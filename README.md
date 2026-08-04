@@ -27,6 +27,7 @@ et de la reprendre ailleurs.
 index.html        le moteur : HTML, CSS, règles, calculs, rendu, dés, combat
 data/*.json       le contenu : biens, raretés, contrées, armes, chariots…
 data/FORMAT.md    le format de chaque fichier de données, clé par clé
+outils/           les outils d'auteur, qui ne partent pas avec le jeu
 ```
 
 Le moteur ne contient aucun contenu, et les fichiers de données aucune logique.
@@ -37,6 +38,12 @@ s'exécute avant.
 Pour ajouter une marchandise, une arme, un type de cité, un pictogramme ou un
 événement, **lisez [`data/FORMAT.md`](data/FORMAT.md)** : il décrit chaque
 fichier, chaque clé, et ce qui casse si on s'en écarte.
+
+Pour dessiner le monde — poser les villes sur une carte, tracer les routes, délimiter
+les contrées, fixer l'échelle des distances — ouvrez
+[`outils/atelier-carte.html`](outils/atelier-carte.html) dans un navigateur.
+Son mode d'emploi et le format qu'il exporte sont dans
+[`outils/README.md`](outils/README.md).
 
 Les événements de route sont la seule exception : ils sont restés dans
 `index.html`, parce que chaque choix y est une fonction qui manipule l'état du

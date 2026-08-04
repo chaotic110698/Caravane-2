@@ -1,0 +1,1215 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Atelier de carte — Caravane</title>
+<style>
+:root{
+  --fond:#1C1A17; --fond-clair:#26231F; --bord:#3A352E;
+  --encre:#E8E1D4; --encre-pale:#9C9484;
+  --or:#C9A227; --minium:#C24A32; --vert:#6E9B6A; --azur:#4A7BC8;
+  --r:3px;
+}
+*{margin:0;padding:0;box-sizing:border-box;font:inherit;color:inherit;background:none;border:none}
+html,body{height:100%}
+body{
+  font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;
+  background:var(--fond);color:var(--encre);
+  display:flex;flex-direction:column;overflow:hidden;
+  -webkit-tap-highlight-color:transparent;
+}
+button{cursor:pointer;user-select:none}
+input,select{background:var(--fond);border:1px solid var(--bord);border-radius:var(--r);
+  padding:5px 7px;color:var(--encre);width:100%}
+input:focus,select:focus{outline:1px solid var(--or);border-color:var(--or)}
+input[type=color]{padding:2px;height:30px}
+select{cursor:pointer}
+option{background:var(--fond-clair)}
+
+/* ── barre d'outils ── */
+#barre{flex:none;display:flex;align-items:center;gap:6px;padding:7px 10px;
+  background:var(--fond-clair);border-bottom:1px solid var(--bord);flex-wrap:wrap}
+#barre h1{font-size:15px;font-weight:600;letter-spacing:.02em;margin-right:6px;white-space:nowrap}
+#barre h1 b{color:var(--or)}
+.outil{display:flex;align-items:center;gap:6px;padding:6px 11px;border:1px solid var(--bord);
+  border-radius:var(--r);background:var(--fond);font-size:13px;white-space:nowrap}
+.outil:hover{border-color:var(--encre-pale)}
+.outil.actif{background:var(--or);color:#1C1A17;border-color:var(--or);font-weight:600}
+.outil kbd{font-size:11px;opacity:.65;font-family:ui-monospace,monospace}
+.outil.actif kbd{opacity:.8}
+.sep{width:1px;align-self:stretch;background:var(--bord);margin:0 3px}
+.pousse{margin-left:auto}
+
+/* ── scène ── */
+#scene{flex:1;min-height:0;display:flex}
+#toile{flex:1;min-width:0;position:relative;background:
+  repeating-conic-gradient(#211E1A 0% 25%,#1A1815 0% 50%) 50%/22px 22px;
+  overflow:hidden;touch-action:none}
+#toile svg{display:block;width:100%;height:100%}
+#depot{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:10px;text-align:center;padding:30px;color:var(--encre-pale);
+  pointer-events:none}
+#depot.cache{display:none}
+#depot b{color:var(--encre);font-size:17px}
+#depot em{color:var(--or);font-style:normal}
+/* quand la carte est déjà peuplée, l'avis se range en haut au lieu de la couvrir */
+#depot.bandeau{inset:auto 0 auto 0;top:0;padding:9px 14px;background:#2A2620E8;
+  border-bottom:1px solid var(--or);flex-direction:row;gap:8px;font-size:13px}
+#depot.bandeau b{font-size:13px}
+#toile.survol{outline:2px dashed var(--or);outline-offset:-8px}
+
+/* ── éléments de la carte ── */
+.voie{stroke:#D8C9A8;stroke-width:2.2;fill:none;vector-effect:non-scaling-stroke;
+  stroke-linecap:round;cursor:pointer}
+.voie.terrain-forestier{stroke:#7FA377}
+.voie.terrain-montagneux{stroke:#A9B4C4}
+.voie.terrain-marecageux{stroke:#8A9A6A}
+.voie.choisi{stroke:var(--minium);stroke-width:4}
+.voie-clic{stroke:transparent;stroke-width:16;fill:none;vector-effect:non-scaling-stroke;cursor:pointer}
+.region{fill-opacity:.13;stroke-width:2;stroke-dasharray:7 5;vector-effect:non-scaling-stroke;
+  cursor:pointer}
+.region.choisi{fill-opacity:.24;stroke-dasharray:none;stroke-width:3}
+.etalon-trait{stroke:var(--or);stroke-width:2.5;vector-effect:non-scaling-stroke;
+  stroke-dasharray:6 4}
+.marqueur{cursor:pointer}
+.marqueur .halo{fill:#1C1A17;fill-opacity:.55}
+.marqueur .pastille{stroke:#1C1A17;stroke-width:1.5}
+.marqueur .nom{fill:#F2ECE0;font-size:12px;font-weight:600;paint-order:stroke;
+  stroke:#1C1A17;stroke-width:3.5;stroke-linejoin:round;pointer-events:none}
+.marqueur.choisi .pastille{stroke:var(--minium);stroke-width:3}
+.marqueur.choisi .nom{fill:var(--minium)}
+.poignee{fill:var(--or);stroke:#1C1A17;stroke-width:1.5;cursor:move}
+.provisoire{stroke:var(--or);stroke-width:2;stroke-dasharray:5 4;fill:none;
+  vector-effect:non-scaling-stroke;pointer-events:none}
+
+/* ── panneau ── */
+#panneau{flex:none;width:310px;background:var(--fond-clair);border-left:1px solid var(--bord);
+  overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:12px}
+.bloc{border:1px solid var(--bord);border-radius:var(--r);background:var(--fond)}
+.bloc>h2{font-size:12px;font-variant:small-caps;letter-spacing:.09em;color:var(--or);
+  padding:7px 10px;border-bottom:1px solid var(--bord)}
+.bloc>div{padding:10px}
+.champ{display:grid;grid-template-columns:88px 1fr;gap:7px;align-items:center;margin-bottom:7px}
+.champ:last-child{margin-bottom:0}
+.champ>label{font-size:12px;color:var(--encre-pale)}
+.champ.large{grid-template-columns:1fr}
+.bouton{display:block;width:100%;padding:7px;border:1px solid var(--bord);border-radius:var(--r);
+  background:var(--fond-clair);font-size:13px;text-align:center}
+.bouton:hover{border-color:var(--encre-pale)}
+.bouton.fort{background:var(--or);color:#1C1A17;border-color:var(--or);font-weight:600}
+.bouton.danger{color:var(--minium);border-color:#5A2A20}
+.rangee{display:flex;gap:6px}
+.liste-contrees{display:flex;flex-direction:column;gap:5px;margin-bottom:9px}
+.ligne-contree{display:flex;align-items:center;gap:7px;padding:5px 7px;border:1px solid var(--bord);
+  border-radius:var(--r);cursor:pointer;font-size:13px}
+.ligne-contree.actif{border-color:var(--or);background:#2E2A22}
+.ligne-contree .pion{width:13px;height:13px;border-radius:50%;flex:none;border:1px solid #0006}
+.ligne-contree .compte{margin-left:auto;font-size:11px;color:var(--encre-pale);
+  font-variant-numeric:tabular-nums}
+.mesures{display:grid;grid-template-columns:1fr auto;gap:3px 10px;font-size:12.5px}
+.mesures b{font-variant-numeric:tabular-nums;text-align:right}
+.mesures .titre{grid-column:1/-1;font-size:11px;font-variant:small-caps;letter-spacing:.07em;
+  color:var(--or);margin-top:7px}
+.mesures .titre:first-child{margin-top:0}
+.avert{font-size:12.5px;padding:6px 8px;border-left:2px solid var(--minium);background:#2A211E;
+  margin-bottom:5px;border-radius:0 var(--r) var(--r) 0}
+.avert.doux{border-color:var(--or);background:#2A2620}
+.avert:last-child{margin-bottom:0}
+.rien{font-size:12.5px;color:var(--encre-pale);font-style:italic}
+#etat{flex:none;display:flex;gap:14px;padding:5px 11px;background:var(--fond-clair);
+  border-top:1px solid var(--bord);font-size:12px;color:var(--encre-pale);
+  font-variant-numeric:tabular-nums;flex-wrap:wrap}
+#etat b{color:var(--encre);font-weight:600}
+.aide{font-size:12px;color:var(--encre-pale);line-height:1.5}
+.aide b{color:var(--encre)}
+kbd{font-family:ui-monospace,monospace;font-size:11px;background:var(--fond-clair);
+  border:1px solid var(--bord);border-radius:2px;padding:0 4px}
+@media (max-width:900px){
+  #scene{flex-direction:column}
+  #panneau{width:auto;max-height:46%;border-left:none;border-top:1px solid var(--bord)}
+}
+</style>
+</head>
+<body>
+
+<div id="barre">
+  <h1><b>Atelier</b> de carte</h1>
+  <button class="outil actif" data-outil="select">Sélection <kbd>V</kbd></button>
+  <button class="outil" data-outil="lieu">Lieu <kbd>L</kbd></button>
+  <button class="outil" data-outil="voie">Voie <kbd>R</kbd></button>
+  <button class="outil" data-outil="frontiere">Frontière <kbd>F</kbd></button>
+  <button class="outil" data-outil="etalon">Étalon <kbd>E</kbd></button>
+  <div class="sep"></div>
+  <button class="outil" id="btn-annuler" title="Annuler">↶ <kbd>Ctrl Z</kbd></button>
+  <button class="outil" id="btn-refaire" title="Refaire">↷ <kbd>Ctrl Y</kbd></button>
+  <div class="sep"></div>
+  <button class="outil" id="btn-cadrer" title="Tout voir">Recadrer <kbd>0</kbd></button>
+  <button class="outil pousse" id="btn-image">Image de fond…</button>
+</div>
+
+<div id="scene">
+  <div id="toile">
+    <svg id="carte" role="application" aria-label="Carte du monde">
+      <g id="vue">
+        <image id="fond" x="0" y="0"/>
+        <g id="c-regions"></g>
+        <g id="c-voies"></g>
+        <g id="c-etalon"></g>
+        <g id="c-provisoire"></g>
+        <g id="c-lieux"></g>
+      </g>
+    </svg>
+    <div id="depot"></div>
+  </div>
+
+  <div id="panneau">
+    <div class="bloc">
+      <h2>Contrées</h2>
+      <div>
+        <div class="liste-contrees" id="liste-contrees"></div>
+        <div class="rangee">
+          <button class="bouton" id="btn-contree">+ Contrée</button>
+          <button class="bouton danger" id="btn-suppr-contree">Supprimer</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bloc">
+      <h2>Sélection</h2>
+      <div id="selection"><p class="rien">Rien de sélectionné.</p></div>
+    </div>
+
+    <div class="bloc">
+      <h2>Échelle</h2>
+      <div id="echelle"></div>
+    </div>
+
+    <div class="bloc">
+      <h2>Terrains</h2>
+      <div id="terrains"></div>
+    </div>
+
+    <div class="bloc">
+      <h2>Contrôles</h2>
+      <div id="controles"></div>
+    </div>
+
+    <div class="bloc">
+      <h2>Fichier</h2>
+      <div>
+        <div class="rangee" style="margin-bottom:6px">
+          <button class="bouton fort" id="btn-exporter">Exporter</button>
+          <button class="bouton" id="btn-importer">Importer</button>
+        </div>
+        <button class="bouton danger" id="btn-vider">Tout effacer</button>
+        <p class="aide" style="margin-top:9px">Le travail est sauvegardé tout seul dans ce
+        navigateur à chaque modification. <b>Exportez</b> pour déposer le fichier dans
+        <code>data/</code>.</p>
+      </div>
+    </div>
+
+    <div class="bloc">
+      <h2>Aide-mémoire</h2>
+      <div class="aide">
+        <p><b>Se déplacer</b> — deux doigts, ou molette pour zoomer, ou glisser avec l'outil
+        Sélection sur le fond.</p>
+        <p style="margin-top:6px"><b>Lieu</b> — cliquez pour poser. <b>Voie</b> — cliquez un lieu
+        puis un autre. <b>Frontière</b> — cliquez les sommets, <kbd>Entrée</kbd> pour fermer.
+        <b>Étalon</b> — cliquez deux points, puis saisissez la distance réelle.</p>
+        <p style="margin-top:6px">Quand la carte est trop pleine pour trouver du vide :
+        <kbd>Espace</kbd> tenue, ou le <b>bouton du milieu</b>, déplacent la vue quel que soit
+        l'outil.</p>
+        <p style="margin-top:6px"><kbd>Suppr</kbd> efface la sélection. <kbd>Échap</kbd> annule
+        le tracé en cours.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="etat">
+  <span id="etat-pos">—</span>
+  <span id="etat-zoom">—</span>
+  <span id="etat-compte">—</span>
+  <span id="etat-msg" style="margin-left:auto"></span>
+</div>
+
+<input type="file" id="fichier-image" accept="image/*" hidden>
+<input type="file" id="fichier-json" accept=".json,application/json" hidden>
+
+<script>
+'use strict';
+
+/* ═══════════════ vocabulaire ═══════════════ */
+
+/* Cinq rangs de lieu. Le rang décide de la taille du marqueur, de l'ampleur du
+   marché en jeu, et le poste frontière est le seul par où l'on change de contrée. */
+const RANGS={
+  capitale:{nom:'Capitale',       r:9,  teinte:'#C9A227', ordre:0},
+  ville:   {nom:'Ville',          r:7,  teinte:'#D8C9A8', ordre:1},
+  village: {nom:'Village',        r:5.5,teinte:'#9C9484', ordre:2},
+  hameau:  {nom:'Hameau',         r:4,  teinte:'#6E655A', ordre:3},
+  poste:   {nom:'Poste frontière',r:7.5,teinte:'#4A7BC8', ordre:4}
+};
+const CLES_RANGS=Object.keys(RANGS);
+
+/* Quatre terrains. Chacun module les trois profils de route : le détour rallonge
+   le chemin, la rudesse use les chariots, le risque appelle les mauvaises
+   rencontres. Une plaine ne change rien, une montagne triple presque tout. */
+const TERRAINS={
+  plaine:     {nom:'Plaine',     detour:1.00,rudesse:1.00,risque:1.00,teinte:'#D8C9A8'},
+  forestier:  {nom:'Forestier',  detour:1.08,rudesse:1.15,risque:1.25,teinte:'#7FA377'},
+  montagneux: {nom:'Montagneux', detour:1.28,rudesse:1.45,risque:1.15,teinte:'#A9B4C4'},
+  marecageux: {nom:'Marécageux', detour:1.18,rudesse:1.35,risque:1.30,teinte:'#8A9A6A'}
+};
+const CLES_TERRAINS=Object.keys(TERRAINS);
+
+/* Les trois façons de faire une même route, reprises du jeu : la dangereuse
+   coupe au plus court, la sécurisée fait le tour par les relais. */
+const PROFILS=[
+  {cle:'securise', nom:'Sécurisé',  detour:1.30,risque:0.50,rudesse:0.72},
+  {cle:'normal',   nom:'Normal',    detour:1.00,risque:1.00,rudesse:1.00},
+  {cle:'dangereux',nom:'Dangereux', detour:0.78,risque:1.60,rudesse:1.35}
+];
+
+const KM_PAR_LIEUE=4.82;      /* la mesure du jeu */
+const KM_PAR_JOUR=15;         /* l'allure du convoi de départ, pour l'estimation */
+const TEINTES_CONTREE=['#C9A227','#6E9B6A','#4A7BC8','#C24A32','#A084C0','#5CA79E',
+  '#C6A24C','#B07A4C','#7C8AA0','#9A7343'];
+
+/* ═══════════════ le modèle ═══════════════ */
+
+function modeleVide(){
+  return {
+    format:'caravane.carte.v1',
+    carte:{fichier:'',largeur:0,hauteur:0},
+    etalon:null,                    /* {a:{x,y},b:{x,y},distance,unite} */
+    contrees:[],                    /* {cle,nom,gentile,teinte,frontiere:[{x,y}]} */
+    lieux:[],                       /* {cle,nom,contree,rang,x,y,etiq:{dx,dy,ancre}} */
+    voies:[]                        /* {cle,de,vers,terrain} */
+  };
+}
+let M=modeleVide();
+let choix=null;                     /* {genre:'lieu'|'voie'|'contree', cle} */
+let contreeCourante=null;
+let outil='select';
+let rangDefaut='ville', terrainDefaut='plaine';
+
+/* tracés en cours */
+let voieDepuis=null, frontiereEnCours=null, etalonEnCours=null;
+
+/* ═══════════════ utilitaires ═══════════════ */
+
+const $=s=>document.querySelector(s);
+const svg=$('#carte'), vue=$('#vue');
+const hypot=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+const arrondi=(n,d)=>Math.round(n*Math.pow(10,d))/Math.pow(10,d);
+const echappe=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function cleDepuis(nom,prises){
+  let base=String(nom).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'lieu';
+  let c=base,n=2;
+  while(prises.indexOf(c)>=0)c=base+'-'+(n++);
+  return c;
+}
+const lieuDe=cle=>M.lieux.find(l=>l.cle===cle);
+const contreeDe=cle=>M.contrees.find(c=>c.cle===cle);
+function teinteContree(cle){const c=contreeDe(cle);return c?c.teinte:'#9C9484';}
+
+/* ── conversion pixels → lieues, une fois l'étalon posé ── */
+function lieuesParPixel(){
+  if(!M.etalon)return null;
+  const px=hypot(M.etalon.a,M.etalon.b);
+  if(px<1)return null;
+  const l=M.etalon.unite==='km'?M.etalon.distance/KM_PAR_LIEUE:M.etalon.distance;
+  return l/px;
+}
+function volDoiseau(v){                       /* en pixels */
+  const a=lieuDe(v.de),b=lieuDe(v.vers);
+  return (a&&b)?hypot(a,b):0;
+}
+/* les trois profils d'une voie, terrain compris — mêmes formules que le jeu */
+function profilsDe(v){
+  const t=TERRAINS[v.terrain]||TERRAINS.plaine;
+  const lpp=lieuesParPixel(), px=volDoiseau(v);
+  return PROFILS.map(p=>{
+    const detour=p.detour*t.detour;
+    const lieues=lpp?Math.max(1,Math.round(px*lpp*detour)):null;
+    const km=lieues===null?null:Math.round(lieues*KM_PAR_LIEUE);
+    return {cle:p.cle,nom:p.nom,detour:arrondi(detour,3),
+      risque:arrondi(p.risque*t.risque,3),rudesse:arrondi(p.rudesse*t.rudesse,3),
+      lieues:lieues,km:km,
+      etapes:km===null?null:Math.min(24,Math.max(2,Math.ceil(km/KM_PAR_JOUR)))};
+  });
+}
+
+/* ═══════════════ vue : déplacement et zoom ═══════════════ */
+
+let V={k:1,tx:0,ty:0};
+const ZOOM_MIN=.05, ZOOM_MAX=12;
+
+function appliquerVue(){
+  vue.setAttribute('transform',`translate(${V.tx} ${V.ty}) scale(${V.k})`);
+  /* les marqueurs gardent leur taille à l'écran : on les contre-met à l'échelle */
+  const inv=1/V.k;
+  document.querySelectorAll('.marqueur,.poignee-g').forEach(g=>{
+    g.setAttribute('transform',`translate(${g.dataset.x} ${g.dataset.y}) scale(${inv})`);
+  });
+  $('#etat-zoom').innerHTML='zoom <b>'+Math.round(V.k*100)+' %</b>';
+}
+function versCarte(ev){
+  const r=svg.getBoundingClientRect();
+  return {x:(ev.clientX-r.left-V.tx)/V.k, y:(ev.clientY-r.top-V.ty)/V.k};
+}
+function cadrer(){
+  const r=svg.getBoundingClientRect();
+  let x0=0,y0=0,x1=M.carte.largeur||1000,y1=M.carte.hauteur||700;
+  if(!M.carte.largeur&&M.lieux.length){
+    x0=y0=1e9;x1=y1=-1e9;
+    M.lieux.forEach(l=>{x0=Math.min(x0,l.x);y0=Math.min(y0,l.y);
+                        x1=Math.max(x1,l.x);y1=Math.max(y1,l.y);});
+    const m=Math.max(80,(x1-x0)*.12);x0-=m;y0-=m;x1+=m;y1+=m;
+  }
+  const k=Math.min(r.width/Math.max(1,x1-x0),r.height/Math.max(1,y1-y0))*.94;
+  V.k=Math.min(ZOOM_MAX,Math.max(ZOOM_MIN,k));
+  V.tx=r.width/2-(x0+x1)/2*V.k;
+  V.ty=r.height/2-(y0+y1)/2*V.k;
+  appliquerVue();
+}
+function zoomVers(cx,cy,facteur){
+  const k=Math.min(ZOOM_MAX,Math.max(ZOOM_MIN,V.k*facteur));
+  const r=svg.getBoundingClientRect();
+  const sx=cx-r.left, sy=cy-r.top;
+  V.tx=sx-(sx-V.tx)*(k/V.k);
+  V.ty=sy-(sy-V.ty)*(k/V.k);
+  V.k=k;
+  appliquerVue();
+}
+
+/* ═══════════════ rendu ═══════════════ */
+
+function dessiner(){
+  /* ── régions ── */
+  $('#c-regions').innerHTML=M.contrees.filter(c=>c.frontiere&&c.frontiere.length>2).map(c=>
+    `<polygon class="region${choix&&choix.genre==='contree'&&choix.cle===c.cle?' choisi':''}"
+       data-contree="${echappe(c.cle)}" fill="${c.teinte}" stroke="${c.teinte}"
+       points="${c.frontiere.map(p=>p.x+','+p.y).join(' ')}"/>`).join('');
+
+  /* ── voies ── */
+  $('#c-voies').innerHTML=M.voies.map(v=>{
+    const a=lieuDe(v.de),b=lieuDe(v.vers);
+    if(!a||!b)return '';
+    const sel=choix&&choix.genre==='voie'&&choix.cle===v.cle;
+    return `<line class="voie-clic" data-voie="${echappe(v.cle)}"
+        x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"/>
+      <line class="voie terrain-${v.terrain}${sel?' choisi':''}" data-voie="${echappe(v.cle)}"
+        x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"/>`;
+  }).join('');
+
+  /* ── étalon ── */
+  $('#c-etalon').innerHTML=M.etalon
+    ? `<line class="etalon-trait" x1="${M.etalon.a.x}" y1="${M.etalon.a.y}"
+         x2="${M.etalon.b.x}" y2="${M.etalon.b.y}"/>`
+      +poignee(M.etalon.a,'etalon-a')+poignee(M.etalon.b,'etalon-b')
+    : '';
+
+  /* ── lieux ── */
+  $('#c-lieux').innerHTML=M.lieux.map(l=>{
+    const R=RANGS[l.rang]||RANGS.ville;
+    const sel=choix&&choix.genre==='lieu'&&choix.cle===l.cle;
+    const e=l.etiq||{pos:'dessus'};
+    const teinte=l.rang==='poste'?RANGS.poste.teinte:teinteContree(l.contree);
+    const forme=l.rang==='poste'
+      ? `<rect class="pastille" x="${-R.r}" y="${-R.r}" width="${R.r*2}" height="${R.r*2}"
+           transform="rotate(45)" fill="${teinte}"/>`
+      : `<circle class="pastille" r="${R.r}" fill="${teinte}"/>`;
+    const noyau=l.rang==='capitale'?`<circle r="${R.r*.38}" fill="#1C1A17"/>`:'';
+    const E=posEtiquette(e.pos,R.r);
+    return `<g class="marqueur${sel?' choisi':''}" data-lieu="${echappe(l.cle)}"
+        data-x="${l.x}" data-y="${l.y}">
+        <circle class="halo" r="${R.r+7}"/>
+        ${forme}${noyau}
+        <text class="nom" x="${E.x}" y="${E.y}"
+          style="text-anchor:${E.ancre}">${echappe(l.nom)}</text>
+      </g>`;
+  }).join('');
+
+  appliquerVue();
+  majDepot();
+  rendrePanneau();
+  sauverAuto();
+}
+/* Quatre places pour un nom autour de son marqueur : de quoi démêler deux
+   cités voisines dont les étiquettes se marchent dessus. */
+const PLACES_ETIQ={
+  dessus: {nom:'au-dessus'},
+  dessous:{nom:'en dessous'},
+  gauche: {nom:'à gauche'},
+  droite: {nom:'à droite'}
+};
+function posEtiquette(place,r){
+  if(place==='dessous')return {x:0,y:r+16,ancre:'middle'};
+  if(place==='gauche') return {x:-(r+7),y:4,ancre:'end'};
+  if(place==='droite') return {x:r+7,y:4,ancre:'start'};
+  return {x:0,y:-(r+8),ancre:'middle'};        /* au-dessus, par défaut */
+}
+/* L'invite de dépôt dit trois choses différentes selon l'état : venez déposer,
+   il manque l'image de ce monde, ou rien du tout. */
+let imageChargee=false;
+function majDepot(){
+  const d=$('#depot');
+  d.classList.remove('cache','bandeau');
+  if(imageChargee){d.classList.add('cache');return;}
+  if(M.lieux.length||M.contrees.length>1){
+    d.classList.add('bandeau');
+    d.innerHTML=`<b>Image de fond absente${M.carte.fichier?' :':''}</b>
+      <span>${M.carte.fichier?echappe(M.carte.fichier)+' — redéposez-la pour retrouver le décor.'
+        :'déposez-en une quand vous voulez.'}</span>`;
+    return;
+  }
+  d.innerHTML=`<b>Déposez ici l'image de votre carte</b>
+    <span>PNG, JPEG ou WebP — elle reste sur votre machine, rien n'est envoyé nulle part.</span>
+    <span><em>Ou commencez sans image</em> : les outils fonctionnent sur fond vide.</span>`;
+}
+function poignee(p,id){
+  return `<g class="poignee-g" data-poignee="${id}" data-x="${p.x}" data-y="${p.y}">
+    <circle class="poignee" r="6"/></g>`;
+}
+function dessinerProvisoire(pos){
+  const c=$('#c-provisoire');
+  let h='';
+  if(voieDepuis){
+    const a=lieuDe(voieDepuis);
+    if(a&&pos)h+=`<line class="provisoire" x1="${a.x}" y1="${a.y}" x2="${pos.x}" y2="${pos.y}"/>`;
+  }
+  if(frontiereEnCours&&frontiereEnCours.points.length){
+    const pts=frontiereEnCours.points.concat(pos?[pos]:[]);
+    h+=`<polyline class="provisoire" points="${pts.map(p=>p.x+','+p.y).join(' ')}"/>`;
+    h+=frontiereEnCours.points.map(p=>poignee(p,'')).join('');
+  }
+  if(etalonEnCours&&pos)
+    h+=`<line class="provisoire" x1="${etalonEnCours.x}" y1="${etalonEnCours.y}"
+         x2="${pos.x}" y2="${pos.y}"/>`;
+  c.innerHTML=h;
+  appliquerVue();
+}
+
+/* ═══════════════ panneau ═══════════════ */
+
+function rendrePanneau(){
+  rendreContrees();
+  rendreSelection();
+  rendreEchelle();
+  rendreTerrains();
+  rendreControles();
+  $('#etat-compte').innerHTML=`<b>${M.contrees.length}</b> contrées · `+
+    `<b>${M.lieux.length}</b> lieux · <b>${M.voies.length}</b> voies`;
+}
+
+function rendreContrees(){
+  $('#liste-contrees').innerHTML=M.contrees.length
+    ? M.contrees.map(c=>`<div class="ligne-contree${c.cle===contreeCourante?' actif':''}"
+        data-choisir-contree="${echappe(c.cle)}">
+        <span class="pion" style="background:${c.teinte}"></span>
+        <span>${echappe(c.nom)}</span>
+        <span class="compte">${M.lieux.filter(l=>l.contree===c.cle).length} lieux</span>
+      </div>`).join('')
+    : '<p class="rien">Aucune contrée. Commencez par en ajouter une.</p>';
+}
+
+function rendreSelection(){
+  const p=$('#selection');
+  if(!choix){p.innerHTML='<p class="rien">Rien de sélectionné.</p>';return;}
+
+  if(choix.genre==='lieu'){
+    const l=lieuDe(choix.cle);
+    if(!l){choix=null;return rendreSelection();}
+    p.innerHTML=`
+      <div class="champ"><label>Nom</label>
+        <input id="s-nom" value="${echappe(l.nom)}"></div>
+      <div class="champ"><label>Rang</label>
+        <select id="s-rang">${CLES_RANGS.map(k=>
+          `<option value="${k}"${k===l.rang?' selected':''}>${RANGS[k].nom}</option>`).join('')}</select></div>
+      <div class="champ"><label>Contrée</label>
+        <select id="s-contree">${M.contrees.map(c=>
+          `<option value="${echappe(c.cle)}"${c.cle===l.contree?' selected':''}>${echappe(c.nom)}</option>`).join('')}</select></div>
+      <div class="champ"><label>Étiquette</label>
+        <select id="s-ancre">${Object.keys(PLACES_ETIQ).map(k=>
+          `<option value="${k}"${(l.etiq&&l.etiq.pos)===k?' selected':''}>${PLACES_ETIQ[k].nom}</option>`
+          ).join('')}</select></div>
+      <div class="mesures" style="margin-top:9px">
+        <span class="titre">Voies au départ d'ici</span>
+        ${voisines(l).map(([v,autre,pr])=>
+          `<span>${echappe(autre.nom)}</span><b>${pr[1].lieues===null?'—':pr[1].lieues+' lieues'}</b>`
+        ).join('')||'<span class="rien">aucune</span><b></b>'}
+      </div>
+      <button class="bouton danger" style="margin-top:9px" id="s-suppr">Supprimer ce lieu</button>`;
+    $('#s-nom').oninput=e=>{l.nom=e.target.value;dessiner();};
+    $('#s-rang').onchange=e=>{memo();l.rang=e.target.value;rangDefaut=l.rang;dessiner();};
+    $('#s-contree').onchange=e=>{memo();l.contree=e.target.value;dessiner();};
+    $('#s-ancre').onchange=e=>{memo();l.etiq=l.etiq||{};l.etiq.pos=e.target.value;dessiner();};
+    $('#s-suppr').onclick=()=>supprimerSelection();
+    return;
+  }
+
+  if(choix.genre==='voie'){
+    const v=M.voies.find(x=>x.cle===choix.cle);
+    if(!v){choix=null;return rendreSelection();}
+    const a=lieuDe(v.de),b=lieuDe(v.vers),pr=profilsDe(v);
+    const lpp=lieuesParPixel();
+    p.innerHTML=`
+      <p style="font-size:13px;margin-bottom:9px"><b>${echappe(a?a.nom:'?')}</b> ↔
+        <b>${echappe(b?b.nom:'?')}</b></p>
+      <div class="champ"><label>Terrain</label>
+        <select id="s-terrain">${CLES_TERRAINS.map(k=>
+          `<option value="${k}"${k===v.terrain?' selected':''}>${TERRAINS[k].nom}</option>`).join('')}</select></div>
+      <div class="mesures" style="margin-top:9px">
+        <span class="titre">À vol d'oiseau</span>
+        <span>${Math.round(volDoiseau(v))} px</span>
+        <b>${lpp?Math.round(volDoiseau(v)*lpp)+' lieues':'étalon manquant'}</b>
+        <span class="titre">Les trois chemins</span>
+        ${pr.map(x=>`<span>${x.nom} <span style="color:var(--encre-pale)">×${x.detour}</span></span>
+          <b>${x.lieues===null?'—':x.lieues+' lieues · '+x.etapes+' ét.'}</b>`).join('')}
+        <span class="titre">Effets du terrain</span>
+        <span>rudesse</span><b>×${arrondi(TERRAINS[v.terrain].rudesse,2)}</b>
+        <span>risque</span><b>×${arrondi(TERRAINS[v.terrain].risque,2)}</b>
+      </div>
+      <button class="bouton danger" style="margin-top:9px" id="s-suppr">Supprimer cette voie</button>`;
+    $('#s-terrain').onchange=e=>{memo();v.terrain=e.target.value;terrainDefaut=v.terrain;dessiner();};
+    $('#s-suppr').onclick=()=>supprimerSelection();
+    return;
+  }
+
+  if(choix.genre==='contree'){
+    const c=contreeDe(choix.cle);
+    if(!c){choix=null;return rendreSelection();}
+    p.innerHTML=`
+      <div class="champ"><label>Nom</label><input id="s-nom" value="${echappe(c.nom)}"></div>
+      <div class="champ"><label>Gentilé</label><input id="s-gentile" value="${echappe(c.gentile||'')}"
+        placeholder="naine, elfique…"></div>
+      <div class="champ"><label>Teinte</label><input type="color" id="s-teinte" value="${c.teinte}"></div>
+      <p class="aide" style="margin-top:7px">${c.frontiere&&c.frontiere.length>2
+        ? c.frontiere.length+' sommets de frontière tracés.'
+        : 'Pas de frontière tracée. Outil <b>Frontière</b>, puis <kbd>Entrée</kbd> pour fermer.'}</p>
+      <button class="bouton" style="margin-top:9px" id="s-refrontiere">Retracer la frontière</button>`;
+    $('#s-nom').oninput=e=>{c.nom=e.target.value;rendreContrees();sauverAuto();};
+    $('#s-gentile').oninput=e=>{c.gentile=e.target.value;sauverAuto();};
+    $('#s-teinte').oninput=e=>{c.teinte=e.target.value;dessiner();};
+    $('#s-refrontiere').onclick=()=>{memo();c.frontiere=[];contreeCourante=c.cle;
+      choisirOutil('frontiere');dessiner();};
+    return;
+  }
+}
+function voisines(l){
+  return M.voies.filter(v=>v.de===l.cle||v.vers===l.cle).map(v=>{
+    const autre=lieuDe(v.de===l.cle?v.vers:v.de);
+    return [v,autre||{nom:'?'},profilsDe(v)];
+  });
+}
+
+function rendreEchelle(){
+  const lpp=lieuesParPixel();
+  $('#echelle').innerHTML=M.etalon
+    ? `<div class="champ"><label>Distance</label>
+         <input type="number" id="e-dist" min="1" step="1" value="${M.etalon.distance}"></div>
+       <div class="champ"><label>Unité</label>
+         <select id="e-unite">
+           <option value="lieues"${M.etalon.unite==='lieues'?' selected':''}>lieues</option>
+           <option value="km"${M.etalon.unite==='km'?' selected':''}>kilomètres</option>
+         </select></div>
+       <div class="mesures" style="margin-top:9px">
+         <span>trait de référence</span><b>${Math.round(hypot(M.etalon.a,M.etalon.b))} px</b>
+         <span>1 lieue vaut</span><b>${lpp?arrondi(1/lpp,1)+' px':'—'}</b>
+         <span>1 lieue vaut</span><b>${KM_PAR_LIEUE} km</b>
+         <span>convoi de départ</span><b>${KM_PAR_JOUR} km/jour</b>
+       </div>
+       <button class="bouton" style="margin-top:9px" id="e-refaire">Reposer l'étalon</button>`
+    : `<p class="rien">Aucun étalon. Sans lui, aucune distance ne peut être calculée.</p>
+       <button class="bouton fort" style="margin-top:8px" id="e-poser">Poser l'étalon</button>`;
+  if($('#e-dist'))$('#e-dist').oninput=e=>{
+    M.etalon.distance=Math.max(1,+e.target.value||1);dessiner();};
+  if($('#e-unite'))$('#e-unite').onchange=e=>{M.etalon.unite=e.target.value;dessiner();};
+  if($('#e-refaire'))$('#e-refaire').onclick=()=>choisirOutil('etalon');
+  if($('#e-poser'))$('#e-poser').onclick=()=>choisirOutil('etalon');
+}
+
+function rendreTerrains(){
+  $('#terrains').innerHTML=
+    `<div class="mesures">
+       <span class="titre">Multiplicateurs appliqués aux voies</span>
+       <span style="color:var(--encre-pale);font-size:11px">terrain</span>
+       <b style="color:var(--encre-pale);font-size:11px">détour · rudesse · risque</b>
+       ${CLES_TERRAINS.map(k=>{const t=TERRAINS[k];
+         return `<span><span style="color:${t.teinte}">■</span> ${t.nom}
+           <span style="color:var(--encre-pale)">(${M.voies.filter(v=>v.terrain===k).length})</span></span>
+           <b>${arrondi(t.detour,2)} · ${arrondi(t.rudesse,2)} · ${arrondi(t.risque,2)}</b>`;}).join('')}
+     </div>
+     <p class="aide" style="margin-top:8px">Ces valeurs multiplient les trois profils de route.
+     Elles partent avec le fichier exporté : le jeu lira les mêmes.</p>`;
+}
+
+function rendreControles(){
+  const aa=[];
+  if(!M.contrees.length)aa.push(['Aucune contrée n\'est définie.','']);
+  if(!M.etalon)aa.push(['Pas d\'étalon : les distances sont inconnues.','']);
+  if(!M.carte.largeur)aa.push(['Pas d\'image de fond.','doux']);
+
+  M.contrees.forEach(c=>{
+    const n=M.lieux.filter(l=>l.contree===c.cle);
+    if(!n.length)aa.push([`<b>${echappe(c.nom)}</b> n'a aucun lieu.`,'']);
+    if(!n.some(l=>l.rang==='capitale'))
+      aa.push([`<b>${echappe(c.nom)}</b> n'a pas de capitale.`,'doux']);
+    if(!n.some(l=>l.rang==='poste'))
+      aa.push([`<b>${echappe(c.nom)}</b> n'a pas de poste frontière : on ne pourra pas y entrer.`,'']);
+    if(!c.frontiere||c.frontiere.length<3)
+      aa.push([`<b>${echappe(c.nom)}</b> n'a pas de frontière tracée.`,'doux']);
+  });
+
+  /* lieux sans voie : injoignables */
+  const relies={};
+  M.voies.forEach(v=>{relies[v.de]=1;relies[v.vers]=1;});
+  const seuls=M.lieux.filter(l=>!relies[l.cle]);
+  if(seuls.length)aa.push([`${seuls.length} lieu(x) sans aucune voie : `+
+    seuls.slice(0,4).map(l=>echappe(l.nom)).join(', ')+(seuls.length>4?'…':''),'']);
+
+  /* traversées : une voie entre deux postes de contrées différentes */
+  const trav=M.voies.filter(v=>{
+    const a=lieuDe(v.de),b=lieuDe(v.vers);
+    return a&&b&&a.contree!==b.contree;
+  });
+  trav.forEach(v=>{
+    const x=lieuDe(v.de),y=lieuDe(v.vers);
+    if(x.rang!=='poste'||y.rang!=='poste')
+      aa.push([`La voie <b>${echappe(x.nom)}</b> ↔ <b>${echappe(y.nom)}</b> franchit une frontière
+        sans passer par deux postes.`,'']);
+  });
+
+  /* voies qui passent sur un lieu tiers */
+  M.voies.forEach(v=>{
+    const p=lieuDe(v.de),q=lieuDe(v.vers);
+    if(!p||!q)return;
+    M.lieux.forEach(l=>{
+      if(l.cle===v.de||l.cle===v.vers)return;
+      const vx=q.x-p.x,vy=q.y-p.y,L=vx*vx+vy*vy;
+      if(!L)return;
+      const t=Math.max(0,Math.min(1,((l.x-p.x)*vx+(l.y-p.y)*vy)/L));
+      const d=Math.hypot(p.x+t*vx-l.x,p.y+t*vy-l.y);
+      const seuil=(RANGS[l.rang]||RANGS.ville).r+6;
+      if(d<seuil)aa.push([`La voie <b>${echappe(p.nom)}</b> ↔ <b>${echappe(q.nom)}</b>
+        passe sur <b>${echappe(l.nom)}</b>.`,'doux']);
+    });
+  });
+
+  /* étiquettes qui se marchent dessus — mesurées telles qu'elles sont dessinées */
+  const noms=Array.from(document.querySelectorAll('#c-lieux .marqueur'));
+  const boites=noms.map(g=>({cle:g.dataset.lieu,
+    r:g.querySelector('.nom').getBoundingClientRect()}));
+  const chocs=[];
+  for(let i=0;i<boites.length;i++)for(let j=i+1;j<boites.length;j++){
+    const A=boites[i].r,B=boites[j].r;
+    if(!A.width||!B.width)continue;
+    if(A.left<B.right&&B.left<A.right&&A.top<B.bottom&&B.top<A.bottom)
+      chocs.push([boites[i].cle,boites[j].cle]);
+  }
+  chocs.slice(0,4).forEach(([x,y])=>{
+    const a=lieuDe(x),b=lieuDe(y);
+    if(a&&b)aa.push([`Les noms de <b>${echappe(a.nom)}</b> et <b>${echappe(b.nom)}</b>
+      se chevauchent — déplacez une étiquette.`,'doux']);
+  });
+
+  /* connexité : peut-on aller partout ? */
+  if(M.lieux.length>1&&M.voies.length){
+    const adj={};
+    M.lieux.forEach(l=>adj[l.cle]=[]);
+    M.voies.forEach(v=>{if(adj[v.de]&&adj[v.vers]){adj[v.de].push(v.vers);adj[v.vers].push(v.de);}});
+    const vus={},pile=[M.lieux[0].cle];vus[pile[0]]=1;
+    while(pile.length){const c=pile.pop();(adj[c]||[]).forEach(n=>{if(!vus[n]){vus[n]=1;pile.push(n);}});}
+    const orphelins=M.lieux.filter(l=>!vus[l.cle]).length;
+    if(orphelins)aa.push([`${orphelins} lieu(x) ne sont pas reliés au reste du monde.`,'']);
+  }
+
+  $('#controles').innerHTML=aa.length
+    ? aa.slice(0,14).map(([t,c])=>`<div class="avert ${c}">${t}</div>`).join('')+
+      (aa.length>14?`<p class="rien" style="margin-top:5px">et ${aa.length-14} autre(s)…</p>`:'')
+    : '<p class="rien">Tout est cohérent.</p>';
+}
+
+/* ═══════════════ actions ═══════════════ */
+
+let pileAvant=[],pileApres=[];
+function memo(){
+  pileAvant.push(JSON.stringify(M));
+  if(pileAvant.length>80)pileAvant.shift();
+  pileApres.length=0;
+}
+function annuler(){
+  if(!pileAvant.length)return;
+  pileApres.push(JSON.stringify(M));
+  M=JSON.parse(pileAvant.pop());
+  choix=null;dessiner();
+}
+function refaire(){
+  if(!pileApres.length)return;
+  pileAvant.push(JSON.stringify(M));
+  M=JSON.parse(pileApres.pop());
+  choix=null;dessiner();
+}
+
+function ajouterContree(){
+  memo();
+  const n=M.contrees.length+1;
+  const c={cle:cleDepuis('contree-'+n,M.contrees.map(x=>x.cle)),
+    nom:'Contrée '+n,gentile:'',teinte:TEINTES_CONTREE[(n-1)%TEINTES_CONTREE.length],frontiere:[]};
+  M.contrees.push(c);
+  contreeCourante=c.cle;
+  choix={genre:'contree',cle:c.cle};
+  dessiner();
+}
+function supprimerContree(){
+  if(!contreeCourante)return;
+  const c=contreeDe(contreeCourante);
+  const n=M.lieux.filter(l=>l.contree===contreeCourante).length;
+  if(!confirm(`Supprimer « ${c.nom} » ?`+(n?`\n${n} lieu(x) et leurs voies seront effacés.`:'')))return;
+  memo();
+  const cles=M.lieux.filter(l=>l.contree===contreeCourante).map(l=>l.cle);
+  M.lieux=M.lieux.filter(l=>l.contree!==contreeCourante);
+  M.voies=M.voies.filter(v=>cles.indexOf(v.de)<0&&cles.indexOf(v.vers)<0);
+  M.contrees=M.contrees.filter(x=>x.cle!==contreeCourante);
+  contreeCourante=M.contrees.length?M.contrees[0].cle:null;
+  choix=null;dessiner();
+}
+function ajouterLieu(pos){
+  if(!M.contrees.length){message('Ajoutez d\'abord une contrée.');return;}
+  memo();
+  const n=M.lieux.length+1;
+  const nom=(RANGS[rangDefaut].nom)+' '+n;
+  const l={cle:cleDepuis(nom,M.lieux.map(x=>x.cle)),nom:nom,
+    contree:contreeCourante||M.contrees[0].cle,rang:rangDefaut,
+    x:Math.round(pos.x),y:Math.round(pos.y),etiq:{pos:'dessus'}};
+  M.lieux.push(l);
+  choix={genre:'lieu',cle:l.cle};
+  dessiner();
+  const c=$('#s-nom');if(c){c.focus();c.select();}
+}
+function ajouterVoie(a,b){
+  if(a===b)return;
+  if(M.voies.some(v=>(v.de===a&&v.vers===b)||(v.de===b&&v.vers===a))){
+    message('Cette voie existe déjà.');return;}
+  memo();
+  const v={cle:cleDepuis(a+'--'+b,M.voies.map(x=>x.cle)),de:a,vers:b,terrain:terrainDefaut};
+  M.voies.push(v);
+  choix={genre:'voie',cle:v.cle};
+  dessiner();
+}
+function supprimerSelection(){
+  if(!choix)return;
+  memo();
+  if(choix.genre==='lieu'){
+    M.voies=M.voies.filter(v=>v.de!==choix.cle&&v.vers!==choix.cle);
+    M.lieux=M.lieux.filter(l=>l.cle!==choix.cle);
+  }else if(choix.genre==='voie'){
+    M.voies=M.voies.filter(v=>v.cle!==choix.cle);
+  }else if(choix.genre==='contree'){
+    contreeCourante=choix.cle;supprimerContree();return;
+  }
+  choix=null;dessiner();
+}
+function message(t){
+  $('#etat-msg').textContent=t;
+  clearTimeout(message.t);
+  message.t=setTimeout(()=>{$('#etat-msg').textContent='';},3200);
+}
+
+/* ═══════════════ outils ═══════════════ */
+
+const CURSEURS={select:'default',lieu:'crosshair',voie:'crosshair',
+  frontiere:'crosshair',etalon:'crosshair'};
+function choisirOutil(o){
+  outil=o;
+  voieDepuis=null;frontiereEnCours=null;etalonEnCours=null;
+  if(o==='frontiere'){
+    if(!contreeCourante){message('Choisissez d\'abord une contrée.');outil='select';}
+    else frontiereEnCours={cle:contreeCourante,points:[]};
+  }
+  document.querySelectorAll('.outil[data-outil]').forEach(b=>
+    b.classList.toggle('actif',b.dataset.outil===outil));
+  dessinerProvisoire(null);
+  $('#toile').style.cursor=espace?'grab':(CURSEURS[outil]||'default');
+}
+function terminerFrontiere(){
+  if(!frontiereEnCours)return;
+  if(frontiereEnCours.points.length>2){
+    memo();
+    const c=contreeDe(frontiereEnCours.cle);
+    if(c)c.frontiere=frontiereEnCours.points.slice();
+    message('Frontière fermée.');
+  }
+  frontiereEnCours={cle:contreeCourante,points:[]};
+  dessiner();dessinerProvisoire(null);
+}
+
+/* ═══════════════ gestes ═══════════════ */
+
+const pointeurs=new Map();
+let glisse=null;          /* {genre:'vue'|'lieu'|'poignee', ...} */
+let pince=null;
+let aBouge=false;
+let espace=false;         /* barre d'espace tenue : main provisoire */
+
+$('#toile').addEventListener('pointerdown',ev=>{
+  $('#toile').setPointerCapture(ev.pointerId);
+  pointeurs.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});
+  aBouge=false;
+
+  if(pointeurs.size===2){
+    const [a,b]=[...pointeurs.values()];
+    pince={d:Math.hypot(a.x-b.x,a.y-b.y),cx:(a.x+b.x)/2,cy:(a.y+b.y)/2};
+    glisse=null;
+    return;
+  }
+  if(pointeurs.size>2)return;
+
+  const pos=versCarte(ev);
+  const cible=ev.target.closest('[data-lieu],[data-voie],[data-poignee],[data-contree]');
+
+  /* La carte se remplit vite : au bout d'un moment il n'y a plus de vide où
+     saisir le fond. Le bouton du milieu et la barre d'espace déplacent la vue
+     quel que soit l'outil et quoi qu'il y ait dessous. */
+  if(ev.button===1||espace){
+    ev.preventDefault();
+    glisse={genre:'vue',x:ev.clientX,y:ev.clientY,tx:V.tx,ty:V.ty};
+    return;
+  }
+
+  if(outil==='select'){
+    if(cible&&cible.dataset.poignee){
+      glisse={genre:'poignee',id:cible.dataset.poignee};return;
+    }
+    if(cible&&cible.dataset.lieu){
+      choix={genre:'lieu',cle:cible.dataset.lieu};
+      const l=lieuDe(choix.cle);
+      glisse={genre:'lieu',cle:choix.cle,dx:l.x-pos.x,dy:l.y-pos.y};
+      dessiner();return;
+    }
+    if(cible&&cible.dataset.voie){choix={genre:'voie',cle:cible.dataset.voie};dessiner();return;}
+    if(cible&&cible.dataset.contree){
+      choix={genre:'contree',cle:cible.dataset.contree};
+      contreeCourante=choix.cle;dessiner();return;
+    }
+    glisse={genre:'vue',x:ev.clientX,y:ev.clientY,tx:V.tx,ty:V.ty};
+    return;
+  }
+  /* les autres outils se déclenchent au relâchement, pour ne pas gêner le glissé */
+  glisse={genre:'vue',x:ev.clientX,y:ev.clientY,tx:V.tx,ty:V.ty,outil:true};
+});
+
+$('#toile').addEventListener('pointermove',ev=>{
+  if(pointeurs.has(ev.pointerId))pointeurs.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});
+  const pos=versCarte(ev);
+  $('#etat-pos').innerHTML=`x <b>${Math.round(pos.x)}</b> · y <b>${Math.round(pos.y)}</b>`;
+
+  if(pince&&pointeurs.size===2){
+    const [a,b]=[...pointeurs.values()];
+    const d=Math.hypot(a.x-b.x,a.y-b.y);
+    const cx=(a.x+b.x)/2,cy=(a.y+b.y)/2;
+    if(pince.d>0)zoomVers(cx,cy,d/pince.d);
+    V.tx+=cx-pince.cx;V.ty+=cy-pince.cy;
+    appliquerVue();
+    pince={d:d,cx:cx,cy:cy};
+    aBouge=true;
+    return;
+  }
+  if(!glisse){
+    if(voieDepuis||frontiereEnCours&&frontiereEnCours.points.length||etalonEnCours)
+      dessinerProvisoire(pos);
+    return;
+  }
+  if(Math.abs(ev.clientX-(glisse.x||0))+Math.abs(ev.clientY-(glisse.y||0))>4)aBouge=true;
+
+  if(glisse.genre==='vue'){
+    V.tx=glisse.tx+(ev.clientX-glisse.x);
+    V.ty=glisse.ty+(ev.clientY-glisse.y);
+    appliquerVue();
+  }else if(glisse.genre==='lieu'){
+    const l=lieuDe(glisse.cle);
+    if(l){l.x=Math.round(pos.x+glisse.dx);l.y=Math.round(pos.y+glisse.dy);
+      if(!glisse.memo){memo();glisse.memo=1;}
+      dessiner();}
+  }else if(glisse.genre==='poignee'&&M.etalon){
+    if(!glisse.memo){memo();glisse.memo=1;}
+    const p=glisse.id==='etalon-a'?M.etalon.a:M.etalon.b;
+    p.x=Math.round(pos.x);p.y=Math.round(pos.y);
+    dessiner();
+  }
+});
+
+function finPointeur(ev){
+  const etaitPince=pointeurs.size>=2;
+  pointeurs.delete(ev.pointerId);
+  if(pointeurs.size<2)pince=null;
+  const g=glisse;glisse=null;
+  if(etaitPince||!g)return;
+
+  /* un clic net (sans glissé) déclenche l'outil */
+  if(!aBouge&&g.outil){
+    const pos=versCarte(ev);
+    const cible=ev.target.closest('[data-lieu]');
+    if(outil==='lieu')ajouterLieu(pos);
+    else if(outil==='voie'){
+      if(!cible){message('Cliquez sur un lieu.');return;}
+      if(!voieDepuis){voieDepuis=cible.dataset.lieu;message('Maintenant le lieu d\'arrivée.');}
+      else{ajouterVoie(voieDepuis,cible.dataset.lieu);voieDepuis=null;}
+      dessinerProvisoire(pos);
+    }
+    else if(outil==='frontiere'){
+      if(!frontiereEnCours)frontiereEnCours={cle:contreeCourante,points:[]};
+      frontiereEnCours.points.push({x:Math.round(pos.x),y:Math.round(pos.y)});
+      dessinerProvisoire(pos);
+    }
+    else if(outil==='etalon'){
+      if(!etalonEnCours){etalonEnCours={x:Math.round(pos.x),y:Math.round(pos.y)};
+        message('Second point de l\'étalon.');}
+      else{
+        memo();
+        M.etalon={a:etalonEnCours,b:{x:Math.round(pos.x),y:Math.round(pos.y)},
+          distance:M.etalon?M.etalon.distance:100,unite:M.etalon?M.etalon.unite:'lieues'};
+        etalonEnCours=null;choisirOutil('select');dessiner();
+        const c=$('#e-dist');if(c){c.focus();c.select();}
+        message('Étalon posé — saisissez la distance réelle.');
+      }
+      dessinerProvisoire(pos);
+    }
+  }
+}
+$('#toile').addEventListener('pointerup',finPointeur);
+$('#toile').addEventListener('pointercancel',ev=>{pointeurs.delete(ev.pointerId);
+  pince=null;glisse=null;});
+
+$('#toile').addEventListener('wheel',ev=>{
+  ev.preventDefault();
+  zoomVers(ev.clientX,ev.clientY,Math.pow(.999,ev.deltaY));
+},{passive:false});
+
+$('#toile').addEventListener('dblclick',ev=>{
+  ev.preventDefault();
+  if(outil==='frontiere')terminerFrontiere();
+});
+
+$('#toile').addEventListener('auxclick',ev=>{if(ev.button===1)ev.preventDefault();});
+
+document.addEventListener('keyup',ev=>{
+  if(ev.code==='Space'){espace=false;$('#toile').style.cursor=CURSEURS[outil]||'default';}
+});
+document.addEventListener('keydown',ev=>{
+  if(/^(INPUT|SELECT|TEXTAREA)$/.test(ev.target.tagName))return;
+  if(ev.code==='Space'){ev.preventDefault();
+    if(!espace){espace=true;$('#toile').style.cursor='grab';}return;}
+  const t=ev.key.toLowerCase();
+  if((ev.ctrlKey||ev.metaKey)&&t==='z'){ev.preventDefault();ev.shiftKey?refaire():annuler();return;}
+  if((ev.ctrlKey||ev.metaKey)&&t==='y'){ev.preventDefault();refaire();return;}
+  if(ev.ctrlKey||ev.metaKey)return;
+  if(t==='v')choisirOutil('select');
+  else if(t==='l')choisirOutil('lieu');
+  else if(t==='r')choisirOutil('voie');
+  else if(t==='f')choisirOutil('frontiere');
+  else if(t==='e')choisirOutil('etalon');
+  else if(t==='0'){cadrer();}
+  else if(ev.key==='Enter'&&outil==='frontiere')terminerFrontiere();
+  else if(ev.key==='Escape'){
+    if(frontiereEnCours&&frontiereEnCours.points.length)frontiereEnCours.points.pop();
+    voieDepuis=null;etalonEnCours=null;
+    dessinerProvisoire(null);
+  }
+  else if(ev.key==='Delete'||ev.key==='Backspace'){ev.preventDefault();supprimerSelection();}
+});
+
+/* ═══════════════ image de fond ═══════════════ */
+
+function chargerImage(fichier){
+  const url=URL.createObjectURL(fichier);
+  const im=new Image();
+  im.onload=()=>{
+    memo();
+    reechelonner(im.naturalWidth,im.naturalHeight);
+    M.carte={fichier:fichier.name,largeur:im.naturalWidth,hauteur:im.naturalHeight};
+    $('#fond').setAttribute('href',url);
+    $('#fond').setAttribute('width',im.naturalWidth);
+    $('#fond').setAttribute('height',im.naturalHeight);
+    imageChargee=true;
+    garderImage(fichier);
+    cadrer();dessiner();
+    message(`${fichier.name} — ${im.naturalWidth} × ${im.naturalHeight} px`);
+  };
+  im.onerror=()=>message('Image illisible.');
+  im.src=url;
+}
+$('#btn-image').onclick=()=>$('#fichier-image').click();
+$('#fichier-image').onchange=e=>{if(e.target.files[0])chargerImage(e.target.files[0]);
+  e.target.value='';};
+['dragenter','dragover'].forEach(n=>$('#toile').addEventListener(n,e=>{
+  e.preventDefault();$('#toile').classList.add('survol');}));
+['dragleave','drop'].forEach(n=>$('#toile').addEventListener(n,e=>{
+  e.preventDefault();$('#toile').classList.remove('survol');}));
+$('#toile').addEventListener('drop',e=>{
+  const f=e.dataTransfer.files[0];
+  if(!f)return;
+  if(/^image\//.test(f.type))chargerImage(f);
+  else if(/\.json$/i.test(f.name))lireJson(f);
+});
+
+/* ═══════════════ persistance ═══════════════ */
+
+const CLE='caravane.atelier.v1';
+let tSauve=null;
+function sauverAuto(){
+  clearTimeout(tSauve);
+  tSauve=setTimeout(()=>{
+    try{localStorage.setItem(CLE,JSON.stringify(M));}catch(e){}
+  },400);
+}
+function reprendre(){
+  try{
+    const t=localStorage.getItem(CLE);
+    if(!t)return false;
+    const d=JSON.parse(t);
+    if(!d||!d.format)return false;
+    M=normaliser(d);
+    contreeCourante=M.contrees.length?M.contrees[0].cle:null;
+    return true;
+  }catch(e){return false;}
+}
+/* l'image vit dans IndexedDB : trop lourde pour localStorage, et on ne veut pas
+   la redéposer à chaque ouverture */
+let bdd=null;
+function ouvrirBdd(){
+  return new Promise(res=>{
+    const r=indexedDB.open('caravane-atelier',1);
+    r.onupgradeneeded=()=>r.result.createObjectStore('fichiers');
+    r.onsuccess=()=>{bdd=r.result;res(bdd);};
+    r.onerror=()=>res(null);
+  });
+}
+async function garderImage(f){
+  await ouvrirBdd();
+  if(!bdd)return;
+  try{bdd.transaction('fichiers','readwrite').objectStore('fichiers').put(f,'fond');}catch(e){}
+}
+async function reprendreImage(){
+  await ouvrirBdd();
+  if(!bdd)return;
+  try{
+    const r=bdd.transaction('fichiers').objectStore('fichiers').get('fond');
+    r.onsuccess=()=>{if(r.result)chargerImage(r.result);};
+  }catch(e){}
+}
+
+/* ═══════════════ import / export ═══════════════ */
+
+function normaliser(d){
+  const m=modeleVide();
+  m.carte=Object.assign(m.carte,d.carte||{});
+  m.etalon=d.etalon||null;
+  m.contrees=(d.contrees||[]).map((c,i)=>({
+    cle:c.cle||('contree-'+(i+1)),nom:c.nom||('Contrée '+(i+1)),gentile:c.gentile||'',
+    teinte:c.teinte||TEINTES_CONTREE[i%TEINTES_CONTREE.length],
+    frontiere:Array.isArray(c.frontiere)?c.frontiere:[]}));
+  m.lieux=(d.lieux||[]).map((l,i)=>({
+    cle:l.cle||('lieu-'+(i+1)),nom:l.nom||('Lieu '+(i+1)),
+    contree:l.contree||(m.contrees[0]&&m.contrees[0].cle)||'',
+    rang:RANGS[l.rang]?l.rang:'ville',
+    x:+l.x||0,y:+l.y||0,
+    etiq:{pos:(l.etiq&&l.etiq.pos)||((l.etiq&&l.etiq.dy>0)?'dessous':'dessus')}}));
+  const cles=m.lieux.map(l=>l.cle);
+  m.voies=(d.voies||[]).filter(v=>cles.indexOf(v.de)>=0&&cles.indexOf(v.vers)>=0)
+    .map((v,i)=>({cle:v.cle||('voie-'+(i+1)),de:v.de,vers:v.vers,
+      terrain:TERRAINS[v.terrain]?v.terrain:'plaine'}));
+  return m;
+}
+/* changer d'image : les repères sont en pixels, on les rééchelonne */
+function reechelonner(ax,ay){
+  if(!M.carte.largeur||!M.carte.hauteur)return;
+  const fx=ax/M.carte.largeur, fy=ay/M.carte.hauteur;
+  if(Math.abs(fx-1)<.001&&Math.abs(fy-1)<.001)return;
+  M.lieux.forEach(l=>{l.x=Math.round(l.x*fx);l.y=Math.round(l.y*fy);});
+  M.contrees.forEach(c=>(c.frontiere||[]).forEach(p=>{
+    p.x=Math.round(p.x*fx);p.y=Math.round(p.y*fy);}));
+  if(M.etalon){[M.etalon.a,M.etalon.b].forEach(p=>{
+    p.x=Math.round(p.x*fx);p.y=Math.round(p.y*fy);});}
+  message(`Repères rééchelonnés (×${arrondi(fx,3)}) pour la nouvelle image.`);
+}
+function exporter(){
+  /* on emporte les tables de référence : le jeu lira les mêmes chiffres */
+  const sortie=Object.assign({},M,{
+    genere:new Date().toISOString(),
+    rangs:RANGS,terrains:TERRAINS,profils:PROFILS,
+    mesures:{kmParLieue:KM_PAR_LIEUE,kmParJour:KM_PAR_JOUR,
+      lieuesParPixel:lieuesParPixel()?arrondi(lieuesParPixel(),6):null},
+    voies:M.voies.map(v=>Object.assign({},v,{calcul:profilsDe(v)}))
+  });
+  const t=JSON.stringify(sortie,null,2);
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([t],{type:'application/json'}));
+  a.download='monde.json';
+  a.click();
+  message('monde.json exporté — '+Math.round(t.length/1024)+' ko');
+}
+function lireJson(f){
+  const l=new FileReader();
+  l.onload=()=>{
+    try{
+      memo();
+      M=normaliser(JSON.parse(String(l.result)));
+      contreeCourante=M.contrees.length?M.contrees[0].cle:null;
+      choix=null;cadrer();dessiner();
+      message('Carte importée : '+M.lieux.length+' lieux.');
+    }catch(e){message('Fichier illisible : '+e.message);}
+  };
+  l.readAsText(f);
+}
+$('#btn-exporter').onclick=exporter;
+$('#btn-importer').onclick=()=>$('#fichier-json').click();
+$('#fichier-json').onchange=e=>{if(e.target.files[0])lireJson(e.target.files[0]);
+  e.target.value='';};
+$('#btn-vider').onclick=()=>{
+  if(!confirm('Tout effacer et repartir d\'une carte vide ?'))return;
+  memo();M=modeleVide();contreeCourante=null;choix=null;dessiner();
+};
+
+/* ═══════════════ branchements ═══════════════ */
+
+document.querySelectorAll('.outil[data-outil]').forEach(b=>
+  b.onclick=()=>choisirOutil(b.dataset.outil));
+$('#btn-annuler').onclick=annuler;
+$('#btn-refaire').onclick=refaire;
+$('#btn-cadrer').onclick=cadrer;
+$('#btn-contree').onclick=ajouterContree;
+$('#btn-suppr-contree').onclick=supprimerContree;
+$('#panneau').addEventListener('click',e=>{
+  const t=e.target.closest('[data-choisir-contree]');
+  if(!t)return;
+  contreeCourante=t.dataset.choisirContree;
+  choix={genre:'contree',cle:contreeCourante};
+  dessiner();
+});
+window.addEventListener('resize',appliquerVue);
+
+/* ═══════════════ départ ═══════════════ */
+
+if(!reprendre()){
+  /* une contrée pour commencer, sinon le premier clic ne mène nulle part */
+  M.contrees.push({cle:'contree-1',nom:'Contrée 1',gentile:'',
+    teinte:TEINTES_CONTREE[0],frontiere:[]});
+  contreeCourante='contree-1';
+}
+if(M.carte.largeur){
+  $('#fond').setAttribute('width',M.carte.largeur);
+  $('#fond').setAttribute('height',M.carte.hauteur);
+}
+choisirOutil('select');
+cadrer();
+dessiner();
+reprendreImage();
+</script>
+</body>
+</html>
