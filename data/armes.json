@@ -1,0 +1,238 @@
+{
+  "familles": {
+    "hache": {
+      "nom": "Hache",
+      "trait": "Tout dans la frappe, rien dans la parade."
+    },
+    "epee": {
+      "nom": "Épée",
+      "trait": "Équilibrée : on frappe et on pare."
+    },
+    "arc": {
+      "nom": "Arc",
+      "trait": "Peu de force au contact, mais on tire avant d'être touché."
+    },
+    "lance": {
+      "nom": "Lance",
+      "trait": "L'allonge tient l'adversaire à distance : on pare beaucoup."
+    },
+    "masse": {
+      "nom": "Masse",
+      "trait": "La frappe la plus lourde du monde, et aucune garde du tout."
+    },
+    "dague": {
+      "nom": "Dague",
+      "trait": "Ne pèse rien : on garde toute son agilité, on ne fait pas grand mal."
+    }
+  },
+  "ordreFamilles": [
+    "hache",
+    "epee",
+    "lance",
+    "masse",
+    "arc",
+    "dague"
+  ],
+  "armes": {
+    "hache-legere": {
+      "nom": "Hache légère",
+      "surnom": "hachette",
+      "famille": "hache",
+      "frappe": 0.26,
+      "poids": 3,
+      "garde": 0,
+      "prix": 95
+    },
+    "hache-moyenne": {
+      "nom": "Hache moyenne",
+      "surnom": "hache de guerre",
+      "famille": "hache",
+      "frappe": 0.48,
+      "poids": 6,
+      "garde": 0,
+      "prix": 215
+    },
+    "hache-lourde": {
+      "nom": "Hache lourde",
+      "surnom": "doloire",
+      "famille": "hache",
+      "frappe": 0.8,
+      "poids": 10,
+      "garde": 0,
+      "prix": 410
+    },
+    "epee-legere": {
+      "nom": "Épée légère",
+      "surnom": "braquemart",
+      "famille": "epee",
+      "frappe": 0.21,
+      "poids": 2,
+      "garde": 0.05,
+      "prix": 105
+    },
+    "epee-moyenne": {
+      "nom": "Épée moyenne",
+      "surnom": "épée longue",
+      "famille": "epee",
+      "frappe": 0.39,
+      "poids": 4,
+      "garde": 0.08,
+      "prix": 235
+    },
+    "epee-lourde": {
+      "nom": "Épée lourde",
+      "surnom": "espadon",
+      "famille": "epee",
+      "frappe": 0.62,
+      "poids": 7,
+      "garde": 0.11,
+      "prix": 430
+    },
+    "arc-leger": {
+      "nom": "Arc léger",
+      "surnom": "arc court",
+      "famille": "arc",
+      "frappe": 0.16,
+      "poids": 2,
+      "garde": 0.07,
+      "prix": 115
+    },
+    "arc-moyen": {
+      "nom": "Arc moyen",
+      "surnom": "arc de chasse",
+      "famille": "arc",
+      "frappe": 0.31,
+      "poids": 4,
+      "garde": 0.1,
+      "prix": 245
+    },
+    "arc-lourd": {
+      "nom": "Arc lourd",
+      "surnom": "arc de guerre",
+      "famille": "arc",
+      "frappe": 0.5,
+      "poids": 7,
+      "garde": 0.13,
+      "prix": 445
+    },
+    "lance-legere": {
+      "nom": "Lance légère",
+      "surnom": "javeline",
+      "famille": "lance",
+      "frappe": 0.23,
+      "poids": 4,
+      "garde": 0.06,
+      "prix": 110
+    },
+    "lance-moyenne": {
+      "nom": "Lance moyenne",
+      "surnom": "pique",
+      "famille": "lance",
+      "frappe": 0.42,
+      "poids": 6,
+      "garde": 0.1,
+      "prix": 240
+    },
+    "lance-lourde": {
+      "nom": "Lance lourde",
+      "surnom": "guisarme",
+      "famille": "lance",
+      "frappe": 0.68,
+      "poids": 9,
+      "garde": 0.14,
+      "prix": 435
+    },
+    "masse-legere": {
+      "nom": "Masse légère",
+      "surnom": "masse d'armes",
+      "famille": "masse",
+      "frappe": 0.32,
+      "poids": 4,
+      "garde": -0.03,
+      "prix": 100
+    },
+    "masse-moyenne": {
+      "nom": "Masse moyenne",
+      "surnom": "fléau",
+      "famille": "masse",
+      "frappe": 0.58,
+      "poids": 8,
+      "garde": -0.05,
+      "prix": 225
+    },
+    "masse-lourde": {
+      "nom": "Masse lourde",
+      "surnom": "maillet de fer",
+      "famille": "masse",
+      "frappe": 0.92,
+      "poids": 12,
+      "garde": -0.07,
+      "prix": 425
+    },
+    "dague-legere": {
+      "nom": "Dague légère",
+      "surnom": "miséricorde",
+      "famille": "dague",
+      "frappe": 0.12,
+      "poids": 1,
+      "garde": 0.03,
+      "prix": 70
+    },
+    "dague-moyenne": {
+      "nom": "Dague moyenne",
+      "surnom": "badelaire",
+      "famille": "dague",
+      "frappe": 0.22,
+      "poids": 2,
+      "garde": 0.05,
+      "prix": 160
+    },
+    "dague-lourde": {
+      "nom": "Dague lourde",
+      "surnom": "cinquedea",
+      "famille": "dague",
+      "frappe": 0.34,
+      "poids": 3,
+      "garde": 0.07,
+      "prix": 295
+    },
+    "excalibur": {
+      "nom": "Excalibur",
+      "famille": "epee",
+      "frappe": 0.95,
+      "poids": 4,
+      "garde": 0.18,
+      "prix": 6200,
+      "mythique": "humain",
+      "surnom": "l'épée des rois humains",
+      "texte": "Une lame qui n'a pas pris une entaille en trois siècles. Le fourreau seul vaudrait une caravane."
+    },
+    "transperce": {
+      "nom": "Celui qui transperce",
+      "famille": "arc",
+      "frappe": 0.82,
+      "poids": 3,
+      "garde": 0.22,
+      "prix": 6400,
+      "mythique": "elfe",
+      "surnom": "l'arc que nul n'a vu manquer",
+      "texte": "On raconte qu'il ne se tend qu'une fois par cible, et que cela suffit toujours."
+    },
+    "miotril": {
+      "nom": "Miotril",
+      "famille": "hache",
+      "frappe": 1.25,
+      "poids": 6,
+      "garde": 0.05,
+      "prix": 6800,
+      "mythique": "nain",
+      "surnom": "la hache des rois sous la montagne",
+      "texte": "Forgée dans un métal dont plus personne ne connaît la recette. Elle pèse la moitié de ce qu'elle devrait."
+    }
+  },
+  "maitriseDefaut": [
+    1.5,
+    1,
+    0.65
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "profils": [
+    {
+      "nom": "La piste des dunes",
+      "tag": "au plus court, par les sables",
+      "risque": 1.6,
+      "rudesse": 1.35,
+      "detour": 0.78
+    },
+    {
+      "nom": "La route caravanière",
+      "tag": "la voie que tout le monde emprunte",
+      "risque": 1,
+      "rudesse": 1,
+      "detour": 1
+    },
+    {
+      "nom": "La voie des relais",
+      "tag": "de puits en puits, sans se presser",
+      "risque": 0.5,
+      "rudesse": 0.72,
+      "detour": 1.3
+    }
+  ],
+  "finsChariot": [
+    "Le dernier chariot s'ouvre en deux au milieu de la piste. Ce qui reste tient dans un sac.",
+    "Plus une roue en état : le convoi s'arrête là où il est tombé, entre deux bornes.",
+    "Le dernier essieu cède. On charge ce qu'on peut sur le dos des bêtes, et ce n'est plus une caravane."
+  ]
+}

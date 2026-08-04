@@ -1,0 +1,123 @@
+{
+  "niveaux": [
+    null,
+    {
+      "nom": "Commun",
+      "court": "commun",
+      "mult": 0.55,
+      "lot": [
+        150,
+        300
+      ],
+      "teinte": "bas"
+    },
+    {
+      "nom": "Courant",
+      "court": "courant",
+      "mult": 0.82,
+      "lot": [
+        80,
+        150
+      ],
+      "teinte": ""
+    },
+    {
+      "nom": "Peu fréquent",
+      "court": "peu fréquent",
+      "mult": 1.24,
+      "lot": [
+        34,
+        68
+      ],
+      "teinte": ""
+    },
+    {
+      "nom": "Rare",
+      "court": "rare",
+      "mult": 2,
+      "lot": [
+        9,
+        20
+      ],
+      "teinte": "haut"
+    },
+    {
+      "nom": "Très rare",
+      "court": "très rare",
+      "mult": 3.2,
+      "lot": [
+        0,
+        6
+      ],
+      "teinte": "haut"
+    }
+  ],
+  "rareteBase": {
+    "humain": {
+      "ble": 1,
+      "sel": 1,
+      "vin": 2,
+      "miel": 2,
+      "epices": 4,
+      "fer": 2,
+      "cuivre": 2,
+      "argent": 3,
+      "mithril": 5,
+      "ambre": 3,
+      "grenat": 4,
+      "saphir": 5,
+      "etoffes": 2,
+      "encens": 3,
+      "tapis": 3,
+      "enlum": 4,
+      "bois": 1,
+      "pierre": 2,
+      "peaux": 1,
+      "verre": 2
+    },
+    "nain": {
+      "ble": 4,
+      "sel": 2,
+      "vin": 3,
+      "miel": 4,
+      "epices": 5,
+      "fer": 1,
+      "cuivre": 1,
+      "argent": 2,
+      "mithril": 3,
+      "ambre": 2,
+      "grenat": 2,
+      "saphir": 3,
+      "etoffes": 4,
+      "encens": 4,
+      "tapis": 4,
+      "enlum": 5,
+      "bois": 4,
+      "pierre": 1,
+      "peaux": 3,
+      "verre": 2
+    },
+    "elfe": {
+      "ble": 2,
+      "sel": 3,
+      "vin": 1,
+      "miel": 1,
+      "epices": 2,
+      "fer": 5,
+      "cuivre": 4,
+      "argent": 4,
+      "mithril": 5,
+      "ambre": 1,
+      "grenat": 3,
+      "saphir": 4,
+      "etoffes": 1,
+      "encens": 1,
+      "tapis": 2,
+      "enlum": 2,
+      "bois": 1,
+      "pierre": 4,
+      "peaux": 2,
+      "verre": 3
+    }
+  }
+}

@@ -1,0 +1,143 @@
+{
+  "heures": [
+    {
+      "cle": "aube",
+      "c1": "#6E7BA8",
+      "c2": "#D9A87A",
+      "astre": "#F6E0A8",
+      "ax": 22,
+      "ay": 34,
+      "nuit": 0,
+      "mot": "au petit matin"
+    },
+    {
+      "cle": "midi",
+      "c1": "#7BA3C8",
+      "c2": "#E4D3A8",
+      "astre": "#FBF0C8",
+      "ax": 90,
+      "ay": 12,
+      "nuit": 0,
+      "mot": "en plein midi"
+    },
+    {
+      "cle": "couchant",
+      "c1": "#8A6E96",
+      "c2": "#E0955C",
+      "astre": "#FBC77A",
+      "ax": 154,
+      "ay": 32,
+      "nuit": 0,
+      "mot": "au soleil couchant"
+    },
+    {
+      "cle": "nuit",
+      "c1": "#232B48",
+      "c2": "#4A4560",
+      "astre": "#D8E2F2",
+      "ax": 132,
+      "ay": 16,
+      "nuit": 1,
+      "mot": "à la nuit tombée"
+    }
+  ],
+  "profilsVille": {
+    "bourg agricole": "<path d=\"M18 46V30l14-9 14 9v16z\"/><path d=\"M28 46v-9h8v9z\" class=\"creux\"/>\n   <path d=\"M56 46c0-7 4-12 9-12s9 5 9 12z\"/><path d=\"M78 46c0-6 3-10 7-10s7 4 7 10z\"/>\n   <path d=\"M100 46V34h10v12zM116 46V38h8v8z\"/>\n   <path d=\"M132 42v4M140 42v4M148 42v4M156 42v4M128 42h32\" class=\"trait\"/>",
+    "cité minière": "<path d=\"M20 46V22h4v24zM34 46V22h4v24z\"/><path d=\"M18 22h22l-11-9z\"/>\n   <path d=\"M22 26h14v3H22z\"/><path d=\"M52 46c6-16 12-16 18 0z\"/><path d=\"M74 46c8-20 16-20 24 0z\"/>\n   <path d=\"M108 46V30h12v16zM126 46V36h9v10z\"/><path d=\"M112 30h4v-7h-4z\"/>",
+    "port franc": "<path d=\"M26 46V14h2.5v32z\"/><path d=\"M28.5 16c10 3 14 8 15 14h-15z\"/>\n   <path d=\"M28.5 34c8 2 11 5 12 9h-12z\"/><path d=\"M60 46V18h2.5v28z\"/>\n   <path d=\"M62.5 20c9 3 12 7 13 12h-13z\"/><path d=\"M96 46V32h30v14z\"/><path d=\"M96 32l15-8 15 8z\"/>\n   <path d=\"M134 46V36h20v10z\"/><path d=\"M2 46h176\" class=\"trait\"/>",
+    "oasis caravanière": "<path d=\"M28 46V26\" class=\"tronc\"/>\n   <path d=\"M28 26c-9-2-13-6-14-11 6 1 11 4 14 11zM28 26c9-2 13-6 14-11-6 1-11 4-14 11zM28 24c-2-8 0-13 4-17 2 5 2 11-4 17z\"/>\n   <path d=\"M58 46V30\" class=\"tronc\"/><path d=\"M58 30c-7-2-10-5-11-9 5 1 9 3 11 9zM58 30c7-2 10-5 11-9-5 1-9 3-11 9z\"/>\n   <path d=\"M86 46l14-18 14 18z\"/><path d=\"M124 46l11-14 11 14z\"/><path d=\"M156 46l8-10 8 10z\"/>",
+    "cité sainte": "<path d=\"M40 46V28h24v18z\"/><path d=\"M40 28a12 12 0 0 1 24 0z\"/><path d=\"M52 16V8\" class=\"trait\"/>\n   <path d=\"M78 46V34h16v12z\"/><path d=\"M78 34a8 8 0 0 1 16 0z\"/>\n   <path d=\"M108 46V20h6v26z\"/><path d=\"M111 20l-5-8h10z\"/><path d=\"M128 46V32h20v14z\"/>",
+    "fort frontalier": "<path d=\"M24 46V24h6v-4h4v4h6v-4h4v4h6v22z\"/>\n   <path d=\"M50 46V32h60v14z\"/><path d=\"M50 32h4v-4h4v4h6v-4h4v4h6v-4h4v4h6v-4h4v4h6v-4h4v4h6v-4h4v4h4\"/>\n   <path d=\"M118 46V26h6v-4h4v4h6v-4h4v4h6v20z\"/><path d=\"M72 46V36h12v10z\" class=\"creux\"/>",
+    "bourg drapier": "<path d=\"M20 46V24l10-8 10 8v22z\"/><path d=\"M46 46V20l11-9 11 9v26z\"/>\n   <path d=\"M74 46V26l9-7 9 7v20z\"/><path d=\"M98 46V22l10-8 10 8v24z\"/>\n   <path d=\"M126 46V30h26v16z\"/><path d=\"M124 30h30M124 36h30\" class=\"trait\"/>\n   <path d=\"M30 40h6v6h-6zM57 36h6v10h-6z\" class=\"creux\"/>",
+    "coteau viticole": "<path d=\"M0 46c30-16 60-22 96-24 34-2 60 2 84 6v18z\" class=\"colline\"/>\n   <path d=\"M24 40v-6M38 37v-6M52 34v-6M66 32v-6M80 30v-6M94 29v-6M108 29v-6M122 30v-6\" class=\"trait\"/>\n   <path d=\"M20 40h92\" class=\"trait\"/>\n   <path d=\"M132 46V28h22v18z\"/><path d=\"M132 28l11-7 11 7z\"/>",
+    "comptoir du nord": "<path d=\"M22 46V30h22v16z\"/><path d=\"M20 30l13-8 13 8z\"/>\n   <path d=\"M56 46V34h18v12z\"/><path d=\"M54 34l11-7 11 7z\"/>\n   <path d=\"M86 46V28h24v18z\"/><path d=\"M84 28l14-9 14 9z\"/><path d=\"M98 19v-8\" class=\"trait\"/>\n   <path d=\"M124 46V36h16v10z\"/><path d=\"M148 46c0-6 4-10 8-10s8 4 8 10z\"/>",
+    "cité verrière": "<path d=\"M24 46V32h18v14z\"/><path d=\"M28 32c0-8 10-8 10 0z\"/><path d=\"M31 24v-8\" class=\"trait\"/>\n   <path d=\"M56 46V30h20v16z\"/><path d=\"M60 30c0-9 12-9 12 0z\"/><path d=\"M64 21v-9\" class=\"trait\"/>\n   <path d=\"M92 46V34h16v12z\"/><path d=\"M96 34c0-7 8-7 8 0z\"/>\n   <path d=\"M120 46V28h28v18z\"/><path d=\"M126 34h6v12h-6zM138 34h6v12h-6z\" class=\"creux\"/>",
+    "halte des sauniers": "<path d=\"M6 46v-8h40v8zM52 46v-8h40v8zM98 46v-8h34v8z\" class=\"creux\"/>\n   <path d=\"M4 38h130\" class=\"trait\"/>\n   <path d=\"M20 34c0-5 4-9 8-9s8 4 8 9zM64 34c0-4 3-7 6-7s6 3 6 7z\"/>\n   <path d=\"M138 46V30h20v16z\"/><path d=\"M136 30l12-8 12 8z\"/>",
+    "cité royale": "<path d=\"M16 46V22h6v-5h5v5h5v-5h5v5h6v24z\"/>\n   <path d=\"M44 46V30h44v16z\"/><path d=\"M44 30h4v-4h4v4h6v-4h4v4h6v-4h4v4h6v-4h4v4h6\"/>\n   <path d=\"M92 46V16h8v-6h6v6h8v30z\"/><path d=\"M100 10V3\" class=\"trait\"/>\n   <path d=\"M118 46V26h6v-5h5v5h5v-5h5v5h6v20z\"/><path d=\"M60 46V34h12v12z\" class=\"creux\"/>\n   <path d=\"M96 46V34h10v12z\" class=\"creux\"/>",
+    "poste de douane": "<path d=\"M28 46V20h10v26zM130 46V20h10v26z\"/>\n   <path d=\"M38 24h92v6H38z\"/><path d=\"M38 34h92v4H38z\" class=\"creux\"/>\n   <path d=\"M26 20l7-7 7 7zM128 20l7-7 7 7z\"/>\n   <path d=\"M60 46V36h10v10zM100 46V36h10v10z\" class=\"creux\"/>",
+    "nain": "<path d=\"M0 46L46 8l34 38zM74 46L112 14l40 32z\" class=\"colline\"/>\n   <path d=\"M92 46V32h24v14z\"/><path d=\"M96 32a10 10 0 0 1 16 0z\" class=\"creux\"/>\n   <path d=\"M38 46V34h16v12z\"/><path d=\"M42 34a6 6 0 0 1 8 0z\" class=\"creux\"/>",
+    "elfe": "<path d=\"M30 46V20\" class=\"tronc\"/><path d=\"M30 26c-11-3-15-9-16-15 7 2 13 7 16 15zM30 26c11-3 15-9 16-15-7 2-13 7-16 15z\"/>\n   <path d=\"M78 46V14\" class=\"tronc\"/><path d=\"M78 22c-13-3-18-10-19-17 8 2 16 8 19 17zM78 22c13-3 18-10 19-17-8 2-16 8-19 17z\"/>\n   <path d=\"M132 46V20\" class=\"tronc\"/><path d=\"M132 26c-10-3-14-8-15-14 7 2 12 6 15 14zM132 26c10-3 14-8 15-14-7 2-12 6-15 14z\"/>\n   <path d=\"M22 34h16v4H22zM70 28h16v4H70z\" class=\"creux\"/>"
+  },
+  "ouvertures": {
+    "bourg agricole": [
+      "Les charrettes de gerbes encombrent la place jusqu'au parvis.",
+      "On bat le grain sur l'aire, et la poussière se dépose sur tout ce qui traîne."
+    ],
+    "cité minière": [
+      "Le chevalement grince au-dessus des toits, jour et nuit.",
+      "Les terrils noirs bordent la route et rien n'y pousse."
+    ],
+    "port franc": [
+      "Les mâts dépassent des toits, et l'on parle huit langues sur les quais.",
+      "La marée découvre une vase grise où fouillent les enfants."
+    ],
+    "oasis caravanière": [
+      "Les palmiers font une tache verte qu'on voit à deux lieues.",
+      "Le puits est le seul endroit où l'on se parle vraiment."
+    ],
+    "cité sainte": [
+      "Les cloches marquent les heures et l'on baisse la voix sans y penser.",
+      "Des pèlerins dorment sous les porches, la sandale à la main."
+    ],
+    "fort frontalier": [
+      "Les murs sont plus hauts que la ville qu'ils protègent.",
+      "On compte les entrants à la porte, et on les recompte à la sortie."
+    ],
+    "bourg drapier": [
+      "Les pièces de drap sèchent sur des cadres, du sol jusqu'aux toits.",
+      "Ça sent la laine mouillée dans toutes les ruelles."
+    ],
+    "coteau viticole": [
+      "Les vignes montent en terrasses jusqu'au-dessus des dernières maisons.",
+      "On goûte avant d'acheter, et l'on goûte beaucoup."
+    ],
+    "comptoir du nord": [
+      "Les maisons de rondins fument toute l'année.",
+      "Les fourrures pendent aux auvents comme du linge."
+    ],
+    "cité verrière": [
+      "Les fours ne s'éteignent jamais : la ville a une lueur à elle.",
+      "Le sable arrive par tombereaux entiers et repart en carafes."
+    ],
+    "halte des sauniers": [
+      "Les marais salants découpent la plaine en miroirs.",
+      "Le sel craque sous les semelles jusque dans les maisons."
+    ],
+    "cité royale": [
+      "Les bannières claquent au-dessus d'un marché qui ne dort qu'à l'aube.",
+      "On croise plus de gardes que de mendiants, ce qui est rare."
+    ],
+    "poste de douane": [
+      "Une file de convois attend le bon vouloir du clerc.",
+      "Tout ici se compte, se pèse et se note deux fois."
+    ]
+  },
+  "ouverturesDefaut": {
+    "nain": [
+      "Les halles sont taillées dans le roc et la voix y porte trop loin.",
+      "Les forges battent quelque part sous vos pieds."
+    ],
+    "elfe": [
+      "Les étals sont montés entre les racines, sans un clou.",
+      "Personne n'élève la voix, et pourtant tout se marchande."
+    ]
+  },
+  "odeurs": [
+    "Ça sent la poussière chaude et le cuir.",
+    "Ça sent le pain et la fumée de bois.",
+    "Une odeur d'huile de lampe traîne partout.",
+    "L'air a un goût de poivre et de sueur.",
+    "Ça sent le fer froid et l'eau croupie.",
+    "Il flotte une odeur de résine et de linge propre.",
+    "L'air sent la pierre mouillée.",
+    "Ça sent le suif et les bêtes."
+  ],
+  "foules": [
+    "Le marché est bondé : on avance à l'épaule.",
+    "Trois étals sur quatre sont pliés ; la saison est mauvaise.",
+    "Les marchands vous hèlent avant même que vous ayez dételé.",
+    "On vous regarde arriver sans se lever.",
+    "Des gamins tournent autour des chariots en comptant les roues.",
+    "Un crieur annonce les cours d'une voix éteinte."
+  ]
+}

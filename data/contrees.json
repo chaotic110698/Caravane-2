@@ -1,0 +1,653 @@
+{
+  "contrees": [
+    {
+      "cle": "humain",
+      "nom": "Terres humaines",
+      "gentile": "humaine",
+      "article": "les Terres humaines",
+      "forge": 1,
+      "capitale": 2,
+      "nomsCapitale": [
+        "Aurelium",
+        "Val-Royal",
+        "Haute-Couronne",
+        "Sainte-Aubine",
+        "Grand-Ferrant"
+      ],
+      "vers": "les Terres naines",
+      "portes": [
+        "La Porte de Fer",
+        "Le Poste des Contreforts",
+        "La Herse Basse",
+        "Le Péage de Pierre"
+      ],
+      "positions": [
+        {
+          "x": 30,
+          "y": 26,
+          "lx": 16,
+          "ly": -11,
+          "ancre": "start"
+        },
+        {
+          "x": 28,
+          "y": 76,
+          "lx": 16,
+          "ly": 16,
+          "ancre": "start"
+        },
+        {
+          "x": 74,
+          "y": 50,
+          "lx": 74,
+          "ly": 16,
+          "ancre": "middle"
+        },
+        {
+          "x": 96,
+          "y": 22,
+          "lx": 96,
+          "ly": -11,
+          "ancre": "middle"
+        },
+        {
+          "x": 102,
+          "y": 80,
+          "lx": 102,
+          "ly": 16,
+          "ancre": "middle"
+        },
+        {
+          "x": 154,
+          "y": 52,
+          "lx": 164,
+          "ly": -10,
+          "ancre": "end"
+        }
+      ]
+    },
+    {
+      "cle": "nain",
+      "nom": "Terres naines",
+      "gentile": "naine",
+      "article": "les Terres naines",
+      "forge": 0.76,
+      "capitale": 3,
+      "nomsCapitale": [
+        "Karak-Dûm",
+        "Grondheim",
+        "La Halle Mère",
+        "Thrumbarad",
+        "Le Trône Noir"
+      ],
+      "vers": "les Terres elfiques",
+      "portes": [
+        "Le Seuil des Racines",
+        "La Poterne Verte",
+        "Le Bas-Sentier",
+        "La Porte Mousse"
+      ],
+      "positions": [
+        {
+          "x": 26,
+          "y": 50,
+          "lx": 16,
+          "ly": 16,
+          "ancre": "start"
+        },
+        {
+          "x": 56,
+          "y": 22,
+          "lx": 56,
+          "ly": -11,
+          "ancre": "middle"
+        },
+        {
+          "x": 58,
+          "y": 80,
+          "lx": 58,
+          "ly": 16,
+          "ancre": "middle"
+        },
+        {
+          "x": 94,
+          "y": 46,
+          "lx": 94,
+          "ly": -11,
+          "ancre": "middle"
+        },
+        {
+          "x": 116,
+          "y": 78,
+          "lx": 116,
+          "ly": 16,
+          "ancre": "middle"
+        },
+        {
+          "x": 154,
+          "y": 26,
+          "lx": 164,
+          "ly": 14,
+          "ancre": "end"
+        }
+      ]
+    },
+    {
+      "cle": "elfe",
+      "nom": "Terres elfiques",
+      "gentile": "elfique",
+      "article": "les Terres elfiques",
+      "forge": 1.3,
+      "capitale": 2,
+      "nomsCapitale": [
+        "Lorendil",
+        "Aelinor",
+        "La Cime Blanche",
+        "Ithilvaen",
+        "Sylvamear"
+      ],
+      "vers": "les Terres humaines",
+      "portes": [
+        "Le Pont des Bannières",
+        "Le Gué des Deux Mondes",
+        "La Barrière Blanche",
+        "Le Passage des Marches"
+      ],
+      "positions": [
+        {
+          "x": 24,
+          "y": 34,
+          "lx": 16,
+          "ly": -11,
+          "ancre": "start"
+        },
+        {
+          "x": 34,
+          "y": 82,
+          "lx": 16,
+          "ly": 16,
+          "ancre": "start"
+        },
+        {
+          "x": 70,
+          "y": 56,
+          "lx": 70,
+          "ly": 16,
+          "ancre": "middle"
+        },
+        {
+          "x": 96,
+          "y": 26,
+          "lx": 96,
+          "ly": -11,
+          "ancre": "middle"
+        },
+        {
+          "x": 112,
+          "y": 82,
+          "lx": 112,
+          "ly": 16,
+          "ancre": "middle"
+        },
+        {
+          "x": 152,
+          "y": 50,
+          "lx": 164,
+          "ly": -10,
+          "ancre": "end"
+        }
+      ]
+    }
+  ],
+  "typesVilles": {
+    "humain": [
+      {
+        "nom": "bourg agricole",
+        "produit": [
+          "nourriture"
+        ],
+        "demande": [
+          "minerais",
+          "materiaux"
+        ]
+      },
+      {
+        "nom": "cité minière",
+        "produit": [
+          "minerais"
+        ],
+        "demande": [
+          "nourriture",
+          "art"
+        ]
+      },
+      {
+        "nom": "port franc",
+        "produit": [
+          "art",
+          "joyaux"
+        ],
+        "demande": [
+          "materiaux",
+          "nourriture"
+        ]
+      },
+      {
+        "nom": "oasis caravanière",
+        "produit": [
+          "nourriture",
+          "art"
+        ],
+        "demande": [
+          "minerais",
+          "materiaux"
+        ]
+      },
+      {
+        "nom": "cité sainte",
+        "produit": [
+          "joyaux"
+        ],
+        "demande": [
+          "art",
+          "nourriture"
+        ]
+      },
+      {
+        "nom": "fort frontalier",
+        "produit": [
+          "minerais"
+        ],
+        "demande": [
+          "nourriture",
+          "art"
+        ]
+      },
+      {
+        "nom": "bourg drapier",
+        "produit": [
+          "art"
+        ],
+        "demande": [
+          "materiaux",
+          "joyaux"
+        ]
+      },
+      {
+        "nom": "coteau viticole",
+        "produit": [
+          "nourriture"
+        ],
+        "demande": [
+          "materiaux",
+          "minerais"
+        ]
+      },
+      {
+        "nom": "comptoir du nord",
+        "produit": [
+          "joyaux",
+          "materiaux"
+        ],
+        "demande": [
+          "nourriture",
+          "art"
+        ]
+      },
+      {
+        "nom": "cité verrière",
+        "produit": [
+          "materiaux"
+        ],
+        "demande": [
+          "minerais",
+          "joyaux"
+        ]
+      },
+      {
+        "nom": "halte des sauniers",
+        "produit": [
+          "nourriture"
+        ],
+        "demande": [
+          "art",
+          "joyaux"
+        ]
+      }
+    ],
+    "nain": [
+      {
+        "nom": "cité-forge",
+        "produit": [
+          "minerais"
+        ],
+        "demande": [
+          "nourriture",
+          "art"
+        ]
+      },
+      {
+        "nom": "mine profonde",
+        "produit": [
+          "minerais",
+          "materiaux"
+        ],
+        "demande": [
+          "nourriture",
+          "art"
+        ]
+      },
+      {
+        "nom": "halle des fondeurs",
+        "produit": [
+          "minerais",
+          "materiaux"
+        ],
+        "demande": [
+          "nourriture",
+          "joyaux"
+        ]
+      },
+      {
+        "nom": "citadelle de pierre",
+        "produit": [
+          "materiaux"
+        ],
+        "demande": [
+          "nourriture",
+          "art"
+        ]
+      },
+      {
+        "nom": "comptoir souterrain",
+        "produit": [
+          "joyaux"
+        ],
+        "demande": [
+          "nourriture",
+          "art"
+        ]
+      },
+      {
+        "nom": "brasserie des profondeurs",
+        "produit": [
+          "nourriture"
+        ],
+        "demande": [
+          "minerais",
+          "art"
+        ]
+      },
+      {
+        "nom": "taillerie de gemmes",
+        "produit": [
+          "joyaux"
+        ],
+        "demande": [
+          "nourriture",
+          "materiaux"
+        ]
+      }
+    ],
+    "elfe": [
+      {
+        "nom": "cité-arbre",
+        "produit": [
+          "art",
+          "materiaux"
+        ],
+        "demande": [
+          "minerais",
+          "nourriture"
+        ]
+      },
+      {
+        "nom": "jardins suspendus",
+        "produit": [
+          "nourriture"
+        ],
+        "demande": [
+          "minerais",
+          "materiaux"
+        ]
+      },
+      {
+        "nom": "sanctuaire sylvestre",
+        "produit": [
+          "art",
+          "joyaux"
+        ],
+        "demande": [
+          "minerais",
+          "nourriture"
+        ]
+      },
+      {
+        "nom": "clairière marchande",
+        "produit": [
+          "art"
+        ],
+        "demande": [
+          "minerais",
+          "materiaux"
+        ]
+      },
+      {
+        "nom": "port fluvial",
+        "produit": [
+          "nourriture",
+          "art"
+        ],
+        "demande": [
+          "minerais",
+          "materiaux"
+        ]
+      },
+      {
+        "nom": "verger d'ambre",
+        "produit": [
+          "joyaux",
+          "nourriture"
+        ],
+        "demande": [
+          "minerais",
+          "materiaux"
+        ]
+      },
+      {
+        "nom": "atelier de soie",
+        "produit": [
+          "art"
+        ],
+        "demande": [
+          "minerais",
+          "nourriture"
+        ]
+      }
+    ]
+  },
+  "typesCapitale": {
+    "humain": {
+      "nom": "cité royale",
+      "produit": [
+        "art"
+      ],
+      "demande": [
+        "joyaux",
+        "nourriture"
+      ]
+    },
+    "nain": {
+      "nom": "halle du roi",
+      "produit": [
+        "minerais",
+        "joyaux"
+      ],
+      "demande": [
+        "nourriture",
+        "art"
+      ]
+    },
+    "elfe": {
+      "nom": "cité des cimes",
+      "produit": [
+        "art",
+        "joyaux"
+      ],
+      "demande": [
+        "minerais",
+        "materiaux"
+      ]
+    }
+  },
+  "typeFrontiere": {
+    "nom": "poste de douane",
+    "produit": [],
+    "demande": []
+  },
+  "nomsLieux": {
+    "humain": {
+      "pref": [
+        "Tell",
+        "Kesh",
+        "Sidr",
+        "Vahr",
+        "Orin",
+        "Dhar",
+        "Melik",
+        "Azar",
+        "Qasr",
+        "Bel",
+        "Nurak",
+        "Ouled",
+        "Samar",
+        "Ferran",
+        "Tamr",
+        "Irel",
+        "Kadan",
+        "Souk"
+      ],
+      "suff": [
+        "Amara",
+        "Roq",
+        "Khaya",
+        "Sabin",
+        "Thar",
+        "Ouel",
+        "Merid",
+        "Zahr",
+        "Faro",
+        "Lume",
+        "Oria",
+        "Sath",
+        "Nikh",
+        "Vent",
+        "Doré",
+        "Bas",
+        "Neuf",
+        "Ombre"
+      ],
+      "lien": "-",
+      "simple": [
+        "Les Trois Puits",
+        "Haute-Poterne",
+        "Val-des-Ânes",
+        "La Dernière Auge",
+        "Pierre-Sèche",
+        "Croix-des-Sables",
+        "Le Gué-Rouge",
+        "Bas-Ferrant",
+        "Saint-Ambre",
+        "Pont-Tari"
+      ]
+    },
+    "nain": {
+      "pref": [
+        "Khaz",
+        "Dur",
+        "Bor",
+        "Grim",
+        "Thrum",
+        "Kar",
+        "Bal",
+        "Zar",
+        "Morg",
+        "Hrud",
+        "Vund",
+        "Skar",
+        "Gron"
+      ],
+      "suff": [
+        "dûm",
+        "grim",
+        "bar",
+        "dur",
+        "haz",
+        "mor",
+        "grund",
+        "delve",
+        "rok",
+        "thûn",
+        "baz",
+        "narr",
+        "veld"
+      ],
+      "lien": "",
+      "simple": [
+        "Les Trois Enclumes",
+        "Fonte-Profonde",
+        "Le Marteau-Bas",
+        "Roc-Fendu",
+        "La Halle Rouge",
+        "Pierre-Noire",
+        "Le Puits Sourd",
+        "Basse-Forge",
+        "Le Filon Long",
+        "Cendre-Haute"
+      ]
+    },
+    "elfe": {
+      "pref": [
+        "Aeli",
+        "Sylv",
+        "Ithil",
+        "Lorë",
+        "Vaen",
+        "Elun",
+        "Nari",
+        "Thali",
+        "Miren",
+        "Caela",
+        "Yssa",
+        "Ende"
+      ],
+      "suff": [
+        "dor",
+        "riel",
+        "thas",
+        "wyn",
+        "lian",
+        "sûl",
+        "mear",
+        "aen",
+        "oris",
+        "vael",
+        "nith",
+        "leth"
+      ],
+      "lien": "",
+      "simple": [
+        "La Clairière-Haute",
+        "Feuille-d'Argent",
+        "Le Val-Chantant",
+        "Source-Claire",
+        "Les Cimes Basses",
+        "Ombre-Douce",
+        "Le Verger Long",
+        "Rive-Pâle",
+        "Le Bois-qui-Veille",
+        "Aube-Mince"
+      ]
+    }
+  }
+}

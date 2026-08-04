@@ -1,0 +1,222 @@
+{
+  "archetypes": {
+    "guerrier": {
+      "nom": "Guerrier",
+      "pvMax": 170,
+      "force": 1,
+      "garde": 0.26,
+      "agilite": 46,
+      "endurance": 62,
+      "vigilance": 45,
+      "negoce": 42,
+      "affinite": "hache",
+      "malhabile": "arc",
+      "maitrise": [
+        1.5,
+        1,
+        0.68
+      ],
+      "resume": "Encaisse ce qui abattrait les autres.",
+      "texte": "Le plus de souffle du convoi et une bonne cotte de mailles. Rien d'extraordinaire à l'attaque, mais il faut beaucoup de coups pour le mettre à terre. Il a grandi la hache à la main ; un arc entre ses doigts ne sert pas à grand-chose."
+    },
+    "berserk": {
+      "nom": "Berserk",
+      "pvMax": 128,
+      "force": 1.7,
+      "garde": 0.07,
+      "agilite": 62,
+      "endurance": 72,
+      "vigilance": 35,
+      "negoce": 30,
+      "affinite": "hache",
+      "malhabile": "arc",
+      "maitrise": [
+        1.95,
+        1,
+        0.42
+      ],
+      "resume": "Frappe fort, se garde mal.",
+      "texte": "Vaut à lui seul deux lanciers dans la mêlée, et se protège à peu près comme un sac de blé. Une hache le transforme ; toute autre arme le laisse à moitié lui-même."
+    },
+    "archer": {
+      "nom": "Archer",
+      "pvMax": 98,
+      "force": 1.05,
+      "garde": 0.34,
+      "agilite": 78,
+      "endurance": 55,
+      "vigilance": 75,
+      "negoce": 45,
+      "affinite": "arc",
+      "malhabile": "hache",
+      "maitrise": [
+        1.6,
+        1,
+        0.55
+      ],
+      "resume": "Tire de loin, voit venir de loin.",
+      "texte": "Reste en arrière et décoche avant le contact : les coups qui l'atteignent tout de même font nettement moins mal. Peu de réserve de santé, mais un œil qui repère une embuscade avant qu'elle ne se referme."
+    },
+    "piquier": {
+      "nom": "Piquier",
+      "pvMax": 128,
+      "force": 1.05,
+      "garde": 0.26,
+      "agilite": 54,
+      "endurance": 80,
+      "vigilance": 58,
+      "negoce": 40,
+      "affinite": "lance",
+      "malhabile": "dague",
+      "maitrise": [
+        1.55,
+        1,
+        0.6
+      ],
+      "resume": "Tient la ligne et ne se fatigue pas.",
+      "texte": "L'allonge de la lance tient l'adversaire à distance : il pare beaucoup et se dépense peu. C'est le combattant qui récupère le plus vite entre deux villes, et celui qu'on soigne le moins cher. Une dague dans sa main est un aveu d'échec."
+    },
+    "eclaireur": {
+      "nom": "Éclaireur",
+      "pvMax": 95,
+      "force": 0.85,
+      "garde": 0.18,
+      "agilite": 92,
+      "endurance": 66,
+      "vigilance": 92,
+      "negoce": 55,
+      "affinite": "dague",
+      "malhabile": "masse",
+      "maitrise": [
+        1.7,
+        1,
+        0.5
+      ],
+      "resume": "Le meilleur combat est celui qu'on évite.",
+      "texte": "Il marche en avant du convoi et rentre avec des nouvelles. Beaucoup d'embuscades ne se déclenchent jamais parce qu'il les a senties. S'il faut se battre, il vaut mieux fuir : personne ne décroche aussi vite que lui."
+    },
+    "champion": {
+      "nom": "Champion",
+      "pvMax": 150,
+      "force": 1.35,
+      "garde": 0.14,
+      "agilite": 38,
+      "endurance": 58,
+      "vigilance": 40,
+      "negoce": 35,
+      "affinite": "masse",
+      "malhabile": "arc",
+      "maitrise": [
+        1.6,
+        1,
+        0.5
+      ],
+      "resume": "Lent, lourd, dévastateur.",
+      "texte": "Une masse d'armes et la carrure pour la porter toute la journée. Ce qu'il touche ne se relève pas, mais il ne touche pas souvent du premier coup, et il n'esquive rien du tout."
+    },
+    "negociant": {
+      "nom": "Négociant",
+      "pvMax": 110,
+      "force": 0.8,
+      "garde": 0.22,
+      "agilite": 64,
+      "endurance": 60,
+      "vigilance": 62,
+      "negoce": 92,
+      "affinite": "epee",
+      "malhabile": "masse",
+      "maitrise": [
+        1.45,
+        1,
+        0.6
+      ],
+      "resume": "Gagne au marché ce qu'il perd sur la route.",
+      "texte": "Piètre bretteur, mais il obtient partout des prix que personne d'autre n'obtient — et cet écart, répété à chaque ville, pèse plus lourd qu'une hache. À condition de survivre assez longtemps pour le faire jouer."
+    }
+  },
+  "metiers": {
+    "routier": {
+      "nom": "Routier",
+      "pvMax": 80,
+      "force": 0.75,
+      "garde": 0.06,
+      "prix": 0.6,
+      "agilite": 74,
+      "endurance": 64,
+      "vigilance": 60,
+      "negoce": 66,
+      "affinite": "epee",
+      "malhabile": "masse"
+    },
+    "coutilier": {
+      "nom": "Coutilier",
+      "pvMax": 85,
+      "force": 0.8,
+      "garde": 0.1,
+      "prix": 0.8,
+      "agilite": 88,
+      "endurance": 62,
+      "vigilance": 78,
+      "negoce": 48,
+      "affinite": "dague",
+      "malhabile": "masse"
+    },
+    "lancier": {
+      "nom": "Lancier",
+      "pvMax": 100,
+      "force": 1,
+      "garde": 0.16,
+      "prix": 1,
+      "agilite": 58,
+      "endurance": 74,
+      "vigilance": 52,
+      "negoce": 38,
+      "affinite": "lance",
+      "malhabile": "dague"
+    },
+    "arbaletrier": {
+      "nom": "Arbalétrier",
+      "pvMax": 90,
+      "force": 1.05,
+      "garde": 0.3,
+      "prix": 1.35,
+      "agilite": 70,
+      "endurance": 56,
+      "vigilance": 80,
+      "negoce": 44,
+      "affinite": "arc",
+      "malhabile": "hache"
+    },
+    "sergent": {
+      "nom": "Sergent",
+      "pvMax": 118,
+      "force": 1.25,
+      "garde": 0.1,
+      "prix": 1.5,
+      "agilite": 46,
+      "endurance": 60,
+      "vigilance": 44,
+      "negoce": 34,
+      "affinite": "masse",
+      "malhabile": "arc"
+    },
+    "veteran": {
+      "nom": "Vétéran",
+      "pvMax": 125,
+      "force": 1.4,
+      "garde": 0.22,
+      "prix": 1.9,
+      "agilite": 54,
+      "endurance": 68,
+      "vigilance": 58,
+      "negoce": 46,
+      "affinite": "hache",
+      "malhabile": null,
+      "maitrise": [
+        1.4,
+        1.08,
+        0.82
+      ]
+    }
+  }
+}

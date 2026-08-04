@@ -977,140 +977,32 @@ const fmt=n=>Math.round(n).toLocaleString('fr-FR');
 const fmtCourt=n=>n>=10000?(n/1000).toFixed(1).replace('.',',')+'k':fmt(n);
 const CLE='caravane.record.v1';
 
-/* ═══════════════ données ═══════════════ */
-const CATEGORIES={
-  nourriture:{nom:'Nourriture',trait:'Lourde, périssable, mais tout le monde en veut.'},
-  minerais:  {nom:'Minerais',  trait:'Le poids du fer contre la valeur de l\'argent.'},
-  joyaux:    {nom:'Joyaux',    trait:'Ne pèsent rien et valent tout : la cargaison du riche.'},
-  art:       {nom:'Art',       trait:'Ce qui ne sert à rien et se vend très cher.'},
-  materiaux: {nom:'Matériaux', trait:'Encombrant, bon marché, indispensable partout.'}
-};
-const ORDRE_CAT=['nourriture','minerais','joyaux','art','materiaux'];
+/* ═══════════════ données ═══════════════
+   Tout le contenu du jeu est dehors, dans data/*.json : ces variables sont
+   vides jusqu'à ce que chargerDonnees(), tout en bas du fichier, les
+   remplisse. Rien du jeu ne tourne avant. Le format de chaque fichier est
+   décrit dans data/FORMAT.md. */
+let CATEGORIES=null;        /* data/biens.json → categories */
+let ORDRE_CAT=null;         /* data/biens.json → ordreCategories */
 
 /* Tout se compte en kilos : les prix sont au kilo, les étals sont en kilos,
    la soute est en kilos. Il n'y a plus d'unités à convertir. */
-const G={
-  /* — nourriture — */
-  ble:     {nom:'Blé',        cat:'nourriture',base:2,  perissable:1},
-  sel:     {nom:'Sel',        cat:'nourriture',base:3},
-  vin:     {nom:'Vin',        cat:'nourriture',base:8,  fragile:1},
-  miel:    {nom:'Miel',       cat:'nourriture',base:15, perissable:1},
-  epices:  {nom:'Épices',     cat:'nourriture',base:74, perissable:1},
-  /* — minerais — */
-  fer:     {nom:'Fer',        cat:'minerais',  base:3},
-  cuivre:  {nom:'Cuivre',     cat:'minerais',  base:5},
-  argent:  {nom:'Argent',     cat:'minerais',  base:32},
-  mithril: {nom:'Mithril',    cat:'minerais',  base:132},
-  /* — joyaux — */
-  ambre:   {nom:'Ambre',      cat:'joyaux',    base:112},
-  grenat:  {nom:'Grenat',     cat:'joyaux',    base:155},
-  saphir:  {nom:'Saphir',     cat:'joyaux',    base:330},
-  /* — art — */
-  etoffes: {nom:'Étoffes',    cat:'art',       base:17},
-  encens:  {nom:'Encens',     cat:'art',       base:58},
-  tapis:   {nom:'Tapisserie', cat:'art',       base:44},
-  enlum:   {nom:'Enluminure', cat:'art',       base:215,fragile:1},
-  /* — matériaux — */
-  bois:    {nom:'Bois',       cat:'materiaux', base:2},
-  pierre:  {nom:'Pierre',     cat:'materiaux', base:2},
-  peaux:   {nom:'Peaux',      cat:'materiaux', base:6},
-  verre:   {nom:'Verrerie',   cat:'materiaux', base:23,fragile:1}
-};
-const IDS=Object.keys(G);
+let G=null;                 /* data/biens.json → biens */
+let IDS=[];                 /* dérivé : les clés de G */
 function biensDe(cat){return IDS.filter(g=>G[g].cat===cat);}
 
 /* Cinq niveaux de rareté. Le niveau de base dépend de la contrée ; la spécialité
    de la cité le décale d'un cran, et chaque cité a ses propres écarts. */
-const RARETES=[null,
-  {nom:'Commun',      court:'commun',      mult:.55, lot:[150,300],teinte:'bas'},
-  {nom:'Courant',     court:'courant',     mult:.82, lot:[80,150], teinte:''},
-  {nom:'Peu fréquent',court:'peu fréquent',mult:1.24,lot:[34,68],  teinte:''},
-  {nom:'Rare',        court:'rare',        mult:2,   lot:[9,20],   teinte:'haut'},
-  {nom:'Très rare',   court:'très rare',   mult:3.2, lot:[0,6],    teinte:'haut'}
-];
+let RARETES=null;           /* data/raretes.json → niveaux */
+let RARETE_BASE=null;       /* data/raretes.json → rareteBase */
 
-const RARETE_BASE={
-  humain:{ble:1,sel:1,vin:2,miel:2,epices:4,
-          fer:2,cuivre:2,argent:3,mithril:5,
-          ambre:3,grenat:4,saphir:5,
-          etoffes:2,encens:3,tapis:3,enlum:4,
-          bois:1,pierre:2,peaux:1,verre:2},
-  nain:  {ble:4,sel:2,vin:3,miel:4,epices:5,
-          fer:1,cuivre:1,argent:2,mithril:3,
-          ambre:2,grenat:2,saphir:3,
-          etoffes:4,encens:4,tapis:4,enlum:5,
-          bois:4,pierre:1,peaux:3,verre:2},
-  elfe:  {ble:2,sel:3,vin:1,miel:1,epices:2,
-          fer:5,cuivre:4,argent:4,mithril:5,
-          ambre:1,grenat:3,saphir:4,
-          etoffes:1,encens:1,tapis:2,enlum:2,
-          bois:1,pierre:4,peaux:2,verre:3}
-};
+/* data/contrees.json → typesVilles, typesCapitale, typeFrontiere */
+let TYPES_HUMAIN=null, TYPES_NAIN=null, TYPES_ELFE=null;
+let TYPE_FRONTIERE=null, TYPE_CAP_HUMAIN=null, TYPE_CAP_NAIN=null, TYPE_CAP_ELFE=null;
+let TOUS_TYPES=[];          /* dérivé : les trois listes bout à bout */
 
-const TYPES_HUMAIN=[
-  {nom:'bourg agricole',produit:['nourriture'],demande:['minerais','materiaux']},
-  {nom:'cité minière',produit:['minerais'],demande:['nourriture','art']},
-  {nom:'port franc',produit:['art','joyaux'],demande:['materiaux','nourriture']},
-  {nom:'oasis caravanière',produit:['nourriture','art'],demande:['minerais','materiaux']},
-  {nom:'cité sainte',produit:['joyaux'],demande:['art','nourriture']},
-  {nom:'fort frontalier',produit:['minerais'],demande:['nourriture','art']},
-  {nom:'bourg drapier',produit:['art'],demande:['materiaux','joyaux']},
-  {nom:'coteau viticole',produit:['nourriture'],demande:['materiaux','minerais']},
-  {nom:'comptoir du nord',produit:['joyaux','materiaux'],demande:['nourriture','art']},
-  {nom:'cité verrière',produit:['materiaux'],demande:['minerais','joyaux']},
-  {nom:'halte des sauniers',produit:['nourriture'],demande:['art','joyaux']}
-];
-const TYPES_NAIN=[
-  {nom:'cité-forge',produit:['minerais'],demande:['nourriture','art']},
-  {nom:'mine profonde',produit:['minerais','materiaux'],demande:['nourriture','art']},
-  {nom:'halle des fondeurs',produit:['minerais','materiaux'],demande:['nourriture','joyaux']},
-  {nom:'citadelle de pierre',produit:['materiaux'],demande:['nourriture','art']},
-  {nom:'comptoir souterrain',produit:['joyaux'],demande:['nourriture','art']},
-  {nom:'brasserie des profondeurs',produit:['nourriture'],demande:['minerais','art']},
-  {nom:'taillerie de gemmes',produit:['joyaux'],demande:['nourriture','materiaux']}
-];
-const TYPES_ELFE=[
-  {nom:'cité-arbre',produit:['art','materiaux'],demande:['minerais','nourriture']},
-  {nom:'jardins suspendus',produit:['nourriture'],demande:['minerais','materiaux']},
-  {nom:'sanctuaire sylvestre',produit:['art','joyaux'],demande:['minerais','nourriture']},
-  {nom:'clairière marchande',produit:['art'],demande:['minerais','materiaux']},
-  {nom:'port fluvial',produit:['nourriture','art'],demande:['minerais','materiaux']},
-  {nom:'verger d\'ambre',produit:['joyaux','nourriture'],demande:['minerais','materiaux']},
-  {nom:'atelier de soie',produit:['art'],demande:['minerais','nourriture']}
-];
-const TYPE_FRONTIERE={nom:'poste de douane',produit:[],demande:[]};
-const TYPE_CAP_HUMAIN={nom:'cité royale',produit:['art'],demande:['joyaux','nourriture']};
-const TYPE_CAP_NAIN={nom:'halle du roi',produit:['minerais','joyaux'],demande:['nourriture','art']};
-const TYPE_CAP_ELFE={nom:'cité des cimes',produit:['art','joyaux'],demande:['minerais','materiaux']};
-const TOUS_TYPES=[].concat(TYPES_HUMAIN,TYPES_NAIN,TYPES_ELFE,
-  [TYPE_FRONTIERE,TYPE_CAP_HUMAIN,TYPE_CAP_NAIN,TYPE_CAP_ELFE]);
-
-const NOMS_LIEUX={
-  humain:{
-    pref:['Tell','Kesh','Sidr','Vahr','Orin','Dhar','Melik','Azar','Qasr','Bel','Nurak','Ouled',
-          'Samar','Ferran','Tamr','Irel','Kadan','Souk'],
-    suff:['Amara','Roq','Khaya','Sabin','Thar','Ouel','Merid','Zahr','Faro','Lume','Oria','Sath',
-          'Nikh','Vent','Doré','Bas','Neuf','Ombre'],
-    lien:'-',
-    simple:['Les Trois Puits','Haute-Poterne','Val-des-Ânes','La Dernière Auge','Pierre-Sèche',
-            'Croix-des-Sables','Le Gué-Rouge','Bas-Ferrant','Saint-Ambre','Pont-Tari']},
-  nain:{
-    pref:['Khaz','Dur','Bor','Grim','Thrum','Kar','Bal','Zar','Morg','Hrud','Vund','Skar','Gron'],
-    suff:['dûm','grim','bar','dur','haz','mor','grund','delve','rok','thûn','baz','narr','veld'],
-    lien:'',
-    simple:['Les Trois Enclumes','Fonte-Profonde','Le Marteau-Bas','Roc-Fendu','La Halle Rouge',
-            'Pierre-Noire','Le Puits Sourd','Basse-Forge','Le Filon Long','Cendre-Haute']},
-  elfe:{
-    pref:['Aeli','Sylv','Ithil','Lorë','Vaen','Elun','Nari','Thali','Miren','Caela','Yssa','Ende'],
-    suff:['dor','riel','thas','wyn','lian','sûl','mear','aen','oris','vael','nith','leth'],
-    lien:'',
-    simple:['La Clairière-Haute','Feuille-d\'Argent','Le Val-Chantant','Source-Claire',
-            'Les Cimes Basses','Ombre-Douce','Le Verger Long','Rive-Pâle','Le Bois-qui-Veille',
-            'Aube-Mince']}
-};
-
-const NOMS_GARDES=['Sadr','Ivar','Lume','Corvin','Naya','Théo','Ashken','Melik','Ora','Brann','Suri',
-  'Jehan','Kilda','Renn','Ymir','Zoha','Ferro','Adiba','Loth','Maren'];
+let NOMS_LIEUX=null;        /* data/contrees.json → nomsLieux */
+let NOMS_GARDES=null;       /* data/pnj.json → nomsGardes */
 
 /* ═══════════════ personnages ═══════════════ */
 /* Sept statistiques par combattant :
@@ -1121,104 +1013,25 @@ const NOMS_GARDES=['Sadr','Ivar','Lume','Corvin','Naya','Théo','Ashken','Melik'
      endurance  — ce qu'il récupère en chemin, et ce que coûtent ses soins
      vigilance  — les mauvaises rencontres qu'il voit venir
      négoce     — ce qu'il obtient au marché (le meilleur de la caravane l'emporte) */
-const ARCHETYPES={
-  guerrier:{nom:'Guerrier',pvMax:170,force:1,garde:.26,agilite:46,endurance:62,vigilance:45,negoce:42,
-    affinite:'hache',malhabile:'arc',maitrise:[1.5,1,.68],
-    resume:'Encaisse ce qui abattrait les autres.',
-    texte:'Le plus de souffle du convoi et une bonne cotte de mailles. Rien d\'extraordinaire à l\'attaque, mais il faut beaucoup de coups pour le mettre à terre. Il a grandi la hache à la main ; un arc entre ses doigts ne sert pas à grand-chose.'},
-  berserk:{nom:'Berserk',pvMax:128,force:1.7,garde:.07,agilite:62,endurance:72,vigilance:35,negoce:30,
-    affinite:'hache',malhabile:'arc',maitrise:[1.95,1,.42],
-    resume:'Frappe fort, se garde mal.',
-    texte:'Vaut à lui seul deux lanciers dans la mêlée, et se protège à peu près comme un sac de blé. Une hache le transforme ; toute autre arme le laisse à moitié lui-même.'},
-  archer:{nom:'Archer',pvMax:98,force:1.05,garde:.34,agilite:78,endurance:55,vigilance:75,negoce:45,
-    affinite:'arc',malhabile:'hache',maitrise:[1.6,1,.55],
-    resume:'Tire de loin, voit venir de loin.',
-    texte:'Reste en arrière et décoche avant le contact : les coups qui l\'atteignent tout de même font nettement moins mal. Peu de réserve de santé, mais un œil qui repère une embuscade avant qu\'elle ne se referme.'},
-  piquier:{nom:'Piquier',pvMax:128,force:1.05,garde:.26,agilite:54,endurance:80,vigilance:58,negoce:40,
-    affinite:'lance',malhabile:'dague',maitrise:[1.55,1,.6],
-    resume:'Tient la ligne et ne se fatigue pas.',
-    texte:'L\'allonge de la lance tient l\'adversaire à distance : il pare beaucoup et se dépense peu. C\'est le combattant qui récupère le plus vite entre deux villes, et celui qu\'on soigne le moins cher. Une dague dans sa main est un aveu d\'échec.'},
-  eclaireur:{nom:'Éclaireur',pvMax:95,force:.85,garde:.18,agilite:92,endurance:66,vigilance:92,negoce:55,
-    affinite:'dague',malhabile:'masse',maitrise:[1.7,1,.5],
-    resume:'Le meilleur combat est celui qu\'on évite.',
-    texte:'Il marche en avant du convoi et rentre avec des nouvelles. Beaucoup d\'embuscades ne se déclenchent jamais parce qu\'il les a senties. S\'il faut se battre, il vaut mieux fuir : personne ne décroche aussi vite que lui.'},
-  champion:{nom:'Champion',pvMax:150,force:1.35,garde:.14,agilite:38,endurance:58,vigilance:40,negoce:35,
-    affinite:'masse',malhabile:'arc',maitrise:[1.6,1,.5],
-    resume:'Lent, lourd, dévastateur.',
-    texte:'Une masse d\'armes et la carrure pour la porter toute la journée. Ce qu\'il touche ne se relève pas, mais il ne touche pas souvent du premier coup, et il n\'esquive rien du tout.'},
-  negociant:{nom:'Négociant',pvMax:110,force:.8,garde:.22,agilite:64,endurance:60,vigilance:62,negoce:92,
-    affinite:'epee',malhabile:'masse',maitrise:[1.45,1,.6],
-    resume:'Gagne au marché ce qu\'il perd sur la route.',
-    texte:'Piètre bretteur, mais il obtient partout des prix que personne d\'autre n\'obtient — et cet écart, répété à chaque ville, pèse plus lourd qu\'une hache. À condition de survivre assez longtemps pour le faire jouer.'}
-};
-const METIERS={
-  routier:    {nom:'Routier',    pvMax:80, force:.75,garde:.06,prix:.6, agilite:74,endurance:64,vigilance:60,negoce:66,
-               affinite:'epee', malhabile:'masse'},
-  coutilier:  {nom:'Coutilier',  pvMax:85, force:.8, garde:.1, prix:.8, agilite:88,endurance:62,vigilance:78,negoce:48,
-               affinite:'dague',malhabile:'masse'},
-  lancier:    {nom:'Lancier',    pvMax:100,force:1,  garde:.16,prix:1,  agilite:58,endurance:74,vigilance:52,negoce:38,
-               affinite:'lance',malhabile:'dague'},
-  arbaletrier:{nom:'Arbalétrier',pvMax:90, force:1.05,garde:.3,prix:1.35,agilite:70,endurance:56,vigilance:80,negoce:44,
-               affinite:'arc',  malhabile:'hache'},
-  sergent:    {nom:'Sergent',    pvMax:118,force:1.25,garde:.1,prix:1.5,agilite:46,endurance:60,vigilance:44,negoce:34,
-               affinite:'masse',malhabile:'arc'},
-  veteran:    {nom:'Vétéran',    pvMax:125,force:1.4,garde:.22,prix:1.9,agilite:54,endurance:68,vigilance:58,negoce:46,
-               affinite:'hache',malhabile:null,maitrise:[1.4,1.08,.82]}
-};
-const CLES_METIERS=Object.keys(METIERS);
+let ARCHETYPES=null;        /* data/archetypes.json → archetypes */
+let METIERS=null;           /* data/archetypes.json → metiers */
+let CLES_METIERS=[];        /* dérivé */
 
 /* ═══════════════ armurerie ═══════════════ */
-const FAMILLES={
-  hache:{nom:'Hache',trait:'Tout dans la frappe, rien dans la parade.'},
-  epee:{nom:'Épée',trait:'Équilibrée : on frappe et on pare.'},
-  arc:{nom:'Arc',trait:'Peu de force au contact, mais on tire avant d\'être touché.'},
-  lance:{nom:'Lance',trait:'L\'allonge tient l\'adversaire à distance : on pare beaucoup.'},
-  masse:{nom:'Masse',trait:'La frappe la plus lourde du monde, et aucune garde du tout.'},
-  dague:{nom:'Dague',trait:'Ne pèse rien : on garde toute son agilité, on ne fait pas grand mal.'}
-};
-const ORDRE_FAMILLES=['hache','epee','lance','masse','arc','dague'];
-const ARMES={
-  'hache-legere' :{nom:'Hache légère', surnom:'hachette',      famille:'hache',frappe:.26,poids:3, garde:0,  prix:95},
-  'hache-moyenne':{nom:'Hache moyenne',surnom:'hache de guerre',famille:'hache',frappe:.48,poids:6, garde:0,  prix:215},
-  'hache-lourde' :{nom:'Hache lourde', surnom:'doloire',       famille:'hache',frappe:.80,poids:10,garde:0,  prix:410},
-  'epee-legere'  :{nom:'Épée légère',  surnom:'braquemart',    famille:'epee', frappe:.21,poids:2, garde:.05,prix:105},
-  'epee-moyenne' :{nom:'Épée moyenne', surnom:'épée longue',   famille:'epee', frappe:.39,poids:4, garde:.08,prix:235},
-  'epee-lourde'  :{nom:'Épée lourde',  surnom:'espadon',       famille:'epee', frappe:.62,poids:7, garde:.11,prix:430},
-  'arc-leger'    :{nom:'Arc léger',    surnom:'arc court',     famille:'arc',  frappe:.16,poids:2, garde:.07,prix:115},
-  'arc-moyen'    :{nom:'Arc moyen',    surnom:'arc de chasse', famille:'arc',  frappe:.31,poids:4, garde:.10,prix:245},
-  'arc-lourd'    :{nom:'Arc lourd',    surnom:'arc de guerre', famille:'arc',  frappe:.50,poids:7, garde:.13,prix:445},
-  'lance-legere' :{nom:'Lance légère', surnom:'javeline',      famille:'lance',frappe:.23,poids:4, garde:.06,prix:110},
-  'lance-moyenne':{nom:'Lance moyenne',surnom:'pique',         famille:'lance',frappe:.42,poids:6, garde:.10,prix:240},
-  'lance-lourde' :{nom:'Lance lourde', surnom:'guisarme',      famille:'lance',frappe:.68,poids:9, garde:.14,prix:435},
-  'masse-legere' :{nom:'Masse légère', surnom:'masse d\'armes',famille:'masse',frappe:.32,poids:4, garde:-.03,prix:100},
-  'masse-moyenne':{nom:'Masse moyenne',surnom:'fléau',         famille:'masse',frappe:.58,poids:8, garde:-.05,prix:225},
-  'masse-lourde' :{nom:'Masse lourde', surnom:'maillet de fer',famille:'masse',frappe:.92,poids:12,garde:-.07,prix:425},
-  'dague-legere' :{nom:'Dague légère', surnom:'miséricorde',   famille:'dague',frappe:.12,poids:1, garde:.03,prix:70},
-  'dague-moyenne':{nom:'Dague moyenne',surnom:'badelaire',     famille:'dague',frappe:.22,poids:2, garde:.05,prix:160},
-  'dague-lourde' :{nom:'Dague lourde', surnom:'cinquedea',     famille:'dague',frappe:.34,poids:3, garde:.07,prix:295},
-  /* — les trois pièces uniques du monde — */
-  'excalibur':{nom:'Excalibur',famille:'epee',frappe:.95,poids:4,garde:.18,prix:6200,
-    mythique:'humain',surnom:'l\'épée des rois humains',
-    texte:'Une lame qui n\'a pas pris une entaille en trois siècles. Le fourreau seul vaudrait une caravane.'},
-  'transperce':{nom:'Celui qui transperce',famille:'arc',frappe:.82,poids:3,garde:.22,prix:6400,
-    mythique:'elfe',surnom:'l\'arc que nul n\'a vu manquer',
-    texte:'On raconte qu\'il ne se tend qu\'une fois par cible, et que cela suffit toujours.'},
-  'miotril':{nom:'Miotril',famille:'hache',frappe:1.25,poids:6,garde:.05,prix:6800,
-    mythique:'nain',surnom:'la hache des rois sous la montagne',
-    texte:'Forgée dans un métal dont plus personne ne connaît la recette. Elle pèse la moitié de ce qu\'elle devrait.'}
-};
-const CLES_ARMES=Object.keys(ARMES);
+let FAMILLES=null;          /* data/armes.json → familles */
+let ORDRE_FAMILLES=null;    /* data/armes.json → ordreFamilles */
+let ARMES=null;             /* data/armes.json → armes */
+let CLES_ARMES=[];          /* dérivé */
 /* Les armes de légende n'apparaissent jamais au hasard : ni chez les recrues,
    ni dans les ruines, ni à l'étal ordinaire. Elles n'existent qu'en un exemplaire. */
-const CLES_COMMUNES=CLES_ARMES.filter(c=>!ARMES[c].mythique);
-const CLES_MYTHIQUES=CLES_ARMES.filter(c=>ARMES[c].mythique);
+let CLES_COMMUNES=[], CLES_MYTHIQUES=[];   /* dérivés */
 function estMythique(cle){return !!(ARMES[cle]&&ARMES[cle].mythique);}
 function mytheDeLaVille(){
   if(!S.ville.capitale)return null;
   const cle=CONTREES[S.ville.contree].cle;
   return CLES_MYTHIQUES.find(c=>ARMES[c].mythique===cle&&S.mythes[c]==='etal')||null;
 }
-const MAITRISE=[1.5,1,.65];
+let MAITRISE=null;          /* data/armes.json → maitriseDefaut */
 
 function maitrise(u,cle){
   const a=ARMES[cle];if(!a)return 0;
@@ -1291,52 +1104,15 @@ function creerGarde(cle){
   return {nom:nomLibre(),metier:cle,pv:m.pvMax,pvMax:m.pvMax};
 }
 function fiche(u){return u.archetype?ARCHETYPES[u.archetype]:METIERS[u.metier];}
-const CHARIOTS={
-  charrette:{nom:'Charrette légère',cap:38,usure:.55,resist:1,  prix:150,
-    texte:'Deux roues, peu de volume, et une solidité de mule : elle avale les lieues sans presque s\'user.'},
-  bache:    {nom:'Chariot bâché',   cap:58,usure:1,  resist:1,  prix:275,
-    texte:'Le chariot de tout le monde. Ni le plus grand, ni le plus solide, ni le plus cher.'},
-  fardier:  {nom:'Fardier',         cap:95,usure:1.8,resist:1.1,prix:430,
-    texte:'Un plateau énorme sur des essieux qui n\'en demandaient pas tant. Il porte tout, et il le paie.'},
-  renforce: {nom:'Chariot renforcé',cap:62,usure:.8, resist:.4, prix:660,
-    texte:'Bois doublé, ferrures partout, bâche huilée. Les tempêtes et les gués glissent dessus.'}
-};
-const CLES_CHARIOTS=Object.keys(CHARIOTS);
+let CHARIOTS=null;          /* data/chariots.json → chariots */
+let CLES_CHARIOTS=[];       /* dérivé */
 /* ═══════════════ les organes du chariot ═══════════════
    Un chariot n'est plus une seule santé mais trois : l'essieu, qui souffre
    de la route ; la caisse, qui encaisse les avaries et porte le volume ;
    le cheval, qui fatigue d'autant plus qu'on le charge. Chacun se remplace
    chez le charron, en trois qualités. */
-const PIECES={
- essieu:{nom:'Essieu',cle:'essieu',
-   niveaux:[
-    {cle:'bois',  nom:'Essieu de bois',   usure:1,  prix:120,
-     texte:'Un fût de frêne tourné à la main. Il fait son office et rien de plus.'},
-    {cle:'cercle',nom:'Essieu cerclé',    usure:.70,prix:300,
-     texte:'Le bois est fretté de bandes de fer aux points d\'usure. Il dure nettement plus.'},
-    {cle:'acier', nom:'Essieu d\'acier',  usure:.44,prix:680,exclusif:'nain',
-     texte:'Forgé d\'une seule pièce dans les halles naines. Les cailloux passent dessous sans qu\'on les sente.'}
-   ]},
- caisse:{nom:'Caisse',cle:'caisse',
-   niveaux:[
-    {cle:'planches',nom:'Caisse de planches',cap:1,   resist:1,  prix:150,
-     texte:'Des planches clouées, une bâche par-dessus. Ça prend l\'eau et ça se fend.'},
-    {cle:'doublee', nom:'Caisse doublée',    cap:1.12,resist:.66,prix:350,
-     texte:'Double paroi et bâche huilée : on y range dix pour cent de plus, et les chocs passent mal.'},
-    {cle:'elfique', nom:'Caisse en bois elfique',cap:1.26,resist:.40,prix:760,exclusif:'elfe',
-     texte:'Assemblée sans un clou par les menuisiers des cimes. Légère, souple, et rien ne l\'ouvre.'}
-   ]},
- cheval:{nom:'Cheval',cle:'cheval',
-   niveaux:[
-    {cle:'roussin',nom:'Roussin',        traction:38,km:15,fatigue:1,  prix:170,
-     texte:'Le cheval de tout le monde : docile, bon marché, et vite à la peine dès qu\'on le charge.'},
-    {cle:'sommier',nom:'Sommier',        traction:60,km:19,fatigue:.72,prix:400,
-     texte:'Bête de somme large de poitrail. Elle emmène une charge honnête sans ralentir.'},
-    {cle:'trait',  nom:'Cheval de trait', traction:95,km:22,fatigue:.52,prix:820,exclusif:'humain',
-     texte:'Une montagne calme, élevée dans les écuries royales. Il avance du même pas, chargé ou vide.'}
-   ]}
-};
-const ORGANES=['essieu','caisse','cheval'];
+let PIECES=null;            /* data/chariots.json → pieces */
+let ORGANES=null;           /* data/chariots.json → organes */
 function niveauxDe(q){return PIECES[q].niveaux;}
 function rangPiece(q,cle){const i=niveauxDe(q).findIndex(n=>n.cle===cle);return i<0?0:i;}
 function piece(c,q){
@@ -1353,7 +1129,7 @@ function pieceDispo(n){
   if(!n.exclusif)return true;
   return !!(S.ville.capitale&&CONTREES[S.ville.contree].cle===n.exclusif);
 }
-const VERBE_PIECE={essieu:'Ne se forge qu\'à',caisse:'Ne s\'assemble qu\'à',cheval:'Ne s\'élève qu\'à'};
+let VERBE_PIECE=null;       /* data/chariots.json → verbePiece */
 function ouTrouver(n){
   const cite=S.villes.find(v=>v.capitale&&CONTREES[v.contree].cle===n.exclusif);
   const ct=CONTREES.find(x=>x.cle===n.exclusif);
@@ -1413,44 +1189,10 @@ function nouvellePartie(cle){
    frontières forment un anneau : humain → nain → elfe → humain. */
 const PAR_CONTREE=6, FRONTIERE=5, DIST_FRONTIERE=88;
 
-const CONTREES=[
- {cle:'humain',nom:'Terres humaines',gentile:'humaine',
-  article:'les Terres humaines',
-  types:TYPES_HUMAIN,forge:1,capitale:2,
-  typeCapitale:TYPE_CAP_HUMAIN,
-  nomsCapitale:['Aurelium','Val-Royal','Haute-Couronne','Sainte-Aubine','Grand-Ferrant'],
-  vers:'les Terres naines',
-  portes:['La Porte de Fer','Le Poste des Contreforts','La Herse Basse','Le Péage de Pierre'],
-  positions:[{x:30,y:26,lx:16,ly:-11,ancre:'start'},{x:28,y:76,lx:16,ly:16,ancre:'start'},
-             {x:74,y:50,lx:74,ly:16,ancre:'middle'},{x:96,y:22,lx:96,ly:-11,ancre:'middle'},
-             {x:102,y:80,lx:102,ly:16,ancre:'middle'},{x:154,y:52,lx:164,ly:-10,ancre:'end'}]},
-
- {cle:'nain',nom:'Terres naines',gentile:'naine',
-  article:'les Terres naines',
-  types:TYPES_NAIN,forge:.76,capitale:3,
-  typeCapitale:TYPE_CAP_NAIN,
-  nomsCapitale:['Karak-Dûm','Grondheim','La Halle Mère','Thrumbarad','Le Trône Noir'],
-  vers:'les Terres elfiques',
-  portes:['Le Seuil des Racines','La Poterne Verte','Le Bas-Sentier','La Porte Mousse'],
-  positions:[{x:26,y:50,lx:16,ly:16,ancre:'start'},{x:56,y:22,lx:56,ly:-11,ancre:'middle'},
-             {x:58,y:80,lx:58,ly:16,ancre:'middle'},{x:94,y:46,lx:94,ly:-11,ancre:'middle'},
-             {x:116,y:78,lx:116,ly:16,ancre:'middle'},{x:154,y:26,lx:164,ly:14,ancre:'end'}]},
-
- {cle:'elfe',nom:'Terres elfiques',gentile:'elfique',
-  article:'les Terres elfiques',
-  types:TYPES_ELFE,forge:1.3,capitale:2,
-  typeCapitale:TYPE_CAP_ELFE,
-  nomsCapitale:['Lorendil','Aelinor','La Cime Blanche','Ithilvaen','Sylvamear'],
-  vers:'les Terres humaines',
-  portes:['Le Pont des Bannières','Le Gué des Deux Mondes','La Barrière Blanche','Le Passage des Marches'],
-  positions:[{x:24,y:34,lx:16,ly:-11,ancre:'start'},{x:34,y:82,lx:16,ly:16,ancre:'start'},
-             {x:70,y:56,lx:70,ly:16,ancre:'middle'},{x:96,y:26,lx:96,ly:-11,ancre:'middle'},
-             {x:112,y:82,lx:112,ly:16,ancre:'middle'},{x:152,y:50,lx:164,ly:-10,ancre:'end'}]}
-];
+let CONTREES=null;          /* data/contrees.json → contrees */
 
 /* distances internes à chaque contrée, calculées une fois pour toutes */
-const GEO=CONTREES.map(c=>c.positions.map(a=>c.positions.map(b=>
-  Math.round(Math.hypot(a.x-b.x,a.y-b.y)))));
+let GEO=null;               /* dérivé des positions de chaque contrée */
 
 function contreeDe(i){return Math.floor(i/PAR_CONTREE);}
 function posDe(i){return i%PAR_CONTREE;}
@@ -1816,115 +1558,17 @@ function rendreMarche(){
    Chaque marchandise a sa silhouette et sa teinte, choisie assez médiane pour
    rester lisible sur vélin comme à la chandelle. Les armes prennent la couleur
    de leur rang ; les reliques sont dorées et cerclées d'étoiles. */
-const F='fill="currentColor"', V='var(--velin)';
-const ICONES={
-  /* — nourriture — */
-  ble:{c:'#D4AC33',d:`<path d="M12 22V11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-    <path d="M12 11c-3.4 0-4.6-2.2-4.6-4.6 2.4 0 4.6 1.2 4.6 4.6zM12 11c3.4 0 4.6-2.2 4.6-4.6-2.4 0-4.6 1.2-4.6 4.6z" ${F}/>
-    <path d="M12 16c-3.4 0-4.6-2.2-4.6-4.6 2.4 0 4.6 1.2 4.6 4.6zM12 16c3.4 0 4.6-2.2 4.6-4.6-2.4 0-4.6 1.2-4.6 4.6z" ${F} opacity=".8"/>
-    <path d="M12 8.5c0-3 .8-5 1-6.5.2 1.5 1 3.5 1 6.5z" ${F}/>`},
-  sel:{c:'#A3B2BB',d:`<path d="M2.5 21h19l-4.5-6.5h-10z" ${F}/>
-    <path d="M12 2.5l2.6 4.2L12 11 9.4 6.7z" ${F}/>
-    <path d="M6 8.5l1.9 3.1L6 14.7l-1.9-3.1z" ${F} opacity=".7"/>
-    <path d="M18 8.5l1.9 3.1L18 14.7l-1.9-3.1z" ${F} opacity=".7"/>`},
-  vin:{c:'#A8485F',d:`<path d="M9.5 2h5v2.4l-1 2.2c2.2 1.1 3.3 3.2 3.3 6.2v6.7A2.5 2.5 0 0 1 14.3 22H9.7a2.5 2.5 0 0 1-2.5-2.5v-6.7c0-3 1.1-5.1 3.3-6.2l-1-2.2z" ${F}/>
-    <path d="M7.4 13.4h9.2" stroke="${V}" stroke-width="1.4" opacity=".55"/>`},
-  miel:{c:'#E0A63A',d:`<path d="M6.6 8.5h10.8l-.9 11.1A2.5 2.5 0 0 1 14 22h-4a2.5 2.5 0 0 1-2.5-2.4z" ${F}/>
-    <rect x="5.6" y="5" width="12.8" height="3.4" rx="1.2" ${F}/>
-    <path d="M12 5V2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-    <path d="M9.5 12.5h5M9 16h6" stroke="${V}" stroke-width="1.3" opacity=".5"/>`},
-  epices:{c:'#C9662A',d:`<path d="M2.5 21h19c-1.2-4.4-4.6-6.6-9.5-6.6S3.7 16.6 2.5 21z" ${F}/>
-    <circle cx="8.6" cy="7" r="1.8" ${F}/><circle cx="14" cy="4.6" r="1.8" ${F} opacity=".85"/>
-    <circle cx="16.8" cy="9.2" r="1.5" ${F} opacity=".7"/><circle cx="11.4" cy="9.8" r="1.2" ${F} opacity=".6"/>`},
-  /* — minerais : même roche, teinte du métal — */
-  fer:{c:'#9BA2AC',d:'MINERAI'},
-  cuivre:{c:'#C4794A',d:'MINERAI'},
-  argent:{c:'#A9B4C4',d:'MINERAI'},
-  mithril:{c:'#7FBDD8',d:'MINERAI'},
-  /* — joyaux : même taille, teinte de la pierre — */
-  ambre:{c:'#D98A25',d:'GEMME'},
-  grenat:{c:'#B84656',d:'GEMME'},
-  saphir:{c:'#4A7BC8',d:'GEMME'},
-  /* — art — */
-  etoffes:{c:'#7FA377',d:`<rect x="2.5" y="6" width="19" height="12" rx="2" ${F}/>
-    <path d="M8 6v12M12.5 6v12" stroke="${V}" stroke-width="1.3" opacity=".5"/>
-    <path d="M17.5 6c2.2 0 3.4 2.2 3.4 6s-1.2 6-3.4 6" fill="none" stroke="${V}" stroke-width="1.3" opacity=".5"/>`},
-  encens:{c:'#A084C0',d:`<path d="M5.5 17.5h13L17.2 22H6.8z" ${F}/>
-    <rect x="8.5" y="14" width="7" height="3.5" rx="1" ${F}/>
-    <path d="M12 12.5c-2.2-2 2.2-3.2 0-5.2s2.2-3.2 0-5.2" fill="none" stroke="currentColor"
-      stroke-width="1.7" stroke-linecap="round" opacity=".8"/>`},
-  tapis:{c:'#C05F38',d:`<rect x="4.6" y="7.4" width="14.8" height="9.6" ${F}/>
-    <path d="M4.6 7.4a5.3 5.3 0 0 0 0 9.6zM19.4 7.4a5.3 5.3 0 0 1 0 9.6z" ${F}/>
-    <path d="M7.4 10.4h9.2M7.4 14h9.2" stroke="${V}" stroke-width="1.2" opacity=".55"/>`},
-  enlum:{c:'#C6A24C',d:`<path d="M4.8 2h14.4v20H4.8z" ${F}/>
-    <rect x="6.8" y="4.4" width="5" height="5" fill="${V}" opacity=".8"/>
-    <path d="M13.6 5.6h4M13.6 8.2h4M6.8 12.4h10.4M6.8 15.4h10.4M6.8 18.4h7" stroke="${V}"
-      stroke-width="1.25" opacity=".65"/>`},
-  /* — matériaux — */
-  bois:{c:'#9A7343',d:`<circle cx="7.6" cy="15.6" r="5.1" ${F}/><circle cx="16.4" cy="15.6" r="5.1" ${F}/>
-    <circle cx="12" cy="7.4" r="5.1" ${F}/>
-    <circle cx="7.6" cy="15.6" r="1.7" fill="${V}" opacity=".55"/>
-    <circle cx="16.4" cy="15.6" r="1.7" fill="${V}" opacity=".55"/>
-    <circle cx="12" cy="7.4" r="1.7" fill="${V}" opacity=".55"/>`},
-  pierre:{c:'#9A9488',d:`<path d="M2.6 8.4L12 3l9.4 5.4v8.2L12 22l-9.4-5.4z" ${F}/>
-    <path d="M2.6 8.4L12 13.8l9.4-5.4M12 13.8V22" fill="none" stroke="${V}" stroke-width="1.3" opacity=".55"/>`},
-  peaux:{c:'#B07A4C',d:`<path d="M12 2.6c2.6 0 3.6 1.6 6.2 2.3 1.9.5 2.5 2.4 1.5 4-1 1.6-1 3.6 0 5.2 1 1.6.4 3.5-1.5 4-2.6.7-3.6 2.3-6.2 2.3s-3.6-1.6-6.2-2.3c-1.9-.5-2.5-2.4-1.5-4 1-1.6 1-3.6 0-5.2-1-1.6-.4-3.5 1.5-4C8.4 4.2 9.4 2.6 12 2.6z" ${F}/>`},
-  verre:{c:'#5CA79E',d:`<path d="M5.6 2.6h12.8v4.2a6.4 6.4 0 0 1-5.4 6.3v5.5h4.2V22H6.8v-3.4H11v-5.5a6.4 6.4 0 0 1-5.4-6.3z" ${F}/>`}
-};
-const MINERAI=`<path d="M3.6 13.8l3.1-7.2 6.2-2.1 7.4 4.2-1 8.4-8.4 3.1z" ${F}/>
-  <circle cx="9" cy="12.2" r="1.6" fill="${V}" opacity=".7"/>
-  <circle cx="14.2" cy="15.2" r="1.2" fill="${V}" opacity=".55"/>
-  <circle cx="15" cy="9.2" r="1.05" fill="${V}" opacity=".5"/>`;
-const GEMME=`<path d="M7 3h10l4.2 6.2L12 21.4 2.8 9.2z" ${F}/>
-  <path d="M2.8 9.2h18.4M7 3l2.1 6.2L12 21.4l2.9-12.2L17 3" fill="none" stroke="${V}"
-    stroke-width="1.1" opacity=".55"/>`;
-Object.keys(ICONES).forEach(k=>{
-  if(ICONES[k].d==='MINERAI')ICONES[k].d=MINERAI;
-  if(ICONES[k].d==='GEMME')ICONES[k].d=GEMME;
-});
+let ICONES=null;            /* data/icones.json → biens */
 
-const ICONES_ARMES={
-  epee:`<path d="M12 1.6l2.1 3.4v9.6h-4.2V5z" ${F}/>
-    <rect x="5.8" y="14.6" width="12.4" height="2.3" rx="1.1" ${F}/>
-    <rect x="10.8" y="16.9" width="2.4" height="3.9" ${F}/>
-    <circle cx="12" cy="21.4" r="1.7" ${F}/>`,
-  hache:`<rect x="10.9" y="2.4" width="2.3" height="19.2" rx="1.1" ${F}/>
-    <path d="M13.2 3.8c4.4 0 7.6 2.3 7.6 5.6s-3.2 5.6-7.6 5.6z" ${F}/>`,
-  arc:`<path d="M7.6 2.6c6.4 3.2 6.4 15.6 0 18.8" fill="none" stroke="currentColor"
-      stroke-width="2.4" stroke-linecap="round"/>
-    <path d="M7.6 2.6v18.8" fill="none" stroke="currentColor" stroke-width="1.1" opacity=".75"/>
-    <path d="M7.6 12h11M15.4 8.8l3.2 3.2-3.2 3.2" fill="none" stroke="currentColor"
-      stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`,
-  lance:`<path d="M12 1.6l3.2 5.4-3.2 3.4-3.2-3.4z" ${F}/>
-    <rect x="10.9" y="10" width="2.2" height="12.4" rx="1.1" ${F}/>
-    <rect x="8.4" y="10.6" width="7.2" height="1.8" rx=".9" ${F} opacity=".8"/>`,
-  masse:`<rect x="10.9" y="10.4" width="2.3" height="12" rx="1.1" ${F}/>
-    <path d="M12 1.4l2.7 1.7 2.9-.6-.7 2.9 2.2 2-2.2 2 .7 2.9-2.9-.6L12 13.4l-2.7-1.7-2.9.6.7-2.9-2.2-2 2.2-2-.7-2.9 2.9.6z" ${F}/>`,
-  dague:`<path d="M12 3.4l1.7 2.6v7.6h-3.4V6z" ${F}/>
-    <rect x="7.9" y="13.6" width="8.2" height="2.1" rx="1" ${F}/>
-    <rect x="10.9" y="15.7" width="2.2" height="4.6" rx="1.1" ${F}/>`
-};
-const ETOILES=`<path d="M4.2 3.6l.7 1.9 1.9.7-1.9.7-.7 1.9-.7-1.9L1.6 6.2l1.9-.7z" ${F}/>
-  <path d="M20 5.4l.55 1.5 1.5.55-1.5.55L20 9.55l-.55-1.55-1.5-.55 1.5-.55z" ${F}/>
-  <path d="M19.4 17.6l.6 1.7 1.7.6-1.7.6-.6 1.7-.6-1.7-1.7-.6 1.7-.6z" ${F}/>`;
+let ICONES_ARMES=null;      /* data/icones.json → famillesArmes */
+let ETOILES=null;           /* data/icones.json → etoiles */
 
-const ICONES_CHARIOTS={
-  charrette:'#9A9488',bache:'#9A7343',fardier:'#8A6A3E',renforce:'#7C8AA0'
-};
-const CHARIOT_GLYPHE=`<path d="M2.8 9h14l3.2 5.8H2.8z" ${F}/>
-  <path d="M4.2 9c1.4-3.8 10.6-3.8 12 0z" ${F} opacity=".7"/>
-  <path d="M6 14.8v2M17 14.8v2" stroke="currentColor" stroke-width="2"/>
-  <circle cx="6.6" cy="18.4" r="3" ${F}/><circle cx="17" cy="18.4" r="3" ${F}/>
-  <circle cx="6.6" cy="18.4" r="1.15" fill="${V}"/><circle cx="17" cy="18.4" r="1.15" fill="${V}"/>`;
+let ICONES_CHARIOTS=null;   /* data/icones.json → teintesChariots */
+let CHARIOT_GLYPHE=null;    /* data/icones.json → chariot */
 
 /* rang d'une arme dans sa famille : acier, bronze, azur — puis or pour les reliques */
-const RANG_ARME={};
-const TEINTES_RANG=['#8A8F98','#5F8A5A','#3E6FA8'];
-ORDRE_FAMILLES.forEach(f=>{
-  CLES_COMMUNES.filter(c=>ARMES[c].famille===f)
-    .sort((a,b)=>ARMES[a].frappe-ARMES[b].frappe)
-    .forEach((c,i)=>{RANG_ARME[c]=i;});
-});
+let RANG_ARME={};           /* dérivé : la place de chaque arme dans sa famille */
+let TEINTES_RANG=null;      /* data/icones.json → teintesRang */
 
 function svgIco(corps,teinte,cls){
   return `<svg class="ico${cls?' '+cls:''}" viewBox="0 0 24 24" aria-hidden="true"
@@ -1941,37 +1585,15 @@ function icoArme(cle,cls){
   if(a.mythique)return svgIco(corps+ETOILES,'#C6A24C',(cls||'')+' relique-ico');
   return svgIco(corps,TEINTES_RANG[RANG_ARME[cle]||0],cls);
 }
-const CHIEN_GLYPHE=`<path d="M5.4 9.2l2-4.2 2.6 2.6h4.6l2.4-2.6 1.8 4.4v6.4a2 2 0 0 1-2 2h-.6l-.6 3.6h-2.2l.4-3.6H9.6L9 21.8H6.8l.4-3.6h-.2a2 2 0 0 1-2-2z" ${F}/>
-  <circle cx="9.4" cy="12.4" r="1.15" fill="${V}"/><circle cx="14.6" cy="12.4" r="1.15" fill="${V}"/>
-  <path d="M11 15.4h2" stroke="${V}" stroke-width="1.3" stroke-linecap="round"/>
-  <path d="M18.6 9.6c1.8-1.2 2.8-3 2.6-5-1.6.4-2.8 1.6-3.4 3.2z" ${F}/>`;
+let CHIEN_GLYPHE=null;      /* data/icones.json → chien */
 function icoChien(cls){return svgIco(CHIEN_GLYPHE,'#9A7343',cls);}
 function icoChariot(cle,cls){
   return svgIco(CHARIOT_GLYPHE,ICONES_CHARIOTS[cle]||'#9A7343',cls);
 }
 
 /* les trois organes : même silhouette, teinte selon la qualité */
-const GLYPHES_PIECE={
- essieu:`<circle cx="6" cy="12" r="3.9" fill="none" stroke="currentColor" stroke-width="2"/>
-   <circle cx="18" cy="12" r="3.9" fill="none" stroke="currentColor" stroke-width="2"/>
-   <path d="M9.9 12h4.2" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/>
-   <circle cx="6" cy="12" r="1.3" ${F}/><circle cx="18" cy="12" r="1.3" ${F}/>
-   <path d="M6 9.1v5.8M3.1 12h5.8" stroke="currentColor" stroke-width="1.1"/>
-   <path d="M18 9.1v5.8M15.1 12h5.8" stroke="currentColor" stroke-width="1.1"/>`,
- caisse:`<path d="M2.6 6.4h18.8v13.2H2.6z" ${F}/>
-   <path d="M2.6 11h18.8M2.6 15.2h18.8" stroke="${V}" stroke-width="1.4"/>
-   <path d="M6.6 6.4v13.2M17.4 6.4v13.2" stroke="${V}" stroke-width="1.4"/>
-   <path d="M2.6 4.2h18.8v2.2H2.6z" ${F}/>`,
- cheval:`<path d="M3.2 10.4h10.4l1.5-4.2 2.1-1.7 1.5 1.3-1.3 1.9 2.7 1.7-.6 2.5-2.5.6-1.2 2.4v1.3H3.2z" ${F}/>
-   <rect x="4.4" y="15.4" width="2.2" height="6" rx="1" ${F}/>
-   <rect x="8" y="15.4" width="2.2" height="6" rx="1" ${F}/>
-   <rect x="11.8" y="15.4" width="2.2" height="6" rx="1" ${F}/>
-   <rect x="15.2" y="15.4" width="2.2" height="6" rx="1" ${F}/>
-   <path d="M3.2 10.4L1.6 8.7l.3 3.5-.8 2 2.1-.9z" ${F}/>
-   <path d="M13.6 10.4l1.6-3.4 1.4.7-1.3 3z" ${F} opacity=".65"/>
-   <circle cx="18.3" cy="6.7" r=".95" fill="${V}"/>`
-};
-const TEINTES_PIECE=['#8A8F98','#5F8A5A','#C6A24C'];
+let GLYPHES_PIECE=null;     /* data/icones.json → pieces */
+let TEINTES_PIECE=null;     /* data/icones.json → teintesPiece */
 function icoPiece(q,rang,cls){
   return svgIco(GLYPHES_PIECE[q]||'',TEINTES_PIECE[rang]||TEINTES_PIECE[0],cls);
 }
@@ -1979,186 +1601,12 @@ function icoPiece(q,rang,cls){
 /* ═══════════════ pictogrammes des situations ═══════════════
    Un dessin par événement, teinté selon sa nature : rouge pour ce qui menace,
    or pour ce qui se trouve, vert pour ce qu'on croise, gris pour les ruines. */
-const TEINTES_EV={danger:'#B84636',meteo:'#7C8AA0',tracas:'#9A7343',rencontre:'#6E9B6A',
-  halte:'#5CA79E',trouvaille:'#C6A24C',ruines:'#9A9488',pari:'#A084C0',
-  flanerie:'#7FA8C4',charite:'#C08A6A'};
+let TEINTES_EV=null;        /* data/icones.json → teintesEvenement */
 
-const GLYPHES_EV={
- lames:`<path d="M4.6 2.6l2.2-1.5 8 11.6-2.2 1.5z" ${F}/><path d="M19.4 2.6l-2.2-1.5-8 11.6 2.2 1.5z" ${F}/>
-   <rect x="8.4" y="14" width="7.2" height="2.4" rx="1.2" ${F}/><rect x="10.4" y="16.4" width="3.2" height="5.4" rx="1" ${F}/>`,
- traits:`<path d="M2 3.6l7.2 7.2M2 3.6v4.8M2 3.6h4.8" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>
-   <path d="M22 3.6l-7.2 7.2M22 3.6v4.8M22 3.6h-4.8" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>
-   <circle cx="12" cy="15" r="3.2" ${F}/><path d="M12 18.2V22" stroke="currentColor" stroke-width="2.2"/>`,
- vent:`<path d="M2.6 8h11.4a2.8 2.8 0 1 0-2.8-2.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-   <path d="M2.6 13h14a2.8 2.8 0 1 1-2.8 2.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-   <path d="M4.4 18h8a2.4 2.4 0 1 0-2.4-2.4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>`,
- bat:`<rect x="3.6" y="7" width="16.8" height="8" rx="2.2" ${F}/>
-   <path d="M6.4 15v6M10 15v6M14 15v6M17.6 15v6" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>
-   <path d="M8.4 7V4.2h7.2V7" fill="none" stroke="currentColor" stroke-width="2"/>`,
- pont:`<path d="M1.6 9.6h7.4l2.2 3.4M22.4 9.6H15l-2.2 3.4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
-   <path d="M4.6 9.6V21M19.4 9.6V21" stroke="currentColor" stroke-width="2.2"/><path d="M1.6 21h20.8" stroke="currentColor" stroke-width="2.2"/>`,
- bulle:`<path d="M2.6 3.4h18.8v11.8H9.4l-5.2 4.2v-4.2H2.6z" ${F}/>
-   <circle cx="8.4" cy="9.3" r="1.5" fill="${V}"/><circle cx="12" cy="9.3" r="1.5" fill="${V}"/>
-   <circle cx="15.6" cy="9.3" r="1.5" fill="${V}"/>`,
- barriere:`<rect x="1.8" y="3.6" width="3.4" height="16.8" rx="1" ${F}/><rect x="18.8" y="3.6" width="3.4" height="16.8" rx="1" ${F}/>
-   <rect x="5.2" y="8.6" width="13.6" height="3.2" rx="1.4" ${F}/><circle cx="12" cy="16.4" r="2.2" ${F}/>`,
- roue_fendue:`<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.6"/>
-   <path d="M12 3v18M3 12h18" stroke="currentColor" stroke-width="1.5"/>
-   <path d="M17.4 5.6l-3.6 5.2 3 1.6-3.8 5.4" fill="none" stroke="${V}" stroke-width="2.4"/>`,
- caravanserail:`<path d="M1.8 21V9.2h20.4V21z" ${F}/><path d="M1.8 9.2L12 2.6l10.2 6.6z" ${F}/>
-   <path d="M8.2 21v-6.6a3.8 3.8 0 0 1 7.6 0V21z" fill="${V}"/>`,
- heaume:`<path d="M4 13.4a8 8 0 0 1 16 0V20h-4.2v-4.2H8.2V20H4z" ${F}/><rect x="9.8" y="7.6" width="4.4" height="5.4" fill="${V}"/>`,
- soleil:`<circle cx="12" cy="12" r="5" ${F}/>
-   <path d="M12 1.4v3.2M12 19.4v3.2M1.4 12h3.2M19.4 12h3.2M4.4 4.4l2.3 2.3M17.3 17.3l2.3 2.3M19.6 4.4l-2.3 2.3M6.7 17.3l-2.3 2.3"
-     stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>`,
- chariot_verse:`<path d="M2.8 15.4h18.4l-2.6 6H5.4z" ${F}/>
-   <path d="M2.8 15.4h18.4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
-   <circle cx="7.6" cy="10.4" r="3.2" fill="none" stroke="currentColor" stroke-width="2.1"/>
-   <circle cx="16.4" cy="10.4" r="3.2" fill="none" stroke="currentColor" stroke-width="2.1"/>
-   <path d="M7.6 7.2v6.4M4.4 10.4h6.4M16.4 7.2v6.4M13.2 10.4h6.4" stroke="currentColor" stroke-width="1.2"/>`,
- fauve:`<path d="M4 9l2.2-5.4 3.2 3.2h5.2l3.2-3.2L20 9v6a6.2 6.2 0 0 1-6.2 6.2h-3.6A6.2 6.2 0 0 1 4 15z" ${F}/>
-   <path d="M9 12.2l1.6 1.6-1.6 1.6zM15 12.2l-1.6 1.6 1.6 1.6z" fill="${V}"/>
-   <path d="M9.6 18h4.8" stroke="${V}" stroke-width="1.6" stroke-linecap="round"/>`,
- sceau:`<circle cx="12" cy="8.6" r="5.8" ${F}/><path d="M7.8 13.4L6 22l6-3 6 3-1.8-8.6z" ${F}/>
-   <path d="M9.6 8.6h4.8M12 6.2v4.8" stroke="${V}" stroke-width="1.6"/>`,
- poteau:`<rect x="10.9" y="3.4" width="2.4" height="18.2" rx="1" ${F}/>
-   <path d="M10.9 5.4H2.6l2.6 2.6-2.6 2.6h8.3z" ${F}/><path d="M13.3 12.6h8.1l-2.6 2.6 2.6 2.6h-8.1z" ${F}/>`,
- tente:`<path d="M12 2.6L1.8 21h20.4z" ${F}/><path d="M12 21v-8.6L8.2 21zM12 21v-8.6L15.8 21z" fill="${V}"/>`,
- roue_sable:`<circle cx="12" cy="10" r="6.8" fill="none" stroke="currentColor" stroke-width="2.6"/>
-   <path d="M12 3.2v13.6M5.2 10h13.6M7.2 5.2l9.6 9.6M16.8 5.2l-9.6 9.6" stroke="currentColor" stroke-width="1.4"/>
-   <path d="M1.4 16.6c4.4 2 6.6 2.4 10.6 2.4s6.2-.4 10.6-2.4V22H1.4z" ${F}/>`,
- lien:`<path d="M2 12h7.4M14.6 12H22" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/>
-   <path d="M9.4 8.4l2 3.6-2 3.6M14.6 8.4l-2 3.6 2 3.6" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>`,
- mule:`<path d="M4.6 9.4h11.2l3-4.2 1.6 5.2v5.2H4.6z" ${F}/>
-   <rect x="5.8" y="15.2" width="2.4" height="6.2" rx="1" ${F}/><rect x="15.4" y="15.2" width="2.4" height="6.2" rx="1" ${F}/>
-   <circle cx="18.6" cy="7.4" r="1.1" fill="${V}"/>`,
- nuee:`<circle cx="5.6" cy="6.6" r="1.7" ${F}/><circle cx="11.6" cy="4.4" r="1.7" ${F}/><circle cx="17.4" cy="7.6" r="1.7" ${F}/>
-   <circle cx="8.6" cy="11.6" r="1.7" ${F}/><circle cx="15" cy="13.4" r="1.7" ${F}/><circle cx="6.4" cy="17" r="1.7" ${F}/>
-   <circle cx="12.6" cy="19" r="1.7" ${F}/><circle cx="18.6" cy="16.4" r="1.7" ${F}/>`,
- outre:`<path d="M8 3.4h8l.8 3.4c2 2 2 9.4-4.8 9.4S5.2 8.8 7.2 6.8z" ${F}/>
-   <path d="M12 18.4c-.6 1-1.4 1.8-1.4 2.6a1.4 1.4 0 0 0 2.8 0c0-.8-.8-1.6-1.4-2.6z" ${F}/>`,
- goutte:`<path d="M12 2c4 6.2 6.2 8.4 6.2 12.2A6.2 6.2 0 0 1 5.8 14.2C5.8 10.4 8 8.2 12 2z" ${F}/>`,
- mortier:`<path d="M3.6 11.4h16.8a8.4 8.4 0 0 1-8.4 8.4 8.4 8.4 0 0 1-8.4-8.4z" ${F}/>
-   <rect x="14.6" y="2.4" width="2.6" height="9.6" rx="1.3" transform="rotate(18 15.9 7.2)" ${F}/>
-   <path d="M2.6 20.8h18.8" stroke="currentColor" stroke-width="2"/>`,
- ermite:`<circle cx="12" cy="6" r="3.4" ${F}/><path d="M4.8 21.4c0-5.2 3.2-8.4 7.2-8.4s7.2 3.2 7.2 8.4z" ${F}/>
-   <path d="M12 9.4v4.6" stroke="${V}" stroke-width="1.6"/>`,
- chevre:`<ellipse cx="10.4" cy="13.4" rx="6.8" ry="4.8" ${F}/><circle cx="17.6" cy="9.4" r="3.2" ${F}/>
-   <path d="M19.4 7l2.4-2.2M16.4 6.6l-1-2.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-   <path d="M6 18.2v3.2M9.6 18.2v3.2M13.4 18.2v3.2" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>`,
- vol:`<path d="M1.8 12.4c4-5 7 .8 10.2-2.2s6-3 10 1c-4 1-6 4-10.2 4s-6-3.8-10-2.8z" ${F}/>`,
- enfant:`<circle cx="12" cy="5.2" r="3.1" ${F}/>
-   <path d="M12 8.6v7.4M12 10.6l-3.6 2.8M12 10.6l3.6 2.8M12 16l-2.8 5.4M12 16l2.8 5.4"
-     stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/>`,
- pelerin:`<circle cx="9.4" cy="5.4" r="3.2" ${F}/><path d="M9.4 9c-3 0-4.2 3-4.2 6.2V21.4h8.4V15.2C13.6 12 12.4 9 9.4 9z" ${F}/>
-   <path d="M18.4 2v20" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>`,
- charrette:`<path d="M2.6 15h12.8V9.4H2.6z" ${F}/><circle cx="6.4" cy="18.8" r="2.6" ${F}/>
-   <circle cx="18.6" cy="16.6" r="3.6" fill="none" stroke="currentColor" stroke-width="2.4"/>
-   <path d="M18.6 13v7.2M15 16.6h7.2" stroke="currentColor" stroke-width="1.5"/>`,
- puits:`<path d="M4.6 11h14.8v10.4H4.6z" ${F}/><path d="M3.4 11L12 5.6l8.6 5.4" fill="none" stroke="currentColor" stroke-width="2.1"/>
-   <rect x="9.8" y="14" width="4.4" height="4.4" fill="${V}"/><path d="M12 5.6V2.4" stroke="currentColor" stroke-width="2.1"/>`,
- bouclier:`<path d="M12 2l9 3.2v6.6c0 5.2-4.2 8.4-9 10.2-4.8-1.8-9-5-9-10.2V5.2z" ${F}/>
-   <path d="M8.4 8.4l7.2 7.2M15.6 8.4l-7.2 7.2" stroke="${V}" stroke-width="2.1"/>`,
- coffre:`<path d="M2.6 10h18.8v11.4H2.6z" ${F}/><path d="M2.6 10a9.4 5.4 0 0 1 18.8 0z" ${F}/>
-   <rect x="10.2" y="8.6" width="3.6" height="5.6" rx="1" fill="${V}"/>`,
- cairn:`<ellipse cx="12" cy="19.8" rx="7.2" ry="2.4" ${F}/><ellipse cx="12" cy="15.4" rx="5.6" ry="2.2" ${F}/>
-   <ellipse cx="12" cy="11.4" rx="4.2" ry="2" ${F}/><ellipse cx="12" cy="7.8" rx="2.8" ry="1.8" ${F}/>`,
- amphore:`<path d="M9 2.6h6v2.2l-1 2.2c2.2 1.1 3.2 3.2 3.2 6.2v3.6H6.8v-3.6c0-3 1-5.1 3.2-6.2l-1-2.2z" ${F}/>
-   <path d="M1.4 17.2h21.2v4.4H1.4z" ${F} opacity=".55"/>`,
- sacoche:`<path d="M4.8 7.6h14.4l1.2 13.8H3.6z" ${F}/>
-   <path d="M8.4 7.6V5.6a3.6 3.6 0 0 1 7.2 0v2" fill="none" stroke="currentColor" stroke-width="2.1"/>
-   <rect x="9.6" y="12" width="4.8" height="4.4" fill="${V}"/>`,
- mur:`<path d="M2.6 2.6h18.8v18.8H2.6z" ${F}/>
-   <path d="M2.6 7.8h18.8M2.6 12.6h18.8M2.6 17.4h18.8M8 2.6v5.2M14.4 7.8v4.8M8 12.6v4.8M14.4 17.4v4" stroke="${V}" stroke-width="1.4"/>
-   <path d="M9 21.4v-6.8a3 3 0 0 1 6 0v6.8z" fill="${V}"/>`,
- tour:`<path d="M6 21.4V5h2.8V2.4h2.2V5h2.2V2.4h2.2V5H18v6.2l-4 4v6.2z" ${F}/>`,
- temple:`<path d="M1.8 8L12 2l10.2 6z" ${F}/><rect x="3.8" y="9" width="2.8" height="9" ${F}/>
-   <rect x="10.6" y="9" width="2.8" height="9" ${F}/><rect x="17.4" y="9" width="2.8" height="9" ${F}/>
-   <rect x="1.8" y="18.4" width="20.4" height="3" ${F}/>`,
- escaliers:`<path d="M1.8 21.4V17h4.2v-4.2h4.2V8.6h4.2V4.4h7.8v17z" ${F}/>`,
- colosse:`<path d="M5.8 21.4V13.4a6.2 6.2 0 0 1 12.4 0v8z" ${F}/>
-   <circle cx="9.4" cy="14.2" r="1.4" fill="${V}"/><circle cx="14.6" cy="14.2" r="1.4" fill="${V}"/>
-   <path d="M7.8 9.2l1.2-4.4 3 2.2 3-2.2 1.2 4.4z" ${F}/><path d="M3.6 21.4h16.8" stroke="currentColor" stroke-width="2.1"/>`,
- des:`<rect x="2.2" y="9" width="10.4" height="10.4" rx="2.2" ${F}/><rect x="12.4" y="3.6" width="9.4" height="9.4" rx="2.2" ${F}/>
-   <circle cx="5.4" cy="12" r="1.15" fill="${V}"/><circle cx="9.4" cy="16.4" r="1.15" fill="${V}"/>
-   <circle cx="7.4" cy="14.2" r="1.15" fill="${V}"/><circle cx="17.1" cy="8.3" r="1.15" fill="${V}"/>`,
- lutte:`<circle cx="6.8" cy="5.6" r="3" ${F}/><circle cx="17.2" cy="5.6" r="3" ${F}/>
-   <path d="M6.8 8.8c-2.2 0-3.2 2.2-3.2 5.2v7.4h6.6v-7.4M17.2 8.8c2.2 0 3.2 2.2 3.2 5.2v7.4h-6.6v-7.4" ${F}/>
-   <path d="M8.6 13.4h6.8" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>`,
- cible:`<circle cx="11" cy="13" r="8.6" fill="none" stroke="currentColor" stroke-width="2.4"/>
-   <circle cx="11" cy="13" r="4.8" fill="none" stroke="currentColor" stroke-width="2.4"/>
-   <circle cx="11" cy="13" r="1.7" ${F}/><path d="M11 13l9.4-9.4M17.6 2.6h3.4v3.4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>`,
- course:`<circle cx="15.4" cy="14.6" r="5.4" fill="none" stroke="currentColor" stroke-width="2.4"/>
-   <circle cx="15.4" cy="14.6" r="1.5" ${F}/>
-   <path d="M2.2 7.6h8.6M2 11.8h6.6M3.6 16h4.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>`,
- enigme:`<path d="M7.8 8a4.2 4.2 0 1 1 5.4 4c-1.1.4-1.6 1.3-1.6 2.4v1.2" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round"/>
-   <circle cx="11.6" cy="19.4" r="1.9" ${F}/>`,
- oiseau:`<ellipse cx="10.4" cy="13" rx="6" ry="4.6" ${F}/><circle cx="16.6" cy="9.4" r="3" ${F}/>
-   <path d="M19.2 8l3.2-1.4-2.8-1.5z" ${F}/><circle cx="17.4" cy="8.8" r=".85" fill="${V}"/>
-   <path d="M5.6 15.4L2 19.4M7.6 16.6L4.6 21" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>`,
- etoile:`<path d="M17 2.6l1.5 3.9 3.9 1.5-3.9 1.5L17 13.4l-1.5-3.9L11.6 8l3.9-1.5z" ${F}/>
-   <path d="M11.4 12.4L3.4 20.4M9.4 7.6L5.2 10.8M14.6 16.4l-3.2 4.4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>`,
- borne:`<path d="M7.8 21.4V7.2a4.2 4.2 0 0 1 8.4 0v14.2z" ${F}/>
-   <path d="M9.8 10.4h4.4M9.8 13.4h4.4M9.8 16.4h3.2" stroke="${V}" stroke-width="1.5"/>
-   <path d="M4.6 21.4h14.8" stroke="currentColor" stroke-width="2.1"/>`,
- notes:`<path d="M8.8 18V4.8l10.4-2.2V15" fill="none" stroke="currentColor" stroke-width="2.4"/>
-   <circle cx="6.2" cy="18.4" r="2.9" ${F}/><circle cx="16.6" cy="16.2" r="2.9" ${F}/>`
-};
+let GLYPHES_EV=null;        /* data/icones.json → glyphesEvenement */
 
 /* chaque situation, son dessin et sa nature */
-const ICONES_EV={
- 'Embuscade':['lames','danger'],
- 'Guet-apens':['traits','danger'],
- 'Tempête de sable':['vent','meteo'],
- 'Marchand ambulant':['bat','rencontre'],
- 'Pont effondré':['pont','meteo'],
- 'Rumeur de comptoir':['bulle','rencontre'],
- 'Péage seigneurial':['barriere','tracas'],
- 'Essieu fendu':['roue_fendue','tracas'],
- 'Caravansérail':['caravanserail','halte'],
- 'Mercenaire sans contrat':['heaume','rencontre'],
- 'Chaleur de plomb':['soleil','meteo'],
- 'Convoi pillé':['chariot_verse','danger'],
- 'Bêtes des sables':['fauve','danger'],
- 'Contrôle des sceaux':['sceau','tracas'],
- 'Piste perdue':['poteau','meteo'],
- 'Nomades en escorte':['tente','rencontre'],
- 'Oiseau blessé':['oiseau','flanerie'],
- 'Étoile filante':['etoile','flanerie'],
- 'Borne gravée':['borne','flanerie'],
- 'Chien errant':['chien','flanerie'],
- 'Chant lointain':['notes','flanerie'],
- 'Coffre au bord de la piste':['coffre','trouvaille'],
- 'Cairn récent':['cairn','trouvaille'],
- 'Amphore scellée':['amphore','trouvaille'],
- 'Sacoche d\'un cavalier':['sacoche','trouvaille'],
- 'Niche murée':['mur','trouvaille'],
- 'Roue embourbée':['roue_sable','tracas'],
- 'Sangle rompue':['lien','tracas'],
- 'Mule butée':['mule','tracas'],
- 'Nuée de mouches':['nuee','tracas'],
- 'Outres percées':['outre','tracas'],
- 'Source claire':['goutte','halte'],
- 'Herbes médicinales':['mortier','halte'],
- 'Ermite':['ermite','rencontre'],
- 'Berger':['chevre','rencontre'],
- 'Bonne chasse':['vol','halte'],
- 'Enfant perdu':['enfant','charite'],
- 'Pèlerin épuisé':['pelerin','charite'],
- 'Charrette versée':['charrette','charite'],
- 'Vieille femme au puits':['puits','charite'],
- 'Soldat blessé':['bouclier','charite'],
- 'Tour de guet éventrée':['tour','ruines'],
- 'Temple enseveli':['temple','ruines'],
- 'Caravansérail en ruine':['caravanserail','ruines'],
- 'Citerne à sec':['escaliers','ruines'],
- 'Colosse brisé':['colosse','ruines'],
- 'Dés avec des pèlerins':['des','pari'],
- 'Lutte au corps':['lutte','pari'],
- 'Tir à la cible':['cible','pari'],
- 'Course d\'attelages':['course','pari'],
- 'Devinettes':['enigme','pari']
-};
+let ICONES_EV=null;         /* data/icones.json → evenements */
 function icoEvenement(titre,cls){
   const e=ICONES_EV[titre];
   if(!e)return '';
@@ -2291,122 +1739,15 @@ function vendable(g){return Math.max(0,stock(g)-consigne(g));}
 /* ═══════════════ l'ambiance des villes ═══════════════
    Chaque cité garde le même profil, la même heure et le même parfum d'une
    visite à l'autre : on finit par la reconnaître avant d'avoir lu son nom. */
-const HEURES=[
- {cle:'aube',   c1:'#6E7BA8',c2:'#D9A87A',astre:'#F6E0A8',ax:22,ay:34,nuit:0,
-  mot:'au petit matin'},
- {cle:'midi',   c1:'#7BA3C8',c2:'#E4D3A8',astre:'#FBF0C8',ax:90,ay:12,nuit:0,
-  mot:'en plein midi'},
- {cle:'couchant',c1:'#8A6E96',c2:'#E0955C',astre:'#FBC77A',ax:154,ay:32,nuit:0,
-  mot:'au soleil couchant'},
- {cle:'nuit',   c1:'#232B48',c2:'#4A4560',astre:'#D8E2F2',ax:132,ay:16,nuit:1,
-  mot:'à la nuit tombée'}
-];
+let HEURES=null;            /* data/ambiance.json → heures */
 
 /* silhouettes, dessinées sur 180 × 54, le sol à y = 46 */
-const PROFILS_VILLE={
- 'bourg agricole':`<path d="M18 46V30l14-9 14 9v16z"/><path d="M28 46v-9h8v9z" class="creux"/>
-   <path d="M56 46c0-7 4-12 9-12s9 5 9 12z"/><path d="M78 46c0-6 3-10 7-10s7 4 7 10z"/>
-   <path d="M100 46V34h10v12zM116 46V38h8v8z"/>
-   <path d="M132 42v4M140 42v4M148 42v4M156 42v4M128 42h32" class="trait"/>`,
- 'cité minière':`<path d="M20 46V22h4v24zM34 46V22h4v24z"/><path d="M18 22h22l-11-9z"/>
-   <path d="M22 26h14v3H22z"/><path d="M52 46c6-16 12-16 18 0z"/><path d="M74 46c8-20 16-20 24 0z"/>
-   <path d="M108 46V30h12v16zM126 46V36h9v10z"/><path d="M112 30h4v-7h-4z"/>`,
- 'port franc':`<path d="M26 46V14h2.5v32z"/><path d="M28.5 16c10 3 14 8 15 14h-15z"/>
-   <path d="M28.5 34c8 2 11 5 12 9h-12z"/><path d="M60 46V18h2.5v28z"/>
-   <path d="M62.5 20c9 3 12 7 13 12h-13z"/><path d="M96 46V32h30v14z"/><path d="M96 32l15-8 15 8z"/>
-   <path d="M134 46V36h20v10z"/><path d="M2 46h176" class="trait"/>`,
- 'oasis caravanière':`<path d="M28 46V26" class="tronc"/>
-   <path d="M28 26c-9-2-13-6-14-11 6 1 11 4 14 11zM28 26c9-2 13-6 14-11-6 1-11 4-14 11zM28 24c-2-8 0-13 4-17 2 5 2 11-4 17z"/>
-   <path d="M58 46V30" class="tronc"/><path d="M58 30c-7-2-10-5-11-9 5 1 9 3 11 9zM58 30c7-2 10-5 11-9-5 1-9 3-11 9z"/>
-   <path d="M86 46l14-18 14 18z"/><path d="M124 46l11-14 11 14z"/><path d="M156 46l8-10 8 10z"/>`,
- 'cité sainte':`<path d="M40 46V28h24v18z"/><path d="M40 28a12 12 0 0 1 24 0z"/><path d="M52 16V8" class="trait"/>
-   <path d="M78 46V34h16v12z"/><path d="M78 34a8 8 0 0 1 16 0z"/>
-   <path d="M108 46V20h6v26z"/><path d="M111 20l-5-8h10z"/><path d="M128 46V32h20v14z"/>`,
- 'fort frontalier':`<path d="M24 46V24h6v-4h4v4h6v-4h4v4h6v22z"/>
-   <path d="M50 46V32h60v14z"/><path d="M50 32h4v-4h4v4h6v-4h4v4h6v-4h4v4h6v-4h4v4h6v-4h4v4h6v-4h4v4h4"/>
-   <path d="M118 46V26h6v-4h4v4h6v-4h4v4h6v20z"/><path d="M72 46V36h12v10z" class="creux"/>`,
- 'bourg drapier':`<path d="M20 46V24l10-8 10 8v22z"/><path d="M46 46V20l11-9 11 9v26z"/>
-   <path d="M74 46V26l9-7 9 7v20z"/><path d="M98 46V22l10-8 10 8v24z"/>
-   <path d="M126 46V30h26v16z"/><path d="M124 30h30M124 36h30" class="trait"/>
-   <path d="M30 40h6v6h-6zM57 36h6v10h-6z" class="creux"/>`,
- 'coteau viticole':`<path d="M0 46c30-16 60-22 96-24 34-2 60 2 84 6v18z" class="colline"/>
-   <path d="M24 40v-6M38 37v-6M52 34v-6M66 32v-6M80 30v-6M94 29v-6M108 29v-6M122 30v-6" class="trait"/>
-   <path d="M20 40h92" class="trait"/>
-   <path d="M132 46V28h22v18z"/><path d="M132 28l11-7 11 7z"/>`,
- 'comptoir du nord':`<path d="M22 46V30h22v16z"/><path d="M20 30l13-8 13 8z"/>
-   <path d="M56 46V34h18v12z"/><path d="M54 34l11-7 11 7z"/>
-   <path d="M86 46V28h24v18z"/><path d="M84 28l14-9 14 9z"/><path d="M98 19v-8" class="trait"/>
-   <path d="M124 46V36h16v10z"/><path d="M148 46c0-6 4-10 8-10s8 4 8 10z"/>`,
- 'cité verrière':`<path d="M24 46V32h18v14z"/><path d="M28 32c0-8 10-8 10 0z"/><path d="M31 24v-8" class="trait"/>
-   <path d="M56 46V30h20v16z"/><path d="M60 30c0-9 12-9 12 0z"/><path d="M64 21v-9" class="trait"/>
-   <path d="M92 46V34h16v12z"/><path d="M96 34c0-7 8-7 8 0z"/>
-   <path d="M120 46V28h28v18z"/><path d="M126 34h6v12h-6zM138 34h6v12h-6z" class="creux"/>`,
- 'halte des sauniers':`<path d="M6 46v-8h40v8zM52 46v-8h40v8zM98 46v-8h34v8z" class="creux"/>
-   <path d="M4 38h130" class="trait"/>
-   <path d="M20 34c0-5 4-9 8-9s8 4 8 9zM64 34c0-4 3-7 6-7s6 3 6 7z"/>
-   <path d="M138 46V30h20v16z"/><path d="M136 30l12-8 12 8z"/>`,
- 'cité royale':`<path d="M16 46V22h6v-5h5v5h5v-5h5v5h6v24z"/>
-   <path d="M44 46V30h44v16z"/><path d="M44 30h4v-4h4v4h6v-4h4v4h6v-4h4v4h6v-4h4v4h6"/>
-   <path d="M92 46V16h8v-6h6v6h8v30z"/><path d="M100 10V3" class="trait"/>
-   <path d="M118 46V26h6v-5h5v5h5v-5h5v5h6v20z"/><path d="M60 46V34h12v12z" class="creux"/>
-   <path d="M96 46V34h10v12z" class="creux"/>`,
- 'poste de douane':`<path d="M28 46V20h10v26zM130 46V20h10v26z"/>
-   <path d="M38 24h92v6H38z"/><path d="M38 34h92v4H38z" class="creux"/>
-   <path d="M26 20l7-7 7 7zM128 20l7-7 7 7z"/>
-   <path d="M60 46V36h10v10zM100 46V36h10v10z" class="creux"/>`,
- 'nain':`<path d="M0 46L46 8l34 38zM74 46L112 14l40 32z" class="colline"/>
-   <path d="M92 46V32h24v14z"/><path d="M96 32a10 10 0 0 1 16 0z" class="creux"/>
-   <path d="M38 46V34h16v12z"/><path d="M42 34a6 6 0 0 1 8 0z" class="creux"/>`,
- 'elfe':`<path d="M30 46V20" class="tronc"/><path d="M30 26c-11-3-15-9-16-15 7 2 13 7 16 15zM30 26c11-3 15-9 16-15-7 2-13 7-16 15z"/>
-   <path d="M78 46V14" class="tronc"/><path d="M78 22c-13-3-18-10-19-17 8 2 16 8 19 17zM78 22c13-3 18-10 19-17-8 2-16 8-19 17z"/>
-   <path d="M132 46V20" class="tronc"/><path d="M132 26c-10-3-14-8-15-14 7 2 12 6 15 14zM132 26c10-3 14-8 15-14-7 2-12 6-15 14z"/>
-   <path d="M22 34h16v4H22zM70 28h16v4H70z" class="creux"/>`
-};
+let PROFILS_VILLE=null;     /* data/ambiance.json → profilsVille */
 
-const OUVERTURES={
- 'bourg agricole':['Les charrettes de gerbes encombrent la place jusqu\'au parvis.',
-   'On bat le grain sur l\'aire, et la poussière se dépose sur tout ce qui traîne.'],
- 'cité minière':['Le chevalement grince au-dessus des toits, jour et nuit.',
-   'Les terrils noirs bordent la route et rien n\'y pousse.'],
- 'port franc':['Les mâts dépassent des toits, et l\'on parle huit langues sur les quais.',
-   'La marée découvre une vase grise où fouillent les enfants.'],
- 'oasis caravanière':['Les palmiers font une tache verte qu\'on voit à deux lieues.',
-   'Le puits est le seul endroit où l\'on se parle vraiment.'],
- 'cité sainte':['Les cloches marquent les heures et l\'on baisse la voix sans y penser.',
-   'Des pèlerins dorment sous les porches, la sandale à la main.'],
- 'fort frontalier':['Les murs sont plus hauts que la ville qu\'ils protègent.',
-   'On compte les entrants à la porte, et on les recompte à la sortie.'],
- 'bourg drapier':['Les pièces de drap sèchent sur des cadres, du sol jusqu\'aux toits.',
-   'Ça sent la laine mouillée dans toutes les ruelles.'],
- 'coteau viticole':['Les vignes montent en terrasses jusqu\'au-dessus des dernières maisons.',
-   'On goûte avant d\'acheter, et l\'on goûte beaucoup.'],
- 'comptoir du nord':['Les maisons de rondins fument toute l\'année.',
-   'Les fourrures pendent aux auvents comme du linge.'],
- 'cité verrière':['Les fours ne s\'éteignent jamais : la ville a une lueur à elle.',
-   'Le sable arrive par tombereaux entiers et repart en carafes.'],
- 'halte des sauniers':['Les marais salants découpent la plaine en miroirs.',
-   'Le sel craque sous les semelles jusque dans les maisons.'],
- 'cité royale':['Les bannières claquent au-dessus d\'un marché qui ne dort qu\'à l\'aube.',
-   'On croise plus de gardes que de mendiants, ce qui est rare.'],
- 'poste de douane':['Une file de convois attend le bon vouloir du clerc.',
-   'Tout ici se compte, se pèse et se note deux fois.']
-};
-const OUVERTURES_DEFAUT={
- nain:['Les halles sont taillées dans le roc et la voix y porte trop loin.',
-   'Les forges battent quelque part sous vos pieds.'],
- elfe:['Les étals sont montés entre les racines, sans un clou.',
-   'Personne n\'élève la voix, et pourtant tout se marchande.']
-};
-const ODEURS=['Ça sent la poussière chaude et le cuir.','Ça sent le pain et la fumée de bois.',
- 'Une odeur d\'huile de lampe traîne partout.','L\'air a un goût de poivre et de sueur.',
- 'Ça sent le fer froid et l\'eau croupie.','Il flotte une odeur de résine et de linge propre.',
- 'L\'air sent la pierre mouillée.','Ça sent le suif et les bêtes.'];
-const FOULES=['Le marché est bondé : on avance à l\'épaule.',
- 'Trois étals sur quatre sont pliés ; la saison est mauvaise.',
- 'Les marchands vous hèlent avant même que vous ayez dételé.',
- 'On vous regarde arriver sans se lever.',
- 'Des gamins tournent autour des chariots en comptant les roues.',
- 'Un crieur annonce les cours d\'une voix éteinte.'];
+let OUVERTURES=null;        /* data/ambiance.json → ouvertures */
+let OUVERTURES_DEFAUT=null; /* data/ambiance.json → ouverturesDefaut */
+let ODEURS=null;            /* data/ambiance.json → odeurs */
+let FOULES=null;            /* data/ambiance.json → foules */
 
 function ambianceDe(v){
   const a=v.amb||{h:1,o:0,od:0,f:0};
@@ -3091,11 +2432,7 @@ function fermerFeuilles(){
 }
 
 /* ═══════════════ itinéraires ═══════════════ */
-const PROFILS=[
-  {nom:'La piste des dunes',tag:'au plus court, par les sables',risque:1.6,rudesse:1.35,detour:.78},
-  {nom:'La route caravanière',tag:'la voie que tout le monde emprunte',risque:1,rudesse:1,detour:1},
-  {nom:'La voie des relais',tag:'de puits en puits, sans se presser',risque:.5,rudesse:.72,detour:1.3}
-];
+let PROFILS=null;           /* data/routes.json → profils */
 function routesVers(j){
   const i=indexVille(S.ville),lieues=lieuesEntre(i,j);
   const trace=(nom,tag,risque,rudesse,detour,extra)=>{
@@ -3304,10 +2641,7 @@ function noter(txte,classe){
   while(j.children.length>40)j.removeChild(j.firstChild);
   j.scrollTop=j.scrollHeight;
 }
-const FINS_CHARIOT=[
- 'Le dernier chariot s\'ouvre en deux au milieu de la piste. Ce qui reste tient dans un sac.',
- 'Plus une roue en état : le convoi s\'arrête là où il est tombé, entre deux bornes.',
- 'Le dernier essieu cède. On charge ce qu\'on peut sur le dos des bêtes, et ce n\'est plus une caravane.'];
+let FINS_CHARIOT=null;      /* data/routes.json → finsChariot */
 function usure(){
   const u=(.80+S.etapes*.050)*S.route.rudesse;
   S.chariots.forEach(c=>{
@@ -3606,8 +2940,7 @@ function combat(bonus){
 /* ═══════════════ le chien du convoi ═══════════════
    Un errant nourri se laisse parfois adopter. Il ne se bat pas à la place des
    hommes : il flaire ce qui attend sur la piste, et il ne quitte pas le marchand. */
-const NOMS_CHIENS=['Ronce','Suif','Braise','Croc','Bourrasque','Cendre','Miette','Vaillant',
-  'Fauve','Tison','Loupiot','Galope','Rouille','Bramée'];
+let NOMS_CHIENS=null;       /* data/pnj.json → nomsChiens */
 function nouveauChien(){
   return {nom:pick(NOMS_CHIENS),flair:2,attaque:1};
 }
@@ -4511,6 +3844,7 @@ function toast(t){
   clearTimeout(tmToast);tmToast=setTimeout(()=>e.classList.remove('on'),2800);
 }
 function rendreArchetypes(){
+  if(!ARCHETYPES)return;                 /* les données ne sont pas encore là */
   $('#liste-archetypes').innerHTML=Object.keys(ARCHETYPES).map(k=>{
     const a=ARCHETYPES[k];
     return `<button class="route-carte" data-arch="${k}">
@@ -4873,10 +4207,144 @@ $('#fichier').addEventListener('change',e=>{
 });
 $('#nom-champ').addEventListener('keydown',e=>{if(e.key==='Enter')$('#nom-valider').click();});
 
+/* ═══════════════ chargement des données ═══════════════
+   Le moteur tient dans ce fichier ; tout le contenu — biens, raretés, contrées,
+   archétypes, armes, chariots, ambiances, noms propres, itinéraires,
+   pictogrammes — vit dans data/*.json et se charge ici. Les chemins sont
+   relatifs et sans barre oblique initiale, pour que la page fonctionne aussi
+   bien à la racine d'un domaine que dans un sous-dossier de GitHub Pages.
+   Rien du jeu ne s'exécute avant que les dix fichiers soient là. */
+const FICHIERS_DONNEES=['biens','raretes','contrees','archetypes','armes',
+  'chariots','ambiance','pnj','routes','icones'];
+
+function assigner(d){
+  /* — marchandises — */
+  CATEGORIES=d.biens.categories;
+  ORDRE_CAT=d.biens.ordreCategories;
+  G=d.biens.biens;
+  IDS=Object.keys(G);
+  /* — raretés — */
+  RARETES=d.raretes.niveaux;
+  RARETE_BASE=d.raretes.rareteBase;
+  /* — types de cités, contrées, toponymie — */
+  TYPES_HUMAIN=d.contrees.typesVilles.humain;
+  TYPES_NAIN=d.contrees.typesVilles.nain;
+  TYPES_ELFE=d.contrees.typesVilles.elfe;
+  TYPE_FRONTIERE=d.contrees.typeFrontiere;
+  TYPE_CAP_HUMAIN=d.contrees.typesCapitale.humain;
+  TYPE_CAP_NAIN=d.contrees.typesCapitale.nain;
+  TYPE_CAP_ELFE=d.contrees.typesCapitale.elfe;
+  TOUS_TYPES=[].concat(TYPES_HUMAIN,TYPES_NAIN,TYPES_ELFE,
+    [TYPE_FRONTIERE,TYPE_CAP_HUMAIN,TYPE_CAP_NAIN,TYPE_CAP_ELFE]);
+  NOMS_LIEUX=d.contrees.nomsLieux;
+  CONTREES=d.contrees.contrees;
+  /* Un fichier JSON ne sait pas pointer d'un objet vers un autre : chaque
+     contrée reçoit ici sa liste de types et le type de sa capitale. Ce sont
+     bien les mêmes objets que dans TOUS_TYPES, et c'est nécessaire — une
+     sauvegarde note le type d'une ville par son index dans ce tableau. */
+  CONTREES.forEach(c=>{
+    c.types=d.contrees.typesVilles[c.cle];
+    c.typeCapitale=d.contrees.typesCapitale[c.cle];
+  });
+  /* distances internes à chaque contrée, calculées une fois pour toutes */
+  GEO=CONTREES.map(c=>c.positions.map(a=>c.positions.map(b=>
+    Math.round(Math.hypot(a.x-b.x,a.y-b.y)))));
+  /* — personnages — */
+  ARCHETYPES=d.archetypes.archetypes;
+  METIERS=d.archetypes.metiers;
+  CLES_METIERS=Object.keys(METIERS);
+  /* — armurerie — */
+  FAMILLES=d.armes.familles;
+  ORDRE_FAMILLES=d.armes.ordreFamilles;
+  ARMES=d.armes.armes;
+  MAITRISE=d.armes.maitriseDefaut;
+  CLES_ARMES=Object.keys(ARMES);
+  CLES_COMMUNES=CLES_ARMES.filter(c=>!ARMES[c].mythique);
+  CLES_MYTHIQUES=CLES_ARMES.filter(c=>ARMES[c].mythique);
+  /* — chariots et leurs organes — */
+  CHARIOTS=d.chariots.chariots;
+  CLES_CHARIOTS=Object.keys(CHARIOTS);
+  PIECES=d.chariots.pieces;
+  ORGANES=d.chariots.organes;
+  VERBE_PIECE=d.chariots.verbePiece;
+  /* — ambiance des villes — */
+  HEURES=d.ambiance.heures;
+  PROFILS_VILLE=d.ambiance.profilsVille;
+  OUVERTURES=d.ambiance.ouvertures;
+  OUVERTURES_DEFAUT=d.ambiance.ouverturesDefaut;
+  ODEURS=d.ambiance.odeurs;
+  FOULES=d.ambiance.foules;
+  /* — noms propres — */
+  NOMS_GARDES=d.pnj.nomsGardes;
+  NOMS_CHIENS=d.pnj.nomsChiens;
+  /* — itinéraires — */
+  PROFILS=d.routes.profils;
+  FINS_CHARIOT=d.routes.finsChariot;
+  /* — pictogrammes — */
+  ICONES=d.icones.biens;
+  /* les quatre minerais partagent une silhouette, les trois gemmes une autre :
+     le JSON pose le mot-clé, on y substitue le tracé */
+  Object.keys(ICONES).forEach(k=>{
+    if(ICONES[k].d==='MINERAI')ICONES[k].d=d.icones.minerai;
+    if(ICONES[k].d==='GEMME')ICONES[k].d=d.icones.gemme;
+  });
+  ICONES_ARMES=d.icones.famillesArmes;
+  ETOILES=d.icones.etoiles;
+  TEINTES_RANG=d.icones.teintesRang;
+  CHARIOT_GLYPHE=d.icones.chariot;
+  ICONES_CHARIOTS=d.icones.teintesChariots;
+  CHIEN_GLYPHE=d.icones.chien;
+  GLYPHES_PIECE=d.icones.pieces;
+  TEINTES_PIECE=d.icones.teintesPiece;
+  GLYPHES_EV=d.icones.glyphesEvenement;
+  TEINTES_EV=d.icones.teintesEvenement;
+  ICONES_EV=d.icones.evenements;
+  /* rang d'une arme dans sa famille : acier, bronze, azur */
+  RANG_ARME={};
+  ORDRE_FAMILLES.forEach(f=>{
+    CLES_COMMUNES.filter(c=>ARMES[c].famille===f)
+      .sort((a,b)=>ARMES[a].frappe-ARMES[b].frappe)
+      .forEach((c,i)=>{RANG_ARME[c]=i;});
+  });
+}
+
+function demarrer(){
+  appliquerTaille(tailleCourante());
+  appliquerTheme(themePrefere());
+  majTitre();
+}
+
+function echecChargement(e){
+  console.error('Caravane — les données du jeu n\'ont pas pu être chargées :',e);
+  const app=$('#app');if(app)app.hidden=true;
+  const p=document.createElement('div');
+  p.setAttribute('style','max-width:34em;margin:12vh auto;padding:0 24px;'+
+    'font:16px/1.65 system-ui,sans-serif;color:#3A3128');
+  p.innerHTML='<h1 style="font-size:20px;margin:0 0 12px">Les données du jeu n\'ont pas pu '+
+    'être chargées.</h1><p>Le moteur attend le dossier <code>data/</code> et ses fichiers '+
+    '<code>.json</code> à côté de <code>index.html</code>.</p><p>Si vous avez ouvert la page '+
+    'd\'un double-clic, servez-la plutôt depuis un serveur local :<br>'+
+    '<code>python3 -m http.server</code> puis <code>http://localhost:8000/</code>.</p>';
+  document.body.appendChild(p);
+}
+
+function chargerDonnees(){
+  return Promise.all(FICHIERS_DONNEES.map(nom=>
+      fetch('data/'+nom+'.json').then(r=>{
+        if(!r.ok)throw new Error('data/'+nom+'.json → '+r.status+' '+r.statusText);
+        return r.json();
+      })))
+    .then(charges=>{
+      const d={};
+      FICHIERS_DONNEES.forEach((nom,i)=>{d[nom]=charges[i];});
+      assigner(d);
+      demarrer();
+    })
+    .catch(echecChargement);
+}
+
 /* départ */
-appliquerTaille(tailleCourante());
-appliquerTheme(themePrefere());
-majTitre();
+chargerDonnees();
 </script>
 </body>
 </html>

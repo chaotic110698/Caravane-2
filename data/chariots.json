@@ -1,0 +1,141 @@
+{
+  "chariots": {
+    "charrette": {
+      "nom": "Charrette légère",
+      "cap": 38,
+      "usure": 0.55,
+      "resist": 1,
+      "prix": 150,
+      "texte": "Deux roues, peu de volume, et une solidité de mule : elle avale les lieues sans presque s'user."
+    },
+    "bache": {
+      "nom": "Chariot bâché",
+      "cap": 58,
+      "usure": 1,
+      "resist": 1,
+      "prix": 275,
+      "texte": "Le chariot de tout le monde. Ni le plus grand, ni le plus solide, ni le plus cher."
+    },
+    "fardier": {
+      "nom": "Fardier",
+      "cap": 95,
+      "usure": 1.8,
+      "resist": 1.1,
+      "prix": 430,
+      "texte": "Un plateau énorme sur des essieux qui n'en demandaient pas tant. Il porte tout, et il le paie."
+    },
+    "renforce": {
+      "nom": "Chariot renforcé",
+      "cap": 62,
+      "usure": 0.8,
+      "resist": 0.4,
+      "prix": 660,
+      "texte": "Bois doublé, ferrures partout, bâche huilée. Les tempêtes et les gués glissent dessus."
+    }
+  },
+  "organes": [
+    "essieu",
+    "caisse",
+    "cheval"
+  ],
+  "pieces": {
+    "essieu": {
+      "nom": "Essieu",
+      "cle": "essieu",
+      "niveaux": [
+        {
+          "cle": "bois",
+          "nom": "Essieu de bois",
+          "usure": 1,
+          "prix": 120,
+          "texte": "Un fût de frêne tourné à la main. Il fait son office et rien de plus."
+        },
+        {
+          "cle": "cercle",
+          "nom": "Essieu cerclé",
+          "usure": 0.7,
+          "prix": 300,
+          "texte": "Le bois est fretté de bandes de fer aux points d'usure. Il dure nettement plus."
+        },
+        {
+          "cle": "acier",
+          "nom": "Essieu d'acier",
+          "usure": 0.44,
+          "prix": 680,
+          "exclusif": "nain",
+          "texte": "Forgé d'une seule pièce dans les halles naines. Les cailloux passent dessous sans qu'on les sente."
+        }
+      ]
+    },
+    "caisse": {
+      "nom": "Caisse",
+      "cle": "caisse",
+      "niveaux": [
+        {
+          "cle": "planches",
+          "nom": "Caisse de planches",
+          "cap": 1,
+          "resist": 1,
+          "prix": 150,
+          "texte": "Des planches clouées, une bâche par-dessus. Ça prend l'eau et ça se fend."
+        },
+        {
+          "cle": "doublee",
+          "nom": "Caisse doublée",
+          "cap": 1.12,
+          "resist": 0.66,
+          "prix": 350,
+          "texte": "Double paroi et bâche huilée : on y range dix pour cent de plus, et les chocs passent mal."
+        },
+        {
+          "cle": "elfique",
+          "nom": "Caisse en bois elfique",
+          "cap": 1.26,
+          "resist": 0.4,
+          "prix": 760,
+          "exclusif": "elfe",
+          "texte": "Assemblée sans un clou par les menuisiers des cimes. Légère, souple, et rien ne l'ouvre."
+        }
+      ]
+    },
+    "cheval": {
+      "nom": "Cheval",
+      "cle": "cheval",
+      "niveaux": [
+        {
+          "cle": "roussin",
+          "nom": "Roussin",
+          "traction": 38,
+          "km": 15,
+          "fatigue": 1,
+          "prix": 170,
+          "texte": "Le cheval de tout le monde : docile, bon marché, et vite à la peine dès qu'on le charge."
+        },
+        {
+          "cle": "sommier",
+          "nom": "Sommier",
+          "traction": 60,
+          "km": 19,
+          "fatigue": 0.72,
+          "prix": 400,
+          "texte": "Bête de somme large de poitrail. Elle emmène une charge honnête sans ralentir."
+        },
+        {
+          "cle": "trait",
+          "nom": "Cheval de trait",
+          "traction": 95,
+          "km": 22,
+          "fatigue": 0.52,
+          "prix": 820,
+          "exclusif": "humain",
+          "texte": "Une montagne calme, élevée dans les écuries royales. Il avance du même pas, chargé ou vide."
+        }
+      ]
+    }
+  },
+  "verbePiece": {
+    "essieu": "Ne se forge qu'à",
+    "caisse": "Ne s'assemble qu'à",
+    "cheval": "Ne s'élève qu'à"
+  }
+}

@@ -1,0 +1,139 @@
+{
+  "categories": {
+    "nourriture": {
+      "nom": "Nourriture",
+      "trait": "Lourde, périssable, mais tout le monde en veut."
+    },
+    "minerais": {
+      "nom": "Minerais",
+      "trait": "Le poids du fer contre la valeur de l'argent."
+    },
+    "joyaux": {
+      "nom": "Joyaux",
+      "trait": "Ne pèsent rien et valent tout : la cargaison du riche."
+    },
+    "art": {
+      "nom": "Art",
+      "trait": "Ce qui ne sert à rien et se vend très cher."
+    },
+    "materiaux": {
+      "nom": "Matériaux",
+      "trait": "Encombrant, bon marché, indispensable partout."
+    }
+  },
+  "ordreCategories": [
+    "nourriture",
+    "minerais",
+    "joyaux",
+    "art",
+    "materiaux"
+  ],
+  "biens": {
+    "ble": {
+      "nom": "Blé",
+      "cat": "nourriture",
+      "base": 2,
+      "perissable": 1
+    },
+    "sel": {
+      "nom": "Sel",
+      "cat": "nourriture",
+      "base": 3
+    },
+    "vin": {
+      "nom": "Vin",
+      "cat": "nourriture",
+      "base": 8,
+      "fragile": 1
+    },
+    "miel": {
+      "nom": "Miel",
+      "cat": "nourriture",
+      "base": 15,
+      "perissable": 1
+    },
+    "epices": {
+      "nom": "Épices",
+      "cat": "nourriture",
+      "base": 74,
+      "perissable": 1
+    },
+    "fer": {
+      "nom": "Fer",
+      "cat": "minerais",
+      "base": 3
+    },
+    "cuivre": {
+      "nom": "Cuivre",
+      "cat": "minerais",
+      "base": 5
+    },
+    "argent": {
+      "nom": "Argent",
+      "cat": "minerais",
+      "base": 32
+    },
+    "mithril": {
+      "nom": "Mithril",
+      "cat": "minerais",
+      "base": 132
+    },
+    "ambre": {
+      "nom": "Ambre",
+      "cat": "joyaux",
+      "base": 112
+    },
+    "grenat": {
+      "nom": "Grenat",
+      "cat": "joyaux",
+      "base": 155
+    },
+    "saphir": {
+      "nom": "Saphir",
+      "cat": "joyaux",
+      "base": 330
+    },
+    "etoffes": {
+      "nom": "Étoffes",
+      "cat": "art",
+      "base": 17
+    },
+    "encens": {
+      "nom": "Encens",
+      "cat": "art",
+      "base": 58
+    },
+    "tapis": {
+      "nom": "Tapisserie",
+      "cat": "art",
+      "base": 44
+    },
+    "enlum": {
+      "nom": "Enluminure",
+      "cat": "art",
+      "base": 215,
+      "fragile": 1
+    },
+    "bois": {
+      "nom": "Bois",
+      "cat": "materiaux",
+      "base": 2
+    },
+    "pierre": {
+      "nom": "Pierre",
+      "cat": "materiaux",
+      "base": 2
+    },
+    "peaux": {
+      "nom": "Peaux",
+      "cat": "materiaux",
+      "base": 6
+    },
+    "verre": {
+      "nom": "Verrerie",
+      "cat": "materiaux",
+      "base": 23,
+      "fragile": 1
+    }
+  }
+}
