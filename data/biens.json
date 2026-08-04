@@ -33,107 +33,130 @@
       "nom": "Blé",
       "cat": "nourriture",
       "base": 2,
-      "perissable": 1
+      "perissable": 1,
+      "genre": "m"
     },
     "sel": {
       "nom": "Sel",
       "cat": "nourriture",
-      "base": 3
+      "base": 3,
+      "genre": "m"
     },
     "vin": {
       "nom": "Vin",
       "cat": "nourriture",
       "base": 8,
-      "fragile": 1
+      "fragile": 1,
+      "genre": "m"
     },
     "miel": {
       "nom": "Miel",
       "cat": "nourriture",
       "base": 15,
-      "perissable": 1
+      "perissable": 1,
+      "genre": "m"
     },
     "epices": {
       "nom": "Épices",
       "cat": "nourriture",
       "base": 74,
-      "perissable": 1
+      "perissable": 1,
+      "genre": "f",
+      "pluriel": 1
     },
     "fer": {
       "nom": "Fer",
       "cat": "minerais",
-      "base": 3
+      "base": 3,
+      "genre": "m"
     },
     "cuivre": {
       "nom": "Cuivre",
       "cat": "minerais",
-      "base": 5
+      "base": 5,
+      "genre": "m"
     },
     "argent": {
       "nom": "Argent",
       "cat": "minerais",
-      "base": 32
+      "base": 32,
+      "genre": "m"
     },
     "mithril": {
       "nom": "Mithril",
       "cat": "minerais",
-      "base": 132
+      "base": 132,
+      "genre": "m"
     },
     "ambre": {
       "nom": "Ambre",
       "cat": "joyaux",
-      "base": 112
+      "base": 112,
+      "genre": "m"
     },
     "grenat": {
       "nom": "Grenat",
       "cat": "joyaux",
-      "base": 155
+      "base": 155,
+      "genre": "m"
     },
     "saphir": {
       "nom": "Saphir",
       "cat": "joyaux",
-      "base": 330
+      "base": 330,
+      "genre": "m"
     },
     "etoffes": {
       "nom": "Étoffes",
       "cat": "art",
-      "base": 17
+      "base": 17,
+      "genre": "f",
+      "pluriel": 1
     },
     "encens": {
       "nom": "Encens",
       "cat": "art",
-      "base": 58
+      "base": 58,
+      "genre": "m"
     },
     "tapis": {
       "nom": "Tapisserie",
       "cat": "art",
-      "base": 44
+      "base": 44,
+      "genre": "f"
     },
     "enlum": {
       "nom": "Enluminure",
       "cat": "art",
       "base": 215,
-      "fragile": 1
+      "fragile": 1,
+      "genre": "f"
     },
     "bois": {
       "nom": "Bois",
       "cat": "materiaux",
-      "base": 2
+      "base": 2,
+      "genre": "m"
     },
     "pierre": {
       "nom": "Pierre",
       "cat": "materiaux",
-      "base": 2
+      "base": 2,
+      "genre": "f"
     },
     "peaux": {
       "nom": "Peaux",
       "cat": "materiaux",
-      "base": 6
+      "base": 6,
+      "genre": "f",
+      "pluriel": 1
     },
     "verre": {
       "nom": "Verrerie",
       "cat": "materiaux",
       "base": 23,
-      "fragile": 1
+      "fragile": 1,
+      "genre": "f"
     }
   }
 }

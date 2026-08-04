@@ -3,9 +3,9 @@
 `index.html` contient le **moteur** : le HTML, le CSS, les règles, les calculs,
 le rendu, les dés, le combat, l'économie. Il ne contient aucun contenu.
 
-Ce dossier contient le **contenu** : dix fichiers JSON chargés au démarrage par
+Ce dossier contient le **contenu** : onze fichiers JSON chargés au démarrage par
 `chargerDonnees()` (tout en bas de `index.html`), en chemin relatif
-`fetch('data/…json')`. Rien du jeu ne s'exécute avant que les dix soient là.
+`fetch('data/…json')`. Rien du jeu ne s'exécute avant que les onze soient là.
 
 Toutes les clés sont en français et reprennent le vocabulaire du code. Les
 fichiers sont en UTF-8, sans commentaires (le JSON n'en accepte pas) : ce
@@ -30,6 +30,7 @@ document en tient lieu.
 | `ambiance.json` | heures, silhouettes, phrases d'ambiance | `HEURES`, `PROFILS_VILLE`, `OUVERTURES`, `ODEURS`, `FOULES` |
 | `pnj.json` | noms de gardes, noms de chiens | `NOMS_GARDES`, `NOMS_CHIENS` |
 | `routes.json` | profils d'itinéraire, fins de partie par ruine | `PROFILS`, `FINS_CHARIOT` |
+| `missions.json` | clients et récits des offres de contrat | `TITRES_CLIENT_RICHES`, `TWISTS_MISSION`, `RECITS_*` |
 | `icones.json` | pictogrammes SVG liés à une entrée de données | `ICONES`, `ICONES_ARMES`, `GLYPHES_EV`… |
 
 ---
@@ -46,7 +47,8 @@ l'étal est en kilos, la soute est en kilos.
   },
   "ordreCategories": ["nourriture", "minerais", "joyaux", "art", "materiaux"],
   "biens": {
-    "vin": { "nom": "Vin", "cat": "nourriture", "base": 8, "fragile": 1 }
+    "vin":    { "nom": "Vin",    "cat": "nourriture", "base": 8,  "fragile": 1, "genre": "m" },
+    "epices": { "nom": "Épices", "cat": "nourriture", "base": 74, "perissable": 1, "genre": "f", "pluriel": 1 }
   }
 }
 ```
@@ -73,6 +75,14 @@ bien dans tout le jeu (soute, contrats, sauvegardes, `icones.json`).
 | `base` | nombre | prix de référence au kilo, avant rareté, ville et négoce |
 | `perissable` | `1` ou absent | se gâte en chemin : une part du stock se perd à l'arrivée, proportionnelle à la longueur du trajet |
 | `fragile` | `1` ou absent | se casse lors des tempêtes, versements et fuites |
+| `genre` | `"m"` ou `"f"` | genre grammatical du `nom` |
+| `pluriel` | `1` ou absent | le `nom` est un pluriel (« Épices », « Peaux ») |
+
+`genre` et `pluriel` ne servent qu'à écrire du français correct quand la
+marchandise est citée dans une phrase — les récits de mission, notamment.
+`duBien()` en tire *du blé*, *de la pierre*, *de l'ambre*, *des peaux* ;
+`deBien()` en tire *de blé*, *d'épices*. Un bien sans `genre` est traité au
+masculin singulier.
 
 > Un bien ajouté ici **doit** recevoir une entrée dans `icones.json → biens` et
 > une note de rareté dans `raretes.json → rareteBase` pour chacune des trois
@@ -428,6 +438,78 @@ chariots, `detour` la distance (< 1 : raccourci). Le moteur en attend trois.
 
 **`finsChariot`** — les phrases de fin de partie quand le convoi n'a plus un
 seul chariot en état. Une est tirée au hasard.
+
+---
+
+## `missions.json`
+
+L'habillage des offres de contrat. Rien ici ne touche à la mécanique : la
+prime, l'échéance et les conditions d'acceptation se calculent dans
+`index.html` et ne lisent aucune de ces valeurs. Chaque offre tire un titre, un
+nom, un gabarit de récit et parfois une complication, ce qui donne quelques
+milliers de formulations possibles — deux offres identiques n'arrivent
+pratiquement jamais.
+
+```json
+{
+  "titresClient": ["Maître", "Dame", "L'intendant de"],
+  "twists": [null, null, "avant que la lune ne soit pleine"],
+  "recitsCommande": [
+    "{client} manque cruellement {deBien}. On dit qu'on en trouve {aCible}{twist}."
+  ],
+  "recitsConvoyage": [
+    "{client} a besoin qu'on porte {duBien} jusqu'{aCible}{twist}."
+  ]
+}
+```
+
+**`titresClient`** — les titres possibles du commanditaire. Le nom qui suit est
+tiré dans `pnj.json → nomsGardes` : « Dame Corvin », « Le comptoir de Naya ».
+Un titre qui se termine par ` de` (`La guilde de`, `L'intendant de`,
+`Le comptoir de`) est élidé devant une voyelle — « La guilde d'Ivar ».
+
+**`twists`** — la complication, facultative, ajoutée en fin de phrase après une
+virgule. **Les `null` sont significatifs** : ils règlent la proportion d'offres
+sans complication. Deux `null` sur neuf entrées, c'est environ une offre sur
+cinq qui reste sobre. Écrivez la complication sans majuscule ni point final.
+
+**`recitsCommande`**, **`recitsConvoyage`** — les gabarits, tirés au sort selon
+le genre de l'offre. Ce sont des textes à trous :
+
+| trou | remplacé par |
+|---|---|
+| `{client}` | le commanditaire, titre compris |
+| `{cible}` | le nom nu de la ville où va (convoyage) ou d'où vient (commande) la marchandise |
+| `{aCible}` | la même ville précédée de sa préposition : *à Tell-Oria*, *au Marteau-Bas*, *aux Cimes Basses* |
+| `{duBien}` | *du blé*, *de la pierre*, *de l'ambre*, *des peaux* — voir `genre` et `pluriel` dans `biens.json` |
+| `{deBien}` | *de blé*, *d'épices* — après « manque de », « un lot de », « livraison de » |
+| `{twist}` | *, avant que la lune ne soit pleine* — ou **rien du tout** si l'offre n'a pas de complication |
+
+Un trou inconnu est laissé tel quel dans le texte, ce qui rend une faute de
+frappe visible à l'écran plutôt que silencieuse.
+
+> **Le français demande ses articles.** Écrire `du {bien}` donnerait « du
+> épices » et « du peaux » ; écrire `à {cible}` donnerait « à Le Marteau-Bas ».
+> Utilisez toujours `{duBien}`, `{deBien}` et `{aCible}` — jamais le nom nu.
+> `{aCible}` se colle aussi après une élision : `jusqu'{aCible}` donne
+> *jusqu'à Tell-Oria* comme *jusqu'au Marteau-Bas*.
+>
+> Attention aussi aux **accords** : une marchandise peut être un pluriel, donc
+> pas de « {duBien} doit partir » (« des peaux doit partir »). Faites porter la
+> phrase par un mot à vous — *ce chargement*, *ce lot*, *cette livraison*.
+>
+> Enfin, placez `{client}` en **début de phrase**. Plusieurs titres commencent
+> par une majuscule d'article (`L'intendant de`, `Le comptoir de`) : « c'est
+> L'intendant de Melik » détonne au milieu d'une phrase, « L'intendant de Melik
+> attend… » se lit tout seul.
+
+Les gabarits sont interchangeables entre commande et convoyage sur la forme,
+mais pas sur le sens : dans une **commande**, le client est ici et la
+marchandise est là-bas ; dans un **convoyage**, la marchandise est ici et doit
+partir là-bas. `{cible}` désigne l'autre ville dans les deux cas.
+
+Ajouter des entrées à n'importe laquelle de ces quatre listes suffit : le
+moteur n'en attend aucun nombre précis.
 
 ---
 

@@ -990,6 +990,27 @@ let ORDRE_CAT=null;         /* data/biens.json → ordreCategories */
 let G=null;                 /* data/biens.json → biens */
 let IDS=[];                 /* dérivé : les clés de G */
 function biensDe(cat){return IDS.filter(g=>G[g].cat===cat);}
+/* Les marchandises se citent dans des phrases : il leur faut leur article.
+   `genre` et `pluriel` viennent de data/biens.json — sans quoi on écrirait
+   « du épices » et « du peaux ». */
+function commenceParVoyelle(mot){return /^[aàâeéèêëiîïoôöuùûüy]/i.test(mot);}
+function duBien(g){                      /* du blé · de la pierre · de l'ambre · des peaux */
+  const b=G[g],n=b.nom.toLowerCase();
+  if(b.pluriel)return 'des '+n;
+  if(commenceParVoyelle(n))return 'de l\''+n;
+  return (b.genre==='f'?'de la ':'du ')+n;
+}
+function deBien(g){                      /* de blé · d'épices */
+  const n=G[g].nom.toLowerCase();
+  return (commenceParVoyelle(n)?'d\'':'de ')+n;
+}
+/* Beaucoup de cités portent leur article : « à Le Marteau-Bas » ne se dit pas.
+   « à La Halle Rouge » se dit, en revanche : seuls le et les se contractent. */
+function aVille(nom){                    /* à Tell-Oria · au Marteau-Bas · aux Cimes Basses */
+  if(nom.indexOf('Les ')===0)return 'aux '+nom.slice(4);
+  if(nom.indexOf('Le ')===0)return 'au '+nom.slice(3);
+  return 'à '+nom;
+}
 
 /* Cinq niveaux de rareté. Le niveau de base dépend de la contrée ; la spécialité
    de la cité le décale d'un cran, et chaque cité a ses propres écarts. */
@@ -1625,9 +1646,36 @@ function icoEvenement(titre,cls){
 const MAX_CONTRATS=3;
 let numContrat=1;
 
+/* ——— l'habillage narratif des offres ———
+   Rien ici ne touche à la mécanique : ni la prime, ni l'échéance, ni les
+   conditions d'acceptation. Seuls le client et le récit changent, et ils se
+   fabriquent par combinaison — un titre, un nom, un gabarit, parfois une
+   complication — pour qu'aucune offre ne ressemble tout à fait à la
+   précédente. Les listes sont dans data/missions.json. */
+let TITRES_CLIENT_RICHES=null;  /* data/missions.json → titresClient */
+let TWISTS_MISSION=null;        /* data/missions.json → twists */
+let RECITS_COMMANDE=null;       /* data/missions.json → recitsCommande */
+let RECITS_CONVOYAGE=null;      /* data/missions.json → recitsConvoyage */
+
+/* Un gabarit est du texte à trous : {client}, {cible}, {duBien}, {deBien}
+   et {twist}, qui s'efface quand l'offre n'a pas de complication. */
+function remplirRecit(modele,ctx){
+  return modele.replace(/\{(\w+)\}/g,(entier,cle)=>{
+    if(cle==='twist')return ctx.twist?', '+ctx.twist:'';
+    return ctx[cle]===undefined?entier:ctx[cle];
+  });
+}
+function recitOffre(genre,bien,cibleNom,client){
+  const ctx={client:client,cible:cibleNom,aCible:aVille(cibleNom),
+    duBien:duBien(bien),deBien:deBien(bien),twist:pick(TWISTS_MISSION)};
+  return remplirRecit(pick(genre==='commande'?RECITS_COMMANDE:RECITS_CONVOYAGE),ctx);
+}
+
 function nomCommanditaire(){
-  return pick(['Maître','Dame','Sieur','Doyen','Veuve','L\'échevin','La guilde de'])+' '+
-    pick(NOMS_GARDES);
+  const titre=pick(TITRES_CLIENT_RICHES),nom=pick(NOMS_GARDES);
+  /* « La guilde de » suivi d'Ivar se dit « La guilde d'Ivar » */
+  if(/ de$/.test(titre)&&commenceParVoyelle(nom))return titre.slice(0,-3)+' d\''+nom;
+  return titre+' '+nom;
 }
 function primeCommande(bien,kg,dist){
   const base=G[bien].base*kg;
@@ -1656,20 +1704,24 @@ function genererOffres(){
       if(!cand.length)continue;
       const bien=pick(cand);
       const kg=ri(3,9)*5;
+      const client=nomCommanditaire();
       v.offres.push({id:numContrat++,genre:'commande',bien:bien,kg:kg,
-        dest:ici,indice:autre,client:nomCommanditaire(),
+        dest:ici,indice:autre,client:client,
         prime:primeCommande(bien,kg,dist),
-        echeance:S.etapes+dist*2+ri(4,7)});
+        echeance:S.etapes+dist*2+ri(4,7),
+        recit:recitOffre('commande',bien,S.villes[autre].nom,client)});
     }else{
       /* il a la marchandise et cherche un convoyeur */
       const cand=IDS.filter(g=>rarete(v,g)<=2);
       if(!cand.length)continue;
       const bien=pick(cand);
       const kg=ri(4,11)*5;
+      const client=nomCommanditaire();
       v.offres.push({id:numContrat++,genre:'convoyage',bien:bien,kg:kg,
-        dest:autre,depart:ici,client:nomCommanditaire(),
+        dest:autre,depart:ici,client:client,
         prime:primeConvoyage(bien,kg,dist),
-        echeance:S.etapes+dist+ri(3,5)});
+        echeance:S.etapes+dist+ri(3,5),
+        recit:recitOffre('convoyage',bien,S.villes[autre].nom,client)});
     }
   }
 }
@@ -2183,16 +2235,18 @@ function carteOffre(o){
   const cible=S.villes[commande?o.indice:o.dest];
   const dist=etapesEntre(ici,commande?o.indice:o.dest);
   const place_ok=commande||place()>=o.kg;
+  /* les offres d'une sauvegarde antérieure au récit gardent l'ancien texte */
+  const recit=o.recit||(commande
+    ? `Il n'en trouve pas ici. On en vend à <b>${cible.nom}</b> ; rapportez-lui la
+       marchandise et il paiera à la livraison.`
+    : `La marchandise est prête et vous sera chargée. Elle doit parvenir à <b>${cible.nom}</b>.`);
   return `<div class="carte offre">
     <div class="rangee"><h3>${ico(o.bien,'ico-inline')}${fmt(o.kg)} kg de ${G[o.bien].nom.toLowerCase()}</h3>
       <span class="oeil chiffre">${fmt(o.prime)} po</span></div>
     <p class="oeil">${commande?'Commande':'Convoyage'} · ${o.client}</p>
-    <p style="margin-top:6px">${commande
-      ? `Il n'en trouve pas ici. On en vend à <b>${cible.nom}</b>, à ${dist} étapes ; rapportez-lui la
-         marchandise et il paiera à la livraison.`
-      : `La marchandise est prête et vous sera chargée. Elle doit parvenir à <b>${cible.nom}</b>,
-         à ${dist} étapes.`}</p>
+    <p style="margin-top:6px">${recit}</p>
     <div class="tags">
+      <span class="tag">${cible.nom} · ${dist} étapes</span>
       <span class="tag">${o.echeance-S.etapes} étapes de délai</span>
       <span class="tag">${commande?'aller-retour':'aller simple'}</span>
       ${commande?'':`<span class="tag ${place_ok?'sur':'perilleux'}">${fmt(o.kg)} kg à charger</span>`}
@@ -4213,9 +4267,9 @@ $('#nom-champ').addEventListener('keydown',e=>{if(e.key==='Enter')$('#nom-valide
    pictogrammes — vit dans data/*.json et se charge ici. Les chemins sont
    relatifs et sans barre oblique initiale, pour que la page fonctionne aussi
    bien à la racine d'un domaine que dans un sous-dossier de GitHub Pages.
-   Rien du jeu ne s'exécute avant que les dix fichiers soient là. */
+   Rien du jeu ne s'exécute avant que les onze fichiers soient là. */
 const FICHIERS_DONNEES=['biens','raretes','contrees','archetypes','armes',
-  'chariots','ambiance','pnj','routes','icones'];
+  'chariots','ambiance','pnj','routes','missions','icones'];
 
 function assigner(d){
   /* — marchandises — */
@@ -4280,6 +4334,11 @@ function assigner(d){
   /* — itinéraires — */
   PROFILS=d.routes.profils;
   FINS_CHARIOT=d.routes.finsChariot;
+  /* — habillage des missions — */
+  TITRES_CLIENT_RICHES=d.missions.titresClient;
+  TWISTS_MISSION=d.missions.twists;
+  RECITS_COMMANDE=d.missions.recitsCommande;
+  RECITS_CONVOYAGE=d.missions.recitsConvoyage;
   /* — pictogrammes — */
   ICONES=d.icones.biens;
   /* les quatre minerais partagent une silhouette, les trois gemmes une autre :

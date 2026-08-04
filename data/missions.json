@@ -1,0 +1,38 @@
+{
+  "titresClient": [
+    "Maître",
+    "Dame",
+    "Sieur",
+    "Doyen",
+    "Veuve",
+    "L'échevin",
+    "La guilde de",
+    "L'intendant de",
+    "Le comptoir de"
+  ],
+  "twists": [
+    null,
+    null,
+    "sans que les gardes du péage n'y voient rien",
+    "avant que la lune ne soit pleine",
+    "malgré les rumeurs de bandits sur la route",
+    "et personne ne doit savoir d'où elle vient",
+    "car un rival guette la moindre erreur",
+    "avant qu'une caravane concurrente ne s'en charge",
+    "discrètement, loin des registres du péage"
+  ],
+  "recitsCommande": [
+    "{client} manque cruellement {deBien}. On dit qu'on en trouve {aCible}{twist}.",
+    "{client} cherche {duBien} de bonne qualité et ne regarde pas trop à la dépense{twist}.",
+    "{client} a passé commande {deBien}, et le besoin est urgent{twist}.",
+    "{client} attend {duBien} depuis deux saisons. Il s'en vend {aCible}{twist}.",
+    "{client} attend une livraison {deBien}, et personne {aCible} ne s'étonnera qu'on en achète{twist}."
+  ],
+  "recitsConvoyage": [
+    "{client} a besoin qu'on porte {duBien} jusqu'{aCible}{twist}.",
+    "Un lot {deBien} attend dans un entrepôt. {client} vous paie pour qu'il prenne la route{twist}.",
+    "{client} a promis cette livraison {deBien} et ne veut pas se dédire{twist}.",
+    "Les caisses sont scellées et pesées. {client} veut les savoir {aCible} avant l'échéance{twist}.",
+    "{client} n'a plus de convoyeur pour ce chargement {deBien}, attendu {aCible} sans faute{twist}."
+  ]
+}

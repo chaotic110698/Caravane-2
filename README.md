@@ -30,7 +30,7 @@ data/FORMAT.md    le format de chaque fichier de données, clé par clé
 ```
 
 Le moteur ne contient aucun contenu, et les fichiers de données aucune logique.
-Au démarrage, `chargerDonnees()` va chercher les dix fichiers `data/*.json` en
+Au démarrage, `chargerDonnees()` va chercher les onze fichiers `data/*.json` en
 chemin relatif, remplit les variables du moteur, puis lance le jeu — rien ne
 s'exécute avant.
 
