@@ -3,9 +3,25 @@
 `atelier-carte.html` sert à dessiner le monde de Caravane : poser les lieux sur une
 carte, les relier, délimiter les contrées, et fixer l'échelle des distances.
 
-Ouvrez-le dans un navigateur — directement par double-clic, ou servi comme le jeu.
-Il n'a aucune dépendance et **rien ne sort de votre machine** : l'image de fond et le
-travail en cours restent dans le navigateur.
+## L'ouvrir
+
+**Depuis le web, sans rien installer.** GitHub Pages sert tout le dépôt, donc l'atelier
+est en ligne avec le jeu :
+
+    https://chaotic110698.github.io/Caravane-2/outils/atelier-carte.html
+
+C'est la façon la plus simple, et elle suit les mises à jour toutes seule.
+
+**Ou par double-clic.** Sur GitHub, ouvrez `outils/atelier-carte.html` et cliquez
+« Download raw file » (l'icône ⤓ en haut à droite du fichier) — ou clonez le dépôt.
+Puis double-cliquez le fichier téléchargé.
+
+Contrairement au jeu, l'atelier **fonctionne parfaitement en `file://`** : il ne va
+chercher aucun fichier, donc rien à servir. La sauvegarde du travail, la persistance de
+l'image de fond et l'export sont vérifiés dans ce mode.
+
+Aucune dépendance, aucune installation, aucun compte. **Rien ne sort de votre
+machine** : l'image de fond et le travail en cours restent dans le navigateur.
 
 > **Le jeu ne lit pas encore ce fichier.** L'atelier définit le monde que le moteur
 > consommera ; l'adaptation du moteur est un chantier séparé, décrit en fin de page.

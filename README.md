@@ -40,10 +40,15 @@ Pour ajouter une marchandise, une arme, un type de cité, un pictogramme ou un
 fichier, chaque clé, et ce qui casse si on s'en écarte.
 
 Pour dessiner le monde — poser les villes sur une carte, tracer les routes, délimiter
-les contrées, fixer l'échelle des distances — ouvrez
-[`outils/atelier-carte.html`](outils/atelier-carte.html) dans un navigateur.
-Son mode d'emploi et le format qu'il exporte sont dans
-[`outils/README.md`](outils/README.md).
+les contrées, fixer l'échelle des distances — il y a l'**atelier de carte**, servi avec
+le jeu :
+
+    https://chaotic110698.github.io/Caravane-2/outils/atelier-carte.html
+
+Il marche aussi par simple double-clic sur
+[`outils/atelier-carte.html`](outils/atelier-carte.html) une fois téléchargé : il ne
+charge aucun fichier, donc pas besoin de le servir. Son mode d'emploi et le format qu'il
+exporte sont dans [`outils/README.md`](outils/README.md).
 
 Les événements de route sont la seule exception : ils sont restés dans
 `index.html`, parce que chaque choix y est une fonction qui manipule l'état du
