@@ -361,6 +361,18 @@ details.regles li{margin-bottom:6px}
   box-shadow:0 0 0 1px var(--or-clair) inset,0 0 0 4px var(--velin-clair),
              0 0 0 5px var(--velin-ombre),0 3px 10px rgba(43,33,22,.28)}
 .carte-monde svg{display:block;width:100%;height:auto}
+/* Deux temps sur l'écran des routes : la carte prend toute la place qui reste
+   tant qu'on choisit une cité, puis s'efface pour laisser les chemins. */
+#ecran-routes .pied{display:grid;gap:8px}
+#ecran-routes.phase-carte .carte-monde{flex:0 1 auto;min-height:0}
+#ecran-routes.phase-carte .carte-monde svg{height:100%}
+#ecran-routes.phase-carte .corps{flex:1 1 auto}
+#ecran-routes.phase-chemins .carte-monde{display:none}
+.route-carte.choisie{border-color:var(--minium);border-top:2px solid var(--minium);
+  background:var(--velin);
+  box-shadow:0 0 0 1px rgba(163,44,28,.22),1px 2px 0 rgba(43,33,22,.09)}
+.route-carte.choisie h3{color:var(--minium)}
+.route-carte.choisie .coche{color:var(--minium)}
 .voie{stroke:var(--velin-ombre);stroke-width:.5;stroke-dasharray:1.6 2.2;fill:none}
 .voie-active{stroke:var(--encre-pale);stroke-width:.8;stroke-dasharray:2.4 1.8}
 .voie-choisie{stroke:var(--minium);stroke-width:1.6;stroke-dasharray:none}
@@ -802,12 +814,15 @@ details.regles li{margin-bottom:6px}
   <section id="ecran-routes" class="ecran">
     <div id="registre-2" class="registre"></div>
     <div class="entete" style="padding-bottom:4px">
-      <p class="oeil">Au départ de <span id="routes-depart">—</span></p>
-      <h1>Où allons-nous ?</h1>
+      <p class="oeil" id="routes-oeil">Au départ de —</p>
+      <h1 id="routes-titre">Où allons-nous ?</h1>
     </div>
     <div class="carte-monde" id="carte-monde"></div>
     <div class="corps"><div class="panneau actif" id="liste-routes"></div></div>
-    <div class="pied"><button class="bouton creux" id="btn-rester">Retourner au marché</button></div>
+    <div class="pied">
+      <button class="bouton" id="btn-etape" disabled>Choisissez une cité</button>
+      <button class="bouton creux" id="btn-rester">Retourner au marché</button>
+    </div>
   </section>
 
   <!-- ══════════ ROUTE ══════════ -->
@@ -2501,21 +2516,41 @@ function routesVers(j){
              .7,1,1,{douane:douane()})];
   return PROFILS.map(p=>trace(p.nom,p.tag,p.risque,p.rudesse,p.detour));
 }
+/* Le voyage se décide en deux temps : la cité d'abord, sur une carte qui a la
+   page pour elle ; le chemin ensuite. Le bouton du bas porte les deux étapes —
+   il reste éteint tant que rien n'est choisi, s'allume dès qu'on touche une
+   cité, mène aux chemins, puis fait partir le convoi. */
+let etapeRoutes='carte', routeChoisie=null;
+
 function ouvrirCarte(){
-  S.dest=null;S.routes=null;
+  S.dest=null;S.routes=null;routeChoisie=null;etapeRoutes='carte';
   registre($('#registre-2'));
   ecran('ecran-routes');
   rendreCarte();
-  rendreChoixRoutes();
+  rendreEtapeRoutes();
 }
 function choisirVille(j){
   if(S.villes[j]===S.ville||!relies(indexVille(S.ville),j))return;
   S.dest=j;
   S.routes=routesVers(j);
+  routeChoisie=null;
   majSelectionCarte();
-  rendreChoixRoutes();
-  const c=$('#ecran-routes .corps');
-  if(c)c.scrollTop=0;
+  rendreEtapeRoutes();
+}
+function choisirRoute(i){
+  if(!S.routes||!S.routes[i])return;
+  routeChoisie=i;
+  rendreEtapeRoutes();
+}
+function villeChoisie(){return S.dest!==null&&S.dest!==undefined;}
+function passerAuxChemins(){
+  if(!villeChoisie())return;
+  etapeRoutes='chemins';
+  rendreEtapeRoutes();
+}
+function revenirALaCarte(){
+  etapeRoutes='carte';routeChoisie=null;
+  rendreEtapeRoutes();
 }
 function carteFrontiere(){
   const i=indexVille(S.ville);
@@ -2534,33 +2569,36 @@ function carteFrontiere(){
         :`Il manque ${fmt(dr-S.or)} po pour la douane`}</button>
   </div>`;
 }
-function rendreChoixRoutes(){
-  $('#routes-depart').textContent=S.ville.nom;
-  const passage=carteFrontiere();
-  if(S.dest===null||S.dest===undefined){
-    $('#liste-routes').innerHTML=passage+`<p class="vide">Touchez une cité sur la carte pour voir
-      les chemins qui y mènent.</p>`;
-    return;
-  }
-  const d=S.villes[S.dest];
+function carteDestination(){
+  const d=S.villes[S.dest],ici=indexVille(S.ville);
   const noms=l=>l.map(c=>CATEGORIES[c].nom.toLowerCase()).join(', ');
   const dem=d.type.demande.length?noms(d.type.demande):'un peu de tout';
   const pro=d.type.produit.length?noms(d.type.produit):'rien en propre';
-  const etranger=contreeDe(S.dest)!==contreeDe(indexVille(S.ville));
-  let h=passage;
-  h+=`<div class="carte">
+  const etranger=contreeDe(S.dest)!==contreeDe(ici);
+  return `<div class="carte">
     <div class="rangee"><h3>${d.nom}</h3>
-      <span class="oeil chiffre">${lieuesEntre(indexVille(S.ville),S.dest)} lieues · ${fmt(kmEntre(indexVille(S.ville),S.dest))} km</span></div>
+      <span class="oeil chiffre">${lieuesEntre(ici,S.dest)} lieues · ${fmt(kmEntre(ici,S.dest))} km</span></div>
     <p>${d.type.nom.charAt(0).toUpperCase()+d.type.nom.slice(1)}${
        etranger?`, en ${CONTREES[d.contree].nom.toLowerCase()}`:''} —
        on y cherche <b>${dem}</b>, on y produit ${pro}.
        ${d.visites?`Vous y êtes déjà passé ${d.visites} fois.`:'Vous n\'y avez jamais mis les pieds.'}</p>
   </div>`;
+}
+/* premier temps : la carte, et sous elle ce qu'on sait de la cité touchée */
+function rendrePanneauCarte(){
+  const passage=carteFrontiere();
+  $('#liste-routes').innerHTML=passage+(villeChoisie()?carteDestination()
+    :`<p class="vide">Touchez une cité sur la carte pour voir les chemins qui y mènent.</p>`);
+}
+/* second temps : les chemins qui y mènent */
+function rendrePanneauChemins(){
+  let h=carteDestination();
   h+=S.routes.map((r,i)=>{
     const dg=r.risque>1.3?['perilleux','périlleuse']:(r.risque<.8?['sur','sûre']:['','incertaine']);
     const impayable=r.douane&&S.or<r.douane;
-    return `<button class="route-carte" data-route="${i}" ${impayable?'disabled':''}>
-      <h3>${r.nom}</h3>
+    return `<button class="route-carte${i===routeChoisie?' choisie':''}" data-route="${i}"
+      ${impayable?'disabled':''} aria-pressed="${i===routeChoisie}">
+      <h3>${r.nom}${i===routeChoisie?' <span class="coche">❧</span>':''}</h3>
       <p class="dest">${impayable
         ? `Il manque ${fmt(r.douane-S.or)} po pour acquitter le droit de passage.`
         : r.tag+'.'}</p>
@@ -2580,15 +2618,69 @@ function rendreChoixRoutes(){
   }).join('');
   $('#liste-routes').innerHTML=h;
 }
+/* ce que porte le bouton du bas, et s'il est allumé */
+function boutonEtape(){
+  if(etapeRoutes==='carte')
+    return villeChoisie()?{actif:true,txt:'Les chemins vers '+S.villes[S.dest].nom}
+                         :{actif:false,txt:'Choisissez une cité'};
+  if(routeChoisie===null)return {actif:false,txt:'Choisissez un chemin'};
+  const r=S.routes[routeChoisie];
+  return {actif:true,txt:`Partir · ${r.etapes} étape${r.etapes>1?'s':''}`};
+}
+function rendreEtapeRoutes(){
+  const sec=$('#ecran-routes'),carte=(etapeRoutes==='carte');
+  sec.classList.toggle('phase-carte',carte);
+  sec.classList.toggle('phase-chemins',!carte);
+  if(carte){
+    $('#routes-oeil').textContent='Au départ de '+S.ville.nom;
+    $('#routes-titre').textContent='Où allons-nous ?';
+    rendrePanneauCarte();
+  }else{
+    $('#routes-oeil').textContent=`${S.ville.nom} → ${S.villes[S.dest].nom}`;
+    $('#routes-titre').textContent='Par où passer ?';
+    rendrePanneauChemins();
+  }
+  const b=boutonEtape(),bouton=$('#btn-etape');
+  bouton.textContent=b.txt;
+  bouton.disabled=!b.actif;
+  $('#btn-rester').textContent=carte?'Retourner au marché':'Changer de destination';
+  const c=$('#ecran-routes .corps');if(c)c.scrollTop=0;
+}
 const GLYPHE_CITE='M-5 4 h10 v-7 h-1.7 v-2.4 h-1.7 v2.4 h-2.9 v-2.4 h-1.7 v2.4 H-5 z';
 const GLYPHE_PORTE='M-6 4 v-8 a6 6 0 0 1 12 0 v8 h-3.4 v-7 a2.6 2.6 0 0 0 -5.2 0 v7 z';
 const GLYPHE_COURONNE='M-4.2 -10.6 l1.4 -3.6 l1.4 2.3 l1.4 -3.6 l1.4 3.6 l1.4 -2.3 l1.4 3.6 z';
+/* Les positions de data/contrees.json dessinent une contrée large et plate :
+   elles ont été tracées pour un bandeau. Sur un écran de poche, le bandeau
+   laisse les deux tiers de la page vides et les cités se marchent dessus. On
+   écarte donc le dessin en hauteur, autour de son axe médian.
+   Les distances, elles, ne bougent pas d'un pouce : GEO les calcule sur les
+   positions d'origine, et chaque route porte son chiffre en lieues. La carte
+   est un plan, pas une règle graduée.
+   1,6 est le compromis retenu : au-delà, l'œil se met à mal classer deux
+   routes partant de la même cité ; en deçà, la contrée reste un bandeau. */
+const ETIREMENT_CARTE=1.6, AXE_CARTE=51;
+function posCarte(i){
+  const p=positionDe(i);
+  return {x:p.x,y:AXE_CARTE+(p.y-AXE_CARTE)*ETIREMENT_CARTE,
+          lx:p.lx,ly:p.ly,ancre:p.ancre};
+}
+/* le cadre suit le dessin : on prend les cités et leurs étiquettes, on garde
+   une bande en haut pour le nom de la contrée et une en bas pour la sortie */
+function cadreCarte(lieux){
+  let h=1e9,b=-1e9;
+  lieux.forEach(i=>{
+    const p=posCarte(i);
+    h=Math.min(h,p.y-13,p.y+p.ly-7);
+    b=Math.max(b,p.y+9,p.y+p.ly+3);
+  });
+  return {haut:h-13,bas:b+11};
+}
 function rendreCarte(){
   const cur=indexVille(S.ville),c=contreeDe(cur),lieux=lieuxDe(c);
   let voies='',etiq='',cites='';
   lieux.forEach(i=>lieux.forEach(j=>{
     if(j<=i)return;
-    const a=positionDe(i),b=positionDe(j);
+    const a=posCarte(i),b=posCarte(j);
     const depuisIci=(i===cur||j===cur);
     voies+=`<line data-voie="${i}-${j}" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"
       class="voie${depuisIci?' voie-active':''}"/>`;
@@ -2597,7 +2689,7 @@ function rendreCarte(){
         x="${(a.x+b.x)/2}" y="${(a.y+b.y)/2-1.6}">${lieuesEntre(i,j)}</text>`;
   }));
   lieux.forEach(i=>{
-    const v=S.villes[i],pos=positionDe(i),porte=estFrontiere(i);
+    const v=S.villes[i],pos=posCarte(i),porte=estFrontiere(i);
     cites+=`<g class="cite${i===cur?' ici':''}${porte?' porte':''}${v.capitale?' capitale':''}"
       data-ville="${i}" role="button" tabindex="0" aria-label="${v.nom}">`;
     if(v.capitale)cites+=`<path class="couronne" transform="translate(${pos.x},${pos.y})"
@@ -2616,12 +2708,16 @@ function rendreCarte(){
         style="text-anchor:${pos.ancre}">${v.nom}</text>
     </g>`;
   });
-  const cc=CONTREES[c];
-  const bord=`<text class="legende" x="6" y="10">${cc.nom}</text>
-    <text class="legende vers" x="174" y="96" style="text-anchor:end">vers ${cc.vers} ➜</text>`;
-  $('#carte-monde').innerHTML=
-    `<svg viewBox="0 0 180 100" role="img" aria-label="Carte : ${cc.nom}">
-       ${voies}${etiq}${cites}${bord}</svg>`;
+  const cc=CONTREES[c],cadre=cadreCarte(lieux);
+  const bord=`<text class="legende" x="6" y="${(cadre.haut+10).toFixed(1)}">${cc.nom}</text>
+    <text class="legende vers" x="174" y="${(cadre.bas-3).toFixed(1)}"
+      style="text-anchor:end">vers ${cc.vers} ➜</text>`;
+  const hauteur=cadre.bas-cadre.haut,el=$('#carte-monde');
+  el.innerHTML=
+    `<svg viewBox="0 ${cadre.haut.toFixed(1)} 180 ${hauteur.toFixed(1)}"
+       role="img" aria-label="Carte : ${cc.nom}">${voies}${etiq}${cites}${bord}</svg>`;
+  /* le cadre épouse le dessin : pas de bande de vélin vide au-dessus ni dessous */
+  el.style.aspectRatio=(180/hauteur).toFixed(3);
   majSelectionCarte();
 }
 function majSelectionCarte(){
@@ -4227,8 +4323,16 @@ document.addEventListener('click',e=>{
   /* routes */
   if(t.id==='btn-route'){ouvrirCarte();return;}
   if(t.dataset.ville!==undefined&&t.dataset.ville!==''){choisirVille(+t.dataset.ville);return;}
-  if(t.id==='btn-rester'){ecran('ecran-marche');rendreMarche();return;}
-  if(t.dataset.route!==undefined&&t.dataset.route!==''){partir(S.routes[+t.dataset.route]);return;}
+  if(t.id==='btn-rester'){
+    if(etapeRoutes==='chemins'){revenirALaCarte();return;}
+    ecran('ecran-marche');rendreMarche();return;
+  }
+  if(t.id==='btn-etape'){
+    if(etapeRoutes==='carte')passerAuxChemins();
+    else if(routeChoisie!==null)partir(S.routes[routeChoisie]);
+    return;
+  }
+  if(t.dataset.route!==undefined&&t.dataset.route!==''){choisirRoute(+t.dataset.route);return;}
 
   /* route en cours */
   if(t.id==='btn-allure'){

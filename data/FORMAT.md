@@ -172,11 +172,19 @@ donc contenir six entrées.
 | `nomsCapitale` | liste de textes | un nom est tiré au sort à la création du monde |
 | `vers` | texte | nom de la contrée suivante, pour les phrases de passage |
 | `portes` | liste de textes | noms possibles du poste frontière |
-| `positions` | six objets | coordonnées sur la carte, `viewBox` de 180 × 100 |
+| `positions` | six objets | coordonnées sur la carte, dans une largeur de 180 |
 
 Une `position` : `x`/`y` la cité, `lx`/`ly` son étiquette, `ancre` l'alignement
 du texte (`start`, `middle`, `end`). **Les distances du jeu se calculent depuis
 ces coordonnées** — déplacer une cité change les durées de trajet.
+
+À l'affichage, `rendreCarte()` écarte les `y` autour de l'axe médian d'un
+facteur `ETIREMENT_CARTE` (1,6) et calcule le cadre pour épouser le dessin :
+ces coordonnées décrivent une contrée large et plate, un écran de poche est
+haut et étroit. L'étirement ne touche que le dessin — `GEO`, `distance()` et
+`lieuesEntre()` travaillent toujours sur les `y` d'origine. Gardez donc les
+`x` dans 0–180 et les `y` dans 20–82 environ : au-delà, le cadre s'étire et
+la carte rétrécit d'autant.
 
 **`typesVilles`** — pour chaque contrée, les types de cités qu'on peut y
 rencontrer. Le monde en tire cinq sans remise à chaque partie : il en faut donc
