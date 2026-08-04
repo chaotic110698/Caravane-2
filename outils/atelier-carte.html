@@ -428,6 +428,7 @@ function dessiner(){
     const E=posEtiquette(e.pos,R.r);
     return `<g class="marqueur${sel?' choisi':''}" data-lieu="${echappe(l.cle)}"
         data-x="${l.x}" data-y="${l.y}">
+        <circle r="${R.r+15}" fill="transparent"/>   <!-- de quoi viser au doigt -->
         <circle class="halo" r="${R.r+7}"/>
         ${forme}${noyau}
         <text class="nom" x="${E.x}" y="${E.y}"
@@ -900,8 +901,13 @@ $('#toile').addEventListener('pointerdown',ev=>{
     glisse={genre:'vue',x:ev.clientX,y:ev.clientY,tx:V.tx,ty:V.ty};
     return;
   }
-  /* les autres outils se déclenchent au relâchement, pour ne pas gêner le glissé */
-  glisse={genre:'vue',x:ev.clientX,y:ev.clientY,tx:V.tx,ty:V.ty,outil:true};
+  /* Les autres outils se déclenchent au relâchement, pour ne pas gêner le glissé.
+     On note dès maintenant le lieu sous le doigt : setPointerCapture redirige
+     les événements suivants vers #toile, si bien qu'au relâchement ev.target
+     n'est plus le marqueur mais le conteneur. */
+  const surLieu=ev.target.closest('[data-lieu]');
+  glisse={genre:'vue',x:ev.clientX,y:ev.clientY,tx:V.tx,ty:V.ty,outil:true,
+          lieu:surLieu?surLieu.dataset.lieu:null};
 });
 
 $('#toile').addEventListener('pointermove',ev=>{
@@ -954,12 +960,13 @@ function finPointeur(ev){
   /* un clic net (sans glissé) déclenche l'outil */
   if(!aBouge&&g.outil){
     const pos=versCarte(ev);
-    const cible=ev.target.closest('[data-lieu]');
     if(outil==='lieu')ajouterLieu(pos);
     else if(outil==='voie'){
-      if(!cible){message('Cliquez sur un lieu.');return;}
-      if(!voieDepuis){voieDepuis=cible.dataset.lieu;message('Maintenant le lieu d\'arrivée.');}
-      else{ajouterVoie(voieDepuis,cible.dataset.lieu);voieDepuis=null;}
+      if(!g.lieu){message('Cliquez sur un lieu.');return;}
+      if(!voieDepuis){voieDepuis=g.lieu;
+        message('Départ : '+(lieuDe(g.lieu)||{nom:'?'}).nom+' — cliquez le lieu d\'arrivée.');}
+      else if(g.lieu===voieDepuis){voieDepuis=null;message('Départ annulé.');}
+      else{ajouterVoie(voieDepuis,g.lieu);voieDepuis=null;}
       dessinerProvisoire(pos);
     }
     else if(outil==='frontiere'){
