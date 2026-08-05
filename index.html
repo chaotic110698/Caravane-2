@@ -662,6 +662,7 @@ details.regles li{margin-bottom:6px}
     <button class="menu-item" data-onglet="marche"></button>
     <button class="menu-item" data-onglet="boutique"></button>
     <button class="menu-item" data-onglet="contrats"></button>
+    <button class="menu-item" data-onglet="carnet"></button>
     <button class="menu-item" data-onglet="convoi"></button>
     <button class="menu-item" data-onglet="troupe"></button>
     <div class="menu-bas">
@@ -804,6 +805,7 @@ details.regles li{margin-bottom:6px}
       <div class="panneau" id="panneau-troupe"></div>
       <div class="panneau" id="panneau-boutique"></div>
       <div class="panneau" id="panneau-contrats"></div>
+      <div class="panneau" id="panneau-carnet"></div>
       <div class="panneau" id="panneau-parametres"></div>
       <div class="panneau" id="panneau-sauvegarde"></div>
     </div>
@@ -1103,16 +1105,19 @@ function stat(u,cle,defaut){const v=fiche(u)[cle];return v===undefined?defaut:v;
 function endurance(u){return stat(u,'endurance',60);}
 function vigilance(u){return stat(u,'vigilance',50);}
 function negoce(u){return stat(u,'negoce',40);}
+/* Les trois aptitudes de la troupe, plus ce qu'un objet unique en soute leur
+   ajoute. bonusObjet() rend 0 tant qu'aucun objets.json n'est chargé, donc ces
+   trois fonctions valent exactement ce qu'elles valaient. */
 function vigilanceTroupe(){
   const t=troupe();
-  return t.reduce((s,u)=>s+vigilance(u),0)/t.length;
+  return t.reduce((s,u)=>s+vigilance(u),0)/t.length+bonusObjet('vigilance');
 }
 function negoceCaravane(){
-  return troupe().reduce((m,u)=>Math.max(m,negoce(u)),0);
+  return troupe().reduce((m,u)=>Math.max(m,negoce(u)),0)+bonusObjet('negoce');
 }
 function agiliteTroupe(){
   const t=troupe();
-  return t.reduce((s,u)=>s+agilite(u),0)/t.length;
+  return t.reduce((s,u)=>s+agilite(u),0)/t.length+bonusObjet('agilite');
 }
 function prixArme(cle){
   const a=ARMES[cle];
@@ -1209,13 +1214,21 @@ function nouvellePartie(cle){
      gardes:[],recrues:[],
      armes:{},mythes:{},karma:50,chien:null,onglet:'marche',echoppe:'armes',contrats:[],contratsHonores:0,contratsRates:0,
      villes:[],ville:null,dest:null,prix:{},routes:null,route:null,pas:0,
-     rumeur:null,escorte:0,fini:false,mort:false,banniere:null,ref:lireRecord()};
+     rumeur:null,escorte:0,fini:false,mort:false,banniere:null,ref:lireRecord(),
+     /* ce que retiennent les contenus d'auteur ; vides si les fichiers sont absents */
+     gens:{},objets:{},objetsDepuis:{},mecrites:{},chronique:[]};
   S.chariots[1].essieu.etat=88;S.chariots[1].caisse.etat=92;
   CLES_MYTHIQUES.forEach(c=>S.mythes[c]='etal');
   S.marchand.arme=({hache:'hache-legere',epee:'epee-legere',arc:'arc-leger',
     lance:'lance-legere',masse:'masse-legere',dague:'dague-legere'})[a.affinite];
   S.villes=creerMonde();
-  S.ville=S.villes[ri(0,FRONTIERE-1)];   /* toujours une cité humaine, jamais la frontière */
+  /* on commence dans une cité de la première contrée, jamais à un poste */
+  const departs=lieuxDe(0).filter(i=>!estFrontiere(i));
+  S.ville=S.villes[departs.length?pick(departs):0];
+  /* les objets qui sont dans les bagages depuis toujours */
+  if(OBJETS)Object.keys(OBJETS).forEach(k=>{
+    if((OBJETS[k].provenance||{}).genre==='depart')donnerObjet(k);});
+  MISSIONS_ECRITES.forEach(m=>{S.mecrites[m.cle]={e:'offerte',j:0,ech:0};});
   arriverEnVille(true);
 }
 
@@ -1391,8 +1404,10 @@ function calculerPrix(){
     const r=rarete(v,g);
     const p=G[g].base*RARETES[r].mult*v.stat[g]*v.mem[g]*(1+rnd(-vol,vol));
     const ng=negoceCaravane();
-    let achat=Math.max(1,Math.round(p*(1-(S.reputation-50)/700)*(1-(ng-50)/720)));
-    let vente=Math.max(1,Math.round(p*.9*(1+(S.reputation-50)/560)*(1+(ng-50)/660)));
+    /* un objet qui pèse sur les prix se voit ici, des deux côtés de l'étal */
+    const rA=bonusObjet('prix'),rV=bonusObjet('prixVente');
+    let achat=Math.max(1,Math.round(p*(1-(S.reputation-50)/700)*(1-(ng-50)/720)*(1-rA)));
+    let vente=Math.max(1,Math.round(p*.9*(1+(S.reputation-50)/560)*(1+(ng-50)/660)*(1+rV)));
     if(S.rumeur&&S.rumeur.ville===v.nom&&S.rumeur.bien===g){
       vente=Math.round(vente*S.rumeur.mult);achat=Math.round(achat*S.rumeur.mult);}
     vente=Math.max(1,Math.min(vente,Math.floor(achat*.92)));
@@ -1505,6 +1520,8 @@ const MENU=[
  {cle:'marche',   nom:'Marché',    sous:'acheter et vendre',   ico:()=>svgIco(GLYPHE_ETAL,'#C9A227')},
  {cle:'boutique', nom:'Boutique',  sous:'armes et échoppes',   ico:()=>svgIco(GLYPHE_BOURSE,'#A34E2C')},
  {cle:'contrats', nom:'Missions',  sous:'commandes en cours',  ico:()=>svgIco(GLYPHES_EV.sceau,'#4A7BC8')},
+ {cle:'carnet',   nom:'Carnet',    sous:'gens, objets, histoires',ico:()=>svgIco(GLYPHE_REGISTRE,'#A084C0'),
+  si:()=>!!(PERSONNAGES||OBJETS||MISSIONS_ECRITES.length)},
  {cle:'convoi',   nom:'Convoi',    sous:'chariots et soute',   ico:()=>icoChariot('bache')},
  {cle:'troupe',   nom:'Troupe',    sous:'marchand et escorte', ico:()=>svgIco(GLYPHES_EV.heaume,'#6E9B6A')},
  {cle:'parametres',nom:'Paramètres',sous:'partie et record',   ico:()=>svgIco(GLYPHE_CLEF,'#9A9488')},
@@ -1530,6 +1547,8 @@ function rendreMenu(){
   document.querySelectorAll('#menu .menu-item').forEach(b=>{
     const m=TITRES_ONGLET[b.dataset.onglet];
     if(!m)return;
+    /* une entrée conditionnelle disparaît quand elle n'a rien à montrer */
+    b.hidden=!!(m.si&&!m.si());
     b.innerHTML=`${m.ico()}<span>${m.nom}<small>${m.sous}</small></span>`;
   });
 }
@@ -1636,6 +1655,11 @@ function genererRecrues(){
 }
 function arriverEnVille(premiere){
   S.ville.visites++;
+  /* les contenus d'auteur, dans cet ordre : les objets peuvent ouvrir du lore,
+     le lore peut décider d'un jalon, un jalon peut achever une mission. */
+  ouvrirCouchesParObjets();
+  if(!premiere)verifierMissionsEcrites();
+  avancerJalons({});
   regarnir(S.ville);
   calculerPrix();
   genererRecrues();
@@ -1658,7 +1682,7 @@ function rendreMarche(){
   $('#marche-ambiance').textContent=ambianceDe(v).texte;
   rendreVignette();
   panneauMarche();panneauConvoi();panneauTroupe();panneauBoutique();panneauContrats();
-  panneauParametres();panneauSauvegarde();majRegistres();
+  panneauCarnet();panneauParametres();panneauSauvegarde();majRegistres();
   if(!S.fini)sauverAuto();
 }
 /* ═══════════════ pictogrammes ═══════════════
@@ -2441,6 +2465,8 @@ function paquet(){
     or:S.or,etapes:S.etapes,lieues:S.lieues,orMax:S.orMax,reputation:S.reputation,
     marchand:S.marchand,chariots:S.chariots,gardes:S.gardes,recrues:S.recrues,armes:S.armes,
     mythes:S.mythes,karma:S.karma,chien:S.chien,contrats:S.contrats,
+    gens:S.gens,objets:S.objets,objetsDepuis:S.objetsDepuis,mecrites:S.mecrites,
+    chronique:S.chronique,
     contratsHonores:S.contratsHonores,contratsRates:S.contratsRates,
     rumeur:S.rumeur,ref:S.ref,prix:S.prix,dest:S.dest,
     villes:S.villes.map(v=>({n:v.nom,t:TOUS_TYPES.indexOf(v.type),s:v.stat,m:v.mem,
@@ -2466,6 +2492,8 @@ function ouvrirPaquet(d){
      marchand:d.marchand,chariots:d.chariots,gardes:d.gardes||[],recrues:d.recrues||[],
      armes:d.armes||{},mythes:d.mythes||{},
      karma:(d.karma===undefined?50:d.karma),chien:d.chien||null,
+     gens:d.gens||{},objets:d.objets||{},objetsDepuis:d.objetsDepuis||{},
+     mecrites:d.mecrites||{},chronique:d.chronique||[],
      contrats:d.contrats||[],contratsHonores:d.contratsHonores||0,contratsRates:d.contratsRates||0,
      villes:villes,ville:villes[d.ville]||villes[0],prix:d.prix,
      routes:d.routes?d.routes.map(r=>Object.assign({},r,{dest:villes[r.dest]||villes[0]})):null,
@@ -2598,9 +2626,14 @@ function routesVers(j){
     if(extra)for(const k in extra)r[k]=extra[k];
     return r;
   };
-  if(estFranchissement(i,j))
-    return [trace('La route de douane','l\'unique passage, gardé aux deux bouts',
-             .7,1,1,{douane:douane()})];
+  if(estFranchissement(i,j)){
+    /* un insigne, un sauf-conduit : l'objet qui ouvre le passage le rend gratuit */
+    const franc=laissezPasser(j);
+    return [trace('La route de douane',
+             franc?'on vous laisse passer sans rien demander'
+                  :'l\'unique passage, gardé aux deux bouts',
+             .7,1,1,franc?{}:{douane:douane()})];
+  }
   return PROFILS.map(p=>trace(p.nom,p.tag,p.risque,p.rudesse,p.detour));
 }
 /* Le voyage se décide en deux temps : la cité d'abord, sur une carte qui a la
@@ -3257,7 +3290,10 @@ function nouveauChien(){
 function apportChien(){return S.chien?S.chien.attaque*.4:0;}
 function chanceFlair(){return S.chien?clamp(S.chien.flair*.09,0,.4):0;}
 
-function bonusKarma(){return clamp(Math.round((S.karma-50)/17),-3,3);}
+function bonusKarma(){
+  /* un objet porte-chance s'ajoute au karma pour le seul calcul du dé */
+  return clamp(Math.round((S.karma+bonusObjet('karma')-50)/17),-3,3);
+}
 function etatConvoi(){
   const ch=S.chariots.length?S.chariots.reduce((s,c)=>s+etatChariot(c),0)/S.chariots.length:0;
   const t=troupe();
@@ -4379,6 +4415,16 @@ document.addEventListener('click',e=>{
     return;
   }
   if(t.dataset.accepter){accepterOffre(+t.dataset.accepter);return;}
+  if(t.dataset.mission){accepterMission(t.dataset.mission);return;}
+  if(t.dataset.parler){
+    const texte=rencontrer(t.dataset.parler);
+    if(texte){
+      chronique(texte);
+      rendreMarche();majRegistres();
+      toast('Vous avez parlé à '+appellationDe(PERSONNAGES[t.dataset.parler])+'.');
+    }
+    return;
+  }
   if(t.dataset.livrer){livrerContrat(+t.dataset.livrer);return;}
   if(t.dataset.renoncer){
     if(t.dataset.sur){renoncerContrat(+t.dataset.renoncer);return;}
@@ -5111,6 +5157,415 @@ function fusionnerEvenements(){
   console.info('data/evenements.json : '+majeurs.length+' majeurs et '+
     mineurs.length+' mineurs ajoutés aux '+(EVENEMENTS.length-majeurs.length)+
     ' écrits en code.');
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LES PERSONNAGES, LES OBJETS UNIQUES, LES MISSIONS ÉCRITES
+   ───────────────────────────────────────────────────────────────────────────
+   Les trois fichiers se citent par leurs clés, jamais par recopie : une mission
+   nomme son commanditaire, un objet nomme la mission qui le donne, un pouvoir
+   d'objet nomme la couche de lore qu'il ouvre. Chacun reste donc modifiable
+   seul, et l'absence de l'un n'empêche pas les autres de tourner.
+
+   Ce que la partie retient, dans S :
+     S.gens[cle]     = { r: rencontres, m: missions faites pour lui, c: [couches] }
+     S.objets[cle]   = 'monde' | 'soute' | 'perdu'
+     S.mecrites[cle] = { e: 'offerte'|'cours'|'faite'|'ratee', j: jalon, ech: étape }
+
+   La règle demandée tient partout : la première description n'est jamais
+   scellée, les couches s'ajoutent en dessous.                                */
+
+/* Le journal de route n'existe que sur la route. Ce qui arrive en ville — un
+   jalon qui tombe, une mission qui s'achève, une langue qui se délie — va dans
+   la chronique du carnet, et dans le journal en plus quand on est en chemin. */
+function chronique(txt,ton){
+  S.chronique=S.chronique||[];
+  S.chronique.unshift({t:txt,ton:ton||'',e:S.etapes+1});
+  while(S.chronique.length>12)S.chronique.pop();
+  if(S.route)noter(txt,ton);
+}
+const etatGens=cle=>(S.gens[cle]=S.gens[cle]||{r:0,m:0,c:[]});
+function personnagesEn(cleLieu){
+  if(!PERSONNAGES||!cleLieu)return [];
+  return Object.keys(PERSONNAGES).filter(k=>PERSONNAGES[k].lieu===cleLieu)
+    .map(k=>PERSONNAGES[k]);
+}
+const personnagesIci=()=>personnagesEn(S.ville&&S.ville.cleLieu);
+function appellationDe(p){
+  if(!p)return '';
+  const t=(p.titre||'').trim(),n=p.nom||'';
+  if(!t)return n;
+  if(/ de$/.test(t))return commenceParVoyelle(n)?t.slice(0,-3)+' d\''+n:t+' '+n;
+  return t+' '+n;
+}
+/* Les trous d'un texte de lore : l'accord vient du personnage, pas du texte. */
+function sacGens(p){
+  const f=p.accord==='f';
+  return {nom:p.nom||'',titre:p.titre||'',appellation:appellationDe(p),
+    role:'',lieu:p.lieu?(S.villes[PAR_CLE?PAR_CLE[p.lieu]:0]||{}).nom||'':'',
+    contree:'',il:f?'elle':'il',le:f?'la':'le',e:f?'e':''};
+}
+function sacObjet(o){
+  const f=o.accord==='f';
+  const anc=(o.provenance&&o.provenance.personnage)?PERSONNAGES[o.provenance.personnage]:null;
+  return {nom:o.nom||'',il:f?'elle':'il',le:f?'la':'le',un:f?'une':'un',e:f?'e':'',
+    ancien:anc?appellationDe(anc):'son ancien propriétaire',
+    lieu:(o.provenance&&o.provenance.lieu&&PAR_CLE)
+      ?((S.villes[PAR_CLE[o.provenance.lieu]]||{}).nom||''):'',
+    poids:fmt(o.poids||0),valeur:o.valeur?fmt(o.valeur):'rien'};
+}
+/* Ce qu'on peut demander à une relation ou à un objet, en plus des vingt-deux
+   interrogations du convoi. */
+function interrogerLore(nom,ctx){
+  if(ctx&&ctx.gens){
+    const e=etatGens(ctx.gens);
+    if(nom==='rencontres')return e.r;
+    if(nom==='missionsPour')return e.m;
+    if(nom==='couchesConnues')return ctx.acquises||0;
+  }
+  if(ctx&&ctx.objet){
+    if(nom==='couchesConnues')return ctx.acquises||0;
+    if(nom==='etapesPorte')return Math.max(0,S.etapes-(ctx.depuis||S.etapes));
+    if(nom==='montre')return ctx.montre||0;
+  }
+  return interrogerEv(nom,ctx);
+}
+function conditionsLore(l,ctx){
+  if(!l||!l.length)return true;
+  return l.every(c=>{
+    const v=interrogerLore(c.quoi,ctx);
+    if(c.min!==undefined&&v<c.min)return false;
+    if(c.max!==undefined&&v>c.max)return false;
+    return true;
+  });
+}
+/* Les couches acquises, recalculées : elles s'ouvrent dans l'ordre, et chacune
+   peut compter celles déjà connues. */
+function couchesAcquises(couches,ctx){
+  const out=[];
+  (couches||[]).forEach((c,i)=>{
+    if(conditionsLore(c.gagne,Object.assign({},ctx,{acquises:out.length})))out.push(i);
+  });
+  return out;
+}
+function ditManque(l){
+  const noms={rencontres:'le croiser',missionsPour:'lui rendre service',
+    couchesConnues:'en savoir plus',etapesPorte:'le garder',montre:'le montrer'};
+  return (l||[]).map(c=>{
+    const q=noms[c.quoi]||c.quoi;
+    return c.min!==undefined?`${q} ${fmt(c.min)} fois`:q;
+  }).join(', ')||'on ne sait quoi';
+}
+
+/* ── rencontrer quelqu'un ── */
+function rencontrer(cle){
+  const p=PERSONNAGES&&PERSONNAGES[cle];
+  if(!p)return '';
+  const e=etatGens(cle);
+  e.r++;
+  const ctx={gens:cle};
+  const avant=e.c.slice();
+  e.c=couchesAcquises(p.couches,ctx);
+  const neuves=e.c.filter(i=>avant.indexOf(i)<0);
+  avancerJalons({rencontre:cle});
+  const sac=sacGens(p);
+  if(neuves.length){
+    const c=p.couches[neuves[0]];
+    return `<b>${appellationDe(p)}</b> — ${texteEv(c.texte,sac)}`;
+  }
+  return `<b>${appellationDe(p)}</b> — ${texteEv(p.premiere,sac)}`;
+}
+
+/* ── les objets uniques ──
+   Le mécanisme des trois armes mythiques, généralisé : un exemplaire au monde,
+   un état qu'on suit, et une disparition définitive. */
+function etatObjet(cle){return S.objets[cle]||'monde';}
+const objetsEnSoute=()=>OBJETS?Object.keys(OBJETS).filter(k=>etatObjet(k)==='soute'):[];
+function donnerObjet(cle){
+  const o=OBJETS&&OBJETS[cle];
+  if(!o||etatObjet(cle)!=='monde')return '';
+  S.objets[cle]='soute';
+  S.objetsDepuis=S.objetsDepuis||{};
+  S.objetsDepuis[cle]=S.etapes;
+  if((o.pouvoirs||[]).some(p=>p.faire==='arme'))rangerArme('objet:'+cle);
+  return o.nom;
+}
+function perdreObjet(cle){
+  const o=OBJETS&&OBJETS[cle];
+  if(!o)return '';
+  S.objets[cle]=o.perdable?'perdu':'monde';
+  return o.nom;
+}
+/* Ce que les objets en soute ajoutent. Rend 0 sans objets.json : les fonctions
+   d'aptitude gardent donc exactement leur valeur d'origine. */
+function bonusObjet(quoi){
+  if(!OBJETS)return 0;
+  let n=0;
+  objetsEnSoute().forEach(k=>(OBJETS[k].pouvoirs||[]).forEach(p=>{
+    if(p.faire==='aptitude'&&p.quoi===quoi)n+=Number(p.de)||0;
+    if(p.faire==='chance'&&quoi==='karma')n+=Number(p.de)||0;
+    if(p.faire==='prix'&&quoi==='prix'&&(p.sens==='les deux'||p.sens==='achat'))
+      n+=Number(p.part)||0;
+    if(p.faire==='prix'&&quoi==='prixVente'&&(p.sens==='les deux'||p.sens==='vente'))
+      n+=Number(p.part)||0;
+  }));
+  return n;
+}
+/* Les couches de lore qu'un objet en soute ouvre chez quelqu'un. */
+function ouvrirCouchesParObjets(){
+  if(!OBJETS||!PERSONNAGES)return;
+  objetsEnSoute().forEach(k=>(OBJETS[k].pouvoirs||[]).forEach(p=>{
+    if(p.faire!=='ouvreCouche'||!p.personnage)return;
+    const q=PERSONNAGES[p.personnage];
+    if(!q)return;
+    const i=(q.couches||[]).findIndex((c,n)=>(c.cle||String(n))===p.couche);
+    if(i<0)return;
+    const e=etatGens(p.personnage);
+    if(e.c.indexOf(i)<0)e.c.push(i);
+  }));
+}
+/* Un passage normalement fermé, qu'un objet ouvre. */
+function laissezPasser(j){
+  if(!OBJETS||!MONDE||!LIEUX[j])return false;
+  return objetsEnSoute().some(k=>(OBJETS[k].pouvoirs||[]).some(p=>
+    p.faire==='laissezPasser'&&(!p.lieu||p.lieu===LIEUX[j].cle)));
+}
+
+/* ── les missions écrites ── */
+const etatMission=cle=>S.mecrites[cle];
+function missionsProposeesIci(){
+  if(!MISSIONS_ECRITES.length||!S.ville)return [];
+  const ici=S.ville.cleLieu;
+  return MISSIONS_ECRITES.filter(m=>{
+    const e=etatMission(m.cle);
+    if(e&&e.e!=='offerte')return false;
+    const q=m.commanditaire&&PERSONNAGES?PERSONNAGES[m.commanditaire]:null;
+    const ou=m.lieu||(q&&q.lieu);
+    if(!ou||ou!==ici)return false;
+    return conditionsEv((m.offre||{}).si);
+  });
+}
+const missionsEnCours=()=>MISSIONS_ECRITES.filter(m=>{
+  const e=etatMission(m.cle);return e&&e.e==='cours';});
+function accepterMission(cle){
+  const m=MISSIONS_ECRITES.find(x=>x.cle===cle);
+  if(!m)return;
+  S.mecrites[cle]={e:'cours',j:0,ech:S.etapes+((m.offre||{}).delai||20)};
+  const q=m.commanditaire?PERSONNAGES[m.commanditaire]:null;
+  if(q)etatGens(m.commanditaire).r++;
+  toast('Mission acceptée : '+m.titre+'.');
+  rendreMarche();
+}
+function sacMission(m){
+  const q=m.commanditaire?(PERSONNAGES||{})[m.commanditaire]:null;
+  const f=q&&q.accord==='f';
+  const der=(m.jalons||[]).slice().reverse().find(j=>j.lieu||j.personnage);
+  const ouDer=der?(der.lieu||((PERSONNAGES||{})[der.personnage]||{}).lieu):null;
+  const orR=((m.reussite||{}).recompenses||[]).find(r=>r.donne==='or');
+  const obR=((m.reussite||{}).recompenses||[]).find(r=>r.donne==='objet');
+  return {commanditaire:appellationDe(q)||'le commanditaire',il:f?'elle':'il',
+    ici:S.ville?S.ville.nom:'',
+    la:(ouDer&&PAR_CLE)?((S.villes[PAR_CLE[ouDer]]||{}).nom||''):'',
+    delai:fmt((m.offre||{}).delai||0),
+    prime:orR?fmt(orR.de||0):'rien',
+    objet:obR?((OBJETS||{})[obR.objet]||{}).nom||'':''};
+}
+/* Un jalon tombe-t-il ? Trois façons, celles du catalogue. */
+function jalonRempli(j,quoi){
+  const ici=S.ville&&S.ville.cleLieu;
+  if(j.faire==='atteindre')return j.lieu===ici;
+  if(j.faire==='livrer')return j.lieu===ici&&stock(j.bien)>=(Number(j.kg)||0);
+  if(j.faire==='rencontrer')return quoi&&quoi.rencontre===j.personnage;
+  return false;
+}
+function avancerJalons(quoi){
+  missionsEnCours().forEach(m=>{
+    const e=etatMission(m.cle);
+    const j=(m.jalons||[])[e.j];
+    if(!j||!jalonRempli(j,quoi))return;
+    if(j.faire==='livrer')retirer(j.bien,Number(j.kg)||0);
+    e.j++;
+    const sac=sacMission(m);
+    chronique(`<b>${m.titre}.</b> ${texteEv(j.texte,sac)||'Un jalon de plus.'}`);
+    if(e.j>=(m.jalons||[]).length)acheverMission(m);
+  });
+}
+function acheverMission(m){
+  const e=etatMission(m.cle);
+  e.e='faite';
+  if(m.commanditaire)etatGens(m.commanditaire).m++;
+  const sac=sacMission(m);
+  const gains=[];
+  ((m.reussite||{}).recompenses||[]).forEach(r=>{
+    if(r.donne==='or'){S.or+=Number(r.de)||0;gains.push(fmt(r.de)+' po');}
+    else if(r.donne==='reputation'){S.reputation=clamp(S.reputation+(Number(r.de)||0),0,100);}
+    else if(r.donne==='karma'){S.karma=clamp(S.karma+(Number(r.de)||0),0,100);}
+    else if(r.donne==='objet'){const n=donnerObjet(r.objet);if(n)gains.push(n);}
+    else if(r.donne==='ouvreCouche'&&r.personnage&&PERSONNAGES[r.personnage]){
+      const q=PERSONNAGES[r.personnage];
+      const i=(q.couches||[]).findIndex((c,k)=>(c.cle||String(k))===r.couche);
+      const g=etatGens(r.personnage);
+      if(i>=0&&g.c.indexOf(i)<0){g.c.push(i);gains.push('ce que sait '+appellationDe(q));}
+    }
+  });
+  /* les couches que la mission vient d'ouvrir chez son commanditaire */
+  if(m.commanditaire){
+    const q=PERSONNAGES[m.commanditaire],g=etatGens(m.commanditaire);
+    couchesAcquises(q&&q.couches,{gens:m.commanditaire}).forEach(i=>{
+      if(g.c.indexOf(i)<0)g.c.push(i);});
+  }
+  ouvrirCouchesParObjets();
+  chronique(`<b>${m.titre}.</b> ${texteEv((m.reussite||{}).texte,sac)}`+
+    (gains.length?` <i>${gains.join(', ')}.</i>`:''),'bon');
+  S.orMax=Math.max(S.orMax,S.or+valeurSoute());
+}
+function verifierMissionsEcrites(){
+  missionsEnCours().forEach(m=>{
+    const e=etatMission(m.cle);
+    if(S.etapes<=e.ech)return;
+    e.e='ratee';
+    const sac=sacMission(m);
+    ((m.echec||{}).recompenses||[]).forEach(r=>{
+      if(r.donne==='or')S.or=Math.max(0,S.or+(Number(r.de)||0));
+      else if(r.donne==='reputation')S.reputation=clamp(S.reputation+(Number(r.de)||0),0,100);
+      else if(r.donne==='karma')S.karma=clamp(S.karma+(Number(r.de)||0),0,100);
+    });
+    chronique(`<b>${m.titre}.</b> `+
+      (texteEv((m.echec||{}).texte,sac)||'Le délai est passé.'),'mauvais');
+  });
+}
+
+/* ═══════════════ le carnet ═══════════════
+   L'index demandé : les gens qu'on a croisés, les objets qu'on porte, les
+   missions écrites. La première description d'un personnage comme d'un objet
+   **reste toujours lisible** — c'est la règle qui ne bouge pas. Les couches
+   méritées s'ajoutent en dessous, et ce qui reste scellé annonce son prix. */
+function carteLore(titre, sous, premiere, couches, ouvertes, sac, pied){
+  const lues=(couches||[]).map((c,i)=>ouvertes.indexOf(i)>=0
+    ?`<p style="margin-top:9px"><b class="chiffre" style="font-variant:small-caps;
+        letter-spacing:.07em;color:var(--or)">${c.titre||'—'}</b><br>${texteEv(c.texte,sac)}</p>`
+    :`<p class="info" style="margin-top:9px;font-style:italic">${c.titre||'Autre chose'} —
+        il faudrait ${ditManque(c.gagne)}.</p>`).join('');
+  return `<div class="carte">
+    <div class="rangee"><h3>${titre}</h3><span class="oeil">${sous}</span></div>
+    <p>${texteEv(premiere,sac)}</p>${lues}
+    ${pied?`<p class="info" style="margin-top:9px">${pied}</p>`:''}
+  </div>`;
+}
+function panneauCarnet(){
+  const p=$('#panneau-carnet');
+  if(!p)return;
+  let h='';
+  if((S.chronique||[]).length){
+    h+=`<div class="carte"><h3>Ce qui vient d'arriver</h3>`+
+      S.chronique.slice(0,5).map(x=>`<p class="info${x.ton?' '+x.ton:''}"
+        style="margin-top:6px"><span class="chiffre"
+        style="color:var(--encre-pale)">étape ${x.e} · </span>${x.t}</p>`).join('')+
+      `</div>`;
+  }
+
+  /* — les missions écrites proposées ici — */
+  const offertes=missionsProposeesIci();
+  if(offertes.length){
+    h+=`<p class="oeil" style="padding:4px 2px 8px">On vous demande quelque chose</p>`;
+    h+=offertes.map(m=>{
+      const sac=sacMission(m);
+      const q=m.commanditaire?(PERSONNAGES||{})[m.commanditaire]:null;
+      const rec=((m.reussite||{}).recompenses||[]).map(r=>{
+        if(r.donne==='or')return fmt(r.de)+' po';
+        if(r.donne==='reputation')return (r.de>0?'+':'')+r.de+' de renom';
+        if(r.donne==='karma')return (r.de>0?'+':'')+r.de+' de karma';
+        if(r.donne==='objet')return ((OBJETS||{})[r.objet]||{}).nom||'un objet';
+        if(r.donne==='ouvreCouche')return 'ce qu\'il sait';
+        return '';
+      }).filter(Boolean);
+      return `<div class="carte">
+        <div class="rangee"><h3>${m.titre}</h3>
+          <span class="oeil">${(m.offre||{}).delai||'—'} étapes</span></div>
+        <p>${texteEv((m.offre||{}).recit,sac)}</p>
+        ${q?`<p class="info">De ${appellationDe(q)}.</p>`:''}
+        ${rec.length?`<p class="info">On promet <b>${rec.join('</b>, <b>')}</b>.</p>`:''}
+        <button class="bouton petit" data-mission="${m.cle}"
+          style="width:100%;margin-top:10px">Accepter</button>
+      </div>`;}).join('');
+  }
+  const cours=missionsEnCours();
+  if(cours.length){
+    h+=`<p class="oeil" style="padding:14px 2px 8px">Ce que vous avez promis</p>`;
+    h+=cours.map(m=>{
+      const e=etatMission(m.cle);
+      const j=(m.jalons||[])[e.j];
+      const reste=e.ech-S.etapes;
+      const quoi=!j?'—':(j.faire==='atteindre'
+        ?'atteindre '+((S.villes[PAR_CLE[j.lieu]]||{}).nom||'—')
+        :(j.faire==='livrer'
+          ?`livrer ${fmt(j.kg)} kg de ${(G[j.bien]||{nom:'—'}).nom.toLowerCase()} à `+
+           ((S.villes[PAR_CLE[j.lieu]]||{}).nom||'—')
+          :'parler à '+appellationDe((PERSONNAGES||{})[j.personnage])));
+      return `<div class="carte${reste<=2?' urgent':''}">
+        <div class="rangee"><h3>${m.titre}</h3>
+          <span class="oeil chiffre">${reste<=0?'échéance passée':reste+' étapes'}</span></div>
+        <p>Prochain pas : <b>${quoi}</b>.</p>
+        <p class="info">${e.j} de ${(m.jalons||[]).length} accomplis.</p>
+      </div>`;}).join('');
+  }
+
+  /* — qui se tient ici — */
+  const gensLa=personnagesIci();
+  if(gensLa.length){
+    h+=`<p class="oeil" style="padding:14px 2px 8px">Ici même</p>`;
+    h+=gensLa.map(q=>{
+      const e=etatGens(q.cle);
+      return `<div class="carte">
+        <div class="rangee"><h3>${appellationDe(q)}</h3>
+          <span class="oeil">${e.r?e.r+(e.r>1?' rencontres':' rencontre'):'jamais vu'}</span></div>
+        <p>${e.r?texteEv(q.premiere,sacGens(q)):'Vous ne lui avez encore jamais parlé.'}</p>
+        <button class="bouton petit creux" data-parler="${q.cle}"
+          style="width:100%;margin-top:10px">${e.r?'Lui reparler':'Aller lui parler'}</button>
+      </div>`;}).join('');
+  }
+
+  /* — les objets qu'on porte — */
+  const enSoute=objetsEnSoute();
+  if(enSoute.length){
+    h+=`<p class="oeil" style="padding:14px 2px 8px">Ce que vous portez</p>`;
+    h+=enSoute.map(k=>{
+      const o=OBJETS[k];
+      const ctx={objet:k,depuis:(S.objetsDepuis||{})[k],montre:0};
+      const ouv=couchesAcquises(o.couches,ctx);
+      const pouv=(o.pouvoirs||[]).map(x=>{
+        if(x.faire==='aptitude')return `${x.quoi} +${x.de}`;
+        if(x.faire==='chance')return `karma +${x.de}`;
+        if(x.faire==='arme')return 'se porte et frappe';
+        if(x.faire==='prix')return `${Math.round((x.part||0)*100)} % sur les prix`;
+        if(x.faire==='laissezPasser')return 'ouvre un passage';
+        if(x.faire==='ouvreCouche')return 'délie une langue';
+        return '';
+      }).filter(Boolean);
+      return carteLore(o.nom,`${fmt(o.poids||0)} kg`+(o.perdable?' · unique':''),
+        o.premiere,o.couches,ouv,sacObjet(o),pouv.join(' · '));
+    }).join('');
+  }
+
+  /* — l'index : tout ce qu'on a appris, relisible pour toujours — */
+  const connus=PERSONNAGES?Object.keys(PERSONNAGES).filter(k=>etatGens(k).r>0):[];
+  if(connus.length){
+    h+=`<p class="oeil" style="padding:14px 2px 8px">L'index — ${connus.length} `+
+      `personnage${connus.length>1?'s':''} connu${connus.length>1?'s':''}</p>`;
+    h+=connus.map(k=>{
+      const q=PERSONNAGES[k],e=etatGens(k);
+      const ou=q.lieu&&PAR_CLE?((S.villes[PAR_CLE[q.lieu]]||{}).nom||''):'';
+      return carteLore(appellationDe(q),ou,q.premiere,q.couches,e.c,sacGens(q));
+    }).join('');
+  }
+  const perdus=OBJETS?Object.keys(OBJETS).filter(k=>etatObjet(k)==='perdu'):[];
+  if(perdus.length)h+=`<div class="carte"><h3>Ce que le monde a perdu</h3><p>`+
+    perdus.map(k=>`<b>${OBJETS[k].nom}</b>`).join(', ')+
+    ` — le monde n'en reverra pas d'autre.</p></div>`;
+
+  if(!h)h=`<div class="carte"><h3>Le carnet</h3><p>Rien encore. Les gens qu'on croise,
+    les objets qu'on rapporte et les services qu'on rend viendront s'inscrire ici.</p></div>`;
+  p.innerHTML=h;
 }
 
 function assigner(d){

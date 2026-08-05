@@ -49,8 +49,9 @@ l'image de fond et l'export sont vérifiés dans ce mode.
 Aucune dépendance, aucune installation, aucun compte. **Rien ne sort de votre
 machine** : l'image de fond et le travail en cours restent dans le navigateur.
 
-> **Le jeu ne lit pas encore ce fichier.** L'atelier définit le monde que le moteur
-> consommera ; l'adaptation du moteur est un chantier séparé, décrit en fin de page.
+> **Le jeu lit ce fichier.** Déposez votre `monde.json` dans `data/` et la partie s'y
+> déroule : les lieux, les voies, les distances, les cinq rangs. S'il est absent, le moteur
+> invente son monde comme avant — rien ne casse.
 
 ## En bref
 
@@ -209,26 +210,75 @@ résolution rééchelonne tout automatiquement.
 et `profils`. Si vous éditez le JSON à la main, corrigez le terrain et laissez l'atelier
 recalculer.
 
-## Ce qu'il reste à faire côté moteur
+## Plusieurs cartes qui communiquent
 
-Le monde que produit l'atelier est plus riche que celui que `index.html` sait lire
-aujourd'hui. L'adaptation demandera :
+L'atelier n'exporte pour l'instant qu'une seule carte, et le moteur la lit très bien.
+Mais **il en accepte autant qu'on veut** : c'est le format `v2`, prêt pour le jour où vous
+aurez une cité à cartographier à part.
 
-- **abandonner `PAR_CONTREE`** — le moteur suppose 3 contrées de 6 lieux exactement,
-  et le vérifie à l'ouverture d'une sauvegarde ; les parties en cours ne survivront pas ;
-- **remplacer le graphe complet par le réseau de voies** — aujourd'hui `relies()` déclare
-  toute paire de cités d'une même contrée reliée, et `distance()` mesure à vol d'oiseau ;
-  avec un vrai réseau il faut un plus court chemin, et les trajets peuvent demander
-  plusieurs tronçons ;
-- **cinq rangs au lieu de deux** — capitale et poste existent, ville, village et hameau
-  sont neufs et doivent moduler la taille des marchés ;
-- **le terrain** — inconnu du moteur, il remplacera les trois profils fixes de
-  `data/routes.json` ;
-- **le monde fixe** — `creerMonde()` invente aujourd'hui les noms et tire les types au
-  sort à chaque partie ; il lira désormais le fichier.
+```json
+{
+  "format": "caravane.carte.v2",
+  "cartes": [
+    { "cle": "monde",   "nom": "Les Terres connues",     "fichier": "monde.png",
+      "largeur": 4000, "hauteur": 3000, "kmParJour": 15,
+      "etalon": { "a": {"x":100,"y":100}, "b": {"x":900,"y":100},
+                  "distance": 100, "unite": "lieues" } },
+    { "cle": "la-cite", "nom": "La Cité aux mille portes", "fichier": "cite.png",
+      "largeur": 3000, "hauteur": 2000, "kmParJour": 6,
+      "etalon": { "a": {"x":0,"y":0}, "b": {"x":600,"y":0},
+                  "distance": 26, "unite": "lieues" } }
+  ],
+  "contrees": [
+    { "cle": "quartiers", "nom": "Quartiers de la Cité", "carte": "la-cite" }
+  ],
+  "lieux": [
+    { "cle": "aurelium", "carte": "monde",   "rang": "capitale", "traits": ["port"] },
+    { "cle": "bas-port", "carte": "la-cite", "rang": "poste" }
+  ],
+  "voies": [ { "de": "aurelium", "vers": "bas-port", "terrain": "plaine" } ]
+}
+```
 
-C'est le gros du chantier, et il vient après : l'atelier peut servir dès maintenant, et
-c'est lui qui définit la cible.
+Trois choses seulement changent par rapport à `v1` :
+
+| | |
+|---|---|
+| `cartes` | une liste au lieu d'un seul objet `carte`, chacune avec son échelle et son `kmParJour` |
+| `lieux[].carte` | à quelle carte le lieu appartient |
+| `contrees[].carte` | idem — une contrée vit sur une carte |
+
+Le reste suit tout seul. **Une voie entre deux lieux de cartes différentes est un
+passage** : le moteur le traite comme une frontière, avec sa douane, et l'écran de carte
+ne dessine que la carte où l'on se trouve.
+
+Et le `kmParJour` fait son office : dans le monde d'essai, **neuf lieues de ruelles
+coûtent huit étapes là où douze lieues de piste en coûtent quatre**. Traverser la cité
+entière revient donc aussi cher qu'aller d'une contrée à l'autre — ce qui était voulu.
+
+Rien ne vous oblige à vous en servir : `v1` reste lu tel quel, et vous pourrez passer à
+plusieurs cartes le jour où votre première sera prête.
+
+## Ce que le moteur en fait
+
+Déposez `monde.json` dans `data/` : la partie se déroule dans votre monde.
+
+- **le réseau de voies remplace le graphe complet** — les distances suivent le plus court
+  chemin, et non plus le vol d'oiseau ;
+- **les cinq rangs servent** — la taille du marché suit le rang : un hameau ne tient pas
+  l'étal d'une capitale ;
+- **plusieurs cartes cohabitent** (format `v2`) — chacune avec sa vitesse de marche, et
+  l'on passe de l'une à l'autre par une voie déclarée. Traverser une cité coûte plus
+  d'étapes que la même distance en rase campagne, ce qui était le but ;
+- **les passages** s'ouvrent depuis n'importe quel lieu d'où part une voie franchissable,
+  pas seulement depuis un poste frontière : une capitale portuaire peut donner sur une
+  cité.
+
+Le format `v1` — une seule carte, ce que l'atelier exporte aujourd'hui — est lu tel quel.
+
+Deux limites à connaître : une contrée que `data/raretes.json` ne connaît pas **emprunte**
+la table de rareté d'une autre (la console le dit), et une sauvegarde faite dans un autre
+monde est refusée à l'ouverture plutôt que reprise de travers.
 
 ---
 
@@ -309,12 +359,18 @@ perte : ce qu'on importe ressort identique.
 Ça refait le tutoriel et réinjecte le catalogue dans la page — l'atelier devant marcher
 sans serveur, le catalogue voyage à l'intérieur du fichier.
 
-## Ce qu'il reste à faire côté moteur
+## Ce que le moteur en fait
 
-`index.html` ne lit pas encore `data/evenements.json` : ses 51 événements sont toujours
-écrits en JavaScript. Le tirage devra puiser dans les deux réservoirs sans distinction
-pour le joueur, et chaque effet du catalogue recevra sa petite pièce dans le moteur.
-C'est du travail de moteur, pas d'auteur — vous pouvez écrire dès maintenant.
+Déposez `evenements.json` dans `data/` et vos événements tombent en jeu, mêlés aux 51
+écrits en JavaScript. Le joueur ne peut pas distinguer les deux réservoirs : chaque
+événement du fichier est **compilé** vers exactement la forme des anciens, et les dix-huit
+effets délèguent aux fonctions que le jeu utilisait déjà. Un effet en données fait donc
+rigoureusement ce que fait son équivalent en code, et s'équilibre pareil.
+
+Tout ce que l'atelier écrit est joué : les quatre formes de choix, le jet gradué, les
+vingt-deux interrogations, la localisation par carte, lieu, contrée, rang, nature, terrain
+et itinéraire, les textes à trous et leurs variantes, la raison affichée sur un bouton
+grisé.
 
 ---
 
@@ -406,12 +462,16 @@ garde alors son grain.
 | `couches[].gagne` | les conditions à remplir, toutes |
 | `couches[].texte` | ce qu'on apprend, une fois mérité |
 
-## Ce qu'il reste à faire côté moteur
+## Ce que le moteur en fait
 
-Le moteur ne connaît pas encore les personnages : un commanditaire y est aujourd'hui un
-titre et un nom tirés au sort, oubliés aussitôt. Il faudra tenir le compte des rencontres
-et des missions faites pour chacun, et un écran d'index où relire tout ça. C'est le même
-chantier que les événements en données, et il vient après les ateliers.
+Déposez `personnages.json` dans `data/` et un onglet **Carnet** apparaît dans le menu du
+marché. On y trouve qui se tient dans le lieu où l'on est, avec un bouton pour aller lui
+parler, et **l'index** : tout ce qu'on a appris, relisible pour toujours.
+
+Le moteur tient les compteurs — les rencontres, les missions rendues, les couches
+acquises — et les emporte dans la sauvegarde. La règle est respectée à la lettre : la
+première description ne se scelle jamais, les couches méritées s'ajoutent en dessous, et
+ce qui reste fermé annonce ce qu'il faudrait pour l'ouvrir.
 
 ---
 
@@ -516,11 +576,23 @@ dessous sans jamais rien recouvrir.
 | `premiere` | **jamais scellée**, toujours relisible |
 | `couches[].gagne` | ce qu'il faut pour l'apprendre |
 
-## Ce qu'il reste à faire côté moteur
+## Ce que le moteur en fait
 
-Le moteur ne connaît que les armes mythiques. Il faudra un coffre d'objets uniques avec
-leur état (pas encore dans le monde, ici, dans les chariots, perdu), l'application des six
-pouvoirs, et le lien avec les missions qui les donnent. Vous pouvez écrire dès maintenant.
+Déposez `objets.json` dans `data/`. Chaque objet a son état — dans le monde, en soute,
+perdu à jamais — suivi et sauvegardé, et les six pouvoirs agissent :
+
+| pouvoir | où ça se voit |
+|---|---|
+| **Améliorer une aptitude** | dans `vigilanceTroupe()`, `agiliteTroupe()`, `negoceCaravane()`, donc dans tous les jets qui s'en servent |
+| **Porter chance** | dans le bonus de karma au dé |
+| **Être une arme** | l'objet se range dans la réserve d'armes |
+| **Révéler du lore** | la couche s'ouvre chez le personnage visé dès que l'objet est en soute |
+| **Ouvrir un passage** | la douane n'est plus demandée sur ce passage |
+| **Peser sur les prix** | à l'achat, à la vente, ou les deux, dans `calculerPrix()` |
+
+Un objet dont la provenance est *dans les bagages au départ* est là dès la première étape.
+Les trois armes mythiques gardent leur mécanisme d'origine : c'est de lui que celui-ci est
+tiré.
 
 ---
 
@@ -631,8 +703,15 @@ L'échec accepte les mêmes récompenses, en négatif.
 | `reussite.recompenses` | or, réputation, karma, objet, couche de lore |
 | `echec` | facultatif ; les mêmes récompenses, en négatif |
 
-## Ce qu'il reste à faire côté moteur
+## Ce que le moteur en fait
 
-Le moteur ne connaît que les contrats tirés au sort. Il faudra un carnet de missions
-écrites avec l'état de chacune, le suivi des jalons, le compteur de missions par
-personnage, et l'application des cinq récompenses. Vous pouvez écrire dès maintenant.
+Déposez `missions-ecrites.json` dans `data/`. Vos missions apparaissent dans le **Carnet**,
+là où se tient leur commanditaire, quand leurs conditions sont remplies. Une fois
+acceptée, le carnet dit toujours quel est le prochain pas et combien d'étapes il reste.
+
+Les jalons tombent tout seuls : *arriver* en entrant dans le lieu, *livrer* quand la
+marchandise y est déposée — elle quitte alors la soute —, *parler à quelqu'un* quand on lui
+parle. Le dernier jalon achève la mission et verse les récompenses, l'objet et la couche de
+lore comprises. Une échéance passée applique ce que l'échec prévoit.
+
+Les contrats tirés au sort à chaque marché n'ont pas bougé : les deux cohabitent.

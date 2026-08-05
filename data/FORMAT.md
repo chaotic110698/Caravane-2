@@ -597,7 +597,8 @@ Chaque personnage porte une **première description qui reste toujours lisible**
 couches qui s'ouvrent à mesure qu'on le fréquente. C'est le socle du lore : les missions
 écrites et les objets uniques s'y rattachent.
 
-Le moteur ne les lit pas encore.
+Le moteur les lit : un onglet **Carnet** apparaît, on va parler aux gens du lieu où l'on
+est, et l'index garde tout.
 
 ---
 
@@ -618,7 +619,8 @@ six **pouvoirs**, une première description toujours relisible et des couches qu
 méritent. Le pouvoir *Révéler du lore* ouvre une couche chez un personnage : c'est ce qui
 relie les objets aux gens.
 
-Le moteur ne les lit pas encore.
+Le moteur les lit, et les six pouvoirs agissent. `S.objets[cle]` suit l'état de chacun —
+dans le monde, en soute, perdu à jamais.
 
 ---
 
@@ -639,7 +641,8 @@ karma, un objet unique, ou une couche de lore.
 > On écrit donc ses personnages sans rien leur attribuer, et on revient plus tard leur
 > confier une mission sans que `personnages.json` soit rouvert.
 
-Le moteur ne les lit pas encore : il ne connaît que les offres tirées au sort.
+Le moteur les lit, à côté des offres tirées au sort qui n'ont pas bougé. Les jalons
+tombent tout seuls et le carnet dit toujours quel est le prochain pas.
 
 ---
 
