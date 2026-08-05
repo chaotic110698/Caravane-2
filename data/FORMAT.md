@@ -583,6 +583,22 @@ les formes de choix. L'atelier en tire ses formulaires, la documentation son tut
 les contrôles leurs règles. Y ajouter une entrée la fait apparaître partout —
 `node outils/construire.mjs` refabrique le tutoriel et réinjecte le catalogue dans la page.
 
+---
+
+## Les personnages
+
+`data/personnages.json`, écrit avec
+**[`../outils/atelier-personnages.html`](../outils/atelier-personnages.html)** et décrit
+dans [`../outils/README.md`](../outils/README.md). Son catalogue est
+[`vocabulaire-personnages.json`](vocabulaire-personnages.json) — les rôles, les accords
+grammaticaux, et ce qui fait mériter une couche de lore.
+
+Chaque personnage porte une **première description qui reste toujours lisible**, puis des
+couches qui s'ouvrent à mesure qu'on le fréquente. C'est le socle du lore : les missions
+écrites et les objets uniques s'y rattacheront.
+
+Le moteur ne les lit pas encore.
+
 Les deux réservoirs cohabitent : les 51 événements d'origine restent en JavaScript dans
 `index.html` (voir ci-dessous), les nouveaux s'écrivent dans `data/evenements.json`, et
 le tirage puise dans les deux.

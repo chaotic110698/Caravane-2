@@ -4,12 +4,19 @@
 |---|---|
 | [`atelier-carte.html`](atelier-carte.html) | dessiner le monde : les lieux, les voies, les contrées, l'échelle |
 | [`atelier-evenements.html`](atelier-evenements.html) | écrire les événements : la situation, les choix, ce qu'ils font |
+| [`atelier-personnages.html`](atelier-personnages.html) | écrire les gens : qui ils sont, et ce qu'on apprend d'eux à force |
 | [`TUTORIEL-EVENEMENTS.md`](TUTORIEL-EVENEMENTS.md) | ce que fait chaque effet, en français — engendré, jamais écrit à la main |
-| `construire.mjs` | refabrique le tutoriel et le catalogue embarqué dans l'atelier |
+| [`TUTORIEL-PERSONNAGES.md`](TUTORIEL-PERSONNAGES.md) | les rôles, ce qui fait mériter une couche de lore — engendré aussi |
+| `commun.js` | la machinerie partagée, recopiée dans chaque atelier |
+| `construire.mjs` | refabrique les tutoriels, les catalogues et la machinerie embarqués |
 
-Les deux ateliers s'ouvrent **d'un double-clic**. Aucune installation, aucun compte,
+Les trois ateliers s'ouvrent **d'un double-clic**. Aucune installation, aucun compte,
 aucune dépendance, et **rien ne sort de votre machine** : tout reste dans le navigateur
 jusqu'à ce que vous exportiez.
+
+> Chaque atelier est un fichier unique et autonome, mais le code n'existe qu'en un
+> exemplaire : `construire.mjs` recopie `commun.js` et les catalogues dans chacun. C'est
+> pour ça qu'il faut le relancer après avoir touché à l'un ou à l'autre.
 
 ---
 
@@ -304,3 +311,100 @@ sans serveur, le catalogue voyage à l'intérieur du fichier.
 écrits en JavaScript. Le tirage devra puiser dans les deux réservoirs sans distinction
 pour le joueur, et chaque effet du catalogue recevra sa petite pièce dans le moteur.
 C'est du travail de moteur, pas d'auteur — vous pouvez écrire dès maintenant.
+
+---
+
+# Atelier de personnages
+
+`atelier-personnages.html` sert à écrire les gens : qui ils sont, où on les trouve, ce
+qu'on sait d'eux au premier regard, et ce qu'on ne leur arrache qu'à force.
+
+C'est le socle des deux ateliers qui viennent. Une mission écrite est donnée par
+quelqu'un ; un objet unique a appartenu à quelqu'un ; l'index de lore répertorie des
+lieux **et** des personnages. Autant que ce quelqu'un existe pour de bon.
+
+## La règle qui ne bouge pas
+
+**La première description reste toujours lisible.** Elle n'est jamais scellée, jamais
+remplacée : c'est ce qu'on lit au premier contact, et ce qu'on retrouve dans l'index dix
+heures de jeu plus tard.
+
+Tout le reste, ce sont des **couches**, et chacune se mérite. Une couche acquise vient
+s'ajouter en dessous des précédentes — rien ne recouvre jamais rien.
+
+## Ce qui fait mériter une couche
+
+Trois choses parlent de la relation elle-même : **combien de fois on l'a croisé**,
+**combien de missions on a faites pour lui**, et **combien de couches on a déjà**. Cette
+dernière est ce qui permet d'enchaîner : la troisième révélation n'a de sens qu'après les
+deux premières, et l'atelier refuse une couche qui en exigerait plus qu'il n'y en a
+au-dessus d'elle.
+
+S'y ajoute tout ce qu'on peut demander à l'état du convoi — l'or, la réputation, le
+karma, les étapes — le même vocabulaire que les événements.
+
+L'onglet **Où en est-on** relit la fiche à n'importe quel moment de la relation. C'est là
+qu'on voit ce qui reste scellé au bout de trois rencontres et ce qui s'ouvre à la
+dixième.
+
+## L'accord, une fois pour toutes
+
+Un personnage porte son **accord grammatical**, et les textes s'en servent : `{il}` donne
+*elle*, `{le}` donne *la*, `arrivé{e}` donne *arrivée*. On écrit le texte une fois, pas
+deux. `{appellation}` colle le titre au nom avec l'élision qui convient — *La guilde de*
+suivi d'*Orlanne* donne *La guilde d'Orlanne*.
+
+L'atelier ne devine pas l'accord : il vous le demande.
+
+## Sa voix
+
+Un champ qui ne s'affiche jamais au joueur : **comment il parle**, en deux mots. C'est
+votre pense-bête pour le jour où vous écrirez le lore à plusieurs voix — chaque voix
+garde alors son grain.
+
+## Le fichier exporté
+
+`personnages.json`.
+
+```json
+{
+  "format": "caravane.personnages.v1",
+  "personnages": [
+    {
+      "cle": "orlanne",
+      "nom": "Orlanne",
+      "titre": "Dame",
+      "accord": "f",
+      "role": "echevin",
+      "lieu": "aurelium",
+      "ico": { "glyphe": "sceau", "nature": "rencontre" },
+      "premiere": "Elle tient le registre des péages depuis onze ans…",
+      "voix": "sèche ; elle ne répète jamais",
+      "couches": [
+        { "titre": "Le registre",
+          "gagne": [ { "quoi": "rencontres", "min": 3 } ],
+          "texte": "Au troisième passage, {il} tourne le registre vers vous…" }
+      ]
+    }
+  ]
+}
+```
+
+| clé | rôle |
+|---|---|
+| `cle` | identifiant, unique dans le répertoire |
+| `titre` | ce qui précède le nom, avec élision automatique |
+| `accord` | `f` ou `m` — décide de tous les accords des textes |
+| `role` | une clé de `vocabulaire-personnages.json` |
+| `lieu` | une clé de `monde.json` : c'est là qu'on peut lui parler |
+| `premiere` | **jamais scellée**, toujours relisible |
+| `voix` | pense-bête d'auteur, jamais montré au joueur |
+| `couches[].gagne` | les conditions à remplir, toutes |
+| `couches[].texte` | ce qu'on apprend, une fois mérité |
+
+## Ce qu'il reste à faire côté moteur
+
+Le moteur ne connaît pas encore les personnages : un commanditaire y est aujourd'hui un
+titre et un nom tirés au sort, oubliés aussitôt. Il faudra tenir le compte des rencontres
+et des missions faites pour chacun, et un écran d'index où relire tout ça. C'est le même
+chantier que les événements en données, et il vient après les trois ateliers.

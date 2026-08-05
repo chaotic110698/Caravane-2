@@ -23,6 +23,7 @@ const lit = (...p) => readFileSync(join(RACINE, ...p), 'utf8');
 const litJson = (...p) => JSON.parse(lit(...p));
 
 const V = litJson('data', 'vocabulaire-evenements.json');
+const VP = litJson('data', 'vocabulaire-personnages.json');
 
 /* ════════════════════ 1. le tutoriel ════════════════════ */
 
@@ -129,6 +130,67 @@ dit('## Il manque un effet ?', '',
 writeFileSync(join(ICI, 'TUTORIEL-EVENEMENTS.md'),
   l.join('\n').replace(/\n{3,}/g, '\n\n') + '\n', 'utf8');
 
+/* ════════════════════ 1 bis. le tutoriel des personnages ════════════════════ */
+
+const q = [];
+const ecrit = (...t) => q.push(...t);
+
+ecrit('# Écrire un personnage — mode d\'emploi', '',
+  '> Cette page est **engendrée** depuis [`data/vocabulaire-personnages.json`](../data/vocabulaire-personnages.json).',
+  '> Ne la corrigez pas à la main : corrigez le catalogue et relancez',
+  '> `node outils/construire.mjs`.', '',
+  'Un personnage, c\'est quelqu\'un à qui parler quelque part, ce qu\'on sait de lui tout de',
+  'suite, et ce qu\'on n\'apprend qu\'à force. Il s\'écrit avec',
+  '[`atelier-personnages.html`](atelier-personnages.html), en champs à remplir.', '',
+  '## La règle qui ne bouge pas', '',
+  'La **première description est toujours relisible**. Elle n\'est jamais scellée, jamais',
+  'remplacée : c\'est ce qu\'on lit au premier contact et ce qu\'on retrouve dans l\'index dix',
+  'heures plus tard. Tout le reste — les **couches** — se mérite et vient s\'ajouter en',
+  'dessous, sans jamais rien recouvrir.', '');
+
+ecrit('## Les rôles', '',
+  `${Object.keys(VP.roles).length} rôles, et la liste est ouverte : il en manque un, il est ajouté.`, '',
+  '| rôle | ce que ça vous donne |', '|---|---|');
+Object.entries(VP.roles).forEach(([k, d]) => ecrit(`| **${d.nom}** | ${d.explique} |`));
+ecrit('');
+
+ecrit('## Ce qui fait mériter une couche', '',
+  'Une couche s\'ouvre quand **toutes** ses conditions sont vraies. Trois d\'entre elles',
+  'parlent de la relation avec ce personnage :', '',
+  '| on regarde | unité | |', '|---|---|---|');
+Object.entries(VP.interrogations).forEach(([k, d]) =>
+  ecrit(`| **${d.nom}** | ${d.unite || ''} | ${d.explique || ''} |`));
+ecrit('', 'S\'y ajoute tout ce qu\'on peut demander à l\'état du convoi — l\'or, la réputation,',
+  'le karma, les étapes parcourues : le même vocabulaire que les événements, décrit dans',
+  '[`TUTORIEL-EVENEMENTS.md`](TUTORIEL-EVENEMENTS.md).', '',
+  'Les couches se comptent **dans l\'ordre où vous les rangez**. La troisième peut donc',
+  'demander d\'avoir déjà les deux premières, et l\'atelier vous prévient si vous en demandez',
+  'plus qu\'il n\'y en a au-dessus — une couche qui ne s\'ouvrirait jamais.', '');
+
+ecrit('## Les trous dans les textes', '',
+  'La première description et le texte de chaque couche acceptent des trous entre accolades.',
+  'Ils évitent d\'écrire deux fois le même personnage au masculin et au féminin.', '',
+  '| trou | ce que ça donne | exemple |', '|---|---|---|');
+Object.entries(VP.trous).forEach(([k, d]) =>
+  ecrit(`| \`{${k}}\` | ${d.explique} | ${d.exemple || ''} |`));
+ecrit('', 'L\'**accord** choisi sur la fiche décide de tout : `{il}` devient *elle*, `{le}`',
+  'devient *la*, et `arrivé{e}` devient *arrivée*. Un trou inconnu reste visible à l\'écran,',
+  'et l\'atelier le signale.', '');
+
+ecrit('## Ce que l\'atelier vérifie', '',
+  '- une clé unique, un nom, et surtout **une première description** ;',
+  '- le lieu existe vraiment dans le `monde.json` chargé ;',
+  '- chaque couche a un texte, et des conditions qui la font mériter ;',
+  '- aucune couche n\'exige plus de couches connues qu\'il n\'y en a avant elle ;',
+  '- les trous des textes correspondent à quelque chose ;',
+  '- la couverture : quels lieux ont quelqu\'un à qui parler, lesquels sont déserts.', '',
+  'Et l\'onglet **Où en est-on** relit la fiche à n\'importe quel moment de la relation :',
+  'c\'est là qu\'on voit ce qui reste scellé au bout de trois rencontres, et ce qui s\'ouvre',
+  'à la dixième.', '');
+
+writeFileSync(join(ICI, 'TUTORIEL-PERSONNAGES.md'),
+  q.join('\n').replace(/\n{3,}/g, '\n\n') + '\n', 'utf8');
+
 /* ════════════════════ 2. les exemples ════════════════════
    Découpés dans la spécification, pour qu'un exemple corrigé là-bas le soit dans
    l'outil sans qu'on ait à y penser. */
@@ -163,6 +225,7 @@ const noms = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, v.n
 
 const reference = {
   vocabulaire: V,
+  vocabulairePersonnages: VP,
   biens: noms(biens.biens),
   armes: noms(armes.armes),
   familles: noms(armes.familles),
@@ -174,22 +237,43 @@ const reference = {
   exemples
 };
 
-const page = join(ICI, 'atelier-evenements.html');
-const html = readFileSync(page, 'utf8');
-const balise = /(<script id="reference" type="application\/json">)[\s\S]*?(<\/script>)/;
-if (!balise.test(html))
-  throw new Error('Balise <script id="reference"> introuvable dans atelier-evenements.html');
-writeFileSync(page,
-  html.replace(balise, (_, a, b) => a + '\n' + JSON.stringify(reference) + '\n' + b), 'utf8');
+/* ════════════════════ 4. l'injection dans les ateliers ════════════════════
+   Chaque atelier reçoit la machinerie partagée puis ses listes de référence.
+   Il reste ainsi un fichier unique, qu'on ouvre d'un double-clic, sans que le
+   code existe en trois exemplaires. */
 
-/* ════════════════════ 4. le compte rendu ════════════════════ */
+const commun = lit('outils', 'commun.js');
+const ATELIERS = ['atelier-evenements.html', 'atelier-personnages.html'];
+
+const injecte = (html, id, contenu, quoi) => {
+  const balise = new RegExp(`(<script id="${id}"[^>]*>)[\\s\\S]*?(</script>)`);
+  if (!balise.test(html)) throw new Error(`Balise <script id="${id}"> introuvable dans ${quoi}`);
+  return html.replace(balise, (_, a, b) => a + '\n' + contenu + '\n' + b);
+};
+
+const poses = [];
+for (const nom of ATELIERS) {
+  const page = join(ICI, nom);
+  let html;
+  try { html = readFileSync(page, 'utf8'); }
+  catch (e) { continue; }                       /* atelier pas encore écrit */
+  html = injecte(html, 'commun', commun, nom);
+  html = injecte(html, 'reference', JSON.stringify(reference), nom);
+  writeFileSync(page, html, 'utf8');
+  poses.push(nom);
+}
+
+/* ════════════════════ 5. le compte rendu ════════════════════ */
 
 const compte = (o) => Object.keys(o).length;
 console.log(
-  'TUTORIEL-EVENEMENTS.md   %d effets · %d interrogations · %d formes · %d moments\n' +
-  'atelier-evenements.html  %d biens · %d armes · %d métiers · %d dessins · %d teintes · %d exemples\n' +
-  'catalogue embarqué : %s',
+  'TUTORIEL-EVENEMENTS.md  %d effets · %d interrogations · %d formes · %d moments\n' +
+  'référence               %d biens · %d armes · %d métiers · %d dessins · %d teintes · %d exemples\n' +
+  'injecté dans            %s\n' +
+  'poids embarqué          %s de catalogue, %s de machinerie',
   compte(V.effets), compte(V.interrogations), compte(V.formes), compte(V.moments),
   compte(reference.biens), compte(reference.armes), compte(reference.metiers),
   compte(reference.glyphes), compte(reference.natures), exemples.length,
-  (JSON.stringify(reference).length / 1024).toFixed(0) + ' ko');
+  poses.join(', ') || '(aucun atelier trouvé)',
+  (JSON.stringify(reference).length / 1024).toFixed(0) + ' ko',
+  (commun.length / 1024).toFixed(0) + ' ko');
