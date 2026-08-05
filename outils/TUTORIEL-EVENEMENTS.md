@@ -2,13 +2,14 @@
 
 > Cette page est **engendrée** depuis [`data/vocabulaire-evenements.json`](../data/vocabulaire-evenements.json).
 > Ne la corrigez pas à la main : corrigez le catalogue et relancez
-> `node outils/tutoriel-evenements.mjs`. Le générateur d'événements affiche exactement
-> les mêmes explications.
+> `node outils/construire.mjs`. L'atelier d'événements affiche exactement les mêmes
+> explications, tirées du même fichier.
 
 Un événement, c'est une situation qui surgit, un récit, et deux à quatre façons d'en
 sortir. Tout s'écrit en champs à remplir — jamais une ligne de code.
 
-La forme exacte du fichier est décrite dans
+L'outil qui les remplit est [`atelier-evenements.html`](atelier-evenements.html) : ouvrez-le
+d'un double-clic. La forme exacte du fichier produit est décrite dans
 [`data/FORMAT-EVENEMENTS.md`](../data/FORMAT-EVENEMENTS.md). Cette page-ci explique
 **ce que chaque chose fait**.
 
@@ -301,6 +302,10 @@ Partout où un nombre est attendu, quatre écritures sont possibles.
 
 Elles se combinent : *base 40, par étape 11, le tout × entre 0,8 et 1,6*.
 
+Dans l'atelier ces quatre écritures sont un menu déroulant, et le montant obtenu
+s'affiche juste en dessous, calculé pour le convoi d'essai. On n'écrit jamais la
+formule à la main.
+
 ## Les textes
 
 Le récit, la note sous un bouton et le texte de chaque issue acceptent des **trous**
@@ -309,17 +314,20 @@ entre accolades — le nom qu'un effet a retenu, ou un mot du contexte.
 > On ne laisse que **{perdu}**. **{blesses.noms}** y laissent des plumes.
 
 Les nombres sortent à la française — *1 240*, pas *1240*. Un trou inconnu reste visible
-à l'écran : une faute de frappe se voit au lieu de disparaître.
+à l'écran : une faute de frappe se voit au lieu de disparaître, et l'atelier la signale
+avant que le joueur ne la découvre.
 
-Un texte peut aussi proposer **plusieurs variantes**, et le jeu en tire une au hasard.
+Un texte peut aussi proposer **plusieurs variantes**, et le jeu en tire une au hasard :
+dans l'atelier, séparez-les par une ligne vide.
 
 ## Il manque un effet ?
 
 Le vocabulaire est un catalogue ouvert, pas une liste figée. Décrivez l'effet que vous
 voulez — *révéler un lieu sur la carte*, *faire monter un prix durablement*, *ouvrir une
-route* — il sera ajouté au catalogue et apparaîtra aussitôt dans le générateur, dans
-cette page et dans les vérifications.
+route* — il sera ajouté au catalogue et apparaîtra aussitôt dans l'atelier, dans cette
+page et dans les vérifications.
 
 Même chose pour les paliers d'un jet : ils sont une liste ouverte. Six degrés de
-réussite au lieu de trois, ce sont six paliers.
+réussite au lieu de trois, ce sont six paliers — le bouton *Ajouter un palier* ne
+compte pas jusqu'à quatre.
 

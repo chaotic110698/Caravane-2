@@ -365,6 +365,12 @@ devient alors citable dans le texte, entre accolades.
 **Les résultats nommés** : `{perdu}`, `{blesses.noms}`, `{melee.butin}` — tout ce qu'un
 effet a retenu par son `nomme`.
 
+Dans le `texte` d'une issue, seuls comptent les résultats des effets **de cette issue** :
+le reste n'a pas eu lieu. La `note`, elle, annonce ce qui va se passer et peut citer
+n'importe quel résultat du choix, y compris d'une branche qu'on ne prendra pas — le jeu
+l'évalue **à vide** pour l'afficher. C'est ce qui permet d'écrire *« {droit} po »* sous un
+bouton dont le droit n'est payé qu'après.
+
 **Le contexte**, toujours disponible :
 
 | trou | vaut |
@@ -565,6 +571,7 @@ existants et vous préviendra si vous en inventez un qui n'existe pas.
     },
     {
       "txt": "Négocier un droit de passage",
+      "de": "renom",
       "note": "Votre réputation vous précède",
       "si": [ { "quoi": "reputation", "min": 62 } ],
       "jet": { "carac": { "selon": "reputation", "divise": 24 }, "seuil": 12, "titre": "Parlementer" },
@@ -583,17 +590,25 @@ existants et vous préviendra si vous en inventez un qui n'existe pas.
 
 ---
 
-## Ce que le générateur vérifiera
+## Ce que l'atelier vérifie
+
+Vous n'aurez pas à écrire ce fichier à la main :
+**[`outils/atelier-evenements.html`](../outils/atelier-evenements.html)** le remplit en
+formulaires et l'exporte. Il contrôle au passage :
 
 - une clé unique, un titre, un récit, au moins deux choix ;
 - chaque choix a exactement une des quatre formes, et chaque issue a un texte ;
 - les clés citées existent vraiment : les lieux dans `monde.json`, les biens dans
   `biens.json`, les armes dans `armes.json`, les glyphes dans `icones.json` ;
 - tous les trous d'un texte correspondent à un résultat nommé ou à un mot du contexte ;
-- les paliers d'un jet gradué ne se recouvrent pas et se terminent par un repli ;
+- aucun palier d'un jet gradué n'est recouvert par un palier au-dessus, et le dernier
+  sert bien de repli ;
 - un choix `bloque` porte un `sinon`, sinon le joueur voit un bouton gris sans raison ;
 - la couverture : quels lieux ont des événements, lesquels n'en ont aucun.
 
-Il montrera aussi **le tirage à blanc** — l'événement joué cent fois contre un convoi
-type, avec la dispersion des issues. C'est là qu'on voit qu'un choix est trop punitif
-avant que le joueur ne le découvre.
+Il montre aussi **le tirage à blanc** — chaque choix joué deux cents fois contre un
+convoi type, avec la dispersion des issues et ce qu'elles coûtent en médiane. C'est là
+qu'on voit qu'un choix est trop punitif avant que le joueur ne le découvre.
+
+Le mode d'emploi de tout ce vocabulaire est dans
+[`outils/TUTORIEL-EVENEMENTS.md`](../outils/TUTORIEL-EVENEMENTS.md).

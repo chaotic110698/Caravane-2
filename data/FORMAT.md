@@ -569,7 +569,8 @@ balise `<svg>` englobante. Deux couleurs conventionnelles :
 
 ## Les événements de route
 
-Ils ont leur propre documentation, en deux pages :
+Ils s'écrivent avec **[`../outils/atelier-evenements.html`](../outils/atelier-evenements.html)**,
+en champs à remplir, sans une ligne de code. Deux pages l'accompagnent :
 
 - **[`FORMAT-EVENEMENTS.md`](FORMAT-EVENEMENTS.md)** — la forme exacte du fichier :
   localisation, conditions, jets de dé, effets et textes à trous ;
@@ -577,7 +578,10 @@ Ils ont leur propre documentation, en deux pages :
   fait chaque effet, en français, engendré depuis
   [`vocabulaire-evenements.json`](vocabulaire-evenements.json).
 
-Tout s'écrit en champs à remplir, sans une ligne de code.
+Ce dernier fichier est le **catalogue** : les effets, leurs réglages, les interrogations,
+les formes de choix. L'atelier en tire ses formulaires, la documentation son tutoriel et
+les contrôles leurs règles. Y ajouter une entrée la fait apparaître partout —
+`node outils/construire.mjs` refabrique le tutoriel et réinjecte le catalogue dans la page.
 
 Les deux réservoirs cohabitent : les 51 événements d'origine restent en JavaScript dans
 `index.html` (voir ci-dessous), les nouveaux s'écrivent dans `data/evenements.json`, et

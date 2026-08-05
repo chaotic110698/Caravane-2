@@ -3,8 +3,13 @@
 | | |
 |---|---|
 | [`atelier-carte.html`](atelier-carte.html) | dessiner le monde : les lieux, les voies, les contrées, l'échelle |
-| [`TUTORIEL-EVENEMENTS.md`](TUTORIEL-EVENEMENTS.md) | écrire un événement : ce que fait chaque effet, en français |
-| `tutoriel-evenements.mjs` | engendre le tutoriel depuis le catalogue — à relancer après l'avoir modifié |
+| [`atelier-evenements.html`](atelier-evenements.html) | écrire les événements : la situation, les choix, ce qu'ils font |
+| [`TUTORIEL-EVENEMENTS.md`](TUTORIEL-EVENEMENTS.md) | ce que fait chaque effet, en français — engendré, jamais écrit à la main |
+| `construire.mjs` | refabrique le tutoriel et le catalogue embarqué dans l'atelier |
+
+Les deux ateliers s'ouvrent **d'un double-clic**. Aucune installation, aucun compte,
+aucune dépendance, et **rien ne sort de votre machine** : tout reste dans le navigateur
+jusqu'à ce que vous exportiez.
 
 ---
 
@@ -213,3 +218,89 @@ aujourd'hui. L'adaptation demandera :
 
 C'est le gros du chantier, et il vient après : l'atelier peut servir dès maintenant, et
 c'est lui qui définit la cible.
+
+---
+
+# Atelier d'événements
+
+`atelier-evenements.html` sert à écrire les événements du voyage : la situation qui
+surgit, les deux à quatre façons d'en sortir, et ce que chacune fait au convoi.
+
+## L'ouvrir
+
+    https://chaotic110698.github.io/Caravane-2/outils/atelier-evenements.html
+
+Ou par double-clic sur le fichier téléchargé — comme l'atelier de carte, il fonctionne
+en `file://` et ne va chercher aucun fichier.
+
+## Vous n'écrirez jamais de code
+
+C'est le principe de l'outil, et il tient à une chose : **tout ce qu'un événement peut
+dire vit dans un catalogue**, [`data/vocabulaire-evenements.json`](../data/vocabulaire-evenements.json).
+Chaque effet y porte son nom en français, sa phrase d'explication et la description de
+chacun de ses réglages. L'atelier n'affiche que ça.
+
+Vous verrez donc « Larguer de la cargaison — *on jette une part du chargement, pour fuir
+plus vite ou parce qu'on vous la prend* », jamais `delester`. Et le mode d'emploi
+[`TUTORIEL-EVENEMENTS.md`](TUTORIEL-EVENEMENTS.md) sort du **même** fichier que les
+formulaires : les deux ne peuvent pas se contredire.
+
+**Il manque un effet ?** C'est prévu. Décrivez celui que vous voulez — *révéler un lieu
+sur la carte*, *faire monter un prix durablement*, *ouvrir une route* — il est ajouté au
+catalogue et apparaît aussitôt dans l'atelier, dans le tutoriel et dans les contrôles.
+Même chose pour les **paliers d'un jet** : ce sont une liste ouverte, pas quatre cases
+figées. Six degrés de réussite, ce sont six paliers.
+
+## Les quatre volets de droite
+
+| | |
+|---|---|
+| **Aperçu** | l'événement tel que le joueur le verra — et **jouable** : cliquez un choix, le dé roule pour de bon |
+| **Contrôles** | ce qui bloque, ce qui mérite un coup d'œil, et quels lieux du monde n'ont aucun événement |
+| **Tirage à blanc** | chaque choix joué 200 fois : la dispersion des issues et ce que ça coûte en médiane |
+| **Convoi** | le convoi contre lequel tout est mesuré. Bougez-le pour voir l'événement au début puis à la fin d'une partie |
+
+Le **tirage à blanc** est ce qui sert le plus. Un bluff qui rate 74 % du temps et coûte
+71 po en médiane, ça se voit là — pas après, dans une partie.
+
+## Par où commencer
+
+1. **Exemples** charge quatre événements du jeu déjà convertis, du plus simple au plus
+   riche. Ouvrez *Embuscade* et regardez comment ses quatre choix sont faits.
+2. **Charger monde.json** — le fichier de l'atelier de carte. Les listes de lieux, de
+   contrées et de terrains deviennent alors de vraies cases à cocher, et l'onglet
+   *Contrôles* peut dire quels lieux n'ont encore rien.
+3. **+ Événement**, et remplissez de haut en bas.
+
+Le travail est sauvegardé tout seul dans le navigateur, y compris si vous fermez
+l'onglet en plein milieu. **Exportez** quand même régulièrement.
+
+## Ce que les contrôles attrapent
+
+Une clé en double, un titre ou un récit manquant, moins de deux choix, une issue sans
+texte, un choix qui mélange deux façons de se résoudre, une marchandise ou un dessin qui
+n'existe pas, un palier qu'un autre recouvre entièrement, un bouton grisé sans raison
+affichée — et surtout **les accolades qui ne correspondent à rien**, celles que le joueur
+lirait telles quelles à l'écran.
+
+Les avertissements rouges bloquent, ceux en or sont des remarques.
+
+## Le fichier exporté
+
+`evenements.json`, dont le format est décrit dans
+[`data/FORMAT-EVENEMENTS.md`](../data/FORMAT-EVENEMENTS.md). Un aller-retour est sans
+perte : ce qu'on importe ressort identique.
+
+## Après avoir touché au catalogue
+
+    node outils/construire.mjs
+
+Ça refait le tutoriel et réinjecte le catalogue dans la page — l'atelier devant marcher
+sans serveur, le catalogue voyage à l'intérieur du fichier.
+
+## Ce qu'il reste à faire côté moteur
+
+`index.html` ne lit pas encore `data/evenements.json` : ses 51 événements sont toujours
+écrits en JavaScript. Le tirage devra puiser dans les deux réservoirs sans distinction
+pour le joueur, et chaque effet du catalogue recevra sa petite pièce dans le moteur.
+C'est du travail de moteur, pas d'auteur — vous pouvez écrire dès maintenant.
