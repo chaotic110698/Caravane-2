@@ -430,6 +430,160 @@ function accueillirFichiers(surJson){
   return ()=>{if(champFichier)champFichier.click();};
 }
 
+/* ═══════════════ la disposition sur téléphone ═══════════════
+   Sur un écran de 390 pixels, les trois colonnes empilées ne laissent que
+   180 pixels au formulaire : on ne peut rien y écrire. Ici, on donne l'écran
+   entier à **une** zone à la fois, et une barre en bas sert à passer de l'une à
+   l'autre. Les boutons de la barre du haut se rangent dans un tiroir.
+
+   Les quatre ateliers partagent la même ossature — #scene > aside, main, aside —
+   donc ce code les sert tous les quatre sans qu'aucun n'ait à s'en occuper.
+
+   Rien de tout cela ne s'active au-dessus de 860 pixels : sur un ordinateur,
+   les trois colonnes restent côte à côte comme avant.                        */
+const CSS_MOBILE=`
+@media (max-width:860px){
+  body{overflow:hidden}
+  /* — la barre du haut, réduite à un titre et un tiroir — */
+  #barre{flex-wrap:nowrap;gap:8px;padding:8px 10px;align-items:center}
+  #barre h1{font-size:15px;flex:1;min-width:0;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap;margin:0}
+  #tiroir{position:fixed;left:0;right:0;top:0;z-index:20;
+    background:var(--fond-clair);border-bottom:1px solid var(--bord);
+    padding:10px;display:none;grid-template-columns:1fr 1fr;gap:8px;
+    box-shadow:0 14px 30px #0009;max-height:78vh;overflow-y:auto}
+  #tiroir.ouvert{display:grid}
+  #tiroir .outil{justify-content:center;padding:11px 10px;font-size:13.5px}
+  #tiroir .sep,#tiroir .pousse{display:none}
+  #tiroir .plein{grid-column:1/-1}
+  #voile-tiroir{position:fixed;inset:0;background:#0009;z-index:19;display:none}
+  #voile-tiroir.ouvert{display:block}
+  #b-tiroir{flex:none;display:inline-flex;align-items:center;gap:7px;
+    padding:8px 12px;border:1px solid var(--bord);border-radius:var(--r);
+    background:var(--fond);font-size:13px}
+  #b-tiroir b{color:var(--or)}
+
+  /* — une seule zone à l'écran — */
+  #scene{flex-direction:column;position:relative}
+  #scene>aside,#scene>main{display:none;width:auto;max-height:none;flex:1;
+    min-height:0;border:none}
+  #scene.vue-liste>aside:first-of-type{display:flex}
+  #scene.vue-feuille>main{display:flex}
+  #scene.vue-cote>aside:last-of-type{display:flex}
+  #scene>main{padding:12px 12px 24px}
+
+  /* — la barre du bas — */
+  #vues{flex:none;display:flex;background:var(--fond-clair);
+    border-top:1px solid var(--bord);padding-bottom:env(safe-area-inset-bottom,0)}
+  #vues button{flex:1;padding:11px 4px 12px;font-size:11.5px;color:var(--encre-pale);
+    border-top:2px solid transparent;display:flex;flex-direction:column;
+    align-items:center;gap:3px;line-height:1.15}
+  #vues button.actif{color:var(--or);border-top-color:var(--or)}
+  #vues .pastille{font-size:16px;line-height:1}
+
+  /* — l'état, sur une ligne qu'on peut faire défiler — */
+  #etat{flex-wrap:nowrap;overflow-x:auto;gap:12px;font-size:11.5px;padding:5px 10px}
+  #etat>span{white-space:nowrap;flex:none}
+  #etat>span:last-child{display:none}
+
+  /* — les champs, au doigt — */
+  .champ{grid-template-columns:1fr;gap:4px}
+  .champ>label{padding-top:0;font-size:12px}
+  input,select,textarea{padding:9px 10px;font-size:15px}   /* 15px : pas de zoom iOS */
+  .chip{padding:7px 12px;font-size:13px}
+  .ajout{padding:9px 12px;width:100%;text-align:center}
+  .glyphes{grid-template-columns:repeat(auto-fill,minmax(46px,1fr));max-height:210px}
+  #onglets button{padding:10px 2px;font-size:11px}
+  #volet{padding:12px 12px 24px}
+  .bloc>h2 button{padding:5px 10px;font-size:12px}
+  .piece>header button,.couche>header button,.effet>header button{padding:5px 9px;font-size:12px}
+}`;
+/* Les trois zones, dans l'ordre où la barre du bas les propose. Chaque atelier
+   nomme la sienne : « le recueil », « le répertoire », « le coffre »… */
+function installerMobile(noms){
+  const scene=$('#scene');
+  if(!scene)return;
+  const barre=$('#barre');
+  /* on range les boutons de la barre dans un tiroir, sans toucher au HTML */
+  if(barre&&!$('#tiroir')){
+    const tiroir=document.createElement('div');
+    tiroir.id='tiroir';
+    const voile=document.createElement('div');
+    voile.id='voile-tiroir';
+    Array.prototype.slice.call(barre.children).forEach(el=>{
+      if(el.tagName==='H1')return;
+      tiroir.appendChild(el);
+    });
+    /* Un retour au hub, en tête du tiroir : sur un téléphone, le bouton « page
+       précédente » du navigateur n'est pas toujours à portée de pouce. */
+    const retour=document.createElement('a');
+    retour.className='outil plein';
+    retour.href='index.html';
+    retour.innerHTML='◂ Tous les ateliers';
+    tiroir.insertBefore(retour,tiroir.firstChild);
+    const b=document.createElement('button');
+    b.id='b-tiroir';b.innerHTML='<b>☰</b> Outils';
+    barre.appendChild(b);
+    document.body.appendChild(voile);
+    document.body.appendChild(tiroir);
+    const fermer=()=>{tiroir.classList.remove('ouvert');voile.classList.remove('ouvert');};
+    b.onclick=()=>{const o=tiroir.classList.toggle('ouvert');
+      voile.classList.toggle('ouvert',o);};
+    voile.onclick=fermer;
+    /* refermer dès qu'on a choisi quelque chose, sauf pour un menu déroulant */
+    tiroir.addEventListener('click',e=>{
+      if(e.target.closest('.outil'))setTimeout(fermer,60);});
+  }
+  /* la barre du bas */
+  if(!$('#vues')){
+    const zones=[['liste',noms&&noms[0]||'La liste','☰'],
+                 ['feuille',noms&&noms[1]||'La fiche','✎'],
+                 ['cote',noms&&noms[2]||'L\'aperçu','◫']];
+    const v=document.createElement('div');
+    v.id='vues';
+    v.innerHTML=zones.map(([k,n,p])=>
+      `<button data-vue="${k}"><span class="pastille">${p}</span>${ech(n)}</button>`).join('');
+    const etat=$('#etat');
+    if(etat)etat.parentNode.insertBefore(v,etat);
+    else document.body.appendChild(v);
+    v.addEventListener('click',e=>{
+      const b=e.target.closest('[data-vue]');
+      if(b)montrerVue(b.dataset.vue);
+    });
+  }
+  montrerVue(localStorage.getItem('caravane.vue')||'feuille');
+}
+function montrerVue(quoi){
+  const scene=$('#scene');
+  if(!scene)return;
+  scene.classList.remove('vue-liste','vue-feuille','vue-cote');
+  scene.classList.add('vue-'+quoi);
+  $$('#vues [data-vue]').forEach(b=>b.classList.toggle('actif',b.dataset.vue===quoi));
+  try{localStorage.setItem('caravane.vue',quoi);}catch(e){}
+  /* on repart du haut : arriver au milieu d'un formulaire désoriente */
+  const z=quoi==='feuille'?$('#scene>main'):
+    (quoi==='cote'?$('#volet'):$('#scene>aside'));
+  if(z)z.scrollTop=0;
+}
+/* Choisir un élément dans la liste passe naturellement à la fiche. */
+function suivreChoix(){
+  const scene=$('#scene');
+  if(!scene)return;
+  scene.addEventListener('click',e=>{
+    if(!matchMedia('(max-width:860px)').matches)return;
+    const b=e.target.closest('[data-sel]');
+    if(b&&b.closest('aside'))setTimeout(()=>montrerVue('feuille'),40);
+  });
+}
+/* À appeler une fois, à la fin de chaque atelier. */
+function habillerMobile(noms){
+  const st=document.createElement('style');
+  st.textContent=CSS_MOBILE;
+  document.head.appendChild(st);
+  installerMobile(noms);
+  suivreChoix();
+}
+
 /* ═══════════════ la saisie, en délégation ═══════════════
    Un seul écouteur pour tous les champs de tous les formulaires : ils portent
    leur chemin, le reste suit. L'atelier fournit ce qu'il faut refaire ensuite. */
@@ -982,6 +1136,7 @@ addEventListener('keydown',e=>{
 
 relire();
 tout();
+habillerMobile(['Le répertoire','Le personnage','La fiche']);
 </script>
 </body>
 </html>

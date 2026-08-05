@@ -135,6 +135,40 @@ kbd{font-family:ui-monospace,monospace;font-size:11px;background:var(--fond-clai
   #scene{flex-direction:column}
   #panneau{width:auto;max-height:46%;border-left:none;border-top:1px solid var(--bord)}
 }
+/* ── sur téléphone ──
+   Un atelier de tracé n'est pas un formulaire : c'est la toile qui doit tenir
+   l'écran. Les outils restent donc visibles en une rangée qu'on fait défiler du
+   doigt, et le panneau devient un tiroir qu'on relève quand on en a besoin. */
+#lien-hub{display:none;text-decoration:none}
+@media (max-width:720px){
+  #lien-hub{display:inline-flex;align-items:center}
+  #barre{flex-wrap:nowrap;overflow-x:auto;gap:5px;padding:6px 8px;
+    scrollbar-width:none;-ms-overflow-style:none}
+  #barre::-webkit-scrollbar{display:none}
+  #barre h1{display:none}
+  #barre .outil{flex:none;padding:9px 13px;font-size:13.5px}
+  #barre .outil kbd{display:none}       /* pas de clavier sur un téléphone */
+  #barre .pousse{margin-left:0}
+  #scene{position:relative}
+  #toile{flex:1;min-height:0}
+  #panneau{position:absolute;left:0;right:0;bottom:0;z-index:8;
+    max-height:62%;border-top:1px solid var(--or);
+    box-shadow:0 -12px 28px #0009;padding-top:34px;
+    transform:translateY(calc(100% - 34px));transition:transform .22s ease}
+  #panneau.ouvert{transform:translateY(0)}
+  #poignee-panneau{position:absolute;top:0;left:0;right:0;height:34px;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    background:var(--fond-clair);border-bottom:1px solid var(--bord);
+    font-size:12.5px;color:var(--encre-pale);cursor:pointer;z-index:2}
+  #poignee-panneau b{color:var(--or)}
+  #etat{flex-wrap:nowrap;overflow-x:auto;font-size:11.5px;
+    padding-bottom:calc(5px + env(safe-area-inset-bottom,0px))}
+  #etat>span{white-space:nowrap;flex:none}
+  input,select{padding:9px 10px;font-size:15px}
+  .champ{grid-template-columns:1fr;gap:4px}
+  .bouton{padding:10px}
+  .trait,.ligne-contree{padding:8px 9px;font-size:13.5px}
+}
 </style>
 </head>
 <body>
@@ -152,6 +186,7 @@ kbd{font-family:ui-monospace,monospace;font-size:11px;background:var(--fond-clai
   <div class="sep"></div>
   <button class="outil" id="btn-cadrer" title="Tout voir">Recadrer <kbd>0</kbd></button>
   <button class="outil pousse" id="btn-image">Image de fond…</button>
+  <a class="outil" id="lien-hub" href="index.html" title="Revenir aux ateliers">◂ Ateliers</a>
 </div>
 
 <div id="scene">
@@ -1270,6 +1305,34 @@ choisirOutil('select');
 cadrer();
 dessiner();
 reprendreImage();
+
+/* ── le tiroir du panneau, sur téléphone ──
+   Une poignée en haut du panneau le relève et le range. On ne l'installe qu'en
+   petit écran, et l'ouvrir se fait aussi tout seul quand on touche un lieu :
+   c'est là qu'on veut le lire. */
+(function(){
+  const panneau=$('#panneau');
+  if(!panneau)return;
+  const poignee=document.createElement('div');
+  poignee.id='poignee-panneau';
+  poignee.innerHTML='<b>▲</b> Le panneau';
+  panneau.insertBefore(poignee,panneau.firstChild);
+  const petit=()=>matchMedia('(max-width:720px)').matches;
+  const poser=o=>{
+    panneau.classList.toggle('ouvert',o);
+    poignee.innerHTML=(o?'<b>▼</b> Replier':'<b>▲</b> Le panneau');
+  };
+  poignee.addEventListener('click',()=>poser(!panneau.classList.contains('ouvert')));
+  /* Toucher un lieu avec l'outil Sélection relève le panneau : on vient de le
+     sélectionner, on veut voir ce qu'on en sait. Avec les outils de tracé, en
+     revanche, le panneau doit rester rangé — sinon il couvre la toile et l'on
+     ne peut pas poser deux lieux de suite. */
+  $('#toile').addEventListener('pointerup',()=>{
+    if(!petit()||outil!=='select')return;
+    setTimeout(()=>{if(choix)poser(true);},60);
+  });
+  poser(false);
+})();
 </script>
 </body>
 </html>

@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Les ateliers de Caravane</title>
+<meta name="description" content="Les cinq ateliers d'auteur de Caravane : la carte, les personnages, les objets, les missions, les événements.">
+<meta name="theme-color" content="#1C1A17">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icone.png">
+<style>
+:root{
+  --fond:#1C1A17; --fond-clair:#26231F; --bord:#3A352E;
+  --encre:#E8E1D4; --encre-pale:#9C9484;
+  --or:#C9A227; --minium:#C24A32; --vert:#6E9B6A; --azur:#4A7BC8; --mauve:#A084C0;
+  --r:4px;
+  --display:'Iowan Old Style','Hoefler Text','Palatino Linotype',Palatino,Georgia,serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;
+  background:var(--fond);color:var(--encre);
+  -webkit-tap-highlight-color:transparent;
+  padding:0 0 calc(28px + env(safe-area-inset-bottom,0px));
+  background-image:
+    radial-gradient(900px 420px at 50% -180px,#2A251C 0%,transparent 70%);
+}
+.large{max-width:760px;margin:0 auto;padding:0 16px}
+
+/* ── en-tête ── */
+header{padding:38px 0 26px;text-align:center}
+header .sceau{width:64px;height:64px;margin:0 auto 14px;display:block}
+header h1{font-family:var(--display);font-size:31px;font-weight:600;line-height:1.1;
+  letter-spacing:.01em}
+header h1 b{color:var(--or);font-weight:600}
+header p{color:var(--encre-pale);font-size:14.5px;margin-top:9px;line-height:1.55}
+
+/* ── les cartes d'atelier ── */
+h2.section{font-size:12px;font-variant:small-caps;letter-spacing:.13em;color:var(--or);
+  margin:30px 0 12px;padding-left:2px}
+.grille{display:grid;gap:11px}
+a.atelier{display:flex;align-items:center;gap:14px;text-decoration:none;color:inherit;
+  background:var(--fond-clair);border:1px solid var(--bord);border-radius:var(--r);
+  padding:15px 15px;position:relative;overflow:hidden}
+a.atelier::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--teinte,var(--or))}
+a.atelier:active{background:#2E2A22}
+a.atelier .jeton{width:40px;height:40px;flex:none;color:var(--teinte,var(--or))}
+a.atelier .jeton svg{width:100%;height:100%;display:block}
+a.atelier .txt{flex:1;min-width:0}
+a.atelier b{display:block;font-family:var(--display);font-size:18.5px;font-weight:600;
+  line-height:1.2}
+a.atelier span{display:block;font-size:13.5px;color:var(--encre-pale);margin-top:3px;
+  line-height:1.45}
+a.atelier .fleche{flex:none;color:var(--encre-pale);font-size:19px}
+a.atelier .rang{position:absolute;right:13px;top:11px;font-size:10.5px;
+  color:var(--encre-pale);font-variant-numeric:tabular-nums}
+
+/* ── l'ordre de travail ── */
+ol.ordre{list-style:none;counter-reset:e;display:grid;gap:11px;margin-top:4px}
+/* le numéro est posé en absolu : un li en flex ferait de chaque <b> une colonne,
+   et la phrase deviendrait illisible */
+ol.ordre li{counter-increment:e;position:relative;padding-left:34px;
+  font-size:14.5px;color:var(--encre-pale);line-height:1.55}
+ol.ordre li::before{content:counter(e);position:absolute;left:0;top:0;
+  width:23px;height:23px;border:1px solid var(--bord);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:12px;
+  color:var(--or)}
+ol.ordre li b{color:var(--encre)}
+
+/* ── blocs de texte ── */
+.bloc{background:var(--fond-clair);border:1px solid var(--bord);border-radius:var(--r);
+  padding:15px 16px;font-size:14.5px;line-height:1.6;color:var(--encre-pale)}
+.bloc h3{font-family:var(--display);font-size:17px;color:var(--encre);
+  font-weight:600;margin-bottom:7px}
+.bloc b{color:var(--encre)}
+.bloc p+p{margin-top:9px}
+.bloc.or{border-left:3px solid var(--or)}
+.bloc.vert{border-left:3px solid var(--vert)}
+.liens{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.liens a{font-size:13px;padding:8px 13px;border:1px solid var(--bord);
+  border-radius:20px;color:var(--encre);text-decoration:none;background:var(--fond)}
+.liens a:active{border-color:var(--or);color:var(--or)}
+
+/* ── pied ── */
+footer{margin-top:34px;padding-top:20px;border-top:1px solid var(--bord);
+  font-size:12.5px;color:var(--encre-pale);text-align:center;line-height:1.7}
+footer a{color:var(--or);text-decoration:none}
+#hors-ligne{display:none;margin-top:12px;font-size:12.5px;color:var(--vert);
+  text-align:center}
+#hors-ligne.pret{display:block}
+
+@media (min-width:620px){
+  header{padding:52px 0 30px}
+  header h1{font-size:39px}
+  .grille{grid-template-columns:1fr 1fr}
+  a.atelier.pleine{grid-column:1/-1}
+}
+</style>
+</head>
+<body>
+
+<header class="large">
+  <svg class="sceau" viewBox="0 0 48 48" aria-hidden="true">
+    <circle cx="24" cy="24" r="22" fill="none" stroke="#C9A227" stroke-width="1.6"
+      stroke-dasharray="3 3.4" opacity=".55"/>
+    <path d="M6 31h30l-4 8H10z" fill="#C9A227"/>
+    <path d="M6 31h30" stroke="#C9A227" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="13" cy="24" r="5.4" fill="none" stroke="#C9A227" stroke-width="2"/>
+    <circle cx="29" cy="24" r="5.4" fill="none" stroke="#C9A227" stroke-width="2"/>
+    <path d="M8 18l3-8h20l3 8z" fill="none" stroke="#C9A227" stroke-width="1.8"/>
+  </svg>
+  <h1>Les ateliers de <b>Caravane</b></h1>
+  <p>Cinq outils pour écrire le monde : la carte, les gens, les objets,
+     les missions et les événements. Aucune installation, aucun compte —
+     tout se garde dans ce navigateur jusqu'à ce que vous exportiez.</p>
+</header>
+
+<main class="large">
+
+  <h2 class="section">Les ateliers</h2>
+  <div class="grille">
+
+    <a class="atelier pleine" href="atelier-carte.html" style="--teinte:#C9A227">
+      <span class="jeton"><svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M2.6 5.4L9 3.2l6 2.2 6.4-2.2v15.6L15 21l-6-2.2-6.4 2.2z" fill="none"
+          stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M9 3.2v15.6M15 5.4V21" stroke="currentColor" stroke-width="1.4" opacity=".7"/>
+        <circle cx="6" cy="9" r="1.7" fill="currentColor"/>
+        <circle cx="12" cy="13" r="1.7" fill="currentColor"/>
+        <circle cx="18.6" cy="8" r="1.7" fill="currentColor"/>
+      </svg></span>
+      <span class="txt"><b>Atelier de carte</b>
+        <span>Poser les lieux, tracer les voies, délimiter les contrées, fixer
+              l'échelle. Tout part de là.</span></span>
+      <span class="fleche">›</span>
+    </a>
+
+    <a class="atelier" href="atelier-personnages.html" style="--teinte:#6E9B6A">
+      <span class="jeton"><svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="7.4" r="4.2" fill="currentColor"/>
+        <path d="M3.8 21.6c0-5.2 3.6-8.6 8.2-8.6s8.2 3.4 8.2 8.6z" fill="currentColor"/>
+      </svg></span>
+      <span class="txt"><b>Personnages</b>
+        <span>Qui ils sont, où on les trouve, et ce qu'on n'apprend d'eux
+              qu'à force.</span></span>
+      <span class="fleche">›</span>
+    </a>
+
+    <a class="atelier" href="atelier-objets.html" style="--teinte:#C6A24C">
+      <span class="jeton"><svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M2.6 10h18.8v11.4H2.6z" fill="currentColor"/>
+        <path d="M2.6 10a9.4 5.4 0 0 1 18.8 0z" fill="currentColor"/>
+        <rect x="10.2" y="8.6" width="3.6" height="5.6" rx="1" fill="#1C1A17"/>
+      </svg></span>
+      <span class="txt"><b>Objets uniques</b>
+        <span>Ce qu'ils font, d'où ils viennent, ce qu'ils cachent —
+              un exemplaire au monde.</span></span>
+      <span class="fleche">›</span>
+    </a>
+
+    <a class="atelier" href="atelier-missions.html" style="--teinte:#4A7BC8">
+      <span class="jeton"><svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="8.6" r="5.8" fill="currentColor"/>
+        <path d="M7.8 13.4L6 22l6-3 6 3-1.8-8.6z" fill="currentColor"/>
+        <path d="M9.6 8.6h4.8M12 6.2v4.8" stroke="#1C1A17" stroke-width="1.6"/>
+      </svg></span>
+      <span class="txt"><b>Missions écrites</b>
+        <span>Qui les donne, ce qu'il faut faire, ce qu'elles rapportent.</span></span>
+      <span class="fleche">›</span>
+    </a>
+
+    <a class="atelier" href="atelier-evenements.html" style="--teinte:#C24A32">
+      <span class="jeton"><svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4.6 2.6l2.2-1.5 8 11.6-2.2 1.5z" fill="currentColor"/>
+        <path d="M19.4 2.6l-2.2-1.5-8 11.6 2.2 1.5z" fill="currentColor"/>
+        <rect x="8.4" y="14" width="7.2" height="2.4" rx="1.2" fill="currentColor"/>
+        <rect x="10.4" y="16.4" width="3.2" height="5.4" rx="1" fill="currentColor"/>
+      </svg></span>
+      <span class="txt"><b>Événements</b>
+        <span>Une situation, un récit, et deux à quatre façons d'en sortir.</span></span>
+      <span class="fleche">›</span>
+    </a>
+
+  </div>
+
+  <h2 class="section">Dans quel ordre</h2>
+  <ol class="ordre">
+    <li><b>La carte d'abord.</b> Elle donne les clés de lieu que tous les autres
+        citent. Exportez <b>monde.json</b>.</li>
+    <li><b>Les personnages ensuite.</b> Chargez-y votre <b>monde.json</b> pour
+        choisir où chacun se tient. Vous n'avez rien à leur attribuer : on revient
+        plus tard.</li>
+    <li><b>Les objets et les missions</b>, dans l'ordre qui vous arrange — ils se
+        citent l'un l'autre par leurs clés, et les ateliers vérifient les deux sens
+        quand les deux fichiers sont chargés.</li>
+    <li><b>Les événements</b> quand vous voulez : ils ne dépendent de rien, sinon
+        de la carte si vous les localisez.</li>
+  </ol>
+
+  <h2 class="section">Les modes d'emploi</h2>
+  <div class="bloc">
+    <p>Chaque atelier explique ses champs au fur et à mesure. Ces quatre pages
+       expliquent <b>ce que chaque chose fait</b> — et elles sont engendrées depuis
+       les mêmes catalogues que les formulaires, donc elles ne peuvent pas
+       les contredire.</p>
+    <div class="liens">
+      <a href="TUTORIEL-EVENEMENTS.md">Les événements</a>
+      <a href="TUTORIEL-PERSONNAGES.md">Les personnages</a>
+      <a href="TUTORIEL-OBJETS.md">Les objets</a>
+      <a href="TUTORIEL-MISSIONS.md">Les missions</a>
+      <a href="README.md">À propos de ce dépôt</a>
+    </div>
+  </div>
+
+  <h2 class="section">Sur téléphone</h2>
+  <div class="bloc or">
+    <h3>Une zone à la fois</h3>
+    <p>Les quatre ateliers d'écriture montrent <b>une seule zone à l'écran</b>, et
+       la barre du bas sert à passer de la liste à la fiche à l'aperçu. Les boutons
+       sont rangés dans le tiroir <b>☰ Outils</b>, en haut à droite.</p>
+    <p>L'atelier de carte garde la toile pour lui : les outils défilent en une
+       rangée en haut, et le panneau se relève par sa poignée. Il se prête mieux à
+       une tablette qu'à un téléphone — on y place des points à la précision du
+       pixel.</p>
+  </div>
+
+  <div class="bloc vert" style="margin-top:11px">
+    <h3>À garder sur l'écran d'accueil</h3>
+    <p>Ajoutez cette page à votre écran d'accueil (<b>Partager › Sur l'écran
+       d'accueil</b> sur iPhone, <b>⋮ › Installer</b> sur Android) : les cinq
+       ateliers sont alors <b>utilisables hors connexion</b>, dans le train comme
+       ailleurs.</p>
+    <p>Votre travail est sauvegardé tout seul dans le navigateur, atelier par
+       atelier, et il survit à la fermeture de l'onglet. <b>Exportez quand
+       même</b> : un navigateur qu'on nettoie emporte sa mémoire.</p>
+    <p id="hors-ligne">✓ Les ateliers sont en cache : ils s'ouvriront sans réseau.</p>
+  </div>
+
+  <h2 class="section">Et après</h2>
+  <div class="bloc">
+    <p>Les fichiers que vous exportez — <b>monde.json</b>, <b>personnages.json</b>,
+       <b>objets.json</b>, <b>missions.json</b>, <b>evenements.json</b> — se
+       déposent dans le dossier <b>data/</b> du jeu, qui les lit tels quels.</p>
+    <p>Ils sont tous <b>facultatifs</b> et indépendants : posez-en un, le jeu s'en
+       sert ; n'en posez aucun, il tourne comme avant. Une seule attention : le
+       fichier des missions s'y appelle <b>missions-ecrites.json</b>, pour ne pas
+       écraser celui qui habille déjà les contrats tirés au sort.</p>
+  </div>
+
+  <footer>
+    Caravane — le jeu et son moteur vivent dans
+    <a href="https://github.com/chaotic110698/Caravane-2">Caravane-2</a>.<br>
+    Ces ateliers en sont une copie autonome, pour les avoir sous la main partout.
+  </footer>
+
+</main>
+
+<script>
+'use strict';
+/* Le service worker met les cinq ateliers en cache dès la première visite : une
+   fois la page ouverte avec du réseau, tout reste utilisable sans. */
+if('serviceWorker' in navigator){
+  addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').then(()=>{
+      const p=document.getElementById('hors-ligne');
+      if(navigator.serviceWorker.controller&&p)p.classList.add('pret');
+    }).catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
