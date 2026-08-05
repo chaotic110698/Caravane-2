@@ -72,6 +72,22 @@ ces deux nombres que l'atelier convertit les pixels en étapes de voyage.
 Un lieu prend la couleur de sa contrée ; le poste frontière garde la sienne pour se
 repérer d'un coup d'œil.
 
+## La nature d'un lieu, à côté de son rang
+
+Le rang dit la **taille**, la nature dit **ce que c'est** — et les deux se cumulent :
+
+| nature | pastille |
+|---|---|
+| **Port** | disque bleu, deux vagues |
+| **Ville souterraine** | disque gris, bouche de tunnel |
+
+Un lieu peut en porter plusieurs, ou aucune. C'est volontairement un second axe :
+une capitale portuaire, un hameau de pêcheurs et une cité naine creusée sous la
+montagne sont trois choses différentes, et les enfermer dans la même liste que
+capitale/ville/village aurait interdit d'écrire « capitale portuaire ».
+
+Les pastilles se cochent dans le panneau, sous **Nature**.
+
 ## Les voies et le terrain
 
 Une voie est un trait droit entre deux lieux. Elle porte un **terrain**, et le terrain
@@ -129,7 +145,7 @@ résolution rééchelonne tout automatiquement.
 
   "lieux": [
     { "cle": "aurelium", "nom": "Aurelium", "contree": "humain",
-      "rang": "capitale", "x": 260, "y": 200,
+      "rang": "capitale", "traits": ["port"], "x": 260, "y": 200,
       "etiq": { "pos": "dessus" } }
   ],
 
@@ -142,6 +158,7 @@ résolution rééchelonne tout automatiquement.
   ],
 
   "rangs":   { "capitale": { "nom": "Capitale", "r": 9, "teinte": "#C9A227" } },
+  "traits":  { "port": { "nom": "Port", "teinte": "#4A7BC8" } },
   "terrains":{ "plaine":   { "nom": "Plaine", "detour": 1, "rudesse": 1, "risque": 1 } },
   "profils": [ { "cle": "normal", "nom": "Normal", "detour": 1, "risque": 1, "rudesse": 1 } ],
   "mesures": { "kmParLieue": 4.82, "kmParJour": 15, "lieuesParPixel": 0.125 }
@@ -155,11 +172,12 @@ résolution rééchelonne tout automatiquement.
 | `contrees[].cle` | identifiant, référencé par `lieux[].contree` |
 | `contrees[].frontiere` | sommets du polygone de délimitation, vide si non tracée |
 | `lieux[].cle` | identifiant, référencé par `voies[].de` et `voies[].vers` |
-| `lieux[].rang` | `capitale`, `ville`, `village`, `hameau` ou `poste` |
+| `lieux[].rang` | la taille : `capitale`, `ville`, `village`, `hameau` ou `poste` |
+| `lieux[].traits` | la nature, cumulable : `port`, `souterrain` — liste vide si rien |
 | `lieux[].etiq.pos` | où poser le nom : `dessus`, `dessous`, `gauche`, `droite` |
 | `voies[].terrain` | `plaine`, `forestier`, `montagneux` ou `marecageux` |
 | `voies[].calcul` | les trois profils déjà calculés — pratique à relire, recalculable à volonté |
-| `rangs`, `terrains`, `profils`, `mesures` | les tables de référence, embarquées pour que le moteur lise exactement les mêmes chiffres |
+| `rangs`, `traits`, `terrains`, `profils`, `mesures` | les tables de référence, embarquées pour que le moteur lise exactement les mêmes chiffres |
 
 `calcul` est une commodité, pas une source : il se recalcule depuis `etalon`, `terrains`
 et `profils`. Si vous éditez le JSON à la main, corrigez le terrain et laissez l'atelier

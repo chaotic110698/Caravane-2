@@ -101,6 +101,12 @@ option{background:var(--fond-clair)}
 .bouton.danger{color:var(--minium);border-color:#5A2A20}
 .rangee{display:flex;gap:6px}
 .liste-contrees{display:flex;flex-direction:column;gap:5px;margin-bottom:9px}
+.traits{display:flex;flex-direction:column;gap:4px}
+.trait{display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;
+  padding:3px 6px;border:1px solid var(--bord);border-radius:var(--r)}
+.trait.actif{border-color:var(--or);background:#2E2A22}
+.trait input{width:auto;margin:0;accent-color:var(--or)}
+.trait .pion{width:11px;height:11px;border-radius:50%;flex:none;border:1px solid #0006}
 .ligne-contree{display:flex;align-items:center;gap:7px;padding:5px 7px;border:1px solid var(--bord);
   border-radius:var(--r);cursor:pointer;font-size:13px}
 .ligne-contree.actif{border-color:var(--or);background:#2E2A22}
@@ -252,6 +258,21 @@ const RANGS={
   poste:   {nom:'Poste frontière',r:7.5,teinte:'#4A7BC8', ordre:4}
 };
 const CLES_RANGS=Object.keys(RANGS);
+
+/* Un second axe, cumulable avec le rang : ce qu'est le lieu, et non sa taille.
+   Un port peut être un hameau de pêcheurs comme une capitale ; une cité naine
+   souterraine peut être un village comme un trône. Les traits se cochent donc
+   à part, et un lieu peut en porter plusieurs — une capitale portuaire creusée
+   sous la montagne est parfaitement légitime. */
+const TRAITS={
+  port:      {nom:'Port',                teinte:'#4A7BC8',
+    glyphe:`<path d="M-3 -1 q1.5 -1.6 3 0 q1.5 1.6 3 0 M-3 1.6 q1.5 -1.6 3 0 q1.5 1.6 3 0"
+      fill="none" stroke="#0E1218" stroke-width="1.15" stroke-linecap="round"/>`},
+  souterrain:{nom:'Ville souterraine',   teinte:'#A9B4C4',
+    glyphe:`<path d="M-3.1 2.6 v-1.8 a3.1 3.1 0 0 1 6.2 0 v1.8 z" fill="#0E1218"/>`}
+};
+const CLES_TRAITS=Object.keys(TRAITS);
+const traitsDe=l=>(l.traits||[]).filter(t=>TRAITS[t]);
 
 /* Quatre terrains. Chacun module les trois profils de route : le détour rallonge
    le chemin, la rudesse use les chariots, le risque appelle les mauvaises
@@ -425,12 +446,18 @@ function dessiner(){
            transform="rotate(45)" fill="${teinte}"/>`
       : `<circle class="pastille" r="${R.r}" fill="${teinte}"/>`;
     const noyau=l.rang==='capitale'?`<circle r="${R.r*.38}" fill="#1C1A17"/>`:'';
+    /* les traits se posent en pastilles au flanc droit du marqueur */
+    const badges=traitsDe(l).map((t,i)=>`
+      <g class="badge" transform="translate(${R.r+3},${-R.r-1+i*11})">
+        <circle r="5.6" fill="${TRAITS[t].teinte}" stroke="#1C1A17" stroke-width="1.3"/>
+        ${TRAITS[t].glyphe}
+      </g>`).join('');
     const E=posEtiquette(e.pos,R.r);
     return `<g class="marqueur${sel?' choisi':''}" data-lieu="${echappe(l.cle)}"
         data-x="${l.x}" data-y="${l.y}">
         <circle r="${R.r+15}" fill="transparent"/>   <!-- de quoi viser au doigt -->
         <circle class="halo" r="${R.r+7}"/>
-        ${forme}${noyau}
+        ${forme}${noyau}${badges}
         <text class="nom" x="${E.x}" y="${E.y}"
           style="text-anchor:${E.ancre}">${echappe(l.nom)}</text>
       </g>`;
@@ -535,6 +562,12 @@ function rendreSelection(){
       <div class="champ"><label>Contrée</label>
         <select id="s-contree">${M.contrees.map(c=>
           `<option value="${echappe(c.cle)}"${c.cle===l.contree?' selected':''}>${echappe(c.nom)}</option>`).join('')}</select></div>
+      <div class="champ"><label>Nature</label>
+        <div class="traits">${CLES_TRAITS.map(k=>
+          `<label class="trait${traitsDe(l).indexOf(k)>=0?' actif':''}">
+             <input type="checkbox" data-trait="${k}"${traitsDe(l).indexOf(k)>=0?' checked':''}>
+             <span class="pion" style="background:${TRAITS[k].teinte}"></span>${TRAITS[k].nom}
+           </label>`).join('')}</div></div>
       <div class="champ"><label>Étiquette</label>
         <select id="s-ancre">${Object.keys(PLACES_ETIQ).map(k=>
           `<option value="${k}"${(l.etiq&&l.etiq.pos)===k?' selected':''}>${PLACES_ETIQ[k].nom}</option>`
@@ -550,6 +583,12 @@ function rendreSelection(){
     $('#s-rang').onchange=e=>{memo();l.rang=e.target.value;rangDefaut=l.rang;dessiner();};
     $('#s-contree').onchange=e=>{memo();l.contree=e.target.value;dessiner();};
     $('#s-ancre').onchange=e=>{memo();l.etiq=l.etiq||{};l.etiq.pos=e.target.value;dessiner();};
+    p.querySelectorAll('[data-trait]').forEach(c=>c.onchange=e=>{
+      memo();
+      const t=e.target.dataset.trait,liste=traitsDe(l);
+      l.traits=e.target.checked?liste.concat([t]):liste.filter(x=>x!==t);
+      dessiner();
+    });
     $('#s-suppr').onclick=()=>supprimerSelection();
     return;
   }
@@ -787,7 +826,7 @@ function ajouterLieu(pos){
   const nom=(RANGS[rangDefaut].nom)+' '+n;
   const l={cle:cleDepuis(nom,M.lieux.map(x=>x.cle)),nom:nom,
     contree:contreeCourante||M.contrees[0].cle,rang:rangDefaut,
-    x:Math.round(pos.x),y:Math.round(pos.y),etiq:{pos:'dessus'}};
+    x:Math.round(pos.x),y:Math.round(pos.y),traits:[],etiq:{pos:'dessus'}};
   M.lieux.push(l);
   choix={genre:'lieu',cle:l.cle};
   dessiner();
@@ -1138,6 +1177,7 @@ function normaliser(d){
     cle:l.cle||('lieu-'+(i+1)),nom:l.nom||('Lieu '+(i+1)),
     contree:l.contree||(m.contrees[0]&&m.contrees[0].cle)||'',
     rang:RANGS[l.rang]?l.rang:'ville',
+    traits:Array.isArray(l.traits)?l.traits.filter(t=>TRAITS[t]):[],
     x:+l.x||0,y:+l.y||0,
     etiq:{pos:(l.etiq&&l.etiq.pos)||((l.etiq&&l.etiq.dy>0)?'dessous':'dessus')}}));
   const cles=m.lieux.map(l=>l.cle);
@@ -1162,7 +1202,7 @@ function exporter(){
   /* on emporte les tables de référence : le jeu lira les mêmes chiffres */
   const sortie=Object.assign({},M,{
     genere:new Date().toISOString(),
-    rangs:RANGS,terrains:TERRAINS,profils:PROFILS,
+    rangs:RANGS,traits:TRAITS,terrains:TERRAINS,profils:PROFILS,
     mesures:{kmParLieue:KM_PAR_LIEUE,kmParJour:KM_PAR_JOUR,
       lieuesParPixel:lieuesParPixel()?arrondi(lieuesParPixel(),6):null},
     voies:M.voies.map(v=>Object.assign({},v,{calcul:profilsDe(v)}))
