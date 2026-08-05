@@ -567,7 +567,17 @@ balise `<svg>` englobante. Deux couleurs conventionnelles :
 
 ---
 
-## Ce qui n'est pas ici : les événements de route
+## Les événements de route
+
+Ils ont leur propre document : **[`FORMAT-EVENEMENTS.md`](FORMAT-EVENEMENTS.md)**, qui
+décrit comment en écrire un entièrement en données — localisation, conditions, jets de
+dé, effets et textes à trous, sans une ligne de code.
+
+Les deux réservoirs cohabitent : les 51 événements d'origine restent en JavaScript dans
+`index.html` (voir ci-dessous), les nouveaux s'écrivent dans `data/evenements.json`, et
+le tirage puise dans les deux.
+
+## Les événements écrits en code
 
 `EVENEMENTS` (les seize situations majeures) et `PETITS` (les sept familles de
 situations mineures) sont restés dans `index.html`. Ce ne sont pas des données :
