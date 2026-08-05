@@ -4,6 +4,28 @@ Un événement, c'est une situation qui surgit en chemin, un récit, et deux à 
 façons d'en sortir. Ce document décrit comment en écrire un **sans une ligne de code** :
 tout est en champs à remplir.
 
+## Le vocabulaire est un catalogue, pas une liste figée
+
+Tout ce qu'un événement peut dire — les effets, les interrogations, les formes de choix,
+les moments — vit dans **[`vocabulaire-evenements.json`](vocabulaire-evenements.json)**.
+Chaque entrée y porte son nom en français, son explication, et la description de chacun
+de ses réglages.
+
+Ça a trois conséquences :
+
+- **vous ne verrez jamais les noms techniques.** Le fichier stocke `delester`, l'outil
+  affiche « Larguer de la cargaison » avec sa phrase d'explication ;
+- **le tutoriel n'est pas à écrire, il se déduit.** Le mode d'emploi de l'outil sort du
+  même catalogue que ses formulaires : impossible qu'ils se contredisent ;
+- **ajouter un effet, c'est ajouter une entrée.** Il apparaît aussitôt dans l'outil, dans
+  la documentation et dans les vérifications. Il reste une petite pièce à poser dans le
+  moteur pour qu'il agisse — c'est mon travail, pas le vôtre : décrivez-moi l'effet que
+  vous voulez, je l'ajoute.
+
+Le même principe vaut pour les **paliers d'un jet** : ils sont une liste ouverte, pas
+quatre cases figées. Si vous voulez un jour six degrés de réussite au lieu de trois, ce
+sont six paliers.
+
 ## Deux réservoirs qui cohabitent
 
 Les 51 événements d'origine sont écrits en JavaScript dans `index.html`. Les nouveaux

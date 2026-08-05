@@ -1,0 +1,251 @@
+{
+  "format": "caravane.vocabulaire.v1",
+  "apropos": "Le catalogue de tout ce qu'un événement peut dire. Le générateur en tire ses formulaires, la documentation en tire son tutoriel, et les vérifications en tirent leurs règles. Ajouter une entrée ici suffit à la faire apparaître partout.",
+
+  "formes": {
+    "direct": {
+      "nom": "Issue certaine",
+      "explique": "Le choix a une seule fin, connue d'avance. On paie, on attend, on repart : pas de dé, pas de surprise.",
+      "quand": "La plupart des choix prudents, et tous les choix qui ne font que raconter.",
+      "champs": ["effets", "texte"]
+    },
+    "jet": {
+      "nom": "Jet de dé",
+      "explique": "On lance un dé à vingt faces, auquel s'ajoutent le karma et l'état du convoi. Selon le total, l'issue change.",
+      "quand": "Dès que le résultat doit dépendre de la chance et de la valeur de la troupe.",
+      "champs": ["jet", "reussi", "rate"],
+      "variante": {
+        "nom": "Jet gradué",
+        "explique": "Au lieu de deux issues, on découpe le résultat en paliers : un coup de maître, un résultat honnête, un échec, un désastre. Le premier palier dont les bornes conviennent l'emporte, et le dernier sans bornes ramasse le reste.",
+        "champs": ["jet.paliers"]
+      }
+    },
+    "pari": {
+      "nom": "Pari",
+      "explique": "On mise une somme. Si l'on gagne, on la double ; si l'on perd, elle disparaît. La difficulté se calcule toute seule à partir de la chance annoncée.",
+      "quand": "Les jeux de hasard, les défis, les paris de taverne.",
+      "champs": ["pari", "gagne", "perd"]
+    },
+    "selon": {
+      "nom": "Selon l'état du convoi",
+      "explique": "L'issue ne dépend pas du sort mais de ce que vous avez : assez d'or, assez de place, un chien, un garde. Deux fins, l'une pour oui, l'autre pour non.",
+      "quand": "Quand vouloir ne suffit pas — payer un droit qu'on n'a peut-être pas les moyens de payer.",
+      "champs": ["selon", "oui", "non"]
+    }
+  },
+
+  "effets": {
+    "or": {
+      "nom": "Gagner ou perdre de l'or",
+      "explique": "Ajoute ou retire des pièces à la bourse. Un montant négatif retire ; la bourse ne descend jamais sous zéro.",
+      "parametres": {
+        "de": { "nom": "Combien", "type": "valeur", "requis": true,
+                "aide": "Négatif pour une perte. « -40 » retire 40 pièces ; « {selon: or, fois: -0.15} » en retire 15 %." }
+      },
+      "nomme": { "explique": "Le montant réellement bougé — utile quand la bourse était trop maigre.",
+                 "exemple": "240" }
+    },
+    "reputation": {
+      "nom": "Faire monter ou tomber la réputation",
+      "explique": "Ce que le monde marchand pense de vous. Elle ouvre des portes, fait baisser les prix, et permet de parlementer avec des gens peu recommandables. Elle reste entre 0 et 100.",
+      "parametres": {
+        "de": { "nom": "Combien", "type": "nombre", "requis": true,
+                "aide": "Négatif pour une perte. Comptez 2 à 6 pour un geste ordinaire, 9 ou plus pour une infamie." }
+      }
+    },
+    "karma": {
+      "nom": "Faire monter ou tomber le karma",
+      "explique": "La chance du convoi. Un karma haut ajoute un bonus à tous les jets de dé ; un karma bas les plombe. C'est la récompense discrète des bonnes actions. Entre 0 et 100.",
+      "parametres": {
+        "de": { "nom": "Combien", "type": "nombre", "requis": true,
+                "aide": "Négatif pour une perte. 3 à 5 pour un bon geste, 7 pour une mesquinerie." }
+      }
+    },
+    "allonger": {
+      "nom": "Rallonger le voyage",
+      "explique": "Ajoute des étapes au trajet en cours. Chaque étape coûte la solde des gardes, use les chariots et peut amener un autre événement. Quatre étapes au maximum par voyage, quoi qu'on empile.",
+      "parametres": {
+        "de": { "nom": "Étapes en plus", "type": "nombre", "requis": true, "defaut": 1,
+                "aide": "1 pour une halte, 2 pour un détour sérieux." }
+      },
+      "nomme": { "explique": "Les étapes réellement ajoutées, une fois le plafond appliqué.", "exemple": "2" }
+    },
+    "abimer": {
+      "nom": "Abîmer les chariots",
+      "explique": "Use les essieux, les caisses et les bêtes. Un chariot pris pour cible souffre plus que les autres. Un essieu ou un cheval à zéro immobilise le chariot.",
+      "parametres": {
+        "combien": { "nom": "Usure infligée", "type": "valeur", "requis": true,
+                     "aide": "3 pour une secousse, 8 à 15 pour un mauvais passage, 20 pour un accident." }
+      }
+    },
+    "delester": {
+      "nom": "Larguer de la cargaison",
+      "explique": "On jette une part du chargement — pour fuir plus vite, ou parce qu'on vous la prend. Les chariots les plus chargés perdent le plus.",
+      "parametres": {
+        "part": { "nom": "Quelle fraction", "type": "fraction", "requis": true, "defaut": 0.2,
+                  "aide": "0,25 largue un quart de la soute. Au-delà de 0,5 c'est une catastrophe." },
+        "seulement": { "nom": "Seulement", "type": "choix", "valeurs": ["tout", "fragile", "perissable"],
+                       "defaut": "tout", "aide": "« fragile » ne casse que le verre et les enluminures." }
+      },
+      "nomme": { "explique": "La liste de ce qui a été perdu, prête à citer dans le texte.",
+                 "exemple": "34 kg de blé et 12 kg de sel" }
+    },
+    "briserFragile": {
+      "nom": "Casser ce qui est fragile",
+      "explique": "Une secousse, une tempête, un versement : seul ce qui se brise se brise. Le reste de la cargaison ne bouge pas.",
+      "parametres": {
+        "part": { "nom": "Quelle fraction du fragile", "type": "fraction", "requis": true, "defaut": 0.3 }
+      },
+      "nomme": { "explique": "La liste de la casse.", "exemple": "18 kg de verrerie" }
+    },
+    "reposer": {
+      "nom": "Soigner la troupe",
+      "explique": "Rend de la santé au marchand et à ses gardes. Une bonne nuit, une source claire, des herbes trouvées au bord du chemin.",
+      "parametres": {
+        "part": { "nom": "Quelle fraction rendue", "type": "fraction", "requis": true, "defaut": 0.15,
+                  "aide": "0,07 pour une gorgée d'eau, 0,25 pour une vraie nuit." }
+      }
+    },
+    "blesserTroupe": {
+      "nom": "Blesser la troupe",
+      "explique": "Répartit des dégâts sur un ou plusieurs hommes. Les gardes encaissent plus souvent que le marchand. Un homme à zéro meurt ; si c'est le marchand, la partie s'arrête.",
+      "parametres": {
+        "total": { "nom": "Dégâts à répartir", "type": "valeur", "requis": true,
+                   "aide": "14 à 30 pour une échauffourée, 40 et plus pour une vraie bataille." },
+        "cibles": { "nom": "Combien d'hommes touchés", "type": "nombre", "defaut": 1 }
+      },
+      "nomme": { "explique": "Qui a souffert.", "exemple": "{blesses.noms} donne « Corvin et Naya », {blesses.morts} donne les morts" }
+    },
+    "combat": {
+      "nom": "Livrer bataille",
+      "explique": "La troupe se bat. L'issue dépend de la force des hommes, de leurs armes et de la menace du moment. On gagne du butin, ou on perd de la cargaison et des hommes.",
+      "parametres": {
+        "bonus": { "nom": "Avantage", "type": "nombre", "defaut": 1,
+                   "aide": "1 pour un combat franc, 0,85 si l'on est pris au dépourvu, 1,3 si l'on tend l'embuscade." }
+      },
+      "nomme": { "explique": "Le récit de la mêlée, déjà écrit. Citez-le tel quel.",
+                 "exemple": "{melee} donne toute la phrase, {melee.butin} le seul montant" }
+    },
+    "charger": {
+      "nom": "Charger de la marchandise",
+      "explique": "Met des kilos dans les chariots. S'il n'y a pas la place, on charge ce qu'on peut. Avec un prix au kilo, la marchandise s'achète ; sans prix, elle est offerte.",
+      "parametres": {
+        "bien": { "nom": "Quelle marchandise", "type": "bien", "requis": true,
+                  "aide": "Une marchandise précise, ou « au hasard »." },
+        "kg": { "nom": "Combien de kilos", "type": "valeur", "requis": true },
+        "prixAuKilo": { "nom": "Prix au kilo", "type": "valeur",
+                        "aide": "Laissez vide pour un cadeau. « {selon: base, fois: 0.55} » pour une bonne affaire." }
+      },
+      "nomme": { "explique": "Ce qui a été chargé.", "exemple": "{charge.kg} kg de {charge.bien}" }
+    },
+    "decharger": {
+      "nom": "Céder de la marchandise",
+      "explique": "Retire des kilos de la soute. Avec un prix au kilo, elle se vend ; sans prix, elle est perdue ou donnée.",
+      "parametres": {
+        "bien": { "nom": "Quelle marchandise", "type": "bien", "requis": true },
+        "kg": { "nom": "Combien de kilos", "type": "valeur", "requis": true },
+        "prixAuKilo": { "nom": "Prix au kilo", "type": "valeur" }
+      },
+      "nomme": { "explique": "Ce qui est parti et ce que ça a rapporté.",
+                 "exemple": "{cede.kg} kg pour {cede.gain} po" }
+    },
+    "armeTrouvee": {
+      "nom": "Trouver une arme",
+      "explique": "Une arme ordinaire, tirée au hasard parmi les légères. Jamais une arme de légende — celles-là n'existent qu'en un exemplaire et ne se ramassent pas dans un fossé.",
+      "parametres": {},
+      "nomme": { "explique": "Le nom de l'arme trouvée.", "exemple": "une hache légère" }
+    },
+    "donnerArme": {
+      "nom": "Donner une arme précise",
+      "explique": "Range une arme nommée dans la réserve. C'est par là que passent les armes de légende, quand le récit le justifie.",
+      "parametres": {
+        "arme": { "nom": "Laquelle", "type": "arme", "requis": true }
+      },
+      "nomme": { "explique": "Le nom de l'arme.", "exemple": "Excalibur" }
+    },
+    "chien": {
+      "nom": "Adopter un chien",
+      "explique": "Un errant se laisse apprivoiser. Il flaire les mauvaises rencontres avant les hommes et se bat un peu aux côtés du marchand. Sans effet si le convoi en a déjà un.",
+      "parametres": {},
+      "nomme": { "explique": "Le nom du chien.", "exemple": "Ronce" }
+    },
+    "recruter": {
+      "nom": "Recruter un garde",
+      "explique": "Un homme rejoint l'escorte, avec son métier et son arme. Il touchera une solde à chaque étape.",
+      "parametres": {
+        "metier": { "nom": "Quel métier", "type": "metier", "defaut": "auHasard" },
+        "arme": { "nom": "Avec quelle arme", "type": "arme",
+                  "aide": "Laissez vide pour une arme de son métier, tirée au hasard." }
+      },
+      "nomme": { "explique": "Le nom de la recrue.", "exemple": "Maren" }
+    },
+    "rumeur": {
+      "nom": "Lancer une rumeur de prix",
+      "explique": "On vous glisse qu'une marchandise vaut cher là où vous allez. Le prix y sera réellement plus haut à l'arrivée.",
+      "parametres": {
+        "bien": { "nom": "Quelle marchandise", "type": "bien", "defaut": "auHasard" },
+        "mult": { "nom": "Multiplicateur de prix", "type": "nombre", "defaut": 1.45,
+                  "aide": "1,45 pour une rumeur vague, 1,9 pour un tuyau payé." }
+      },
+      "nomme": { "explique": "Le nom de la marchandise concernée.", "exemple": "les épices" }
+    },
+    "escorte": {
+      "nom": "Faire escorter le convoi",
+      "explique": "Des compagnons de route protègent la caravane pendant quelques étapes. Les mauvaises rencontres se font plus rares.",
+      "parametres": {
+        "de": { "nom": "Combien d'étapes", "type": "nombre", "requis": true, "defaut": 2 }
+      }
+    }
+  },
+
+  "interrogations": {
+    "or": { "nom": "L'or en bourse", "unite": "pièces" },
+    "etapes": { "nom": "Les étapes parcourues", "unite": "étapes",
+                "explique": "Sert à mesurer l'avancement de la partie : tout devient plus cher et plus dangereux avec le temps." },
+    "lieues": { "nom": "Les lieues au compteur", "unite": "lieues" },
+    "reputation": { "nom": "La réputation", "unite": "0 à 100" },
+    "karma": { "nom": "Le karma", "unite": "0 à 100" },
+    "gardes": { "nom": "Le nombre de gardes", "unite": "hommes" },
+    "troupe": { "nom": "Le marchand et ses gardes", "unite": "hommes" },
+    "place": { "nom": "La place libre dans les chariots", "unite": "kg" },
+    "charge": { "nom": "Les kilos chargés", "unite": "kg" },
+    "stock": { "nom": "Les kilos d'une marchandise", "unite": "kg", "demande": "bien" },
+    "valeurSoute": { "nom": "La valeur marchande de la cargaison", "unite": "pièces" },
+    "etatConvoi": { "nom": "La santé du convoi", "unite": "0 à 100",
+                    "explique": "La moyenne des chariots et des hommes." },
+    "chien": { "nom": "Un chien suit le convoi", "unite": "oui ou non" },
+    "vigilance": { "nom": "La vigilance de la troupe", "unite": "0 à 100",
+                   "explique": "Ce qui permet de voir venir une embuscade." },
+    "agilite": { "nom": "L'agilité de la troupe", "unite": "0 à 100",
+                 "explique": "Ce qui permet de décrocher et de fuir." },
+    "negoce": { "nom": "Le talent de négoce", "unite": "0 à 100",
+                "explique": "Le meilleur de la caravane l'emporte." },
+    "puissance": { "nom": "La force du marchand", "unite": "0 à 3" },
+    "armeFamille": { "nom": "Quelqu'un porte une arme de cette famille", "unite": "oui ou non",
+                     "demande": "famille" },
+    "mise": { "nom": "La mise de jeu courante", "unite": "pièces",
+              "explique": "Ce qu'on parie à ce stade de la partie. Croît avec les étapes." },
+    "coutGarde": { "nom": "Le prix d'un garde", "unite": "pièces" },
+    "tribut": { "nom": "Ce qu'exigerait un pillard", "unite": "pièces",
+                "explique": "Calculé sur l'or et la valeur de la cargaison." },
+    "soin": { "nom": "Le coût des soins", "unite": "pièces" }
+  },
+
+  "typesDeChamp": {
+    "nombre": { "explique": "Un nombre simple." },
+    "fraction": { "explique": "Une part, entre 0 et 1. 0,25 vaut un quart." },
+    "valeur": { "explique": "Un nombre, une fourchette, une formule ou une référence — voir la documentation des valeurs." },
+    "choix": { "explique": "Une valeur parmi une liste fermée." },
+    "bien": { "explique": "Une marchandise de biens.json, ou « au hasard »." },
+    "arme": { "explique": "Une arme de armes.json." },
+    "metier": { "explique": "Un métier de garde, ou « au hasard »." },
+    "texte": { "explique": "Du texte, qui accepte les trous entre accolades." },
+    "booleen": { "explique": "Oui ou non." }
+  },
+
+  "moments": {
+    "route": { "nom": "En chemin", "explique": "Pendant un trajet, entre deux lieux." },
+    "arrivee": { "nom": "À l'arrivée", "explique": "En entrant dans un lieu, avant le marché." },
+    "sejour": { "nom": "Pendant le séjour", "explique": "Pendant qu'on est en ville, entre deux actions." }
+  }
+}

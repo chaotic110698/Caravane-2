@@ -1,3 +1,13 @@
+# Les outils d'auteur
+
+| | |
+|---|---|
+| [`atelier-carte.html`](atelier-carte.html) | dessiner le monde : les lieux, les voies, les contrées, l'échelle |
+| [`TUTORIEL-EVENEMENTS.md`](TUTORIEL-EVENEMENTS.md) | écrire un événement : ce que fait chaque effet, en français |
+| `tutoriel-evenements.mjs` | engendre le tutoriel depuis le catalogue — à relancer après l'avoir modifié |
+
+---
+
 # Atelier de carte
 
 `atelier-carte.html` sert à dessiner le monde de Caravane : poser les lieux sur une

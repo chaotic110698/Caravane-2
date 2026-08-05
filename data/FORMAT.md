@@ -569,9 +569,15 @@ balise `<svg>` englobante. Deux couleurs conventionnelles :
 
 ## Les événements de route
 
-Ils ont leur propre document : **[`FORMAT-EVENEMENTS.md`](FORMAT-EVENEMENTS.md)**, qui
-décrit comment en écrire un entièrement en données — localisation, conditions, jets de
-dé, effets et textes à trous, sans une ligne de code.
+Ils ont leur propre documentation, en deux pages :
+
+- **[`FORMAT-EVENEMENTS.md`](FORMAT-EVENEMENTS.md)** — la forme exacte du fichier :
+  localisation, conditions, jets de dé, effets et textes à trous ;
+- **[`../outils/TUTORIEL-EVENEMENTS.md`](../outils/TUTORIEL-EVENEMENTS.md)** — ce que
+  fait chaque effet, en français, engendré depuis
+  [`vocabulaire-evenements.json`](vocabulaire-evenements.json).
+
+Tout s'écrit en champs à remplir, sans une ligne de code.
 
 Les deux réservoirs cohabitent : les 51 événements d'origine restent en JavaScript dans
 `index.html` (voir ci-dessous), les nouveaux s'écrivent dans `data/evenements.json`, et
