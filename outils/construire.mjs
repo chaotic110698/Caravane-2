@@ -24,6 +24,7 @@ const litJson = (...p) => JSON.parse(lit(...p));
 
 const V = litJson('data', 'vocabulaire-evenements.json');
 const VP = litJson('data', 'vocabulaire-personnages.json');
+const VO = litJson('data', 'vocabulaire-objets.json');
 
 /* ════════════════════ 1. le tutoriel ════════════════════ */
 
@@ -191,6 +192,86 @@ ecrit('## Ce que l\'atelier vérifie', '',
 writeFileSync(join(ICI, 'TUTORIEL-PERSONNAGES.md'),
   q.join('\n').replace(/\n{3,}/g, '\n\n') + '\n', 'utf8');
 
+/* ════════════════════ 1 ter. le tutoriel des objets ════════════════════ */
+
+const s = [];
+const note = (...t) => s.push(...t);
+
+note('# Écrire un objet unique — mode d\'emploi', '',
+  '> Cette page est **engendrée** depuis [`data/vocabulaire-objets.json`](../data/vocabulaire-objets.json).',
+  '> Ne la corrigez pas à la main : corrigez le catalogue et relancez',
+  '> `node outils/construire.mjs`.', '',
+  'Le jeu connaît déjà quatre familles de choses : les marchandises, les armes, les',
+  'chariots et leurs pièces. Ce sont des choses qu\'on **achète**. Voici la cinquième :',
+  'l\'objet qui n\'existe qu\'en un exemplaire, qu\'on ne trouve qu\'une fois, et dont on',
+  'apprend l\'histoire à force de l\'avoir sous les yeux.', '',
+  'Il s\'écrit avec [`atelier-objets.html`](atelier-objets.html), en champs à remplir.', '',
+  '## La règle qui ne bouge pas', '',
+  'Comme pour les personnages : **la première description reste toujours lisible**. Les',
+  '**couches** se méritent et s\'ajoutent en dessous, sans jamais rien recouvrir.', '');
+
+note('## Les genres', '',
+  `${Object.keys(VO.genres).length} genres, et la liste est ouverte.`, '',
+  '| genre | ce que c\'est |', '|---|---|');
+Object.entries(VO.genres).forEach(([k, d]) => note(`| **${d.nom}** | ${d.explique} |`));
+note('');
+
+note('## Ce qu\'un objet peut faire', '',
+  `${Object.keys(VO.pouvoirs).length} pouvoirs, qu'on empile. Un objet sans aucun pouvoir est`,
+  'parfaitement valable : une relique n\'a pas à être utile.', '');
+Object.entries(VO.pouvoirs).forEach(([k, d]) => {
+  note(`### ${d.nom}`, '', d.explique, '');
+  const params = Object.entries(d.parametres || {});
+  if (params.length) {
+    note('| réglage | à savoir |', '|---|---|');
+    params.forEach(([p, dd]) => {
+      const defaut = dd.defaut !== undefined ? ` Par défaut : ${String(dd.defaut).replace('.', ',')}.` : '';
+      const requis = dd.requis ? ' **Obligatoire.**' : '';
+      note(`| **${dd.nom}** | ${(dd.aide || '') + defaut + requis} |`);
+    });
+    note('');
+  }
+});
+
+note('## D\'où il vient', '',
+  'Sans provenance, un objet **n\'entre jamais dans la partie**. C\'est le seul champ que',
+  'l\'atelier refuse de laisser vide, avec le nom et la première description.', '');
+Object.entries(VO.provenances).forEach(([k, d]) => {
+  note(`### ${d.nom}`, '', d.explique, '');
+  Object.entries(d.parametres || {}).forEach(([p, dd]) =>
+    note(`- **${dd.nom}**${dd.requis ? ' *(obligatoire)*' : ''}${dd.aide ? ' — ' + dd.aide : ''}`));
+  if (Object.keys(d.parametres || {}).length) note('');
+});
+note('> **Au bout d\'une mission** est la provenance la plus solide : il a fallu aller',
+  '> quelque part et le rapporter. L\'atelier note les clés de mission attendues, pour que',
+  '> vous les écriviez avec exactement les mêmes dans l\'atelier de missions.', '');
+
+note('## Ce qui fait mériter une couche', '',
+  '| on regarde | unité | |', '|---|---|---|');
+Object.entries(VO.interrogations).forEach(([k, d]) =>
+  note(`| **${d.nom}** | ${d.unite || ''} | ${d.explique || ''} |`));
+note('', 'S\'y ajoute l\'état du convoi — l\'or, la réputation, le karma, les étapes.',
+  'Les couches se comptent dans l\'ordre : la troisième peut demander d\'avoir déjà les',
+  'deux premières, et l\'atelier refuse celle qui en exigerait plus qu\'il n\'y en a',
+  'au-dessus d\'elle.', '');
+
+note('## Les trous dans les textes', '',
+  '| trou | ce que ça donne | exemple |', '|---|---|---|');
+Object.entries(VO.trous).forEach(([k, d]) =>
+  note(`| \`{${k}}\` | ${d.explique} | ${d.exemple || ''} |`));
+note('', 'L\'**accord** choisi décide de tout : `{il}`, `{le}`, `{un}`, et `retrouvé{e}`',
+  'qui donne *retrouvée*. On écrit le texte une fois.', '');
+
+note('## L\'onglet « Ce que ça pèse »', '',
+  'C\'est là qu\'on juge un objet, parce qu\'un objet unique ne se juge que par comparaison.',
+  'L\'atelier situe sa frappe parmi les armes qui existent déjà — les trois mythiques',
+  'comprises —, traduit un bonus de karma en points de dé, chiffre ce qu\'un rabais fait',
+  'sur mille pièces, et dit quelle part d\'un chariot son poids occupe.', '',
+  'Un objet trop fort ne se voit pas quand on l\'écrit seul dans son coin. Il se voit là.', '');
+
+writeFileSync(join(ICI, 'TUTORIEL-OBJETS.md'),
+  s.join('\n').replace(/\n{3,}/g, '\n\n') + '\n', 'utf8');
+
 /* ════════════════════ 2. les exemples ════════════════════
    Découpés dans la spécification, pour qu'un exemple corrigé là-bas le soit dans
    l'outil sans qu'on ait à y penser. */
@@ -226,6 +307,12 @@ const noms = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, v.n
 const reference = {
   vocabulaire: V,
   vocabulairePersonnages: VP,
+  vocabulaireObjets: VO,
+  /* les chiffres bruts des armes : l'atelier d'objets en a besoin pour situer
+     une arme de légende parmi celles qui existent déjà */
+  armesChiffres: Object.fromEntries(Object.entries(armes.armes).map(
+    ([k, a]) => [k, { frappe: a.frappe, poids: a.poids, garde: a.garde,
+                      prix: a.prix, mythique: a.mythique || null }])),
   biens: noms(biens.biens),
   armes: noms(armes.armes),
   familles: noms(armes.familles),
@@ -243,7 +330,8 @@ const reference = {
    code existe en trois exemplaires. */
 
 const commun = lit('outils', 'commun.js');
-const ATELIERS = ['atelier-evenements.html', 'atelier-personnages.html'];
+const ATELIERS = ['atelier-evenements.html', 'atelier-personnages.html',
+                  'atelier-objets.html'];
 
 const injecte = (html, id, contenu, quoi) => {
   const balise = new RegExp(`(<script id="${id}"[^>]*>)[\\s\\S]*?(</script>)`);
@@ -267,13 +355,18 @@ for (const nom of ATELIERS) {
 
 const compte = (o) => Object.keys(o).length;
 console.log(
-  'TUTORIEL-EVENEMENTS.md  %d effets · %d interrogations · %d formes · %d moments\n' +
-  'référence               %d biens · %d armes · %d métiers · %d dessins · %d teintes · %d exemples\n' +
-  'injecté dans            %s\n' +
-  'poids embarqué          %s de catalogue, %s de machinerie',
+  'TUTORIEL-EVENEMENTS.md   %d effets · %d interrogations · %d formes · %d moments · %d exemples\n' +
+  'TUTORIEL-PERSONNAGES.md  %d rôles · %d interrogations de relation · %d trous\n' +
+  'TUTORIEL-OBJETS.md       %d genres · %d pouvoirs · %d provenances\n' +
+  'référence                %d biens · %d armes · %d métiers · %d dessins · %d teintes\n' +
+  'injecté dans             %s\n' +
+  'poids embarqué           %s de catalogue, %s de machinerie',
   compte(V.effets), compte(V.interrogations), compte(V.formes), compte(V.moments),
+  exemples.length,
+  compte(VP.roles), compte(VP.interrogations), compte(VP.trous),
+  compte(VO.genres), compte(VO.pouvoirs), compte(VO.provenances),
   compte(reference.biens), compte(reference.armes), compte(reference.metiers),
-  compte(reference.glyphes), compte(reference.natures), exemples.length,
+  compte(reference.glyphes), compte(reference.natures),
   poses.join(', ') || '(aucun atelier trouvé)',
   (JSON.stringify(reference).length / 1024).toFixed(0) + ' ko',
   (commun.length / 1024).toFixed(0) + ' ko');

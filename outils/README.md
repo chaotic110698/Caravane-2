@@ -5,12 +5,14 @@
 | [`atelier-carte.html`](atelier-carte.html) | dessiner le monde : les lieux, les voies, les contrées, l'échelle |
 | [`atelier-evenements.html`](atelier-evenements.html) | écrire les événements : la situation, les choix, ce qu'ils font |
 | [`atelier-personnages.html`](atelier-personnages.html) | écrire les gens : qui ils sont, et ce qu'on apprend d'eux à force |
+| [`atelier-objets.html`](atelier-objets.html) | écrire les objets uniques : ce qu'ils font, d'où ils viennent, ce qu'ils cachent |
 | [`TUTORIEL-EVENEMENTS.md`](TUTORIEL-EVENEMENTS.md) | ce que fait chaque effet, en français — engendré, jamais écrit à la main |
 | [`TUTORIEL-PERSONNAGES.md`](TUTORIEL-PERSONNAGES.md) | les rôles, ce qui fait mériter une couche de lore — engendré aussi |
+| [`TUTORIEL-OBJETS.md`](TUTORIEL-OBJETS.md) | les genres, les pouvoirs, les provenances — engendré aussi |
 | `commun.js` | la machinerie partagée, recopiée dans chaque atelier |
 | `construire.mjs` | refabrique les tutoriels, les catalogues et la machinerie embarqués |
 
-Les trois ateliers s'ouvrent **d'un double-clic**. Aucune installation, aucun compte,
+Les quatre ateliers s'ouvrent **d'un double-clic**. Aucune installation, aucun compte,
 aucune dépendance, et **rien ne sort de votre machine** : tout reste dans le navigateur
 jusqu'à ce que vous exportiez.
 
@@ -407,4 +409,113 @@ garde alors son grain.
 Le moteur ne connaît pas encore les personnages : un commanditaire y est aujourd'hui un
 titre et un nom tirés au sort, oubliés aussitôt. Il faudra tenir le compte des rencontres
 et des missions faites pour chacun, et un écran d'index où relire tout ça. C'est le même
-chantier que les événements en données, et il vient après les trois ateliers.
+chantier que les événements en données, et il vient après les ateliers.
+
+---
+
+# Atelier d'objets
+
+`atelier-objets.html` sert à écrire la **cinquième famille** : l'objet qui n'existe qu'en
+un exemplaire.
+
+Le jeu en connaît déjà quatre — les marchandises, les armes, les chariots et leurs pièces.
+Ce sont des choses qu'on **achète**. Celle-ci est faite de choses qu'on **trouve une fois**,
+et dont on apprend l'histoire à force de les avoir sous les yeux.
+
+Le mécanisme existe déjà en miniature : les trois armes mythiques du jeu ne se vendent
+qu'à la capitale de leur contrée, et si leur porteur tombe, *« le monde n'en reverra pas
+d'autre »*. C'est cela qu'on généralise.
+
+## D'où il vient — le seul champ qu'on ne peut pas laisser vide
+
+Un objet sans provenance **n'entre jamais dans la partie**. Cinq façons de l'obtenir, et
+la plus solide est **au bout d'une mission** : il a fallu aller quelque part et le
+rapporter. L'onglet *Contrôles* récapitule alors les clés de mission attendues, pour que
+vous les écriviez avec exactement les mêmes dans l'atelier de missions.
+
+Les autres : dans un événement, détenu par quelqu'un, trouvable quelque part, ou dans les
+bagages au départ — celle-ci étant excellente pour un objet dont le marchand ne sait même
+pas ce qu'il est.
+
+## Ce qu'il fait
+
+Six pouvoirs, qu'on empile — et **aucun** est une réponse valable : une relique n'a pas à
+être utile.
+
+| pouvoir | ce que ça donne |
+|---|---|
+| **Améliorer une aptitude** | vigilance, agilité, négoce ou endurance, tant qu'on l'a |
+| **Porter chance** | du karma, donc tous les jets de dé |
+| **Être une arme** | il se porte et il frappe, comme les mythiques |
+| **Révéler du lore** | il ouvre une couche chez un personnage — le document qui dit ce qu'il n'aurait jamais raconté |
+| **Ouvrir un passage** | là où l'on serait refoulé |
+| **Peser sur les prix** | à l'achat, à la vente, ou les deux |
+
+**Révéler du lore** est celui qui lie les objets aux gens. Chargez votre `personnages.json`
+et l'atelier vous propose les couches de chacun — et refuse d'en viser une qui n'existe
+pas.
+
+## L'onglet « Ce que ça pèse »
+
+Un objet unique ne se juge que par comparaison, et on ne l'a jamais sous les yeux quand on
+l'invente seul dans son coin. Cet onglet la fournit :
+
+- la frappe d'une arme **située parmi les 21 du jeu**, les trois mythiques comprises, et
+  un avertissement franc si c'est devenu la plus forte du monde ;
+- un bonus de karma **traduit en points de dé** — le karma en donne un tous les 17 points ;
+- ce qu'un rabais fait sur mille pièces ;
+- quelle part d'un chariot bâché son poids occupe.
+
+## La règle qui ne bouge pas
+
+La même que pour les personnages : **la première description reste toujours lisible**. Les
+couches se méritent — à force de le porter, à force de le montrer — et s'ajoutent en
+dessous sans jamais rien recouvrir.
+
+## Le fichier exporté
+
+`objets.json`.
+
+```json
+{
+  "format": "caravane.objets.v1",
+  "objets": [
+    {
+      "cle": "registre-des-peages",
+      "nom": "Le registre des péages",
+      "accord": "m",
+      "genre": "document",
+      "poids": 2,
+      "valeur": 0,
+      "perdable": true,
+      "ico": { "glyphe": "sceau", "nature": "ruines" },
+      "provenance": { "genre": "mission", "mission": "le-registre-rature",
+                      "quand": "à la fin" },
+      "pouvoirs": [ { "faire": "prix", "sens": "les deux", "part": 0.06 } ],
+      "premiere": "Un in-folio relié de peau, gonflé d'humidité…",
+      "couches": [
+        { "titre": "La main qui a raturé",
+          "gagne": [ { "quoi": "etapesPorte", "min": 6 } ],
+          "texte": "À force de le feuilleter le soir…" }
+      ]
+    }
+  ]
+}
+```
+
+| clé | rôle |
+|---|---|
+| `accord` | `f` ou `m` — décide de `{il}`, `{le}`, `{un}`, `retrouvé{e}` |
+| `genre` | une clé de `vocabulaire-objets.json` : ce à quoi il ressemble |
+| `valeur` | `0` = il ne se vend à aucun prix |
+| `perdable` | il disparaît à jamais si on le perd |
+| `provenance` | **obligatoire** : sans elle il n'entre jamais dans la partie |
+| `pouvoirs` | ce qu'il fait, empilable — une liste vide est valable |
+| `premiere` | **jamais scellée**, toujours relisible |
+| `couches[].gagne` | ce qu'il faut pour l'apprendre |
+
+## Ce qu'il reste à faire côté moteur
+
+Le moteur ne connaît que les armes mythiques. Il faudra un coffre d'objets uniques avec
+leur état (pas encore dans le monde, ici, dans les chariots, perdu), l'application des six
+pouvoirs, et le lien avec les missions qui les donnent. Vous pouvez écrire dès maintenant.

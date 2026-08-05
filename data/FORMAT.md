@@ -595,7 +595,28 @@ grammaticaux, et ce qui fait mériter une couche de lore.
 
 Chaque personnage porte une **première description qui reste toujours lisible**, puis des
 couches qui s'ouvrent à mesure qu'on le fréquente. C'est le socle du lore : les missions
-écrites et les objets uniques s'y rattacheront.
+écrites et les objets uniques s'y rattachent.
+
+Le moteur ne les lit pas encore.
+
+---
+
+## Les objets uniques
+
+`data/objets.json`, écrit avec
+**[`../outils/atelier-objets.html`](../outils/atelier-objets.html)**, catalogue dans
+[`vocabulaire-objets.json`](vocabulaire-objets.json).
+
+C'est la **cinquième famille**, à côté des quatre qui existent déjà — `biens.json`,
+`armes.json`, et les chariots et pièces de `chariots.json`. Celles-là sont des choses
+qu'on achète ; celle-ci est faite de choses qu'on ne trouve qu'une fois. Les trois armes
+`mythique` d'`armes.json` en sont la maquette : un exemplaire au monde, et rien d'autre
+après elles.
+
+Un objet porte sa **provenance** — sans elle il n'entre jamais dans la partie —, jusqu'à
+six **pouvoirs**, une première description toujours relisible et des couches qui se
+méritent. Le pouvoir *Révéler du lore* ouvre une couche chez un personnage : c'est ce qui
+relie les objets aux gens.
 
 Le moteur ne les lit pas encore.
 
