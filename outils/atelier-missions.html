@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Atelier de personnages — Caravane</title>
+<title>Atelier de missions — Caravane</title>
 <style>
 :root{
   --fond:#1C1A17; --fond-clair:#26231F; --bord:#3A352E;
@@ -24,7 +24,7 @@ input,select,textarea{background:var(--fond);border:1px solid var(--bord);border
   padding:5px 7px;color:var(--encre);width:100%;font-family:inherit}
 input:focus,select:focus,textarea:focus{outline:1px solid var(--or);border-color:var(--or)}
 select{cursor:pointer}
-option{background:var(--fond-clair)}
+option,optgroup{background:var(--fond-clair)}
 textarea{resize:vertical;line-height:1.5}
 input[type=checkbox]{width:auto;accent-color:var(--or)}
 ::-webkit-scrollbar{width:10px;height:10px}
@@ -40,13 +40,14 @@ input[type=checkbox]{width:auto;accent-color:var(--or)}
 .outil:hover{border-color:var(--encre-pale)}
 .outil.fort{background:var(--or);color:#1C1A17;border-color:var(--or);font-weight:600}
 .outil.danger{color:var(--minium);border-color:#5A2A20}
+.outil.petit{padding:3px 8px;font-size:12px}
 .sep{width:1px;align-self:stretch;background:var(--bord);margin:0 3px}
 .pousse{margin-left:auto}
 
 #scene{flex:1;min-height:0;display:flex}
-#repertoire{flex:none;width:236px;background:var(--fond-clair);border-right:1px solid var(--bord);
+#carnet{flex:none;width:236px;background:var(--fond-clair);border-right:1px solid var(--bord);
   display:flex;flex-direction:column;min-height:0}
-#repertoire>input{margin:8px;width:auto;flex:none}
+#carnet>input{margin:8px;width:auto;flex:none}
 #liste{flex:1;overflow-y:auto;padding:0 8px 8px}
 .groupe{font-size:11px;font-variant:small-caps;letter-spacing:.09em;color:var(--or);
   padding:9px 4px 4px}
@@ -63,10 +64,10 @@ input[type=checkbox]{width:auto;accent-color:var(--or)}
 
 #feuille{flex:1;min-width:0;overflow-y:auto;padding:14px 16px 60px;display:flex;
   flex-direction:column;gap:13px}
-#cote{flex:none;width:340px;background:var(--fond-clair);border-left:1px solid var(--bord);
+#cote{flex:none;width:352px;background:var(--fond-clair);border-left:1px solid var(--bord);
   display:flex;flex-direction:column;min-height:0}
 #onglets{flex:none;display:flex;border-bottom:1px solid var(--bord)}
-#onglets button{flex:1;padding:8px 4px;font-size:12px;border-bottom:2px solid transparent;
+#onglets button{flex:1;padding:8px 3px;font-size:11.5px;border-bottom:2px solid transparent;
   color:var(--encre-pale)}
 #onglets button.actif{color:var(--or);border-bottom-color:var(--or)}
 #volet{flex:1;overflow-y:auto;padding:12px}
@@ -89,30 +90,35 @@ input[type=checkbox]{width:auto;accent-color:var(--or)}
 .rangee>*{flex:1;min-width:0}
 .rangee>.fixe{flex:none}
 .mot{font-size:12px;color:var(--encre-pale);flex:none}
-.chips{display:flex;flex-wrap:wrap;gap:4px}
-.chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:3px 8px;
-  border:1px solid var(--bord);border-radius:11px;cursor:pointer}
-.chip.actif{border-color:var(--or);background:#2E2A22;color:var(--or)}
-.chip input{display:none}
 .vide{font-size:12.5px;color:var(--encre-pale);font-style:italic}
 
-.couche{border:1px solid var(--bord);border-left:3px solid var(--azur);border-radius:var(--r);
+.piece{border:1px solid var(--bord);border-left:3px solid var(--azur);border-radius:var(--r);
   background:var(--fond)}
-.couche>header{display:flex;align-items:center;gap:7px;padding:6px 9px;font-size:12.5px;
+.piece>header{display:flex;align-items:center;gap:7px;padding:6px 9px;font-size:12.5px;
   border-bottom:1px solid var(--bord)}
-.couche>header b{color:var(--or);font-variant:small-caps;letter-spacing:.07em;flex:none}
-.couche>header .titre{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;
-  white-space:nowrap;color:var(--encre-pale)}
-.couche>header button{font-size:11px;padding:1px 6px;border:1px solid var(--bord);
+.piece>header b{flex:1;min-width:0;color:var(--encre)}
+.piece>header .rang{color:var(--or);font-variant:small-caps;letter-spacing:.07em;flex:none}
+.piece>header button{font-size:11px;padding:1px 6px;border:1px solid var(--bord);
   border-radius:var(--r);color:var(--encre-pale)}
-.couche>header button:hover{color:var(--encre);border-color:var(--encre-pale)}
-.couche>.corps{padding:9px;display:flex;flex-direction:column;gap:8px}
+.piece>header button:hover{color:var(--encre);border-color:var(--encre-pale)}
+.piece>.corps{padding:9px;display:flex;flex-direction:column;gap:8px}
+.piece .explique{font-size:11.5px;color:var(--encre-pale);line-height:1.45}
 .cond{border:1px solid var(--bord);border-radius:var(--r);padding:7px;display:flex;
   flex-direction:column;gap:6px}
 .pile{display:flex;flex-direction:column;gap:7px}
 .ajout{font-size:12px;padding:5px 9px;border:1px dashed var(--bord);border-radius:var(--r);
   color:var(--encre-pale);align-self:flex-start}
 .ajout:hover{border-color:var(--or);color:var(--or)}
+
+/* ── le commanditaire, en évidence ── */
+.qui{display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--bord);
+  border-radius:var(--r);background:var(--fond)}
+.qui .jeton{width:32px;height:32px;flex:none}
+.qui .jeton svg{width:100%;height:100%;display:block}
+.qui .txt{flex:1;min-width:0}
+.qui b{display:block;font-size:14px}
+.qui span{font-size:11.5px;color:var(--encre-pale)}
+.qui.rien{border-style:dashed;color:var(--encre-pale)}
 
 .glyphes{display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:4px;
   max-height:150px;overflow-y:auto;padding:4px;border:1px solid var(--bord);border-radius:var(--r)}
@@ -121,28 +127,42 @@ input[type=checkbox]{width:auto;accent-color:var(--or)}
 .glyphes button.actif{border-color:var(--or);background:#2E2A22}
 .glyphes svg{width:100%;height:100%;display:block}
 
-/* ── la fiche, dans les couleurs du jeu ── */
-.fiche{--velin:#E3D6B2;--velin-clair:#F0E7CE;--filet:#2B2116;
-  --gencre:#2B2116;--gencre-pale:#6C5C46;--gminium:#A32C1C;--gor:#96751F;
+/* ── l'offre, dans les couleurs du jeu ── */
+.offre{--velin:#E3D6B2;--velin-clair:#F0E7CE;--filet:#2B2116;
+  --gencre:#2B2116;--gencre-pale:#6C5C46;--gminium:#A32C1C;--gor:#96751F;--gvert:#4C6A44;
   --display:'Iowan Old Style','Hoefler Text','Palatino Linotype',Palatino,Georgia,serif;
   background:var(--velin-clair);color:var(--gencre);border:1px solid var(--filet);
   border-radius:var(--r);padding:13px;font-family:var(--display)}
-.fiche .tete{display:flex;align-items:center;gap:11px;margin-bottom:9px}
-.fiche .ico{width:44px;height:44px;flex:none}
-.fiche .ico svg{width:100%;height:100%;display:block}
-.fiche .oeil{font-size:12px;font-variant:small-caps;letter-spacing:.13em;color:var(--gencre-pale)}
-.fiche h3{font-size:20px;font-weight:600;line-height:1.15}
-.fiche .prem{font-size:14.5px;line-height:1.5;padding-bottom:10px;
+.offre .tete{display:flex;align-items:center;gap:11px;margin-bottom:9px}
+.offre .ico{width:44px;height:44px;flex:none}
+.offre .ico svg{width:100%;height:100%;display:block}
+.offre .oeil{font-size:12px;font-variant:small-caps;letter-spacing:.13em;color:var(--gencre-pale)}
+.offre h3{font-size:20px;font-weight:600;line-height:1.15}
+.offre .recit{font-size:14.5px;line-height:1.5;margin-bottom:11px}
+.offre .recit::first-letter{color:var(--gminium);font-size:1.05em}
+.offre .lignes{display:grid;grid-template-columns:auto 1fr;gap:3px 9px;font-size:12.5px;
+  font-family:system-ui,sans-serif;padding:8px 0;border-top:1px solid #2B211630;
   border-bottom:1px solid #2B211630}
-.fiche .prem::first-letter{color:var(--gminium);font-size:1.05em}
-.fiche .couche-lue{margin-top:10px}
-.fiche .couche-lue h4{font-size:13px;font-variant:small-caps;letter-spacing:.08em;
-  color:var(--gor);margin-bottom:3px}
-.fiche .couche-lue p{font-size:14px;line-height:1.5}
-.fiche .scelle{margin-top:10px;padding:7px 9px;border:1px dashed #2B211655;border-radius:var(--r);
-  font-size:12.5px;color:var(--gencre-pale);font-style:italic}
-.fiche .voix{margin-top:11px;font-size:12px;color:var(--gencre-pale);
-  font-family:system-ui,sans-serif;border-top:1px solid #2B211630;padding-top:8px}
+.offre .lignes dt{color:var(--gencre-pale)}
+.offre .lignes dd{font-weight:600}
+.offre .prix{margin-top:9px;font-size:13px;font-family:system-ui,sans-serif}
+.offre .prix b{color:var(--gor)}
+.offre .fin{margin-top:10px;font-size:14px;line-height:1.5;padding:9px 10px;
+  background:var(--velin);border-left:3px solid var(--gvert);border-radius:0 var(--r) var(--r) 0}
+.offre .fin.mauvais{border-left-color:var(--gminium)}
+
+/* ── le fil des jalons ── */
+.fil{display:flex;flex-direction:column;gap:0}
+.fil .etape{display:flex;gap:10px}
+.fil .rail{flex:none;width:16px;display:flex;flex-direction:column;align-items:center}
+.fil .pion{width:11px;height:11px;border-radius:50%;background:var(--or);flex:none;margin-top:4px}
+.fil .pion.dep{background:var(--azur)}
+.fil .pion.fin{background:var(--vert)}
+.fil .trait{flex:1;width:2px;background:var(--bord);min-height:14px}
+.fil .corps2{flex:1;min-width:0;padding-bottom:11px}
+.fil b{font-size:13px}
+.fil span{display:block;font-size:11.5px;color:var(--encre-pale)}
+.fil .cout{font-size:11.5px;color:var(--or);font-variant-numeric:tabular-nums}
 
 .avert{font-size:12.5px;padding:7px 9px;border-left:2px solid var(--minium);background:#2A211E;
   margin-bottom:6px;border-radius:0 var(--r) var(--r) 0;line-height:1.45}
@@ -160,6 +180,22 @@ h4.section:first-child{margin-top:0}
 .tableau th{color:var(--encre-pale);font-weight:400;font-size:11px}
 .tableau td.n{text-align:right;font-variant-numeric:tabular-nums}
 
+/* ── le volet des personnages ── */
+.gens{display:flex;flex-direction:column;gap:7px}
+.gens .carte{border:1px solid var(--bord);border-radius:var(--r);padding:8px 9px;
+  background:var(--fond)}
+.gens .carte.sien{border-color:var(--or);background:#2E2A22}
+.gens .haut{display:flex;align-items:center;gap:8px}
+.gens .jeton{width:26px;height:26px;flex:none}
+.gens .jeton svg{width:100%;height:100%;display:block}
+.gens .txt{flex:1;min-width:0}
+.gens b{display:block;font-size:13px}
+.gens .sous{font-size:11px;color:var(--encre-pale)}
+.gens .extrait{font-size:11.5px;color:var(--encre-pale);line-height:1.45;margin-top:5px;
+  font-style:italic}
+.gens .rangee{margin-top:7px}
+.gens .aucune{color:var(--or)}
+
 #etat{flex:none;display:flex;gap:14px;padding:5px 11px;background:var(--fond-clair);
   border-top:1px solid var(--bord);font-size:12px;color:var(--encre-pale);
   font-variant-numeric:tabular-nums;flex-wrap:wrap}
@@ -168,48 +204,52 @@ h4.section:first-child{margin-top:0}
 #toile-depot{position:fixed;inset:0;background:#1C1A17E0;display:none;align-items:center;
   justify-content:center;font-size:17px;color:var(--or);z-index:9;pointer-events:none}
 #toile-depot.on{display:flex}
-@media (max-width:1100px){#cote{width:300px}#repertoire{width:190px}}
-@media (max-width:860px){
+@media (max-width:1150px){#cote{width:310px}#carnet{width:190px}}
+@media (max-width:880px){
   #scene{flex-direction:column}
-  #repertoire{width:auto;max-height:150px;border-right:none;border-bottom:1px solid var(--bord)}
-  #cote{width:auto;max-height:44%;border-left:none;border-top:1px solid var(--bord)}
+  #carnet{width:auto;max-height:150px;border-right:none;border-bottom:1px solid var(--bord)}
+  #cote{width:auto;max-height:46%;border-left:none;border-top:1px solid var(--bord)}
 }
 </style>
 </head>
 <body>
 
 <div id="barre">
-  <h1>Atelier de <b>personnages</b></h1>
-  <button class="outil" id="b-nouveau">+ Personnage</button>
+  <h1>Atelier de <b>missions</b></h1>
+  <button class="outil" id="b-nouveau">+ Mission</button>
   <button class="outil" id="b-dupliquer">Dupliquer</button>
   <button class="outil danger" id="b-supprimer">Supprimer</button>
   <span class="sep"></span>
-  <button class="outil" id="b-ouvrir">Ouvrir un répertoire…</button>
-  <button class="outil" id="b-monde">Charger monde.json…</button>
+  <button class="outil" id="b-ouvrir">Ouvrir un carnet…</button>
+  <button class="outil" id="b-monde">monde.json…</button>
+  <button class="outil" id="b-gens">personnages.json…</button>
+  <button class="outil" id="b-objets">objets.json…</button>
   <button class="outil" id="b-exemple">Exemple</button>
   <span class="pousse"></span>
-  <a class="outil" href="TUTORIEL-PERSONNAGES.md" target="_blank" rel="noopener">Mode d'emploi</a>
+  <a class="outil" href="TUTORIEL-MISSIONS.md" target="_blank" rel="noopener">Mode d'emploi</a>
   <button class="outil fort" id="b-exporter">Exporter</button>
 </div>
 
 <div id="scene">
-  <aside id="repertoire">
+  <aside id="carnet">
     <input id="filtre" placeholder="Filtrer…" autocomplete="off" spellcheck="false">
     <div id="liste"></div>
   </aside>
   <main id="feuille"></main>
   <aside id="cote">
     <div id="onglets">
-      <button data-onglet="fiche" class="actif">La fiche</button>
+      <button data-onglet="offre" class="actif">L'offre</button>
+      <button data-onglet="fil">Le fil</button>
+      <button data-onglet="gens">Personnages</button>
       <button data-onglet="controles">Contrôles</button>
-      <button data-onglet="relation">Où en est-on</button>
+      <button data-onglet="convoi">Convoi</button>
     </div>
     <div id="volet"></div>
   </aside>
 </div>
 
 <div id="etat"></div>
-<div id="toile-depot">Déposez un <b>répertoire</b> ou un <b>monde.json</b></div>
+<div id="toile-depot">Déposez un <b>carnet</b>, un <b>monde</b>, un <b>répertoire</b> ou un <b>coffre</b></div>
 <input type="file" id="fichier" accept=".json,application/json" hidden>
 
 <script id="reference" type="application/json">
@@ -465,129 +505,247 @@ function ecouterSaisie(apres){
 <script>
 'use strict';
 /* ═══════════════ les catalogues, injectés par outils/construire.mjs ═══════════════
-   Les rôles, les accords, les interrogations propres à une relation et les trous
-   de texte viennent de data/vocabulaire-personnages.json ; les conditions peuvent
-   en plus interroger l'état du convoi, qui vient de data/vocabulaire-evenements.json.
-   Rien n'est écrit en dur ici : ajouter un rôle au catalogue le fait apparaître. */
+   Les genres de jalon, les récompenses et leurs réglages viennent de
+   data/vocabulaire-missions.json ; les conditions d'apparition interrogent l'état
+   du convoi, qui vient de data/vocabulaire-evenements.json.
+
+   Le principe qui gouverne tout l'atelier : le lien entre une mission et son
+   commanditaire est stocké DANS LA MISSION. On écrit ses personnages tranquillement,
+   sans rien leur attribuer, et on revient plus tard leur confier une mission —
+   personnages.json n'est jamais rouvert ni modifié. */
 const REF=JSON.parse(document.getElementById('reference').textContent);
-const P=REF.vocabulairePersonnages;
+const M=REF.vocabulaireMissions;
 const V=REF.vocabulaire;
 
-/* Les deux catalogues d'interrogations bout à bout : celles de la relation
-   d'abord, parce que ce sont elles qui font mériter du lore. */
-const INTERROGATIONS=Object.assign({},P.interrogations,V.interrogations||{});
-const RELATION=Object.keys(P.interrogations);
-
 /* ═══════════════ le modèle ═══════════════ */
-let R={format:'caravane.personnages.v1',personnages:[]};
-let sel=0, onglet='fiche', filtre='';
-/* Où en est le joueur avec ce personnage — sert à voir ce qui est mérité. */
-let OU={rencontres:2,missionsPour:0,or:900,reputation:52,karma:50,etapes:6,lieues:120};
+let R={format:'caravane.missions.v1',missions:[]};
+let GENS=null, OBJETS=null;
+let sel=0, onglet='offre', filtre='', zone='';
+let ESSAI={etapes:6,or:900,reputation:52,karma:50,gardes:2,lieues:120,place:400,
+  charge:620,valeurSoute:1400,etatConvoi:78,vigilance:58,agilite:62,negoce:60,
+  puissance:1,troupe:3,chien:false,stock:150};
 
-const PE=()=>R.personnages[sel]||null;
-racineEst(PE);
-sauvegardeEst('caravane.atelier-personnages.v1',
-  ()=>({repertoire:R,ou:OU,sel:sel,monde:MONDE}));
+const MI=()=>R.missions[sel]||null;
+racineEst(MI);
+sauvegardeEst('caravane.atelier-missions.v1',
+  ()=>({carnet:R,essai:ESSAI,sel:sel,monde:MONDE,gens:GENS,objets:OBJETS,zone:zone}));
 function relire(){
   const d=relireSauve();
   if(!d)return false;
-  if(d.repertoire&&Array.isArray(d.repertoire.personnages))R=d.repertoire;
-  if(d.ou)Object.assign(OU,d.ou);
+  if(d.carnet&&Array.isArray(d.carnet.missions))R=d.carnet;
+  if(d.essai)Object.assign(ESSAI,d.essai);
   if(d.monde)mondeEst(d.monde);
-  sel=Math.max(0,Math.min(R.personnages.length-1,d.sel|0));
+  if(d.gens)GENS=d.gens;
+  if(d.objets)OBJETS=d.objets;
+  if(d.zone)zone=d.zone;
+  sel=Math.max(0,Math.min(R.missions.length-1,d.sel|0));
   return true;
 }
 
-/* ═══════════════ la grammaire ═══════════════
-   Un personnage porte son accord, pour que les textes engendrés soient
-   corrects sans qu'on ait à les écrire deux fois. */
-const voyelle=s=>/^[aeiouyàâäéèêëîïôöûüh]/i.test(String(s||''));
+/* ═══════════════ les répertoires chargés ═══════════════ */
+const tousGens=()=>GENS?(GENS.personnages||[]):[];
+const gensPar=k=>tousGens().find(p=>p.cle===k)||null;
+const listeGens=()=>tousGens().map(p=>[p.cle,appellation(p)]);
+const tousObjets=()=>OBJETS?(OBJETS.objets||[]):[];
+const objetPar=k=>tousObjets().find(o=>o.cle===k)||null;
+const listeObjets=()=>tousObjets().map(o=>[o.cle,o.nom]);
 function appellation(p){
+  if(!p)return '';
   const t=(p.titre||'').trim(), n=p.nom||'';
   if(!t)return n;
-  /* « La guilde de » suivi d'Orlanne se dit « La guilde d'Orlanne » */
-  if(/ de$/.test(t))return voyelle(n)?t.slice(0,-3)+' d\''+n:t+' '+n;
+  if(/ de$/.test(t))return /^[aeiouyàâäéèêëîïôöûüh]/i.test(n)?t.slice(0,-3)+' d\''+n:t+' '+n;
   return t+' '+n;
 }
-function sacTexte(p){
-  const f=p.accord==='f';
-  const l=(listeOu('lieux').find(x=>x[0]===p.lieu)||[])[1]||'quelque part';
-  const lc=MONDE&&(MONDE.lieux||[]).find(x=>x.cle===p.lieu);
-  const c=lc?((listeOu('contrees').find(x=>x[0]===lc.contree)||[])[1]||''):'';
-  const role=P.roles[p.role]?P.roles[p.role].nom.toLowerCase():'';
-  return {nom:p.nom||'',titre:p.titre||'',appellation:appellation(p),
-    role:f&&/^é?chevin$|^artisan$|^marchand$/.test(role)?role+'e':role,
-    lieu:l,contree:c,il:f?'elle':'il',le:f?'la':'le',e:f?'e':''};
+const nomLieu=k=>k?((listeOu('lieux').find(x=>x[0]===k)||[])[1]||k):'';
+const nomContree=k=>k?((listeOu('contrees').find(x=>x[0]===k)||[])[1]||k):'';
+function contreeDe(cleLieu){
+  if(!MONDE)return '';
+  const l=(MONDE.lieux||[]).find(x=>x.cle===cleLieu);
+  return l?l.contree||'':'';
+}
+/* Les missions qu'un personnage donne — déduites du carnet, jamais stockées
+   chez lui. C'est ce qui permet de l'écrire sans mission et de revenir après. */
+const missionsDe=cle=>R.missions.filter(m=>m.commanditaire===cle);
+
+/* ═══════════════ les distances, quand le monde est chargé ═══════════════
+   Un plus court chemin sur le réseau de voies, en étapes du profil normal.
+   C'est ce qui permet de dire qu'un délai de dix étapes est impossible pour
+   un trajet qui en demande quatorze. */
+function reseau(){
+  const g={};
+  if(!MONDE)return g;
+  (MONDE.voies||[]).forEach(v=>{
+    const c=(v.calcul||[]).find(x=>x.cle==='normal')||(v.calcul||[])[0];
+    const e=c&&c.etapes?c.etapes:null;
+    if(!e)return;
+    (g[v.de]=g[v.de]||[]).push([v.vers,e]);
+    (g[v.vers]=g[v.vers]||[]).push([v.de,e]);
+  });
+  return g;
+}
+function etapesEntre(a,b){
+  if(!a||!b)return null;
+  if(a===b)return 0;
+  const g=reseau();
+  if(!Object.keys(g).length)return null;
+  const d={},vus={};
+  d[a]=0;
+  for(;;){
+    let x=null;
+    Object.keys(d).forEach(k=>{if(!vus[k]&&(x===null||d[k]<d[x]))x=k;});
+    if(x===null)break;
+    if(x===b)return d[b];
+    vus[x]=1;
+    (g[x]||[]).forEach(([y,w])=>{
+      if(d[y]===undefined||d[x]+w<d[y])d[y]=d[x]+w;});
+  }
+  return d[b]===undefined?null:d[b];
+}
+/* Le fil complet : d'où l'on part, chaque jalon, et ce que ça coûte en étapes. */
+function filDe(m){
+  const out=[];
+  let ou=m.lieu||(gensPar(m.commanditaire)||{}).lieu||'';
+  out.push({genre:'depart',lieu:ou,texte:'On reçoit la mission'+(ou?' à '+nomLieu(ou):'')});
+  (m.jalons||[]).forEach((j,i)=>{
+    const dest=j.lieu||(j.faire==='rencontrer'?(gensPar(j.personnage)||{}).lieu:null)||null;
+    const cout=dest?etapesEntre(ou,dest):null;
+    out.push({genre:'jalon',jalon:j,i:i,lieu:dest,cout:cout});
+    if(dest)ou=dest;
+  });
+  return out;
+}
+const etapesTotales=m=>filDe(m).reduce((s,x)=>s+(x.cout||0),0);
+
+/* ═══════════════ les textes ═══════════════ */
+function sacTexte(m){
+  const q=gensPar(m.commanditaire);
+  const f=q&&q.accord==='f';
+  const fil=filDe(m);
+  const der=fil.filter(x=>x.lieu).slice(-1)[0];
+  const orR=(m.reussite&&(m.reussite.recompenses||[]).find(r=>r.donne==='or'))||null;
+  const obR=(m.reussite&&(m.reussite.recompenses||[]).find(r=>r.donne==='objet'))||null;
+  return {commanditaire:appellation(q)||'le commanditaire',
+    il:f?'elle':'il',
+    ici:nomLieu(m.lieu||(q||{}).lieu)||'ici',
+    la:der?nomLieu(der.lieu):'là-bas',
+    delai:fmt((m.offre&&m.offre.delai)||0),
+    prime:orR?fmt(orR.de||0):'rien',
+    objet:obR?((objetPar(obR.objet)||{}).nom||obR.objet||''):''};
 }
 
-/* ═══════════════ ce qui est mérité ═══════════════ */
-function interroger(nom,p,acquises){
-  if(nom==='couchesConnues')return acquises;
-  if(OU[nom]!==undefined)return OU[nom];
-  return 0;
+/* ═══════════════ ce que la mission demande ═══════════════ */
+function inter(nom){
+  if(nom==='troupe')return (ESSAI.gardes||0)+1;
+  return ESSAI[nom]!==undefined?ESSAI[nom]:0;
 }
-function conditionsVraies(liste,p,acquises){
+function conditionsVraies(liste){
   if(!liste||!liste.length)return true;
   return liste.every(c=>{
-    const v=interroger(c.quoi,p,acquises);
+    const v=inter(c.quoi);
+    if(c.vaut!==undefined)return !!v===!!c.vaut;
     if(c.min!==undefined&&v<c.min)return false;
     if(c.max!==undefined&&v>c.max)return false;
     return true;
   });
 }
-/* Les couches se débloquent dans l'ordre, chacune pouvant compter celles
-   déjà acquises. La première description, elle, n'est jamais scellée. */
-function acquises(p){
-  const out=[];
-  let n=0;
-  (p.couches||[]).forEach((c,i)=>{
-    if(conditionsVraies(c.gagne,p,n)){out.push(i);n++;}
-  });
-  return out;
-}
 function ditCondition(c){
-  const d=INTERROGATIONS[c.quoi]||{nom:c.quoi};
-  const bornes=[];
-  if(c.min!==undefined)bornes.push('au moins '+fmt(c.min));
-  if(c.max!==undefined)bornes.push('au plus '+fmt(c.max));
-  return d.nom.toLowerCase()+' : '+(bornes.join(', ')||'—');
+  const d=(V.interrogations||{})[c.quoi]||{nom:c.quoi};
+  const b=[];
+  if(c.min!==undefined)b.push('au moins '+fmt(c.min));
+  if(c.max!==undefined)b.push('au plus '+fmt(c.max));
+  return d.nom.toLowerCase()+' : '+(b.join(', ')||'—');
+}
+function ditJalon(j){
+  const d=M.jalons[j.faire];
+  if(!d)return 'un jalon inconnu';
+  switch(j.faire){
+    case 'atteindre':return 'Arriver à '+(nomLieu(j.lieu)||'—');
+    case 'livrer':return `Livrer ${fmt(j.kg||0)} kg de `+
+      `${(REF.biens[j.bien]||j.bien||'—').toLowerCase()} à ${nomLieu(j.lieu)||'—'}`;
+    case 'rencontrer':return 'Parler à '+(appellation(gensPar(j.personnage))||j.personnage||'—');
+    default:return d.nom;
+  }
+}
+function ditRecompense(r){
+  const d=M.recompenses[r.donne];
+  if(!d)return 'une récompense inconnue';
+  switch(r.donne){
+    case 'or':return fmt(r.de||0)+' po';
+    case 'reputation':return (r.de>0?'+':'')+fmt(r.de||0)+' de réputation';
+    case 'karma':return (r.de>0?'+':'')+fmt(r.de||0)+' de karma';
+    case 'objet':return (objetPar(r.objet)||{}).nom||r.objet||'un objet';
+    case 'ouvreCouche':return `« ${nomCouche(r.personnage,r.couche)} », chez `+
+      `${appellation(gensPar(r.personnage))||r.personnage||'quelqu\'un'}`;
+    default:return d.nom;
+  }
+}
+function couchesDe(cle){
+  const g=gensPar(cle);
+  return g?(g.couches||[]).map((c,i)=>[c.cle||String(i),c.titre||('Couche '+(i+1))]):[];
+}
+function nomCouche(q,c){
+  const l=couchesDe(q).find(x=>x[0]===c);
+  return l?l[1]:(c||'—');
 }
 
 /* ═══════════════ la feuille ═══════════════ */
 function rendreFeuille(){
-  const f=$('#feuille'), garde=f.scrollTop, p=PE();
-  if(!p){
+  const f=$('#feuille'), garde=f.scrollTop, m=MI();
+  if(!m){
     f.innerHTML=`<p class="vide" style="padding:30px;text-align:center">`+
-      `Aucun personnage. <b>+ Personnage</b> pour commencer, ou <b>Exemple</b> pour voir `+
-      `une fiche complète.</p>`;
+      `Aucune mission. <b>+ Mission</b> pour commencer, ou <b>Exemple</b> pour voir une `+
+      `mission complète.</p>`;
     return;
   }
   let h='';
-  h+=`<div class="bloc"><h2>Qui c'est</h2><div class="corps">`+
-    champ('Nom',texte('nom','Orlanne'))+
-    champ('Titre',texte('titre','Dame'),
-      'Ce qu\'on met devant le nom : <b>Dame</b>, <b>Maître</b>, <b>L\'intendant de</b>. '+
-      'Laissez vide s\'il n\'en a pas.')+
-    champ('Clé',`<div class="rangee">${texte('cle','orlanne')}`+
-      `<button class="outil fixe" data-act="cle-auto">Depuis le nom</button></div>`,
-      'L\'identifiant du fichier. Minuscules et tirets, unique dans le répertoire.')+
-    champ('Accord des textes',choixListe('accord',
-      Object.entries(P.accords).map(([k,d])=>[k,d.nom+' — '+d.explique]),'— à choisir —'),
-      'Pour que les textes s\'accordent tout seuls : <b>{il}</b> donne « elle », '+
-      '<b>arrivé{e}</b> donne « arrivée ».')+
-    champ('Ce qu\'il fait',choixListe('role',
-      Object.entries(P.roles).map(([k,d])=>[k,d.nom]),'— sans rôle —'),
-      p.role&&P.roles[p.role]?ech(P.roles[p.role].explique):
-      'La liste est ouverte : dites-moi un rôle qui manque, il sera ajouté.')+
+  h+=`<div class="bloc"><h2>La mission</h2><div class="corps">`+
+    champ('Titre',texte('titre','Le registre raturé'))+
+    champ('Clé',`<div class="rangee">${texte('cle','le-registre-rature')}`+
+      `<button class="outil fixe" data-act="cle-auto">Depuis le titre</button></div>`,
+      'L\'identifiant du fichier. C\'est cette clé qu\'un objet cite pour dire qu\'il vient '+
+      'de cette mission.')+
+    champ('Ligne au-dessus',texte('oeil','Un service'),
+      'La petite ligne en petites capitales, au-dessus du titre.')+
     `</div></div>`;
 
-  h+=`<div class="bloc"><h2>Où on le trouve</h2><div class="corps">`+
-    champ('Le lieu',listeOu('lieux').length
-      ?choixListe('lieu',listeOu('lieux'),'— nulle part de précis —')
-      :`<p class="vide">Chargez un <b>monde.json</b> pour choisir un lieu.</p>`,
-      'C\'est là qu\'on peut lui parler, et c\'est ce lieu qui héritera de son lore.',true)+
+  /* ── le commanditaire : le lien vit ici, dans la mission ── */
+  const q=gensPar(m.commanditaire);
+  h+=`<div class="bloc"><h2>Qui la donne<span class="pousse"></span>`+
+    (m.commanditaire?`<button data-act="qui-oter">Détacher</button>`:'')+
+    `</h2><div class="corps">`;
+  if(!GENS)h+=`<p class="vide">Chargez votre <b>personnages.json</b> pour choisir un `+
+    `commanditaire. Le lien est enregistré <b>ici, dans la mission</b> — votre répertoire `+
+    `de personnages n'est jamais modifié.</p>`;
+  else if(q)h+=`<div class="qui"><span class="jeton">`+
+    `${svgGlyphe((q.ico||{}).glyphe,REF.natures[(q.ico||{}).nature]||'#9C9484')}</span>`+
+    `<span class="txt"><b>${ech(appellation(q))}</b>`+
+    `<span>${ech(nomLieu(q.lieu)||'sans lieu')} · `+
+    `${missionsDe(q.cle).length} mission${missionsDe(q.cle).length>1?'s':''} dans ce carnet`+
+    `</span></span></div>`+
+    champ('Changer',choixListe('commanditaire',listeGens(),'— personne —'),
+      'Ou passez par l\'onglet <b>Personnages</b>, qui montre qui se trouve dans la zone.')+
+    champ('Où on la reçoit',choixListe('lieu',listeOu('lieux'),
+      '— là où il se tient : '+(nomLieu(q.lieu)||'nulle part')+' —'),
+      'À défaut, c\'est le lieu du commanditaire.');
+  else h+=`<div class="qui rien">Personne pour l'instant. Choisissez dans l'onglet `+
+    `<b>Personnages</b>, ou ici.</div>`+
+    champ('Le commanditaire',choixListe('commanditaire',listeGens(),'— personne —'));
+  h+=`</div></div>`;
+
+  /* ── l'offre ── */
+  h+=`<div class="bloc"><h2>Comment elle est proposée</h2><div class="corps">`+
+    champ('Ce qu\'on lit',texte('offre.recit','',4),
+      'Le texte de l\'offre. Les accolades citent le contexte : <b>{commanditaire}</b>, '+
+      '<b>{ici}</b>, <b>{la}</b>, <b>{delai}</b>, <b>{prime}</b>, <b>{objet}</b>.',true)+
+    champ('Délai',`<div class="rangee">${nombre('offre.delai','14')}`+
+      `<span class="mot fixe">étapes</span></div>`,
+      coutDit(m))+
+    champ('N\'est proposée que si',blocConditions('offre.si'),
+      'Toutes doivent être vraies. C\'est ce qui empêche une mission de fin de partie de '+
+      'tomber à la première étape.',true)+
     `</div></div>`;
 
+  /* ── pictogramme ── */
   const gl=lire('ico.glyphe'), nat=lire('ico.nature')||'rencontre';
   h+=`<div class="bloc"><h2>Le pictogramme</h2><div class="corps">`+
     champ('Teinte',choixListe('ico.nature',Object.keys(REF.natures).map(k=>[k,k]),'— aucune —'))+
@@ -597,138 +755,248 @@ function rendreFeuille(){
       `</div>`,'',true)+
     `</div></div>`;
 
-  h+=`<div class="bloc"><h2>Ce qu'on sait d'emblée</h2><div class="corps">`+
-    champ('La première description',texte('premiere','',4),
-      'Ce qu\'on lit la première fois — et <b>toujours ensuite</b> : elle ne se scelle jamais, '+
-      'elle reste relisible dans l\'index quoi qu\'il arrive. Les accolades citent le '+
-      'contexte : <b>{appellation}</b>, <b>{lieu}</b>, <b>{il}</b>.',true)+
-    champ('Sa voix',texte('voix','sèche ; elle ne répète jamais'),
-      'Comment il parle, en deux mots. Ne s\'affiche pas au joueur : c\'est votre pense-bête '+
-      'quand vous écrirez le lore à plusieurs voix.',true)+
-    `</div></div>`;
+  /* ── les jalons ── */
+  const jal=m.jalons||[];
+  h+=`<div class="bloc"><h2>Ce qu'il faut faire<span class="pousse"></span></h2>`+
+    `<div class="corps">`+
+    (jal.length?'':`<p class="vide">Aucun jalon : la mission serait accomplie avant d'avoir `+
+      `commencé.</p>`)+
+    `<div class="pile">`+jal.map((j,i)=>{
+      const d=M.jalons[j.faire]||{nom:j.faire,explique:'Jalon inconnu du catalogue.',
+        parametres:{}};
+      return `<div class="piece"><header><span class="rang">Jalon ${i+1}</span>`+
+        `<b>${ech(d.nom)}</b>`+
+        (i>0?`<button data-act="jalon-haut" data-i="${i}">↑</button>`:'')+
+        (i<jal.length-1?`<button data-act="jalon-bas" data-i="${i}">↓</button>`:'')+
+        `<button data-act="jalon-oter" data-i="${i}">✕</button></header>`+
+        `<div class="corps"><p class="explique">${ech(d.explique)}</p>`+
+        Object.entries(d.parametres||{}).map(([k,dd])=>
+          reglage('jalons.'+i+'.'+k,dd,j)).join('')+
+        champ('Ce qu\'on lit en l\'accomplissant',texte('jalons.'+i+'.texte','',2),'',true)+
+        `</div></div>`;}).join('')+
+      `<select class="ajout" data-act="jalon-ajout">`+
+      `<option value="">+ Ajouter un jalon…</option>`+
+      Object.entries(M.jalons).map(([k,d])=>
+        `<option value="${ech(k)}">${ech(d.nom)}</option>`).join('')+
+      `</select></div></div></div>`;
 
-  const couches=p.couches||[];
-  h+=`<div class="bloc"><h2>Ce qui se mérite<span class="pousse"></span>`+
-    `<button data-act="couche-ajout">+ Couche</button></h2><div class="corps">`+
-    (couches.length?'':`<p class="vide">Aucune couche : on saura de lui ce qu'on lit d'emblée, `+
-      `et rien de plus.</p>`)+
-    couches.map((c,i)=>rendreCouche(c,i,couches.length)).join('')+
+  /* ── issues ── */
+  h+=`<div class="bloc"><h2>Si elle est accomplie</h2><div class="corps">`+
+    champ('Ce qu\'on lit',texte('reussite.texte','',3),'',true)+
+    champ('Ce qu\'on gagne',blocRecompenses('reussite.recompenses'),'',true)+
+    `</div></div>`;
+  h+=`<div class="bloc"><h2>Si le délai passe</h2><div class="corps">`+
+    champ('Ce qu\'on lit',texte('echec.texte','',3),
+      'Facultatif. Sans texte, le jeu se contente de signaler l\'échéance passée.',true)+
+    champ('Ce qu\'on perd',blocRecompenses('echec.recompenses'),
+      'Des montants <b>négatifs</b>. Les contrats ordinaires coûtent 7 de réputation.',true)+
     `</div></div>`;
 
   f.innerHTML=h;
   f.scrollTop=garde;
 }
-function rendreCouche(c,i,n){
-  const ch='couches.'+i;
-  const libre=!(c.gagne||[]).length;
-  return `<div class="couche"><header><b>Couche ${i+1}</b>`+
-    `<span class="titre">${ech(c.titre||'sans titre')}</span>`+
-    (i>0?`<button data-act="couche-haut" data-i="${i}">↑</button>`:'')+
-    (i<n-1?`<button data-act="couche-bas" data-i="${i}">↓</button>`:'')+
-    `<button data-act="couche-oter" data-i="${i}">✕</button></header><div class="corps">`+
-    champ('Son titre',texte(ch+'.titre','Le frère'),
-      'La ligne qui apparaît dans l\'index quand elle est acquise.')+
-    champ('Ce qu\'il faut pour l\'avoir',blocConditions(ch+'.gagne'),
-      libre?'<b>Rien pour l\'instant</b> : elle sera lisible d\'emblée, comme la première '+
-        'description. Le lore qui se mérite demande au moins une condition.'
-      :'Toutes doivent être vraies. Les couches se comptent dans l\'ordre : la troisième '+
-       'peut demander d\'avoir déjà les deux premières.',true)+
-    champ('Ce qu\'on apprend',texte(ch+'.texte','',4),'',true)+
-    `</div></div>`;
+function coutDit(m){
+  const t=etapesTotales(m);
+  const d=(m.offre&&m.offre.delai)||0;
+  if(!MONDE)return 'Chargez un <b>monde.json</b> et l\'atelier calculera le trajet réel.';
+  if(!t)return 'Le trajet ne coûte encore rien : aucun jalon situé.';
+  if(d&&d<t)return `Le trajet demande <b>${t} étapes</b> et vous n'en accordez que `+
+    `<b>${d}</b> : <b>impossible à tenir</b>.`;
+  return `Le trajet demande <b>${t} étapes</b>`+
+    (d?` — il reste <b>${d-t}</b> étape${d-t>1?'s':''} de marge.`:'.');
+}
+function blocRecompenses(ch){
+  const l=lire(ch)||[];
+  return `<div class="pile">`+l.map((r,i)=>{
+    const d=M.recompenses[r.donne]||{nom:r.donne,explique:'Récompense inconnue du catalogue.',
+      parametres:{}};
+    return `<div class="piece" style="border-left-color:var(--vert)"><header>`+
+      `<b>${ech(d.nom)}</b>`+
+      `<button data-act="rec-oter" data-ch="${ech(ch)}" data-i="${i}">✕</button></header>`+
+      `<div class="corps"><p class="explique">${ech(d.explique)}</p>`+
+      Object.entries(d.parametres||{}).map(([k,dd])=>
+        reglage(ch+'.'+i+'.'+k,dd,r)).join('')+
+      `</div></div>`;}).join('')+
+    `<select class="ajout" data-act="rec-ajout" data-ch="${ech(ch)}">`+
+    `<option value="">+ Ajouter…</option>`+
+    Object.entries(M.recompenses).map(([k,d])=>
+      `<option value="${ech(k)}">${ech(d.nom)}</option>`).join('')+
+    `</select></div>`;
 }
 function blocConditions(ch){
   const l=lire(ch)||[];
-  const groupes=`<optgroup label="La relation">`+
-      RELATION.map(k=>`<option value="${ech(k)}">${ech(INTERROGATIONS[k].nom)}</option>`).join('')+
-    `</optgroup><optgroup label="L'état du convoi">`+
-      Object.keys(V.interrogations||{}).filter(k=>(V.interrogations[k].unite||'')!=='oui ou non')
-        .map(k=>`<option value="${ech(k)}">${ech(V.interrogations[k].nom)}</option>`).join('')+
-    `</optgroup>`;
-  return `<div class="pile">`+l.map((c,i)=>{
-    const d=INTERROGATIONS[c.quoi]||{};
-    return `<div class="cond">`+
+  const opts=Object.entries(V.interrogations||{})
+    .filter(([k,d])=>(d.unite||'')!=='oui ou non')
+    .map(([k,d])=>`<option value="${ech(k)}">${ech(d.nom)}</option>`).join('');
+  return `<div class="pile">`+(l.length?'':`<p class="vide">Aucune — elle peut être `+
+    `proposée dès le départ.</p>`)+
+    l.map((c,i)=>`<div class="cond">`+
       `<div class="rangee"><select data-ch="${ech(ch+'.'+i+'.quoi')}" data-t="txt">`+
-      groupes.replace(`value="${ech(c.quoi)}"`,`value="${ech(c.quoi)}" selected`)+
+      opts.replace(`value="${ech(c.quoi)}"`,`value="${ech(c.quoi)}" selected`)+
       `</select><button class="fixe outil" data-act="cond-oter" data-ch="${ech(ch)}" `+
       `data-i="${i}">✕</button></div>`+
       `<div class="rangee"><span class="mot fixe">au moins</span>`+
       nombre(ch+'.'+i+'.min')+`<span class="mot fixe">au plus</span>`+
-      nombre(ch+'.'+i+'.max')+`</div>`+
-      (d.explique?`<div class="aide">${ech(d.explique)}</div>`:'')+
-      `</div>`;}).join('')+
+      nombre(ch+'.'+i+'.max')+`</div></div>`).join('')+
     `<button class="ajout" data-act="cond-ajout" data-ch="${ech(ch)}">`+
     `+ Ajouter une condition</button></div>`;
+}
+function reglage(ch,d,contexte){
+  let corps;
+  if(d.type==='choix')corps=choixListe(ch,d.valeurs.map(x=>[x,x]),d.requis?'':'— au choix —');
+  else if(d.type==='bien')corps=choixListe(ch,Object.entries(REF.biens),d.requis?'— quoi ? —':'');
+  else if(d.type==='lieu')corps=listeOu('lieux').length
+    ?choixListe(ch,listeOu('lieux'),d.requis?'— où ? —':'')
+    :`<p class="vide">Chargez un <b>monde.json</b> pour choisir un lieu.</p>`;
+  else if(d.type==='personnage')corps=listeGens().length
+    ?choixListe(ch,listeGens(),'— qui ? —')
+    :`<p class="vide">Chargez un <b>personnages.json</b> pour choisir quelqu'un.</p>`;
+  else if(d.type==='objet')corps=listeObjets().length
+    ?choixListe(ch,listeObjets(),'— lequel ? —')
+    :`<p class="vide">Chargez un <b>objets.json</b> pour choisir un objet.</p>`;
+  else if(d.type==='couche'){
+    const qui=contexte?contexte.personnage:null;
+    const l=qui?couchesDe(qui):[];
+    corps=l.length?choixListe(ch,l,'— laquelle ? —')
+      :`<p class="vide">Choisissez d'abord quelqu'un qui a des couches.</p>`;
+  }
+  else if(d.type==='nombre'||d.type==='fraction')
+    corps=nombre(ch,d.defaut!==undefined?String(d.defaut):'',
+      d.type==='fraction'?'0.01':'any');
+  else corps=texte(ch);
+  return champ(d.nom,corps,(d.aide||'')+(d.requis?' <b>Obligatoire.</b>':''));
 }
 function svgGlyphe(k,teinte){
   return `<svg viewBox="0 0 24 24" style="color:${teinte};--velin:#E3D6B2">`+
     `${REF.glyphes[k]||''}</svg>`;
 }
 
-/* ═══════════════ le répertoire ═══════════════ */
+/* ═══════════════ le carnet ═══════════════ */
 function rendreListe(){
   const q=filtre.trim().toLowerCase();
-  const vus=R.personnages.map((p,i)=>({p:p,i:i}))
-    .filter(o=>!q||((o.p.nom||'')+' '+(o.p.cle||'')+' '+(o.p.role||''))
-      .toLowerCase().indexOf(q)>=0);
-  /* rangés par lieu : c'est ainsi qu'on les cherche */
-  const parLieu={};
-  vus.forEach(o=>{const k=o.p.lieu||'';(parLieu[k]=parLieu[k]||[]).push(o);});
-  const nomLieu=k=>k?((listeOu('lieux').find(x=>x[0]===k)||[])[1]||k):'Sans attache';
-  const cles=Object.keys(parLieu).sort((a,b)=>nomLieu(a).localeCompare(nomLieu(b),'fr'));
+  const vus=R.missions.map((m,i)=>({m:m,i:i}))
+    .filter(x=>!q||((x.m.titre||'')+' '+(x.m.cle||'')+' '+
+      appellation(gensPar(x.m.commanditaire))).toLowerCase().indexOf(q)>=0);
+  const par={};
+  vus.forEach(x=>{const k=x.m.commanditaire||'';(par[k]=par[k]||[]).push(x);});
+  const nomQui=k=>k?(appellation(gensPar(k))||k):'Sans commanditaire';
+  const cles=Object.keys(par).sort((a,b)=>nomQui(a).localeCompare(nomQui(b),'fr'));
   $('#liste').innerHTML=cles.map(k=>
-    `<div class="groupe">${ech(nomLieu(k))}</div>`+
-    parLieu[k].map(o=>{
-      const pb=controler(o.p,o.i).filter(x=>x.dur).length;
-      const t=REF.natures[(o.p.ico||{}).nature]||'#5A554C';
-      return `<button class="entree${o.i===sel?' actif':''}${pb?' faux':''}" data-sel="${o.i}">`+
-        `<span class="jeton">${svgGlyphe((o.p.ico||{}).glyphe,t)}</span>`+
-        `<span class="txt"><b>${ech(appellation(o.p)||'sans nom')}</b>`+
-        `<span>${ech(P.roles[o.p.role]?P.roles[o.p.role].nom:'—')}`+
-        ` · ${(o.p.couches||[]).length} couche${(o.p.couches||[]).length>1?'s':''}`+
+    `<div class="groupe">${ech(nomQui(k))}</div>`+
+    par[k].map(x=>{
+      const pb=controler(x.m,x.i).filter(y=>y.dur).length;
+      const t=REF.natures[(x.m.ico||{}).nature]||'#5A554C';
+      const nj=(x.m.jalons||[]).length;
+      return `<button class="entree${x.i===sel?' actif':''}${pb?' faux':''}" data-sel="${x.i}">`+
+        `<span class="jeton">${svgGlyphe((x.m.ico||{}).glyphe,t)}</span>`+
+        `<span class="txt"><b>${ech(x.m.titre||'sans titre')}</b>`+
+        `<span>${nj} jalon${nj>1?'s':''}`+
+        `${MONDE&&etapesTotales(x.m)?' · '+etapesTotales(x.m)+' étapes':''}`+
         `${pb?' · '+pb+' à corriger':''}</span></span></button>`;}).join('')
-  ).join('')||`<p class="vide" style="padding:8px">Personne ici.</p>`;
+  ).join('')||`<p class="vide" style="padding:8px">Rien ici.</p>`;
 }
 
 /* ═══════════════ les contrôles ═══════════════ */
-const TROUS=Object.keys(P.trous);
-function controler(p,idx){
+const TROUS=Object.keys(M.trous);
+function controler(m,idx){
   const out=[];
   const dur=t=>out.push({dur:true,txt:t});
   const doux=t=>out.push({dur:false,txt:t});
-  if(!p)return out;
-  if(!p.cle)dur('Il manque la <b>clé</b>.');
-  else if(!/^[a-z0-9-]+$/.test(p.cle))
+  if(!m)return out;
+  if(!m.cle)dur('Il manque la <b>clé</b>.');
+  else if(!/^[a-z0-9-]+$/.test(m.cle))
     dur('La <b>clé</b> ne prend que des minuscules, des chiffres et des tirets.');
-  else if(R.personnages.some((o,i)=>i!==idx&&o.cle===p.cle))
-    dur(`La clé <b>${ech(p.cle)}</b> sert déjà à un autre personnage.`);
-  if(!p.nom)dur('Il manque le <b>nom</b>.');
-  if(!p.accord)doux('Pas d\'<b>accord</b> choisi : les textes s\'accorderont au masculin.');
-  if(!p.role)doux('Pas de <b>rôle</b> : on ne saura pas ce qu\'il fait dans le monde.');
-  if(!p.lieu)doux('Pas de <b>lieu</b> : personne ne pourra le croiser.');
-  else if(MONDE&&!(MONDE.lieux||[]).some(l=>l.cle===p.lieu))
-    dur(`Le lieu <b>${ech(p.lieu)}</b> n'existe pas dans le monde chargé.`);
-  if(!p.premiere)dur('Il manque la <b>première description</b> — celle qu\'on doit pouvoir '+
-    'relire à tout moment.');
-  if(p.ico&&p.ico.glyphe&&!REF.glyphes[p.ico.glyphe])
-    dur(`Le dessin <b>${ech(p.ico.glyphe)}</b> n'existe pas.`);
-  if(!p.ico||!p.ico.glyphe)doux('Pas de <b>pictogramme</b> : la fiche s\'affichera sans image.');
+  else if(R.missions.some((x,i)=>i!==idx&&x.cle===m.cle))
+    dur(`La clé <b>${ech(m.cle)}</b> sert déjà à une autre mission.`);
+  if(!m.titre)dur('Il manque le <b>titre</b>.');
+  if(!m.oeil)doux('Pas de <b>ligne au-dessus</b> du titre.');
+  if(!m.commanditaire)doux('Personne ne la donne : c\'est valable pour l\'écrire, mais elle '+
+    'ne sera proposée nulle part tant qu\'un <b>commanditaire</b> ne l\'aura pas prise.');
+  else if(GENS&&!gensPar(m.commanditaire))
+    dur(`Le commanditaire <b>${ech(m.commanditaire)}</b> n'est pas au répertoire chargé.`);
+  if(!(m.offre&&m.offre.recit))dur('Il manque le <b>texte de l\'offre</b>.');
+  if(!(m.offre&&m.offre.delai))doux('Pas de <b>délai</b> : la mission ne pourra jamais être '+
+    'ratée par le temps.');
+  if(m.ico&&m.ico.glyphe&&!REF.glyphes[m.ico.glyphe])
+    dur(`Le dessin <b>${ech(m.ico.glyphe)}</b> n'existe pas.`);
+  if(m.lieu&&MONDE&&!(MONDE.lieux||[]).some(l=>l.cle===m.lieu))
+    dur(`Le lieu <b>${ech(m.lieu)}</b> n'existe pas dans le monde chargé.`);
 
-  verifierTexte(p.premiere,'la première description',out);
-  (p.couches||[]).forEach((c,i)=>{
-    if(!c.titre)doux(`La couche ${i+1} n'a pas de <b>titre</b>.`);
-    if(!c.texte)dur(`La couche ${i+1} n'a <b>rien à lire</b>.`);
-    verifierTexte(c.texte,`la couche ${i+1}`,out);
-    if(!(c.gagne||[]).length)
-      doux(`La couche ${i+1} ne demande <b>rien</b> : elle sera lisible d'emblée, `+
-        `au même titre que la première description.`);
-    (c.gagne||[]).forEach(g=>{
-      if(!INTERROGATIONS[g.quoi])
-        dur(`La couche ${i+1} interroge quelque chose d'inconnu : <b>${ech(g.quoi)}</b>.`);
-      if(g.min===undefined&&g.max===undefined)
-        dur(`Une condition de la couche ${i+1} n'a <b>aucune borne</b> : elle est toujours vraie.`);
-      if(g.quoi==='couchesConnues'&&g.min!==undefined&&g.min>i)
-        dur(`La couche ${i+1} demande ${g.min} couches déjà connues, mais il n'y en a que `+
-          `<b>${i}</b> avant elle : elle ne s'ouvrira jamais.`);
+  verifierTexte(m.offre&&m.offre.recit,'le texte de l\'offre',out);
+
+  const jal=m.jalons||[];
+  if(!jal.length)dur('Aucun <b>jalon</b> : elle serait accomplie avant d\'avoir commencé.');
+  jal.forEach((j,i)=>{
+    const d=M.jalons[j.faire];
+    if(!d){dur(`Jalon ${i+1} inconnu du catalogue : <b>${ech(j.faire)}</b>.`);return;}
+    Object.entries(d.parametres||{}).forEach(([k,dd])=>{
+      if(dd.requis&&(j[k]===undefined||j[k]===''))
+        dur(`Jalon ${i+1} « ${ech(d.nom)} » : <b>${ech(dd.nom)}</b> est obligatoire.`);
+    });
+    if(j.lieu&&MONDE&&!(MONDE.lieux||[]).some(l=>l.cle===j.lieu))
+      dur(`Jalon ${i+1} : le lieu <b>${ech(j.lieu)}</b> n'existe pas.`);
+    if(j.personnage&&GENS&&!gensPar(j.personnage))
+      dur(`Jalon ${i+1} : <b>${ech(j.personnage)}</b> n'est pas au répertoire chargé.`);
+    if(j.faire==='rencontrer'&&j.personnage&&GENS&&gensPar(j.personnage)&&
+       !gensPar(j.personnage).lieu)
+      dur(`Jalon ${i+1} : <b>${ech(appellation(gensPar(j.personnage)))}</b> n'a pas de lieu, `+
+        `on ne peut donc pas aller lui parler.`);
+    if(!j.texte)doux(`Jalon ${i+1} : rien à lire quand il tombe.`);
+    verifierTexte(j.texte,`le jalon ${i+1}`,out);
+  });
+  /* le fil est-il tenable ? */
+  if(MONDE){
+    const fil=filDe(m);
+    fil.forEach((x,i)=>{
+      if(x.genre==='jalon'&&x.lieu&&x.cout===null)
+        dur(`Le jalon ${x.i+1} est à <b>${ech(nomLieu(x.lieu))}</b>, qu'aucune voie ne relie `+
+          `au reste du trajet.`);
+    });
+    const t=etapesTotales(m), d=(m.offre||{}).delai||0;
+    if(d&&t&&d<t)dur(`Le trajet demande <b>${t} étapes</b> et le délai n'en accorde que `+
+      `<b>${d}</b> : la mission est <b>impossible</b>.`);
+    else if(d&&t&&d<t+2)doux(`Le délai (<b>${d}</b>) ne laisse que <b>${d-t}</b> étape`+
+      `${d-t>1?'s':''} de marge sur <b>${t}</b> de trajet. Un seul détour et c'est raté.`);
+  }
+
+  verifierTexte(m.reussite&&m.reussite.texte,'la réussite',out);
+  verifierTexte(m.echec&&m.echec.texte,'l\'échec',out);
+  if(!(m.reussite&&m.reussite.texte))dur('Il manque le <b>texte de réussite</b>.');
+  const rec=(m.reussite||{}).recompenses||[];
+  if(!rec.length)doux('Elle ne rapporte <b>rien</b>. Valable si le lore est la récompense, '+
+    'mais dites-le dans le texte.');
+  [['reussite',rec],['echec',((m.echec||{}).recompenses||[])]].forEach(([ou,l])=>{
+    l.forEach((r,i)=>{
+      const d=M.recompenses[r.donne];
+      if(!d){dur(`Récompense inconnue du catalogue : <b>${ech(r.donne)}</b>.`);return;}
+      Object.entries(d.parametres||{}).forEach(([k,dd])=>{
+        if(dd.requis&&(r[k]===undefined||r[k]===''))
+          dur(`« ${ech(d.nom)} » : <b>${ech(dd.nom)}</b> est obligatoire.`);
+      });
+      if(r.donne==='objet'&&r.objet){
+        if(OBJETS&&!objetPar(r.objet))
+          dur(`L'objet <b>${ech(r.objet)}</b> n'est pas au coffre chargé.`);
+        else if(OBJETS){
+          /* les deux fichiers doivent se citer l'un l'autre */
+          const o=objetPar(r.objet), pv=(o||{}).provenance||{};
+          if(pv.genre!=='mission')
+            dur(`<b>${ech(o.nom)}</b> est donné par cette mission, mais sa provenance est `+
+              `« ${ech(pv.genre?(pv.genre):'aucune')} ». Corrigez-la dans l'atelier d'objets.`);
+          else if(pv.mission!==m.cle)
+            dur(`<b>${ech(o.nom)}</b> dit venir de la mission `+
+              `<b>${ech(pv.mission||'—')}</b>, pas de <b>${ech(m.cle||'—')}</b>.`);
+        }
+      }
+      if(r.donne==='ouvreCouche'&&r.personnage&&GENS){
+        if(!gensPar(r.personnage))
+          dur(`« Une couche de lore » vise <b>${ech(r.personnage)}</b>, hors répertoire.`);
+        else if(r.couche&&!couchesDe(r.personnage).some(x=>x[0]===r.couche))
+          dur(`« Une couche de lore » vise une couche qui n'existe pas chez `+
+            `<b>${ech(appellation(gensPar(r.personnage)))}</b>.`);
+      }
+      if(ou==='echec'&&(r.donne==='or'||r.donne==='reputation'||r.donne==='karma')&&
+         (r.de||0)>0)
+        doux(`L'échec <b>récompense</b> ${ech(ditRecompense(r))}. C'est peut-être voulu.`);
     });
   });
   return out;
@@ -744,114 +1012,211 @@ function verifierTexte(txt,ou,out){
 /* ═══════════════ les volets ═══════════════ */
 function rendreVolet(){
   const v=$('#volet');
-  if(onglet==='fiche')v.innerHTML=voletFiche();
+  if(onglet==='offre')v.innerHTML=voletOffre();
+  else if(onglet==='fil')v.innerHTML=voletFil();
+  else if(onglet==='gens')v.innerHTML=voletGens();
   else if(onglet==='controles')v.innerHTML=voletControles();
-  else v.innerHTML=voletRelation();
+  else v.innerHTML=voletConvoi();
 }
-function voletFiche(){
-  const p=PE();
-  if(!p)return `<p class="vide">Rien à montrer.</p>`;
-  const sac=sacTexte(p);
-  const nat=REF.natures[(p.ico||{}).nature]||'#9C9484';
-  const ouv=acquises(p);
-  let h=`<div class="fiche"><div class="tete">`+
-    ((p.ico&&p.ico.glyphe)?`<div class="ico">${svgGlyphe(p.ico.glyphe,nat)}</div>`:'')+
-    `<div><p class="oeil">${ech([P.roles[p.role]?P.roles[p.role].nom:'',sac.lieu]
-      .filter(Boolean).join(' · ')||'—')}</p>`+
-    `<h3>${ech(appellation(p)||'Sans nom')}</h3></div></div>`+
-    `<p class="prem">${ech(boucher(p.premiere,sac))||'<em>…</em>'}</p>`;
-  (p.couches||[]).forEach((c,i)=>{
-    if(ouv.indexOf(i)>=0)
-      h+=`<div class="couche-lue"><h4>${ech(c.titre||'—')}</h4>`+
-        `<p>${ech(boucher(c.texte,sac))||'<em>…</em>'}</p></div>`;
-    else
-      h+=`<div class="scelle">${ech(c.titre||'Quelque chose d\'autre')} — `+
-        `il faudrait ${ech((c.gagne||[]).map(ditCondition).join(', ')||'on ne sait quoi')}.</div>`;
-  });
-  if(p.voix)h+=`<div class="voix">Sa voix : ${ech(p.voix)}</div>`;
+function voletOffre(){
+  const m=MI();
+  if(!m)return `<p class="vide">Rien à montrer.</p>`;
+  const sac=sacTexte(m);
+  const nat=REF.natures[(m.ico||{}).nature]||'#9C9484';
+  const rec=(m.reussite||{}).recompenses||[];
+  const dispo=conditionsVraies((m.offre||{}).si);
+  let h=`<div class="offre"><div class="tete">`+
+    ((m.ico&&m.ico.glyphe)?`<div class="ico">${svgGlyphe(m.ico.glyphe,nat)}</div>`:'')+
+    `<div><p class="oeil">${ech(m.oeil||'Un service')}</p>`+
+    `<h3>${ech(m.titre||'Sans titre')}</h3></div></div>`+
+    `<p class="recit">${ech(boucher((m.offre||{}).recit,sac))||'<em>…</em>'}</p>`+
+    `<dl class="lignes">`+
+    `<dt>De</dt><dd>${ech(sac.commanditaire)}</dd>`+
+    `<dt>À</dt><dd>${ech(sac.ici)}</dd>`+
+    ((m.jalons||[]).length?`<dt>Il faut</dt><dd>${(m.jalons||[]).map(j=>
+      ech(ditJalon(j))).join('<br>')}</dd>`:'')+
+    ((m.offre||{}).delai?`<dt>Délai</dt><dd>${fmt(m.offre.delai)} étapes`+
+      `${MONDE&&etapesTotales(m)?` (trajet : ${etapesTotales(m)})`:''}</dd>`:'')+
+    `</dl>`;
+  if(rec.length)h+=`<p class="prix">On promet <b>`+
+    rec.map(r=>ech(ditRecompense(r))).join('</b>, <b>')+`</b>.</p>`;
+  if((m.reussite||{}).texte)h+=`<div class="fin">`+
+    `${ech(boucher(m.reussite.texte,sac))}</div>`;
+  if((m.echec||{}).texte)h+=`<div class="fin mauvais">`+
+    `${ech(boucher(m.echec.texte,sac))}</div>`;
   h+=`</div>`;
-  h+=`<p class="aide" style="margin-top:9px">La <b>première description reste toujours `+
-    `lisible</b> : elle n'est jamais scellée. Réglez l'onglet <b>Où en est-on</b> pour voir `+
-    `la fiche à différents moments de la relation.</p>`;
+  if(!dispo)h+=`<div class="avert doux" style="margin-top:9px">Avec le convoi d'essai, `+
+    `elle <b>ne serait pas proposée</b> : `+
+    ((m.offre||{}).si||[]).filter(c=>!conditionsVraies([c])).map(c=>ech(ditCondition(c)))
+      .join(', ')+`.</div>`;
+  return h;
+}
+function voletFil(){
+  const m=MI();
+  if(!m)return `<p class="vide">Rien à suivre.</p>`;
+  const fil=filDe(m);
+  let h=`<p class="aide">Le chemin que la mission fait parcourir, dans l'ordre. Les étapes `+
+    `viennent du réseau de voies de votre <b>monde.json</b> — le plus court chemin, profil `+
+    `normal.</p><div class="fil" style="margin-top:11px">`;
+  fil.forEach((x,i)=>{
+    const der=i===fil.length-1;
+    const cls=x.genre==='depart'?'dep':(der?'fin':'');
+    h+=`<div class="etape"><div class="rail"><div class="pion ${cls}"></div>`+
+      (der?'':`<div class="trait"></div>`)+`</div><div class="corps2">`+
+      `<b>${x.genre==='depart'?ech(x.texte):ech(ditJalon(x.jalon))}</b>`+
+      (x.lieu?`<span>${ech(nomLieu(x.lieu))}`+
+        (contreeDe(x.lieu)?' · '+ech(nomContree(contreeDe(x.lieu))):'')+
+        `</span>`:`<span>sans lieu</span>`)+
+      /* on ne dit le coût que s'il y en a un : « +0 étape » n'apprend rien */
+      (x.genre!=='jalon'||!x.lieu?''
+        :x.cout===null||x.cout===undefined
+          ?`<div class="cout" style="color:var(--minium)">aucune voie connue</div>`
+          :x.cout?`<div class="cout">+${x.cout} étape${x.cout>1?'s':''}</div>`
+                 :`<div class="cout" style="opacity:.6">sur place</div>`)+
+      `</div></div>`;
+  });
+  h+=`</div>`;
+  const t=etapesTotales(m), d=(m.offre||{}).delai||0;
+  h+=`<div class="mesures" style="margin-top:10px">`+
+    `<span>Trajet total</span><b>${MONDE?t+' étapes':'monde absent'}</b>`+
+    (d?`<span>Délai accordé</span><b>${d} étapes</b>`:'')+
+    (d&&t?`<span>Marge</span><b>${d-t}</b>`:'')+`</div>`;
+  if(!MONDE)h+=`<p class="vide" style="margin-top:8px">Chargez un <b>monde.json</b> et `+
+    `l'atelier calculera les distances réelles.</p>`;
+  else if(d&&t&&d<t)h+=`<div class="avert" style="margin-top:8px">Le délai ne suffit pas : `+
+    `la mission est <b>impossible</b>.</div>`;
+  return h;
+}
+/* ── l'onglet Personnages : qui se trouve dans la zone, et à qui confier ── */
+function voletGens(){
+  const m=MI();
+  if(!GENS)return `<p class="vide">Chargez votre <b>personnages.json</b> pour voir qui `+
+    `peuple le monde.</p><p class="aide" style="margin-top:9px">Le lien est enregistré `+
+    `<b>dans la mission</b> : votre répertoire de personnages n'est jamais modifié. `+
+    `Écrivez vos gens tranquillement, revenez leur confier une mission plus tard.</p>`;
+  const zones=[['','Tout le monde']]
+    .concat(listeOu('contrees').map(c=>['c:'+c[0],c[1]]))
+    .concat(listeOu('lieux').map(l=>['l:'+l[0],'— '+l[1]]));
+  let dans=tousGens();
+  if(zone.indexOf('l:')===0)dans=dans.filter(p=>p.lieu===zone.slice(2));
+  else if(zone.indexOf('c:')===0)dans=dans.filter(p=>contreeDe(p.lieu)===zone.slice(2));
+  let h=`<div class="champ large"><label>La zone</label><select id="zone">`+
+    zones.map(([k,n])=>`<option value="${ech(k)}"${k===zone?' selected':''}>`+
+      `${ech(n)}</option>`).join('')+`</select></div>`;
+  if(m)h+=`<p class="aide">Cliquez <b>Confier</b> pour donner « `+
+    `${ech(m.titre||'cette mission')} » à quelqu'un.</p>`;
+  h+=`<div class="gens" style="margin-top:10px">`;
+  if(!dans.length)h+=`<p class="vide">Personne dans cette zone.</p>`;
+  dans.forEach(p=>{
+    const siennes=missionsDe(p.cle);
+    const sien=m&&m.commanditaire===p.cle;
+    const prem=String(p.premiere||'').replace(/\s+/g,' ');
+    h+=`<div class="carte${sien?' sien':''}"><div class="haut">`+
+      `<span class="jeton">${svgGlyphe((p.ico||{}).glyphe,
+        REF.natures[(p.ico||{}).nature]||'#9C9484')}</span>`+
+      `<span class="txt"><b>${ech(appellation(p))}</b>`+
+      `<span class="sous">${ech(nomLieu(p.lieu)||'sans lieu')} · `+
+      `<span class="${siennes.length?'':'aucune'}">`+
+      `${siennes.length?siennes.length+' mission'+(siennes.length>1?'s':''):'aucune mission'}`+
+      `</span></span></span></div>`+
+      (prem?`<div class="extrait">${ech(prem.slice(0,120))}`+
+        `${prem.length>120?'…':''}</div>`:'')+
+      (siennes.length?`<div class="sous" style="margin-top:5px">`+
+        siennes.map(x=>`<a href="#" data-sel="${R.missions.indexOf(x)}" `+
+          `style="color:var(--or)">${ech(x.titre||x.cle||'?')}</a>`).join(' · ')+`</div>`:'')+
+      (m?`<div class="rangee">`+
+        (sien?`<button class="outil petit" data-act="qui-oter">Détacher</button>`
+             :`<button class="outil petit fort" data-act="confier" `+
+              `data-q="${ech(p.cle)}">Confier</button>`)+
+        `</div>`:'')+
+      `</div>`;
+  });
+  h+=`</div>`;
+  const sans=tousGens().filter(p=>!missionsDe(p.cle).length).length;
+  if(sans)h+=`<p class="aide" style="margin-top:10px"><b>${sans}</b> personnage`+
+    `${sans>1?'s n\'ont':' n\'a'} encore aucune mission dans ce carnet. C'est normal : on `+
+    `écrit ses gens d'abord, on leur confie des missions quand on veut.</p>`;
   return h;
 }
 function voletControles(){
-  const p=PE();
-  if(!p)return `<p class="vide">Rien à contrôler.</p>`;
-  const l=controler(p,sel);
+  const m=MI();
+  if(!m)return `<p class="vide">Rien à contrôler.</p>`;
+  const l=controler(m,sel);
   const durs=l.filter(x=>x.dur), doux=l.filter(x=>!x.dur);
-  let h=`<h4 class="section">Ce personnage</h4>`;
-  h+=durs.length
-    ?durs.map(x=>`<div class="avert">${x.txt}</div>`).join('')
-    :`<div class="avert bien">Rien ne bloque : sa fiche est <b>jouable</b>.</div>`;
+  let h=`<h4 class="section">Cette mission</h4>`;
+  h+=durs.length?durs.map(x=>`<div class="avert">${x.txt}</div>`).join('')
+    :`<div class="avert bien">Rien ne bloque : elle est <b>jouable</b>.</div>`;
   if(doux.length)h+=`<h4 class="section">À voir, sans urgence</h4>`+
     doux.map(x=>`<div class="avert doux">${x.txt}</div>`).join('');
 
-  const mauvais=R.personnages.map((x,i)=>({x:x,i:i,n:controler(x,i).filter(y=>y.dur).length}))
-    .filter(o=>o.n);
-  h+=`<h4 class="section">Le répertoire</h4><div class="mesures">`+
-    `<span>Personnages</span><b>${R.personnages.length}</b>`+
-    `<span>Couches de lore</span><b>${R.personnages.reduce((s,x)=>s+(x.couches||[]).length,0)}</b>`+
+  const mauvais=R.missions.map((x,i)=>({x:x,i:i,n:controler(x,i).filter(y=>y.dur).length}))
+    .filter(z=>z.n);
+  h+=`<h4 class="section">Le carnet</h4><div class="mesures">`+
+    `<span>Missions</span><b>${R.missions.length}</b>`+
+    `<span>Jalons en tout</span><b>${R.missions.reduce((s,x)=>s+(x.jalons||[]).length,0)}</b>`+
+    `<span>Sans commanditaire</span><b>${R.missions.filter(x=>!x.commanditaire).length}</b>`+
     `<span>À corriger</span><b>${mauvais.length}</b></div>`;
   if(mauvais.length)h+=`<div class="avert" style="margin-top:7px">`+
-    mauvais.map(o=>`<a href="#" data-sel="${o.i}" style="color:var(--or)">`+
-      `${ech(o.x.nom||o.x.cle||'?')}</a>`).join(' · ')+`</div>`;
+    mauvais.map(z=>`<a href="#" data-sel="${z.i}" style="color:var(--or)">`+
+      `${ech(z.x.titre||z.x.cle||'?')}</a>`).join(' · ')+`</div>`;
 
-  h+=`<h4 class="section">La couverture</h4>`;
-  if(!MONDE)h+=`<p class="vide">Chargez un <b>monde.json</b> pour savoir quels lieux ont `+
-    `quelqu'un à qui parler.</p>`;
+  /* les objets promis, et si le coffre est d'accord */
+  const promis=[];
+  R.missions.forEach(x=>((x.reussite||{}).recompenses||[]).forEach(r=>{
+    if(r.donne==='objet'&&r.objet)promis.push([r.objet,x.cle]);}));
+  h+=`<h4 class="section">Les objets promis</h4>`;
+  if(!promis.length)h+=`<p class="vide">Aucune mission ne donne d'objet.</p>`;
+  else if(!OBJETS)h+=`<p class="vide">Chargez votre <b>objets.json</b> pour vérifier que `+
+    `les deux fichiers se citent bien l'un l'autre.</p><div class="avert doux">`+
+    promis.map(([o])=>ech(o)).join(' · ')+`</div>`;
+  else h+=`<table class="tableau"><tr><th>Objet</th><th>Le coffre est d'accord</th></tr>`+
+    promis.map(([o,mc])=>{
+      const ob=objetPar(o), pv=(ob||{}).provenance||{};
+      const ok=ob&&pv.genre==='mission'&&pv.mission===mc;
+      return `<tr><td>${ech((ob||{}).nom||o)}</td><td style="color:${ok?
+        'var(--vert)':'var(--minium)'}">${ok?'oui':(ob?'non':'inconnu')}</td></tr>`;
+    }).join('')+`</table>`;
+
+  /* qui donne quoi */
+  h+=`<h4 class="section">Qui donne quoi</h4>`;
+  if(!GENS)h+=`<p class="vide">Chargez un <b>personnages.json</b>.</p>`;
   else{
-    const lieux=MONDE.lieux||[];
-    const compte={};
-    R.personnages.forEach(x=>{if(x.lieu)compte[x.lieu]=(compte[x.lieu]||0)+1;});
-    const nus=lieux.filter(L=>!compte[L.cle]);
-    h+=`<div class="mesures"><span>Lieux habités</span>`+
-      `<b>${lieux.length-nus.length} / ${lieux.length}</b></div>`;
-    if(nus.length)h+=`<div class="avert doux" style="margin-top:7px">Personne à : `+
-      nus.slice(0,14).map(L=>ech(L.nom)).join(', ')+
-      (nus.length>14?`, et ${nus.length-14} autres`:'')+`.</div>`;
-    const forts=Object.entries(compte).sort((a,b)=>b[1]-a[1]).slice(0,6);
-    if(forts.length)h+=`<table class="tableau" style="margin-top:8px">`+
-      `<tr><th>Lieu</th><th class="n">personnages</th></tr>`+
-      forts.map(([k,n])=>{const L=lieux.find(x=>x.cle===k)||{};
-        return `<tr><td>${ech(L.nom||k)}</td><td class="n">${n}</td></tr>`;}).join('')+
-      `</table>`;
+    const avec=tousGens().filter(p=>missionsDe(p.cle).length);
+    h+=`<div class="mesures"><span>Personnages qui donnent</span>`+
+      `<b>${avec.length} / ${tousGens().length}</b></div>`;
+    if(avec.length)h+=`<table class="tableau" style="margin-top:7px">`+
+      avec.map(p=>`<tr><td>${ech(appellation(p))}</td>`+
+        `<td class="n">${missionsDe(p.cle).length}</td></tr>`).join('')+`</table>`;
   }
   return h;
 }
-function voletRelation(){
-  const p=PE();
-  const l=[['rencontres','Fois qu\'on l\'a croisé',0,30],
-    ['missionsPour','Missions faites pour lui',0,12],
+function voletConvoi(){
+  const l=[['etapes','Étapes parcourues',0,40],['or','Or en bourse',0,20000],
     ['reputation','Réputation',0,100],['karma','Karma',0,100],
-    ['or','Or en bourse',0,20000],['etapes','Étapes parcourues',0,40],
-    ['lieues','Lieues au compteur',0,900]];
-  let h=`<p class="aide">Où en est le joueur avec ce personnage. La <b>fiche</b> se relit `+
-    `contre ces valeurs : c'est ainsi qu'on voit ce qui est déjà mérité et ce qui reste `+
-    `scellé.</p><div style="display:flex;flex-direction:column;gap:7px;margin-top:10px">`+
+    ['gardes','Gardes',0,6],['lieues','Lieues au compteur',0,900],
+    ['place','Place libre (kg)',0,3000],['charge','Cargaison (kg)',0,3000],
+    ['valeurSoute','Valeur de la cargaison',0,40000],['etatConvoi','Santé du convoi',0,100],
+    ['negoce','Négoce',0,100],['vigilance','Vigilance',0,100],['agilite','Agilité',0,100]];
+  return `<p class="aide">Le convoi contre lequel les conditions d'apparition sont `+
+    `évaluées. C'est ce qui permet de voir si une mission serait proposée au début ou `+
+    `seulement à la fin d'une partie.</p>`+
+    `<div style="display:flex;flex-direction:column;gap:7px;margin-top:10px">`+
     l.map(([k,n,a,b])=>`<div class="champ"><label>${ech(n)}</label>`+
-      `<input type="number" min="${a}" max="${b}" data-ou="${k}" value="${OU[k]}"></div>`).join('')+
-    `</div>`;
-  if(p){
-    const ouv=acquises(p), tot=(p.couches||[]).length;
-    h+=`<div class="mesures" style="margin-top:12px">`+
-      `<span>Couches ouvertes</span><b>${ouv.length} / ${tot}</b>`+
-      `<span>Première description</span><b>toujours lisible</b></div>`;
-  }
-  h+=`<button class="outil" style="margin-top:10px" data-act="ou-defaut">`+
-    `Revenir au premier contact</button>`;
-  return h;
+      `<input type="number" min="${a}" max="${b}" data-essai="${k}" value="${ESSAI[k]}">`+
+      `</div>`).join('')+`</div>`+
+    `<button class="outil" style="margin-top:10px" data-act="essai-defaut">`+
+    `Remettre au milieu</button>`;
 }
 
 /* ═══════════════ l'état du bas ═══════════════ */
 function rendreEtat(){
-  const durs=R.personnages.reduce((s,p,i)=>s+controler(p,i).filter(x=>x.dur).length,0);
-  const couches=R.personnages.reduce((s,p)=>s+(p.couches||[]).length,0);
+  const durs=R.missions.reduce((s,m,i)=>s+controler(m,i).filter(x=>x.dur).length,0);
   $('#etat').innerHTML=
-    `<span>Répertoire : <b>${R.personnages.length}</b> personnage`+
-      `${R.personnages.length>1?'s':''}</span>`+
-    `<span>Couches de lore : <b>${couches}</b></span>`+
+    `<span>Carnet : <b>${R.missions.length}</b> mission${R.missions.length>1?'s':''}</span>`+
+    `<span>Jalons : <b>${R.missions.reduce((s,m)=>s+(m.jalons||[]).length,0)}</b></span>`+
     `<span>Monde : <b>${MONDE?(MONDE.lieux||[]).length+' lieux':'aucun'}</b></span>`+
+    `<span>Personnages : <b>${GENS?tousGens().length:'aucun'}</b></span>`+
+    `<span>Objets : <b>${OBJETS?tousObjets().length:'aucun'}</b></span>`+
     `<span class="${durs?'rouge':''}">À corriger : <b>${durs}</b></span>`+
     `<span style="margin-left:auto">Sauvegardé dans le navigateur — <b>exportez</b> `+
       `régulièrement</span>`;
@@ -860,75 +1225,86 @@ function tout(){rendreListe();rendreFeuille();rendreVolet();rendreEtat();sauver(
 function maj(){rendreListe();rendreVolet();rendreEtat();sauver();}
 
 /* ═══════════════ actions ═══════════════ */
-function neuf(){
-  /* pas d'accord par défaut : le choisir est une décision d'auteur, pas une
-     valeur qu'on devine. Tant qu'il manque, les textes s'accordent au masculin
-     et le contrôle le signale. */
-  return {cle:'',nom:'',titre:'',role:'',lieu:'',
-    ico:{glyphe:'ermite',nature:'rencontre'},premiere:'',couches:[]};
+function neuve(){
+  return {cle:'',titre:'',oeil:'Un service',
+    ico:{glyphe:'sceau',nature:'rencontre'},
+    offre:{recit:'',delai:14,si:[]},jalons:[],
+    reussite:{texte:'',recompenses:[]},echec:{texte:'',recompenses:[]}};
 }
-function ajouter(p){
-  R.personnages.push(p||neuf());
-  sel=R.personnages.length-1;tout();
-}
+function ajouter(m){R.missions.push(m||neuve());sel=R.missions.length-1;tout();}
 const EXEMPLE={
-  cle:'orlanne',nom:'Orlanne',titre:'Dame',accord:'f',role:'echevin',lieu:'',
-  ico:{glyphe:'sceau',nature:'rencontre'},
-  premiere:'Elle tient le registre des péages depuis onze ans, et connaît le nom de '+
-    'chaque convoi qui passe. On la trouve sous l\'auvent de la halle, un encrier '+
-    'suspendu à la ceinture.',
-  voix:'sèche ; elle ne répète jamais',
-  couches:[
-    {cle:'le-registre',titre:'Le registre',gagne:[{quoi:'rencontres',min:3}],
-     texte:'Au troisième passage, {il} tourne le registre vers vous. Certaines lignes ont '+
-       'été grattées, et regrattées. « Ce ne sont pas mes ratures. »'},
-    {cle:'le-frere',titre:'Le frère',
-     gagne:[{quoi:'couchesConnues',min:1},{quoi:'missionsPour',min:2}],
-     texte:'Elle avait un frère convoyeur. Il est parti vers l\'est avec douze chariots et '+
-       'un sauf-conduit qu\'elle avait signé elle-même. Onze sont revenus.'}
-  ]
+  cle:'le-registre-rature',titre:'Le registre raturé',oeil:'Un service',
+  commanditaire:'orlanne',
+  ico:{glyphe:'sceau',nature:'tracas'},
+  offre:{recit:'{commanditaire} vous retient au moment où vous quittez la halle. Onze '+
+    'lignes de son registre ont été grattées, et {il} veut savoir par qui. Le clerc qui '+
+    'tenait la plume cette année-là s\'est retiré à {la}.',
+    delai:14,si:[{quoi:'reputation',min:35}]},
+  jalons:[
+    {faire:'atteindre',lieu:'',texte:'Le bourg est plus petit que ce qu\'on vous avait dit.'},
+    {faire:'rencontrer',personnage:'',texte:'Le vieux clerc ne nie rien. Il demande '+
+      'seulement qu\'on ne lui rapporte pas le registre.'}
+  ],
+  reussite:{texte:'{commanditaire} écoute jusqu\'au bout sans rien noter. Puis {il} vous '+
+    'tend le registre : « Gardez-le. Moi je sais, maintenant. »',
+    recompenses:[{donne:'or',de:420},{donne:'reputation',de:9}]},
+  echec:{texte:'Quand vous revenez, le registre n\'est plus sur le pupitre, et personne '+
+    'ne se souvient qu\'il ait existé.',recompenses:[{donne:'reputation',de:-6}]}
 };
 
 document.addEventListener('input',ev=>{
   const t=ev.target;
-  if(t.dataset.ou!==undefined){
-    OU[t.dataset.ou]=Number(t.value)||0;rendreVolet();sauver();return;
+  if(t.dataset.essai!==undefined){
+    ESSAI[t.dataset.essai]=t.type==='checkbox'?t.checked:(Number(t.value)||0);
+    rendreVolet();sauver();return;
   }
   if(t.id==='filtre'){filtre=t.value;rendreListe();}
 });
 ecouterSaisie((t,ch)=>{
-  if(ch==='nom'||ch==='titre'){
-    const b=t.closest('.bloc');
-    if(b)rendreListe();
-  }
-  if(/\.titre$/.test(ch)){
-    const b=t.closest('.couche');
-    if(b)$('.titre',b).textContent=t.value||'sans titre';
-  }
+  if(ch==='titre')rendreListe();
   maj();
 });
 document.addEventListener('change',ev=>{
-  const c=ev.target.dataset.ch;
-  /* changer le rôle, l'accord ou le lieu change ce que la feuille explique */
-  if(c==='role'||c==='accord'||c==='lieu'||c==='ico.nature'||/\.quoi$/.test(c||''))tout();
+  const t=ev.target;
+  if(t.id==='zone'){zone=t.value;rendreVolet();sauver();return;}
+  if(t.dataset.act==='jalon-ajout'){
+    if(!t.value)return;
+    const d=M.jalons[t.value], j={faire:t.value};
+    Object.entries(d.parametres||{}).forEach(([k,dd])=>{
+      if(dd.defaut!==undefined)j[k]=dd.defaut;});
+    const l=lire('jalons')||[];l.push(j);ecrire('jalons',l);tout();return;
+  }
+  if(t.dataset.act==='rec-ajout'){
+    if(!t.value)return;
+    const d=M.recompenses[t.value], r={donne:t.value};
+    Object.entries(d.parametres||{}).forEach(([k,dd])=>{
+      if(dd.defaut!==undefined)r[k]=dd.defaut;});
+    const l=lire(t.dataset.ch)||[];l.push(r);ecrire(t.dataset.ch,l);tout();return;
+  }
+  const c=t.dataset.ch;
+  if(c==='commanditaire'||c==='lieu'||c==='ico.nature'||/\.quoi$/.test(c||'')||
+     /\.personnage$/.test(c||''))tout();
 });
 document.addEventListener('click',ev=>{
   const b=ev.target.closest('[data-act],[data-sel]');
   if(!b)return;
   if(b.dataset.sel!==undefined){ev.preventDefault();sel=Number(b.dataset.sel);tout();return;}
-  const a=b.dataset.act, p=PE();
-  if(a==='cle-auto'){ecrire('cle',slug(lire('nom')));tout();}
+  const a=b.dataset.act, m=MI();
+  if(a==='cle-auto'){ecrire('cle',slug(lire('titre')));tout();}
   else if(a==='glyphe'){ecrire('ico.glyphe',b.dataset.g);tout();}
-  else if(a==='couche-ajout'){p.couches=p.couches||[];
-    p.couches.push({titre:'',gagne:[{quoi:'rencontres',min:3}],texte:''});tout();}
-  else if(a==='couche-oter'){p.couches.splice(Number(b.dataset.i),1);tout();}
-  else if(a==='couche-haut'){bouger(p.couches,Number(b.dataset.i),-1);tout();}
-  else if(a==='couche-bas'){bouger(p.couches,Number(b.dataset.i),1);tout();}
+  /* confier : le lien est écrit dans la mission, jamais chez le personnage */
+  else if(a==='confier'){if(m){m.commanditaire=b.dataset.q;tout();}}
+  else if(a==='qui-oter'){if(m){delete m.commanditaire;tout();}}
+  else if(a==='jalon-oter'){m.jalons.splice(Number(b.dataset.i),1);tout();}
+  else if(a==='jalon-haut'){bouger(m.jalons,Number(b.dataset.i),-1);tout();}
+  else if(a==='jalon-bas'){bouger(m.jalons,Number(b.dataset.i),1);tout();}
+  else if(a==='rec-oter'){const l=lire(b.dataset.ch);l.splice(Number(b.dataset.i),1);tout();}
   else if(a==='cond-ajout'){const l=lire(b.dataset.ch)||[];
-    l.push({quoi:'rencontres',min:1});ecrire(b.dataset.ch,l);tout();}
+    l.push({quoi:'etapes',min:1});ecrire(b.dataset.ch,l);tout();}
   else if(a==='cond-oter'){const l=lire(b.dataset.ch);l.splice(Number(b.dataset.i),1);tout();}
-  else if(a==='ou-defaut'){OU={rencontres:1,missionsPour:0,or:900,reputation:52,karma:50,
-    etapes:6,lieues:120};tout();}
+  else if(a==='essai-defaut'){ESSAI={etapes:6,or:900,reputation:52,karma:50,gardes:2,
+    lieues:120,place:400,charge:620,valeurSoute:1400,etatConvoi:78,vigilance:58,
+    agilite:62,negoce:60,puissance:1,troupe:3,chien:false,stock:150};tout();}
 });
 $$('#onglets button').forEach(b=>b.addEventListener('click',()=>{
   onglet=b.dataset.onglet;
@@ -939,44 +1315,56 @@ $$('#onglets button').forEach(b=>b.addEventListener('click',()=>{
 /* ── la barre ── */
 $('#b-nouveau').onclick=()=>ajouter();
 $('#b-dupliquer').onclick=()=>{
-  if(!PE())return;
-  const c=JSON.parse(JSON.stringify(PE()));
-  c.cle=(c.cle||'personnage')+'-bis';c.nom=(c.nom||'')+' (copie)';
+  if(!MI())return;
+  const c=JSON.parse(JSON.stringify(MI()));
+  c.cle=(c.cle||'mission')+'-bis';c.titre=(c.titre||'')+' (copie)';
   ajouter(c);
 };
 $('#b-supprimer').onclick=()=>{
-  if(!PE())return;
-  if(!confirm('Supprimer « '+(PE().nom||'sans nom')+' » ?'))return;
-  R.personnages.splice(sel,1);sel=Math.max(0,sel-1);tout();
+  if(!MI())return;
+  if(!confirm('Supprimer « '+(MI().titre||'sans titre')+' » ?'))return;
+  R.missions.splice(sel,1);sel=Math.max(0,sel-1);tout();
 };
 $('#b-exemple').onclick=()=>{
-  if(R.personnages.some(p=>p.cle==='orlanne')){alert('L\'exemple est déjà là.');return;}
+  if(R.missions.some(m=>m.cle==='le-registre-rature')){alert('L\'exemple est déjà là.');return;}
   const e=JSON.parse(JSON.stringify(EXEMPLE));
+  /* on remplit ce qu'on peut avec ce qui est chargé */
   const l=listeOu('lieux');
-  if(l.length)e.lieu=l[0][0];
+  if(l.length>1){e.jalons[0].lieu=l[1][0];}
+  if(!gensPar('orlanne'))delete e.commanditaire;
   ajouter(e);
 };
 let attente=null;
 const ouvrirFichier=accueillirFichiers(d=>avaler(d,attente));
-$('#b-ouvrir').onclick=()=>{attente='repertoire';ouvrirFichier();};
+$('#b-ouvrir').onclick=()=>{attente='carnet';ouvrirFichier();};
 $('#b-monde').onclick=()=>{attente='monde';ouvrirFichier();};
+$('#b-gens').onclick=()=>{attente='gens';ouvrirFichier();};
+$('#b-objets').onclick=()=>{attente='objets';ouvrirFichier();};
 function avaler(d,quoi){
   attente=null;
-  if(quoi==='monde'||(quoi!=='repertoire'&&estMonde(d))){mondeEst(d);tout();return;}
-  const l=Array.isArray(d)?d:(d.personnages||null);
-  if(!l){alert('Ni un répertoire de personnages, ni un monde.');return;}
-  if(R.personnages.length&&!confirm('Remplacer le répertoire courant ('+
-    R.personnages.length+' personnages) ?'))return;
-  R={format:d.format||'caravane.personnages.v1',personnages:l};
+  if(quoi==='monde'||(!quoi&&estMonde(d))){mondeEst(d);tout();return;}
+  if(quoi==='gens'||(!quoi&&d&&d.personnages)){
+    if(!d||!d.personnages){alert('Ce fichier n\'est pas un répertoire de personnages.');return;}
+    GENS=d;tout();return;
+  }
+  if(quoi==='objets'||(!quoi&&d&&d.objets)){
+    if(!d||!d.objets){alert('Ce fichier n\'est pas un coffre d\'objets.');return;}
+    OBJETS=d;tout();return;
+  }
+  const l=Array.isArray(d)?d:(d.missions||null);
+  if(!l){alert('Ni un carnet de missions, ni un monde, ni un répertoire, ni un coffre.');return;}
+  if(R.missions.length&&!confirm('Remplacer le carnet courant ('+R.missions.length+
+    ' missions) ?'))return;
+  R={format:d.format||'caravane.missions.v1',missions:l};
   sel=0;tout();
 }
 $('#b-exporter').onclick=()=>
-  telecharger('personnages.json',nettoyer(JSON.parse(JSON.stringify(R))));
+  telecharger('missions.json',nettoyer(JSON.parse(JSON.stringify(R))));
 
 addEventListener('keydown',e=>{
   if(/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName))return;
   if(e.key==='n'&&!e.ctrlKey&&!e.metaKey){e.preventDefault();ajouter();}
-  if(e.key==='ArrowDown'&&sel<R.personnages.length-1){e.preventDefault();sel++;tout();}
+  if(e.key==='ArrowDown'&&sel<R.missions.length-1){e.preventDefault();sel++;tout();}
   if(e.key==='ArrowUp'&&sel>0){e.preventDefault();sel--;tout();}
 });
 

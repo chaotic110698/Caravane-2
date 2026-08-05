@@ -1,0 +1,84 @@
+{
+  "format": "caravane.vocabulaire-missions.v1",
+  "apropos": "Le catalogue des missions écrites — celles qu'on compose à la main, une par une, par opposition aux offres que le moteur tire au sort à chaque marché. Une mission est une chaîne de jalons : reçue de quelqu'un, elle avance ailleurs et se conclut. Comme les autres catalogues, celui-ci est ouvert.",
+
+  "principe": "Le lien entre une mission et son commanditaire est stocké dans la mission, jamais dans le personnage. On écrit donc ses personnages tranquillement, sans leur attribuer quoi que ce soit, et on revient plus tard leur confier une mission sans jamais rouvrir personnages.json.",
+
+  "jalons": {
+    "atteindre": {
+      "nom": "Arriver quelque part",
+      "explique": "Le jalon tombe quand le convoi entre dans le lieu. C'est le jalon le plus simple, et souvent le premier : il faut bien aller là-bas.",
+      "parametres": {
+        "lieu": { "nom": "Où", "type": "lieu", "requis": true }
+      }
+    },
+    "livrer": {
+      "nom": "Livrer de la marchandise",
+      "explique": "Il faut arriver quelque part avec les kilos demandés dans les chariots. La marchandise part au moment de la livraison — elle ne se revend pas au marché du coin.",
+      "parametres": {
+        "bien": { "nom": "Quelle marchandise", "type": "bien", "requis": true },
+        "kg": { "nom": "Combien de kilos", "type": "nombre", "requis": true, "defaut": 20 },
+        "lieu": { "nom": "Où", "type": "lieu", "requis": true }
+      }
+    },
+    "rencontrer": {
+      "nom": "Parler à quelqu'un",
+      "explique": "Il faut trouver la personne là où elle se tient et lui parler. Le jalon compte une rencontre de plus à son compteur — celui qui fait mériter son lore.",
+      "parametres": {
+        "personnage": { "nom": "Qui", "type": "personnage", "requis": true }
+      }
+    }
+  },
+
+  "recompenses": {
+    "or": {
+      "nom": "De l'or",
+      "explique": "La prime. Rien n'oblige une mission écrite à en donner, mais c'est ce que le joueur attend d'abord.",
+      "parametres": {
+        "de": { "nom": "Combien", "type": "nombre", "requis": true, "defaut": 300,
+                "aide": "Les offres tirées au sort donnent 150 à 900 po selon l'avancement. Une mission écrite peut se permettre davantage : elle ne revient pas." }
+      }
+    },
+    "reputation": {
+      "nom": "De la réputation",
+      "explique": "Ce que le monde marchand pense de vous. Entre 0 et 100.",
+      "parametres": {
+        "de": { "nom": "Combien", "type": "nombre", "requis": true, "defaut": 8,
+                "aide": "Négatif pour une perte. Les contrats ordinaires donnent 4 à 6." }
+      }
+    },
+    "karma": {
+      "nom": "Du karma",
+      "explique": "La chance du convoi, donc tous les jets de dé. La récompense discrète de ce qui n'était pas obligé.",
+      "parametres": {
+        "de": { "nom": "Combien", "type": "nombre", "requis": true, "defaut": 4 }
+      }
+    },
+    "objet": {
+      "nom": "Un objet unique",
+      "explique": "L'objet passe dans les chariots. C'est la façon la plus sûre de faire mériter un objet — il a fallu aller quelque part et le rapporter. L'objet doit déclarer de son côté qu'il vient de cette mission.",
+      "parametres": {
+        "objet": { "nom": "Lequel", "type": "objet", "requis": true,
+                   "aide": "Chargez votre objets.json pour choisir. L'atelier vérifie que l'objet pointe bien vers cette mission." }
+      }
+    },
+    "ouvreCouche": {
+      "nom": "Une couche de lore",
+      "explique": "Accomplir la mission ouvre une couche chez un personnage. C'est ce qui rend un service payant autrement qu'en pièces : on apprend quelque chose.",
+      "parametres": {
+        "personnage": { "nom": "Chez qui", "type": "personnage", "requis": true },
+        "couche": { "nom": "Laquelle", "type": "couche", "requis": true }
+      }
+    }
+  },
+
+  "trous": {
+    "commanditaire": { "explique": "Le nom de celui qui donne la mission, titre compris.", "exemple": "Dame Orlanne" },
+    "il": { "explique": "Son pronom, accordé.", "exemple": "elle" },
+    "ici": { "explique": "Le lieu où la mission est proposée.", "exemple": "Aurelium" },
+    "la": { "explique": "Le lieu du dernier jalon — là où ça se termine.", "exemple": "Bas-Ferrant" },
+    "delai": { "explique": "Le nombre d'étapes accordé.", "exemple": "14" },
+    "prime": { "explique": "L'or promis, s'il y en a.", "exemple": "400" },
+    "objet": { "explique": "Le nom de l'objet promis, s'il y en a un.", "exemple": "Le registre des péages" }
+  }
+}

@@ -25,6 +25,7 @@ const litJson = (...p) => JSON.parse(lit(...p));
 const V = litJson('data', 'vocabulaire-evenements.json');
 const VP = litJson('data', 'vocabulaire-personnages.json');
 const VO = litJson('data', 'vocabulaire-objets.json');
+const VM = litJson('data', 'vocabulaire-missions.json');
 
 /* ════════════════════ 1. le tutoriel ════════════════════ */
 
@@ -272,6 +273,78 @@ note('## L\'onglet « Ce que ça pèse »', '',
 writeFileSync(join(ICI, 'TUTORIEL-OBJETS.md'),
   s.join('\n').replace(/\n{3,}/g, '\n\n') + '\n', 'utf8');
 
+/* ════════════════════ 1 quater. le tutoriel des missions ════════════════════ */
+
+const r = [];
+const dis = (...t) => r.push(...t);
+
+dis('# Écrire une mission — mode d\'emploi', '',
+  '> Cette page est **engendrée** depuis [`data/vocabulaire-missions.json`](../data/vocabulaire-missions.json).',
+  '> Ne la corrigez pas à la main : corrigez le catalogue et relancez',
+  '> `node outils/construire.mjs`.', '',
+  'Le jeu propose déjà des contrats à chaque marché : il les tire au sort à partir de la',
+  'carte des raretés, et ils ne se répètent jamais tout à fait. **Ces missions-ci sont',
+  'autre chose** — elles s\'écrivent une par une, elles ne surviennent qu\'une fois, et',
+  'elles sont données par quelqu\'un qui existe.', '',
+  'Elles s\'écrivent avec [`atelier-missions.html`](atelier-missions.html), et cohabitent',
+  'avec les offres tirées au sort sans les remplacer.', '');
+
+dis('## Le lien avec le personnage vit dans la mission', '',
+  VM.principe, '',
+  'C\'est le point qui compte à l\'usage. L\'onglet **Personnages** de l\'atelier montre qui',
+  'se tient dans la zone que vous choisissez — tout le monde, une contrée, ou un lieu — avec',
+  'pour chacun le début de sa description et le nombre de missions qu\'il donne déjà. Un',
+  'bouton **Confier** attache la mission courante à cette personne.', '',
+  'La liste indique aussi qui n\'a encore **aucune** mission. Ce n\'est pas un défaut à',
+  'corriger : c\'est la façon normale de travailler.', '');
+
+dis('## Les jalons', '',
+  `${Object.keys(VM.jalons).length} genres de jalon, dans l'ordre où vous les rangez.`, '');
+Object.entries(VM.jalons).forEach(([k, d]) => {
+  dis(`### ${d.nom}`, '', d.explique, '');
+  Object.entries(d.parametres || {}).forEach(([p, dd]) =>
+    dis(`- **${dd.nom}**${dd.requis ? ' *(obligatoire)*' : ''}${dd.aide ? ' — ' + dd.aide : ''}`));
+  dis('');
+});
+dis('L\'onglet **Le fil** déroule le chemin que la mission fait parcourir, et calcule ce',
+  'qu\'il coûte en étapes — le plus court chemin sur le réseau de voies de votre',
+  '`monde.json`. Si le délai que vous accordez ne suffit pas, l\'atelier refuse la mission :',
+  'elle serait impossible à tenir.', '');
+
+dis('## Ce qu\'elle rapporte', '',
+  `${Object.keys(VM.recompenses).length} récompenses, empilables, à la réussite comme à l'échec`,
+  '(avec des montants négatifs, pour l\'échec).', '');
+Object.entries(VM.recompenses).forEach(([k, d]) => {
+  dis(`### ${d.nom}`, '', d.explique, '');
+  Object.entries(d.parametres || {}).forEach(([p, dd]) =>
+    dis(`- **${dd.nom}**${dd.requis ? ' *(obligatoire)*' : ''}${dd.aide ? ' — ' + dd.aide : ''}`));
+  dis('');
+});
+dis('> **Un objet unique** doit être d\'accord des deux côtés : la mission dit qu\'elle le',
+  '> donne, et l\'objet dit qu\'il vient de cette mission. Chargez votre `objets.json` et',
+  '> l\'atelier vérifie les deux sens, clé par clé.', '');
+
+dis('## Les trous dans les textes', '',
+  '| trou | ce que ça donne | exemple |', '|---|---|---|');
+Object.entries(VM.trous).forEach(([k, d]) =>
+  dis(`| \`{${k}}\` | ${d.explique} | ${d.exemple || ''} |`));
+dis('', '`{il}` s\'accorde sur l\'**accord** du commanditaire, celui que vous avez choisi dans',
+  'l\'atelier de personnages. Vous écrivez le texte une fois.', '');
+
+dis('## Ce que l\'atelier vérifie', '',
+  '- une clé unique, un titre, un texte d\'offre, un texte de réussite, au moins un jalon ;',
+  '- les lieux, les personnages et les objets cités existent dans les fichiers chargés ;',
+  '- le délai suffit pour le trajet — et vous prévient quand la marge tient à une étape ;',
+  '- aucun jalon n\'est posé dans un lieu qu\'aucune voie ne relie au reste du trajet ;',
+  '- un personnage à rencontrer a bien un lieu où le trouver ;',
+  '- un objet promis pointe bien vers cette mission, et réciproquement ;',
+  '- les trous des textes correspondent à quelque chose.', '',
+  'Une mission **sans commanditaire** n\'est pas une faute : elle est simplement en attente.',
+  'L\'atelier le signale en or, pas en rouge.', '');
+
+writeFileSync(join(ICI, 'TUTORIEL-MISSIONS.md'),
+  r.join('\n').replace(/\n{3,}/g, '\n\n') + '\n', 'utf8');
+
 /* ════════════════════ 2. les exemples ════════════════════
    Découpés dans la spécification, pour qu'un exemple corrigé là-bas le soit dans
    l'outil sans qu'on ait à y penser. */
@@ -308,6 +381,7 @@ const reference = {
   vocabulaire: V,
   vocabulairePersonnages: VP,
   vocabulaireObjets: VO,
+  vocabulaireMissions: VM,
   /* les chiffres bruts des armes : l'atelier d'objets en a besoin pour situer
      une arme de légende parmi celles qui existent déjà */
   armesChiffres: Object.fromEntries(Object.entries(armes.armes).map(
@@ -331,7 +405,7 @@ const reference = {
 
 const commun = lit('outils', 'commun.js');
 const ATELIERS = ['atelier-evenements.html', 'atelier-personnages.html',
-                  'atelier-objets.html'];
+                  'atelier-objets.html', 'atelier-missions.html'];
 
 const injecte = (html, id, contenu, quoi) => {
   const balise = new RegExp(`(<script id="${id}"[^>]*>)[\\s\\S]*?(</script>)`);
@@ -358,6 +432,7 @@ console.log(
   'TUTORIEL-EVENEMENTS.md   %d effets · %d interrogations · %d formes · %d moments · %d exemples\n' +
   'TUTORIEL-PERSONNAGES.md  %d rôles · %d interrogations de relation · %d trous\n' +
   'TUTORIEL-OBJETS.md       %d genres · %d pouvoirs · %d provenances\n' +
+  'TUTORIEL-MISSIONS.md     %d jalons · %d récompenses · %d trous\n' +
   'référence                %d biens · %d armes · %d métiers · %d dessins · %d teintes\n' +
   'injecté dans             %s\n' +
   'poids embarqué           %s de catalogue, %s de machinerie',
@@ -365,6 +440,7 @@ console.log(
   exemples.length,
   compte(VP.roles), compte(VP.interrogations), compte(VP.trous),
   compte(VO.genres), compte(VO.pouvoirs), compte(VO.provenances),
+  compte(VM.jalons), compte(VM.recompenses), compte(VM.trous),
   compte(reference.biens), compte(reference.armes), compte(reference.metiers),
   compte(reference.glyphes), compte(reference.natures),
   poses.join(', ') || '(aucun atelier trouvé)',

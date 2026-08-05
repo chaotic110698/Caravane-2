@@ -6,13 +6,15 @@
 | [`atelier-evenements.html`](atelier-evenements.html) | écrire les événements : la situation, les choix, ce qu'ils font |
 | [`atelier-personnages.html`](atelier-personnages.html) | écrire les gens : qui ils sont, et ce qu'on apprend d'eux à force |
 | [`atelier-objets.html`](atelier-objets.html) | écrire les objets uniques : ce qu'ils font, d'où ils viennent, ce qu'ils cachent |
+| [`atelier-missions.html`](atelier-missions.html) | écrire les missions : qui les donne, ce qu'il faut faire, ce qu'elles rapportent |
 | [`TUTORIEL-EVENEMENTS.md`](TUTORIEL-EVENEMENTS.md) | ce que fait chaque effet, en français — engendré, jamais écrit à la main |
 | [`TUTORIEL-PERSONNAGES.md`](TUTORIEL-PERSONNAGES.md) | les rôles, ce qui fait mériter une couche de lore — engendré aussi |
 | [`TUTORIEL-OBJETS.md`](TUTORIEL-OBJETS.md) | les genres, les pouvoirs, les provenances — engendré aussi |
+| [`TUTORIEL-MISSIONS.md`](TUTORIEL-MISSIONS.md) | les jalons, les récompenses, le lien avec les gens — engendré aussi |
 | `commun.js` | la machinerie partagée, recopiée dans chaque atelier |
 | `construire.mjs` | refabrique les tutoriels, les catalogues et la machinerie embarqués |
 
-Les quatre ateliers s'ouvrent **d'un double-clic**. Aucune installation, aucun compte,
+Les cinq ateliers s'ouvrent **d'un double-clic**. Aucune installation, aucun compte,
 aucune dépendance, et **rien ne sort de votre machine** : tout reste dans le navigateur
 jusqu'à ce que vous exportiez.
 
@@ -519,3 +521,118 @@ dessous sans jamais rien recouvrir.
 Le moteur ne connaît que les armes mythiques. Il faudra un coffre d'objets uniques avec
 leur état (pas encore dans le monde, ici, dans les chariots, perdu), l'application des six
 pouvoirs, et le lien avec les missions qui les donnent. Vous pouvez écrire dès maintenant.
+
+---
+
+# Atelier de missions
+
+`atelier-missions.html` sert à écrire les missions **scénarisées** : celles qu'on compose
+une par une, qui ne surviennent qu'une fois, et qui sont données par quelqu'un qui existe.
+
+Le jeu propose déjà des contrats à chaque marché — il les tire au sort à partir de la carte
+des raretés. **Ceux-là ne bougent pas.** Les missions écrites viennent à côté, pas à la
+place.
+
+## Le lien vers le personnage vit dans la mission
+
+C'est le point qui compte à l'usage, et c'est délibéré.
+
+Écrivez vos personnages tranquillement, **sans leur attribuer quoi que ce soit**. Revenez
+un mois plus tard, chargez le répertoire, et confiez-leur une mission : `personnages.json`
+n'est **jamais** rouvert ni modifié. Le nombre de missions qu'une personne donne est
+*déduit* du carnet, pas stocké chez elle.
+
+Conséquence agréable : vous pouvez refaire un répertoire de personnages sans rien casser
+côté missions, et déplacer une mission d'un commanditaire à l'autre d'un clic.
+
+## L'onglet Personnages
+
+Il montre **qui se tient dans la zone** — tout le monde, une contrée, ou un lieu précis —
+et pour chacun :
+
+- son nom, son lieu, et le début de sa description ;
+- combien de missions il donne déjà dans ce carnet, **ou qu'il n'en a aucune** ;
+- la liste de ses missions, cliquable pour y sauter ;
+- un bouton **Confier** — ou **Détacher**, si c'est déjà le sien.
+
+En bas, le compte de ceux qui n'ont encore rien. Ce n'est pas un défaut à corriger : c'est
+la façon normale de travailler.
+
+## Les jalons, et le fil
+
+Trois genres de jalon : **arriver quelque part**, **livrer de la marchandise**, **parler à
+quelqu'un**. Ils s'enchaînent dans l'ordre où vous les rangez.
+
+L'onglet **Le fil** déroule le chemin, étape par étape, et calcule ce qu'il coûte : le plus
+court chemin sur le réseau de voies de votre `monde.json`, profil normal. Si le délai que
+vous accordez ne suffit pas, l'atelier **refuse la mission** — elle serait impossible. Si
+la marge tient à une étape, il vous le dit en or : un seul détour et c'est raté.
+
+Il refuse aussi un jalon posé dans un lieu qu'aucune voie ne relie au reste du trajet, et
+une rencontre avec quelqu'un qui n'a pas de lieu où être trouvé.
+
+## Ce qu'elle rapporte
+
+De l'or, de la réputation, du karma, **un objet unique**, ou **une couche de lore**.
+
+L'objet doit être d'accord des deux côtés : la mission dit qu'elle le donne, l'objet dit
+qu'il vient de cette mission. Chargez votre `objets.json` et l'atelier vérifie les deux
+sens, clé par clé, avec un tableau récapitulatif.
+
+La couche de lore est ce qui rend un service payant autrement qu'en pièces : on apprend
+quelque chose sur quelqu'un. L'atelier propose les couches du personnage visé et refuse
+d'en inventer une.
+
+L'échec accepte les mêmes récompenses, en négatif.
+
+## Le fichier exporté
+
+`missions.json`.
+
+```json
+{
+  "format": "caravane.missions.v1",
+  "missions": [
+    {
+      "cle": "le-registre-rature",
+      "titre": "Le registre raturé",
+      "oeil": "Un service",
+      "commanditaire": "orlanne",
+      "ico": { "glyphe": "sceau", "nature": "tracas" },
+      "offre": {
+        "recit": "{commanditaire} vous retient au moment où vous quittez la halle…",
+        "delai": 14,
+        "si": [ { "quoi": "reputation", "min": 35 } ]
+      },
+      "jalons": [
+        { "faire": "atteindre", "lieu": "gue-sec", "texte": "Le bourg est petit." },
+        { "faire": "rencontrer", "personnage": "sorn", "texte": "Il ne nie rien." }
+      ],
+      "reussite": {
+        "texte": "{commanditaire} écoute jusqu'au bout. Puis {il} vous tend le registre.",
+        "recompenses": [ { "donne": "or", "de": 420 },
+                         { "donne": "objet", "objet": "registre-des-peages" } ]
+      },
+      "echec": { "texte": "Le registre n'est plus sur le pupitre.",
+                 "recompenses": [ { "donne": "reputation", "de": -6 } ] }
+    }
+  ]
+}
+```
+
+| clé | rôle |
+|---|---|
+| `cle` | l'identifiant qu'un objet cite pour dire qu'il vient de cette mission |
+| `commanditaire` | une clé de `personnages.json` — **le lien, stocké ici** |
+| `lieu` | où on la reçoit ; à défaut, le lieu du commanditaire |
+| `offre.delai` | les étapes accordées ; l'atelier vérifie qu'elles suffisent |
+| `offre.si` | ce qu'il faut pour qu'elle soit proposée |
+| `jalons[].faire` | `atteindre`, `livrer` ou `rencontrer` |
+| `reussite.recompenses` | or, réputation, karma, objet, couche de lore |
+| `echec` | facultatif ; les mêmes récompenses, en négatif |
+
+## Ce qu'il reste à faire côté moteur
+
+Le moteur ne connaît que les contrats tirés au sort. Il faudra un carnet de missions
+écrites avec l'état de chacune, le suivi des jalons, le compteur de missions par
+personnage, et l'application des cinq récompenses. Vous pouvez écrire dès maintenant.

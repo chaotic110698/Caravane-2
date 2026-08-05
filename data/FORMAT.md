@@ -620,6 +620,46 @@ relie les objets aux gens.
 
 Le moteur ne les lit pas encore.
 
+---
+
+## Les missions écrites
+
+`data/missions.json` — à ne pas confondre avec
+[`missions.json`](missions.json) tel qu'il existe aujourd'hui, qui ne contient que
+l'habillage des offres tirées au sort. Le fichier des missions **écrites** se compose avec
+**[`../outils/atelier-missions.html`](../outils/atelier-missions.html)**, catalogue dans
+[`vocabulaire-missions.json`](vocabulaire-missions.json).
+
+Une mission écrite ne survient qu'une fois et elle est donnée par quelqu'un. Elle porte une
+chaîne de **jalons** — arriver, livrer, parler à quelqu'un —, un délai que l'atelier
+confronte aux distances réelles du `monde.json`, et des **récompenses** : or, réputation,
+karma, un objet unique, ou une couche de lore.
+
+> **Le lien vers le commanditaire est stocké dans la mission**, jamais dans le personnage.
+> On écrit donc ses personnages sans rien leur attribuer, et on revient plus tard leur
+> confier une mission sans que `personnages.json` soit rouvert.
+
+Le moteur ne les lit pas encore : il ne connaît que les offres tirées au sort.
+
+---
+
+## Comment les quatre fichiers se citent
+
+```
+monde.json ────── lieux ─────┬──► personnages.json  (lieu d'attache)
+                             ├──► missions.json     (jalons : où)
+                             └──► objets.json       (provenance : où)
+
+personnages.json ── cle ─────┬──► missions.json     (commanditaire, rencontres)
+                             └──► objets.json       (pouvoir « révéler du lore »)
+
+missions.json ──── cle ──────────► objets.json      (provenance « au bout d'une mission »)
+objets.json ────── cle ──────────► missions.json    (récompense « un objet unique »)
+```
+
+Toujours **par clé**, jamais par recopie : chaque fichier reste modifiable seul. Les
+ateliers vérifient les deux sens quand les fichiers concernés sont chargés ensemble.
+
 Les deux réservoirs cohabitent : les 51 événements d'origine restent en JavaScript dans
 `index.html` (voir ci-dessous), les nouveaux s'écrivent dans `data/evenements.json`, et
 le tirage puise dans les deux.
