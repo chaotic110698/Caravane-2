@@ -1714,8 +1714,10 @@ let GLYPHES_EV=null;        /* data/icones.json → glyphesEvenement */
 
 /* chaque situation, son dessin et sa nature */
 let ICONES_EV=null;         /* data/icones.json → evenements */
-function icoEvenement(titre,cls){
-  const e=ICONES_EV[titre];
+function icoEvenement(titre,cls,ico){
+  /* un événement écrit en données porte son pictogramme avec lui ; ceux du code
+     passent par la table des titres de data/icones.json */
+  const e=ico?[ico.glyphe,ico.nature]:ICONES_EV[titre];
   if(!e)return '';
   const corps=(e[0]==='chien')?CHIEN_GLYPHE:GLYPHES_EV[e[0]];
   if(!corps)return '';
@@ -3138,7 +3140,7 @@ function declencher(petit){
   evCourant=ev;
   $('#ev-oeil').textContent=ev.oeil||'Sur la route';
   $('#ev-titre').textContent=ev.titre;
-  $('#ev-ico').innerHTML=icoEvenement(ev.titre);
+  $('#ev-ico').innerHTML=icoEvenement(ev.titre,'',ev.ico);
   $('#ev-recit').textContent=typeof ev.recit==='function'?ev.recit():ev.recit;
   $('#ev-issue').hidden=true;
   $('#ev-jet').hidden=true;
@@ -3147,9 +3149,13 @@ function declencher(petit){
   const choix=ev.choix.filter(c=>!c.si||c.si());
   box.innerHTML=choix.map((c,i)=>{
     const d=typeof c.de==='function'?c.de():c.de;
-    return `<button class="choix" data-choix="${i}" ${c.bloque&&c.bloque()?'disabled':''}>
+    const gris=!!(c.bloque&&c.bloque());
+    /* un bouton grisé dit pourquoi il l'est, quand l'auteur a écrit la raison */
+    const sous=gris&&c.raison&&c.raison()
+      ?c.raison():(typeof c.note==='function'?c.note():c.note);
+    return `<button class="choix" data-choix="${i}" ${gris?'disabled':''}>
       <strong>${c.txt}${d?`<span class="marque-de">${icoDe()}${d}</span>`:''}</strong>
-      <span>${typeof c.note==='function'?c.note():c.note}</span></button>`;}).join('');
+      <span>${sous===undefined?'':sous}</span></button>`;}).join('');
   box._choix=choix;
   ouvrirFeuille('#feuille-event');
 }
@@ -3197,7 +3203,8 @@ function resoudre(i){
   $('#ev-choix').hidden=true;
   if(mythesPerdus.length)
     texte+=` ${mythesPerdus.join(' et ')} disparaît avec lui — le monde n'en reverra pas d'autre.`;
-  noter(`${icoEvenement(evCourant.titre,'ico-min')}<b>${evCourant.titre}.</b> ${texte}`,c.ton||'');
+  noter(`${icoEvenement(evCourant.titre,'ico-min',evCourant.ico)}`+
+    `<b>${evCourant.titre}.</b> ${texte}`,c.ton||'');
   registre($('#registre-3'));
   majHorizon();
   const afficher=()=>{
@@ -3323,7 +3330,7 @@ function armeTrouvee(){
 }
 function miseCourante(){return Math.round(clamp(18+S.etapes*4,18,9e9));}
 
-const PETITS=[
+let PETITS=[
 
 /* ── 1. ce qui ne change rien, mais fait le voyage ── */
 {cle:'flanerie',poids:3.4,variantes:[
@@ -3809,7 +3816,7 @@ function fouillerRuine(txtArme,txtOr,txtAccident,txtRien){
   return txtRien;
 }
 
-const EVENEMENTS=[
+let EVENEMENTS=[
 {titre:'Embuscade',oeil:'Sur la route',poids:()=>1+S.etapes*.09,
  recit:'Des silhouettes se lèvent derrière les rochers. Une dizaine, le visage couvert, la main sur le manche. Le chef s\'avance sans se presser.',
  choix:[
@@ -4775,6 +4782,335 @@ function assignerAuteur(d){
     OBJETS={};
     d.objets.objets.forEach(o=>{OBJETS[o.cle]=o;});
   }
+  fusionnerEvenements();
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LES ÉVÉNEMENTS ÉCRITS EN DONNÉES
+   ───────────────────────────────────────────────────────────────────────────
+   Le parti pris : au lieu d'un second système de tirage et d'affichage, chaque
+   événement du fichier est **compilé** vers exactement la forme des cinquante et
+   un événements écrits en JavaScript — un titre, un poids, un si(), un recit(),
+   et des choix dont chacun a son act() qui rend le texte à lire.
+
+   Résultat : tirerMajeur(), declencher() et resoudre() n'ont pas changé d'une
+   ligne, et le joueur ne peut pas distinguer les deux réservoirs.
+   Le format est décrit dans data/FORMAT-EVENEMENTS.md.                       */
+
+/* ── les valeurs : un nombre, une fourchette, une formule, une référence ── */
+function valeurEv(v){
+  if(v===undefined||v===null)return 0;
+  if(typeof v==='number')return v;
+  if(Array.isArray(v))return rnd(v[0],v[1]);
+  let n=0;
+  if(v.selon!==undefined)n=Number(interrogerEv(v.selon,v))||0;
+  if(v.base!==undefined)n+=v.base;
+  if(v.parEtape!==undefined)n+=v.parEtape*S.etapes;
+  if(v.parGarde!==undefined)n+=v.parGarde*S.gardes.length;
+  if(v.parLieue!==undefined)n+=v.parLieue*(S.lieues||0);
+  if(v.divise)n=n/v.divise;
+  if(v.fois!==undefined)n*=Array.isArray(v.fois)?rnd(v.fois[0],v.fois[1]):v.fois;
+  return n;
+}
+/* ── les interrogations : les vingt-deux mots du catalogue ── */
+function interrogerEv(nom,o){
+  switch(nom){
+    case 'or':return S.or;
+    case 'etapes':return S.etapes;
+    case 'lieues':return S.lieues||0;
+    case 'reputation':return S.reputation;
+    case 'karma':return S.karma;
+    case 'gardes':return S.gardes.length;
+    case 'troupe':return troupe().length;
+    case 'place':return place();
+    case 'charge':return IDS.reduce((s,g)=>s+stock(g),0);
+    case 'stock':return stock((o&&o.bien)||IDS[0]);
+    case 'valeurSoute':return valeurSoute();
+    case 'etatConvoi':return etatConvoi();
+    case 'chien':return !!S.chien;
+    case 'vigilance':return vigilanceTroupe();
+    case 'agilite':return agiliteTroupe();
+    case 'negoce':return negoceCaravane();
+    case 'puissance':return S.marchand?ARCHETYPES[S.marchand.archetype].force:1;
+    case 'armeFamille':return troupe().some(u=>u.arme&&ARMES[u.arme]&&
+      ARMES[u.arme].famille===(o&&o.famille));
+    case 'mise':return miseCourante();
+    case 'coutGarde':return coutGarde();
+    case 'tribut':return tribut();
+    case 'soin':return troupe().reduce((s,u)=>s+coutSoin(u),0);
+    default:return 0;
+  }
+}
+function conditionsEv(l){
+  if(!l||!l.length)return true;
+  return l.every(c=>{
+    const v=interrogerEv(c.quoi,c);
+    if(c.vaut!==undefined)return !!v===!!c.vaut;
+    if(c.min!==undefined&&v<valeurEv(c.min))return false;
+    if(c.max!==undefined&&v>valeurEv(c.max))return false;
+    return true;
+  });
+}
+/* La raison affichée sur un choix grisé : la première condition qui échoue. */
+function raisonBloque(l){
+  if(!l)return '';
+  const c=l.find(x=>!conditionsEv([x]));
+  return c?(c.sinon||''):'';
+}
+
+/* ── la localisation ── */
+function lieuCourantEv(quand){
+  /* en chemin, ce qui compte est la destination ; à l'arrivée et au séjour, le
+     lieu où l'on est */
+  if(quand==='route'&&S.route&&S.route.dest)return indexVille(S.route.dest);
+  return indexVille(S.ville);
+}
+function localisationEv(ou,quand){
+  if(!ou)return true;
+  const i=lieuCourantEv(quand);
+  if(i<0)return false;
+  const v=S.villes[i];
+  const dans=(l,x)=>!l||!l.length||l.indexOf(x)>=0;
+  const cle=MONDE&&LIEUX[i]?LIEUX[i].cle:null;
+  if(ou.cartes&&ou.cartes.length&&!dans(ou.cartes,carteDeLieu(i)))return false;
+  if(ou.lieux&&ou.lieux.length&&(!cle||!dans(ou.lieux,cle)))return false;
+  if(ou.contrees&&ou.contrees.length&&!dans(ou.contrees,CONTREES[v.contree].cle))return false;
+  if(ou.rangs&&ou.rangs.length){
+    const r=v.rang||(v.frontiere?'poste':(v.capitale?'capitale':'ville'));
+    if(!dans(ou.rangs,r))return false;
+  }
+  if(ou.traits&&ou.traits.length){
+    const t=v.traits||[];
+    if(!t.some(x=>ou.traits.indexOf(x)>=0))return false;
+  }
+  if(ou.terrains&&ou.terrains.length){
+    const t=S.route&&S.route.terrain;
+    if(!t||!dans(ou.terrains,t))return false;
+  }
+  if(ou.profils&&ou.profils.length){
+    const p=S.route&&S.route.profil;
+    if(!p||!dans(ou.profils,p))return false;
+  }
+  return true;
+}
+
+/* ── les textes à trous ── */
+function contexteEv(){
+  const s={};
+  const ici=S.ville?S.ville.nom:'';
+  s.ville=ici;
+  s.destination=(S.route&&S.route.dest)?S.route.dest.nom:ici;
+  s.contree=S.ville?CONTREES[S.ville.contree].nom:'';
+  s.chien=S.chien?S.chien.nom:'le chien';
+  s.garde=S.gardes.length?pick(S.gardes).nom:'un garde';
+  const porte=IDS.filter(g=>stock(g)>0);
+  s.bien=porte.length?G[pick(porte)].nom.toLowerCase():'rien';
+  ['or','etapes','lieues','reputation','karma','gardes','troupe','place','charge',
+   'valeurSoute','etatConvoi','vigilance','agilite','negoce','puissance','mise',
+   'coutGarde','tribut','soin'].forEach(k=>{
+    const v=interrogerEv(k);
+    s[k]=typeof v==='number'?fmt(v):String(v);
+  });
+  return s;
+}
+function texteEv(txt,sac){
+  const t=Array.isArray(txt)?pick(txt):txt;
+  return String(t==null?'':t).replace(/\{([a-zA-Z0-9_.]+)\}/g,
+    (m,k)=>sac[k]!==undefined?sac[k]:m);
+}
+
+/* ── les dix-huit effets ──
+   Chacun délègue à la fonction que le jeu utilisait déjà : rien n'est réécrit,
+   et un effet en données fait donc exactement ce que fait son équivalent en
+   code. C'est ce qui garantit qu'ils s'équilibrent pareil. */
+function effetsEv(liste,sac){
+  (liste||[]).forEach(e=>{
+    let retenu='';
+    switch(e.faire){
+      case 'or':{
+        const n=Math.round(valeurEv(e.de));
+        const avant=S.or;
+        S.or=Math.max(0,S.or+n);
+        retenu=fmt(Math.abs(S.or-avant));
+        break;}
+      case 'reputation':S.reputation=clamp(S.reputation+(Number(e.de)||0),0,100);break;
+      case 'karma':S.karma=clamp(S.karma+(Number(e.de)||0),0,100);break;
+      case 'allonger':{
+        const veut=Math.round(Number(e.de)||0);
+        const n=Math.max(0,Math.min(veut,4-(S.rallonge||0)));
+        if(n&&S.route){S.route.etapes+=n;S.rallonge=(S.rallonge||0)+n;}
+        retenu=fmt(n);break;}
+      case 'abimer':abimer(Math.round(valeurEv(e.combien)));break;
+      case 'delester':retenu=delester(valeurEv(e.part),
+        e.seulement&&e.seulement!=='tout'?e.seulement:undefined);break;
+      case 'briserFragile':retenu=delester(valeurEv(e.part),'fragile');break;
+      case 'reposer':reposer(valeurEv(e.part));break;
+      case 'blesserTroupe':{
+        const r=blesserTroupe(Math.round(valeurEv(e.total)),
+          Math.max(1,Math.round(Number(e.cibles)||1)));
+        retenu=r.noms.join(' et ')||'personne';
+        if(e.nomme){
+          sac[e.nomme+'.noms']=r.noms.join(' et ')||'personne';
+          sac[e.nomme+'.morts']=r.morts.join(' et ')||'personne';
+        }
+        break;}
+      case 'combat':{
+        const t=combat(Number(e.bonus)||1);
+        retenu=t;
+        if(e.nomme)sac[e.nomme+'.gagne']=dernierJet&&dernierJet.reussi?'oui':'non';
+        break;}
+      case 'charger':{
+        const g=(!e.bien||e.bien==='auHasard')?pick(IDS):e.bien;
+        if(!G[g])break;
+        const veut=Math.round(valeurEv(e.kg));
+        const kg=Math.max(0,Math.min(veut,place()));
+        if(kg)ajouter(g,kg);
+        let paye=0;
+        if(e.prixAuKilo!==undefined){
+          paye=Math.round(kg*valeurEv(e.prixAuKilo));
+          S.or=Math.max(0,S.or-paye);
+        }
+        retenu=fmt(kg)+' kg de '+G[g].nom.toLowerCase();
+        if(e.nomme){sac[e.nomme+'.kg']=fmt(kg);sac[e.nomme+'.bien']=G[g].nom.toLowerCase();
+          sac[e.nomme+'.paye']=fmt(paye);}
+        break;}
+      case 'decharger':{
+        const g=(!e.bien||e.bien==='auHasard')?pick(IDS.filter(x=>stock(x)>0).concat(IDS)):e.bien;
+        if(!G[g])break;
+        const kg=Math.max(0,Math.min(Math.round(valeurEv(e.kg)),stock(g)));
+        if(kg)retirer(g,kg);
+        let gain=0;
+        if(e.prixAuKilo!==undefined){gain=Math.round(kg*valeurEv(e.prixAuKilo));S.or+=gain;}
+        retenu=fmt(kg)+' kg de '+G[g].nom.toLowerCase();
+        if(e.nomme){sac[e.nomme+'.kg']=fmt(kg);sac[e.nomme+'.bien']=G[g].nom.toLowerCase();
+          sac[e.nomme+'.gain']=fmt(gain);}
+        break;}
+      case 'armeTrouvee':retenu=armeTrouvee();break;
+      case 'donnerArme':
+        if(e.arme&&ARMES[e.arme]){
+          rangerArme(e.arme);
+          if(estMythique(e.arme))S.mythes[e.arme]='convoi';
+          retenu=ARMES[e.arme].nom;
+        }
+        break;
+      case 'chien':
+        if(!S.chien){S.chien=nouveauChien();retenu=S.chien.nom;}
+        else retenu=S.chien.nom;
+        break;
+      case 'recruter':{
+        const g=creerGarde(e.metier&&e.metier!=='auHasard'?e.metier:undefined);
+        if(e.arme&&ARMES[e.arme])g.arme=e.arme;
+        S.gardes.push(g);
+        retenu=g.nom;break;}
+      case 'rumeur':{
+        const g=(!e.bien||e.bien==='auHasard')?pick(IDS):e.bien;
+        if(!G[g])break;
+        const ou=(S.route&&S.route.dest)?S.route.dest.nom:(S.ville?S.ville.nom:'');
+        S.rumeur={ville:ou,bien:g,mult:Number(e.mult)||1.45};
+        retenu=G[g].nom.toLowerCase();break;}
+      case 'escorte':S.escorte=Math.max(S.escorte||0,Number(e.de)||1);break;
+      default:console.warn('effet inconnu dans data/evenements.json :',e.faire);
+    }
+    if(e.nomme&&sac[e.nomme]===undefined)sac[e.nomme]=retenu;
+  });
+}
+/* Ce qu'une note annonce avant qu'on choisisse : les montants sont évalués à
+   vide, sans rien appliquer, pour que « {droit} po » s'affiche sous le bouton. */
+function previsionEv(c){
+  const s={};
+  const listes=[c.effets];
+  ['reussi','rate','gagne','perd','oui','non'].forEach(k=>{if(c[k])listes.push(c[k].effets);});
+  if(c.jet&&c.jet.paliers)c.jet.paliers.forEach(p=>listes.push(p.effets));
+  listes.forEach(l=>(l||[]).forEach(e=>{
+    if(!e.nomme||s[e.nomme]!==undefined)return;
+    if(e.faire==='or')s[e.nomme]=fmt(Math.abs(valeurEv(e.de)));
+    else if(e.faire==='allonger')s[e.nomme]=fmt(Number(e.de)||0);
+    else if(e.faire==='charger'||e.faire==='decharger')s[e.nomme]=fmt(valeurEv(e.kg))+' kg';
+    else s[e.nomme]='—';
+  }));
+  return s;
+}
+
+/* ── résoudre une issue ── */
+function issueEv(o,sac){
+  if(!o)return '';
+  effetsEv(o.effets,sac);
+  return texteEv(o.texte,sac);
+}
+function actEv(c){
+  const sac=contexteEv();
+  if(c.jet){
+    const j=c.jet;
+    const carac=Math.round(valeurEv(j.carac));
+    if(j.paliers&&j.paliers.length){
+      const r=jet({carac:carac,nom:c.de||'aptitude',seuil:0,titre:j.titre||''});
+      const p=j.paliers.find(x=>(x.min===undefined||r.total>=valeurEv(x.min))&&
+        (x.max===undefined||r.total<=valeurEv(x.max)))||j.paliers[j.paliers.length-1];
+      if(dernierJet===r){r.verdict=p.verdict||null;r.classe=p.classe||null;r.seuil=null;}
+      return issueEv(p,sac);
+    }
+    const r=jet({carac:carac,nom:c.de||'aptitude',
+      seuil:Math.round(valeurEv(j.seuil)),titre:j.titre||''});
+    return issueEv(r.reussi?c.reussi:c.rate,sac);
+  }
+  if(c.pari){
+    const p=c.pari, mise=Math.round(valeurEv(p.mise));
+    sac.mise=fmt(mise);
+    if(S.or<mise)return 'La bourse ne suit pas : on décline poliment.';
+    const carac=Math.round(valeurEv(p.carac));
+    const seuil=clamp(Math.round(21-20*clamp(p.chance===undefined?.5:p.chance,.05,.95))
+      +carac+2,2,26);
+    const r=jet({carac:carac,nom:p.nom||'adresse',seuil:seuil,titre:'Pari'});
+    if(r.reussi){S.or+=mise;return issueEv(c.gagne,sac);}
+    S.or=Math.max(0,S.or-mise);
+    return issueEv(c.perd,sac);
+  }
+  if(c.selon)return issueEv(conditionsEv(c.selon)?c.oui:c.non,sac);
+  effetsEv(c.effets,sac);
+  return texteEv(c.texte,sac);
+}
+
+/* ── la compilation ── */
+function compilerEvenement(ev){
+  const quand=ev.quand||'route';
+  const c={
+    titre:ev.titre,oeil:ev.oeil||'Sur la route',
+    ico:ev.ico||null,quand:quand,cleEv:ev.cle,
+    poids:()=>{
+      const p=ev.poids;
+      if(p===undefined)return 1;
+      if(typeof p==='number')return p;
+      return (p.base===undefined?1:p.base)+(p.parEtape||0)*S.etapes;
+    },
+    si:()=>localisationEv(ev.ou,quand)&&conditionsEv(ev.si),
+    recit:()=>texteEv(ev.recit,contexteEv()),
+    choix:(ev.choix||[]).map(ch=>({
+      txt:ch.txt,de:ch.de||null,ton:ch.ton||'',
+      note:()=>texteEv(ch.note,Object.assign(contexteEv(),previsionEv(ch))),
+      si:ch.si?(()=>conditionsEv(ch.si)):null,
+      bloque:ch.bloque?(()=>!conditionsEv(ch.bloque)):null,
+      raison:()=>raisonBloque(ch.bloque),
+      act:()=>actEv(ch)
+    }))
+  };
+  return c;
+}
+/* Les deux réservoirs, mis bout à bout. Les événements majeurs et mineurs se
+   distinguent par leur genre ; le tirage puise dans l'un ou l'autre selon le
+   moment demandé, exactement comme avant. */
+function fusionnerEvenements(){
+  if(!EVENEMENTS_DONNEES.length)return;
+  const compiles=EVENEMENTS_DONNEES.map(compilerEvenement);
+  const majeurs=compiles.filter((c,i)=>(EVENEMENTS_DONNEES[i].genre||'majeur')!=='mineur');
+  const mineurs=compiles.filter((c,i)=>(EVENEMENTS_DONNEES[i].genre||'majeur')==='mineur');
+  EVENEMENTS=EVENEMENTS.concat(majeurs);
+  /* PETITS est une liste de familles à variantes : les mineurs écrits forment
+     une famille de plus, dont chaque événement est une variante. */
+  if(mineurs.length)PETITS=PETITS.concat(mineurs.map(m=>({
+    poids:m.poids,si:m.si,variantes:[m]})));
+  console.info('data/evenements.json : '+majeurs.length+' majeurs et '+
+    mineurs.length+' mineurs ajoutés aux '+(EVENEMENTS.length-majeurs.length)+
+    ' écrits en code.');
 }
 
 function assigner(d){
