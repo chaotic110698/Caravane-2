@@ -30,8 +30,8 @@ machine** : l'image de fond et le travail en cours restent dans le navigateur.
 
 | | |
 |---|---|
-| **Se déplacer** | deux doigts, molette, ou glisser le fond avec l'outil Sélection |
-| **Quand c'est trop plein** | <kbd>Espace</kbd> tenue, ou le bouton du milieu, déplacent la vue quoi qu'il y ait dessous |
+| **Se déplacer** | le **clic molette** maintenu, <kbd>Espace</kbd> tenue avec le clic gauche, ou deux doigts |
+| **Zoomer** | la molette |
 | **Poser un lieu** | outil <kbd>L</kbd>, puis cliquer |
 | **Relier deux lieux** | outil <kbd>R</kbd>, cliquer l'un puis l'autre |
 | **Délimiter une contrée** | outil <kbd>F</kbd>, cliquer les sommets, <kbd>Entrée</kbd> pour fermer |
@@ -39,9 +39,15 @@ machine** : l'image de fond et le travail en cours restent dans le navigateur.
 | **Défaire / refaire** | <kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Y</kbd>, 80 pas en arrière |
 | **Tout voir** | <kbd>0</kbd> |
 
-Le travail est sauvegardé tout seul dans le navigateur à chaque modification, et
-l'image de fond est conservée aussi : rouvrez la page, tout est là. **Exportez** quand
-même régulièrement — un navigateur qu'on nettoie emporte sa mémoire.
+**Le clic gauche ne déplace jamais la carte** : il sélectionne, il pose, il trace — et
+sur le vide il désélectionne. Le déplacement de la vue est au clic molette, qui marche
+quel que soit l'outil et quoi qu'il y ait sous le curseur. La barre d'espace tenue fait
+la même chose, pour les machines sans bouton du milieu.
+
+Le travail est sauvegardé tout seul dans le navigateur, et l'image de fond avec lui :
+rouvrez la page, tout est là. Fermer l'onglet en plein travail ne coûte rien non plus,
+l'écriture est forcée au moment où la page part. **Exportez** quand même régulièrement —
+un navigateur qu'on nettoie emporte sa mémoire.
 
 ## L'étalon, à poser en premier
 

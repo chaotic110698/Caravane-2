@@ -212,16 +212,16 @@ kbd{font-family:ui-monospace,monospace;font-size:11px;background:var(--fond-clai
     <div class="bloc">
       <h2>Aide-mémoire</h2>
       <div class="aide">
-        <p><b>Se déplacer</b> — deux doigts, ou molette pour zoomer, ou glisser avec l'outil
-        Sélection sur le fond.</p>
+        <p><b>Se déplacer</b> — le <b>clic molette</b> maintenu, ou <kbd>Espace</kbd> tenue
+        avec le clic gauche, ou deux doigts. La molette zoome. Le clic gauche seul ne
+        déplace jamais la carte.</p>
         <p style="margin-top:6px"><b>Lieu</b> — cliquez pour poser. <b>Voie</b> — cliquez un lieu
         puis un autre. <b>Frontière</b> — cliquez les sommets, <kbd>Entrée</kbd> pour fermer.
         <b>Étalon</b> — cliquez deux points, puis saisissez la distance réelle.</p>
-        <p style="margin-top:6px">Quand la carte est trop pleine pour trouver du vide :
-        <kbd>Espace</kbd> tenue, ou le <b>bouton du milieu</b>, déplacent la vue quel que soit
-        l'outil.</p>
+        <p style="margin-top:6px">Le déplacement marche quel que soit l'outil et quoi qu'il y
+        ait sous le curseur — même par-dessus une ville, rien ne bouge d'autre que la vue.</p>
         <p style="margin-top:6px"><kbd>Suppr</kbd> efface la sélection. <kbd>Échap</kbd> annule
-        le tracé en cours.</p>
+        le tracé en cours. Un clic gauche sur le vide désélectionne.</p>
       </div>
     </div>
   </div>
@@ -853,7 +853,7 @@ function terminerFrontiere(){
 /* ═══════════════ gestes ═══════════════ */
 
 const pointeurs=new Map();
-let glisse=null;          /* {genre:'vue'|'lieu'|'poignee', ...} */
+let glisse=null;          /* {genre:'vue'|'lieu'|'poignee'|'outil', …} */
 let pince=null;
 let aBouge=false;
 let espace=false;         /* barre d'espace tenue : main provisoire */
@@ -898,7 +898,9 @@ $('#toile').addEventListener('pointerdown',ev=>{
       choix={genre:'contree',cle:cible.dataset.contree};
       contreeCourante=choix.cle;dessiner();return;
     }
-    glisse={genre:'vue',x:ev.clientX,y:ev.clientY,tx:V.tx,ty:V.ty};
+    /* Le clic gauche ne déplace jamais la carte : sur le vide, il désélectionne
+       simplement. La vue se déplace au bouton du milieu ou à la barre d'espace. */
+    if(choix){choix=null;dessiner();}
     return;
   }
   /* Les autres outils se déclenchent au relâchement, pour ne pas gêner le glissé.
@@ -906,7 +908,7 @@ $('#toile').addEventListener('pointerdown',ev=>{
      les événements suivants vers #toile, si bien qu'au relâchement ev.target
      n'est plus le marqueur mais le conteneur. */
   const surLieu=ev.target.closest('[data-lieu]');
-  glisse={genre:'vue',x:ev.clientX,y:ev.clientY,tx:V.tx,ty:V.ty,outil:true,
+  glisse={genre:'outil',x:ev.clientX,y:ev.clientY,
           lieu:surLieu?surLieu.dataset.lieu:null};
 });
 
@@ -958,7 +960,7 @@ function finPointeur(ev){
   if(etaitPince||!g)return;
 
   /* un clic net (sans glissé) déclenche l'outil */
-  if(!aBouge&&g.outil){
+  if(!aBouge&&g.genre==='outil'){
     const pos=versCarte(ev);
     if(outil==='lieu')ajouterLieu(pos);
     else if(outil==='voie'){
@@ -1068,13 +1070,24 @@ $('#toile').addEventListener('drop',e=>{
 /* ═══════════════ persistance ═══════════════ */
 
 const CLE='caravane.atelier.v1';
-let tSauve=null;
-function sauverAuto(){
-  clearTimeout(tSauve);
-  tSauve=setTimeout(()=>{
-    try{localStorage.setItem(CLE,JSON.stringify(M));}catch(e){}
-  },400);
+let tSauve=null, echeance=0;
+function ecrire(){
+  clearTimeout(tSauve);tSauve=null;echeance=0;
+  try{localStorage.setItem(CLE,JSON.stringify(M));}catch(e){}
 }
+/* On temporise pour ne pas écrire à chaque pixel d'un glissé — mais avec une
+   échéance ferme : à force de se reprogrammer, une temporisation simple ne
+   s'exécute jamais tant qu'on travaille sans pause, et tout se perd si l'onglet
+   se ferme là. Deux secondes de retard au maximum, et on écrit tout de suite
+   dès que la page passe à l'arrière-plan. */
+function sauverAuto(){
+  const t=Date.now();
+  if(!echeance)echeance=t+2000;
+  clearTimeout(tSauve);
+  tSauve=setTimeout(ecrire,Math.max(0,Math.min(400,echeance-t)));
+}
+addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')ecrire();});
+addEventListener('pagehide',ecrire);
 function reprendre(){
   try{
     const t=localStorage.getItem(CLE);
