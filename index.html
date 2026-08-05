@@ -1230,27 +1230,89 @@ let CONTREES=null;          /* data/contrees.json → contrees */
 /* distances internes à chaque contrée, calculées une fois pour toutes */
 let GEO=null;               /* dérivé des positions de chaque contrée */
 
-function contreeDe(i){return Math.floor(i/PAR_CONTREE);}
+/* Ces douze fonctions sont la seule interface entre le jeu et la forme du monde.
+   Tant que MONDE est null, elles tiennent leur arithmétique d'origine : trois
+   contrées de six lieux, index divisé par six. Dès qu'un data/monde.json est
+   chargé, elles lisent le réseau de voies — et tout le reste du moteur continue
+   d'appeler les mêmes noms avec les mêmes indices, sans rien savoir du
+   changement. C'est ce qui a permis de généraliser sans rien réécrire. */
+function contreeDe(i){return MONDE?(IDX_CONTREE[i]||0):Math.floor(i/PAR_CONTREE);}
 function posDe(i){return i%PAR_CONTREE;}
-function estFrontiere(i){return posDe(i)===FRONTIERE;}
-function contreeVoisine(c){return (c+1)%CONTREES.length;}
-function frontiereDe(c){return c*PAR_CONTREE+FRONTIERE;}
-function positionDe(i){return CONTREES[contreeDe(i)].positions[posDe(i)];}
+function estFrontiere(i){return MONDE?!!EST_POSTE[i]:posDe(i)===FRONTIERE;}
+function contreeVoisine(c){
+  if(!MONDE)return (c+1)%CONTREES.length;
+  /* la première contrée qu'un poste de celle-ci sait atteindre */
+  for(let i=0;i<LIEUX.length;i++){
+    if(contreeDe(i)!==c||!estFrontiere(i))continue;
+    const t=traversees(i);
+    for(const x of t)if(contreeDe(x.vers)!==c)return contreeDe(x.vers);
+  }
+  return (c+1)%CONTREES.length;
+}
+function frontiereDe(c){
+  if(!MONDE)return c*PAR_CONTREE+FRONTIERE;
+  for(let i=0;i<LIEUX.length;i++)if(contreeDe(i)===c&&estFrontiere(i))return i;
+  return 0;
+}
+/* Où poser le nom d'un lieu, selon ce que l'atelier de carte a choisi. */
+const ETIQ={dessus:{lx:0,ly:-13,ancre:'middle'},dessous:{lx:0,ly:15,ancre:'middle'},
+  gauche:{lx:-12,ly:4,ancre:'end'},droite:{lx:12,ly:4,ancre:'start'}};
+function positionDe(i){
+  if(!MONDE)return CONTREES[contreeDe(i)].positions[posDe(i)];
+  const l=LIEUX[i];
+  const e=ETIQ[(l.etiq&&l.etiq.pos)||'dessous']||ETIQ.dessous;
+  return {x:l.x,y:l.y,lx:e.lx,ly:e.ly,ancre:e.ancre};
+}
 function lieuxDe(c){
-  const l=[];for(let k=0;k<PAR_CONTREE;k++)l.push(c*PAR_CONTREE+k);return l;
+  if(!MONDE){
+    const l=[];for(let k=0;k<PAR_CONTREE;k++)l.push(c*PAR_CONTREE+k);return l;
+  }
+  const l=[];for(let i=0;i<LIEUX.length;i++)if(contreeDe(i)===c)l.push(i);
+  return l;
+}
+/* Les lieux d'une même carte : c'est ce que l'écran de carte dessine. */
+function lieuxDeCarte(i){
+  if(!MONDE)return lieuxDe(contreeDe(i));
+  const k=carteDeLieu(i),l=[];
+  for(let x=0;x<LIEUX.length;x++)if(carteDeLieu(x)===k)l.push(x);
+  return l;
+}
+const KM_PAR_LIEUE=4.82;
+/* Le cache des chemins : le plus court chemin est recalculé souvent — à chaque
+   dessin de carte, pour chaque offre — et le monde ne change pas en cours de
+   partie. */
+let CACHE_CHEMIN={};
+function chemin(i,j){
+  if(!MONDE)return null;
+  const cle=i+'>'+j;
+  if(CACHE_CHEMIN[cle]===undefined)
+    CACHE_CHEMIN[cle]=cheminEntre(i,j,false)||cheminEntre(i,j,true)||null;
+  return CACHE_CHEMIN[cle];
 }
 function distance(i,j){
+  if(MONDE){
+    const c=chemin(i,j);
+    return c?c.lieues/.22:Infinity;   /* même échelle que GEO, pour le reste du code */
+  }
   if(i===j)return 0;
   if(contreeDe(i)===contreeDe(j))return GEO[contreeDe(i)][posDe(i)][posDe(j)];
   if(estFrontiere(i)&&estFrontiere(j))return DIST_FRONTIERE;
   return Infinity;
 }
 function relies(i,j){return distance(i,j)!==Infinity&&i!==j;}
-const KM_PAR_LIEUE=4.82;
-function lieuesEntre(i,j){return Math.round(distance(i,j)*.22);}
+function lieuesEntre(i,j){
+  if(MONDE){const c=chemin(i,j);return c?c.lieues:0;}
+  return Math.round(distance(i,j)*.22);
+}
 function kmEntre(i,j){return Math.round(lieuesEntre(i,j)*KM_PAR_LIEUE);}
 function enKm(lieues){return Math.round(lieues*KM_PAR_LIEUE);}
-function etapesEntre(i,j){return etapesConvoi(kmEntre(i,j));}
+function etapesEntre(i,j){
+  /* Avec un monde écrit, les étapes viennent du chemin : chaque tronçon se
+     compte à la vitesse de sa carte, donc traverser une cité coûte plus cher
+     que la même distance en rase campagne. */
+  if(MONDE){const c=chemin(i,j);return c?clamp(c.etapes,2,24):2;}
+  return etapesConvoi(kmEntre(i,j));
+}
 function indexVille(v){return S.villes.indexOf(v);}
 function contreeCourante(){return CONTREES[contreeDe(indexVille(S.ville))];}
 function douane(){return Math.round(55+S.etapes*9+valeurSoute()*.06);}
@@ -1264,7 +1326,11 @@ function nomsDeContree(cle,combien){
   }
   return noms;
 }
+/* Combien de lieux ce monde compte — la seule vérification qu'une sauvegarde ait
+   été faite dans le même monde que celui qui est chargé. */
+function nbLieux(){return MONDE?LIEUX.length:CONTREES.length*PAR_CONTREE;}
 function creerMonde(){
+  if(MONDE)return creerMondeEcrit();
   const lieux=[];
   CONTREES.forEach((c,ci)=>{
     const noms=nomsDeContree(c.cle,FRONTIERE);
@@ -1299,7 +1365,9 @@ function volatilite(){return clamp(.09+S.etapes*.011,0,.44);}
 
 function rarete(v,g){
   const cat=G[g].cat;
-  let r=RARETE_BASE[CONTREES[v.contree].cle][g];
+  const table=RARETE_BASE[v.ecoContree||CONTREES[v.contree].cle]||
+    RARETE_BASE[Object.keys(RARETE_BASE)[0]];
+  let r=table[g];
   if(v.type.produit.indexOf(cat)>=0)r-=1;
   if(v.type.demande.indexOf(cat)>=0)r+=1;
   r+=(v.dec&&v.dec[cat])||0;
@@ -1309,7 +1377,10 @@ function regarnir(v){
   v.dispo={};
   IDS.forEach(g=>{
     const lot=RARETES[rarete(v,g)].lot;
-    v.dispo[g]=ri(lot[0],lot[1]);
+    /* un hameau ne tient pas l'étal d'une capitale : le rang du lieu réduit
+       les lots. Sans monde écrit, taille vaut 1 et rien ne change. */
+    const t=v.taille===undefined?1:v.taille;
+    v.dispo[g]=Math.round(ri(lot[0],lot[1])*t);
   });
 }
 function calculerPrix(){
@@ -2042,15 +2113,22 @@ function panneauTroupe(){
 }
 
 function legendesConnues(){
+  /* Chaque arme de légende appartient à une contrée. Un monde écrit peut très
+     bien ne pas contenir cette contrée : l'arme existe alors sans nulle part
+     où l'acheter, et il vaut mieux le dire que faire semblant. */
   const l=CLES_MYTHIQUES.map(c=>{
     const a=ARMES[c],ct=CONTREES.find(x=>x.cle===a.mythique);
-    const cite=S.villes.find(v=>v.capitale&&CONTREES[v.contree].cle===a.mythique);
-    const ou=(cite&&cite.visites)?`à ${cite.nom}`:'dans la capitale';
     if(S.mythes[c]==='perdu')return `<b>${a.nom}</b> a disparu du monde`;
     if(S.mythes[c]==='convoi')return `<b>${a.nom}</b> voyage avec vous`;
+    if(!ct)return `<b>${a.nom}</b> n'est en ce monde nulle part`;
+    const cite=S.villes.find(v=>v.capitale&&CONTREES[v.contree].cle===a.mythique);
+    const ou=(cite&&cite.visites)?`à ${cite.nom}`:'dans la capitale';
     return `<b>${a.nom}</b> attend ${ou}, en ${ct.nom.toLowerCase()}`;
   });
-  return 'Trois armes n\'existent qu\'en un exemplaire : '+l.join(' ; ')+'.';
+  const n=CLES_MYTHIQUES.length;
+  const mot=n===1?'Une arme n\'existe':(n===2?'Deux armes n\'existent'
+    :(n===3?'Trois armes n\'existent':n+' armes n\'existent'));
+  return mot+' qu\'en un exemplaire : '+l.join(' ; ')+'.';
 }
 const ECHOPPES=[
  {cle:'armes',nom:'Armurerie'},
@@ -2372,8 +2450,10 @@ function paquet(){
 function ouvrirPaquet(d){
   if(!d||d.jeu!=='caravane'||!d.villes||!d.marchand)
     throw new Error('Ce fichier n\'est pas une sauvegarde de Caravane.');
-  if(d.villes.length!==CONTREES.length*PAR_CONTREE)
-    throw new Error('Sauvegarde d\'une version antérieure aux contrées : elle ne peut plus être reprise.');
+  if(d.villes.length!==nbLieux())
+    throw new Error(MONDE
+      ?'Cette sauvegarde a été faite dans un autre monde : elle ne peut pas être reprise ici.'
+      :'Sauvegarde d\'une version antérieure aux contrées : elle ne peut plus être reprise.');
   const villes=d.villes.map((v,i)=>({nom:v.n,type:TOUS_TYPES[v.t]||TYPE_FRONTIERE,
     stat:v.s,mem:v.m,visites:v.vi||1,forge:v.f||1,dec:v.dc||{},dispo:v.dp||{},
     amb:v.am||{h:1,o:0,od:0,f:0},offres:v.of||null,
@@ -2504,14 +2584,19 @@ function fermerFeuilles(){
 let PROFILS=null;           /* data/routes.json → profils */
 function routesVers(j){
   const i=indexVille(S.ville),lieues=lieuesEntre(i,j);
+  /* Une lieue de ruelles se paie plus cher qu'une lieue de piste : on rapporte
+     les kilomètres à la vitesse de la carte d'arrivée avant de compter les
+     étapes, ce qui laisse intacte la pénalité de charge des chariots. */
+  const lenteur=MONDE?KM_PAR_JOUR_DEFAUT/kmParJourDe(j):1;
   const trace=(nom,tag,risque,rudesse,detour,extra)=>{
     const l=Math.max(1,Math.round(lieues*detour)),km=enKm(l);
     const r={nom:nom,tag:tag,risque:risque,rudesse:rudesse,
-             lieues:l,km:km,etapes:etapesConvoi(km),dest:S.villes[j]};
+             lieues:l,km:km,etapes:etapesConvoi(km*lenteur),dest:S.villes[j],
+             lenteur:lenteur};
     if(extra)for(const k in extra)r[k]=extra[k];
     return r;
   };
-  if(contreeDe(i)!==contreeDe(j))
+  if(estFranchissement(i,j))
     return [trace('La route de douane','l\'unique passage, gardé aux deux bouts',
              .7,1,1,{douane:douane()})];
   return PROFILS.map(p=>trace(p.nom,p.tag,p.risque,p.rudesse,p.detour));
@@ -2554,19 +2639,40 @@ function revenirALaCarte(){
 }
 function carteFrontiere(){
   const i=indexVille(S.ville);
-  if(!estFrontiere(i))return '';
-  const c=contreeDe(i),voisine=CONTREES[contreeVoisine(c)];
-  const j=frontiereDe(contreeVoisine(c)),dr=douane();
-  const assez=S.or>=dr;
+  /* Avec un monde écrit, ce n'est plus le rang qui décide mais le réseau : une
+     capitale portuaire d'où part un passage vers une autre carte propose ce
+     passage, même si elle n'est pas un poste frontière. */
+  if(MONDE?!traversees(i).length:!estFrontiere(i))return '';
+  const dr=douane(),assez=S.or>=dr;
+  /* Sans monde écrit, il n'y a qu'une sortie et elle est calculée ; avec un
+     monde écrit, il y en a autant que de voies franchissables — c'est le joueur
+     qui décide où il va, au lieu de subir l'unique voisine. */
+  const sorties=MONDE?traversees(i)
+    :[{vers:frontiereDe(contreeVoisine(contreeDe(i)))}];
+  if(!sorties.length)return '';
+  const ou=j=>{
+    const l=LIEUX&&LIEUX[j];
+    return (MONDE&&l&&carteDeLieu(j)!==carteDeLieu(i)&&CARTES[l.carte])
+      ?CARTES[l.carte].nom
+      :enContree(contreeDe(j));
+  };
+  const boutons=sorties.map(s=>{
+    const j=s.vers;
+    return `<button class="bouton petit${assez?'':' creux'}" data-ville="${j}"
+      ${assez?'':'disabled'} style="width:100%;margin-top:8px">${assez
+        ?`Passer vers ${ou(j)} · ${S.villes[j].nom}`
+        :`Il manque ${fmt(dr-S.or)} po pour la douane`}</button>`;}).join('');
+  const une=sorties.length===1;
   return `<div class="carte passage">
-    <div class="rangee"><h3>Franchir la frontière</h3>
-      <span class="oeil chiffre">${lieuesEntre(i,j)} lieues · ${etapesEntre(i,j)} étapes</span></div>
-    <p>Au-delà de la herse commencent <b>${enContree(contreeVoisine(c))}</b>. Le droit de passage se
+    <div class="rangee"><h3>${une?'Franchir la frontière':'Les passages'}</h3>
+      <span class="oeil chiffre">${une
+        ?`${lieuesEntre(i,sorties[0].vers)} lieues · ${etapesEntre(i,sorties[0].vers)} étapes`
+        :`${sorties.length} sorties`}</span></div>
+    <p>${une?`Au-delà de la herse : <b>${ou(sorties[0].vers)}</b>.`
+           :'Plusieurs routes partent d\'ici.'} Le droit de passage se
        calcule sur ce que vous transportez : <b class="chiffre">${fmt(dr)} po</b> à acquitter
        avant de partir.</p>
-    <button class="bouton petit${assez?'':' creux'}" data-ville="${j}" ${assez?'':'disabled'}
-      style="width:100%;margin-top:11px">${assez?`Passer vers ${enContree(contreeVoisine(c))}`
-        :`Il manque ${fmt(dr-S.or)} po pour la douane`}</button>
+    ${boutons}
   </div>`;
 }
 function carteDestination(){
@@ -2659,8 +2765,27 @@ const GLYPHE_COURONNE='M-4.2 -10.6 l1.4 -3.6 l1.4 2.3 l1.4 -3.6 l1.4 3.6 l1.4 -2
    1,6 est le compromis retenu : au-delà, l'œil se met à mal classer deux
    routes partant de la même cité ; en deçà, la contrée reste un bandeau. */
 const ETIREMENT_CARTE=1.6, AXE_CARTE=51;
+/* La transformation qui ramène les pixels d'une carte dessinée dans le cadre de
+   180 unités de large du dessin. Recalculée à chaque rendu, pour les seuls lieux
+   affichés : la carte se cadre donc toujours sur ce qu'on regarde. */
+let AJUST=null;
+function ajusterCadre(lieux){
+  if(!MONDE){AJUST=null;return;}
+  let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
+  lieux.forEach(i=>{const p=positionDe(i);
+    x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y);});
+  const lx=Math.max(1,x1-x0),ly=Math.max(1,y1-y0);
+  /* 22 unités de marge de chaque côté : les noms débordent les pastilles */
+  const k=Math.min(136/lx,58/ly);
+  AJUST={x0:x0,y0:y0,k:k,dx:90-(lx*k)/2,dy:AXE_CARTE-(ly*k)/2};
+}
 function posCarte(i){
   const p=positionDe(i);
+  if(AJUST){
+    const x=AJUST.dx+(p.x-AJUST.x0)*AJUST.k;
+    const y=AJUST.dy+(p.y-AJUST.y0)*AJUST.k;
+    return {x:x,y:y,lx:x+(p.lx||0),ly:p.ly||14,ancre:p.ancre||'middle'};
+  }
   return {x:p.x,y:AXE_CARTE+(p.y-AXE_CARTE)*ETIREMENT_CARTE,
           lx:p.lx,ly:p.ly,ancre:p.ancre};
 }
@@ -2675,11 +2800,30 @@ function cadreCarte(lieux){
   });
   return {haut:h-13,bas:b+11};
 }
+/* Les paires de lieux à relier d'un trait : le réseau réel quand il existe,
+   sinon le graphe complet d'une contrée, comme avant. */
+function pairesCarte(lieux){
+  const dans={};lieux.forEach(i=>{dans[i]=1;});
+  if(!MONDE){
+    const p=[];
+    lieux.forEach(i=>lieux.forEach(j=>{if(j>i)p.push([i,j]);}));
+    return p;
+  }
+  const p=[],vu={};
+  lieux.forEach(i=>VOISINS[i].forEach(v=>{
+    if(!dans[v.vers])return;
+    const a=Math.min(i,v.vers),b=Math.max(i,v.vers);
+    if(vu[a+'-'+b])return;
+    vu[a+'-'+b]=1;p.push([a,b]);
+  }));
+  return p;
+}
 function rendreCarte(){
-  const cur=indexVille(S.ville),c=contreeDe(cur),lieux=lieuxDe(c);
+  const cur=indexVille(S.ville),c=contreeDe(cur);
+  const lieux=MONDE?lieuxDeCarte(cur):lieuxDe(c);
+  ajusterCadre(lieux);
   let voies='',etiq='',cites='';
-  lieux.forEach(i=>lieux.forEach(j=>{
-    if(j<=i)return;
+  pairesCarte(lieux).forEach(([i,j])=>{
     const a=posCarte(i),b=posCarte(j);
     const depuisIci=(i===cur||j===cur);
     voies+=`<line data-voie="${i}-${j}" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"
@@ -2687,7 +2831,7 @@ function rendreCarte(){
     if(depuisIci)
       etiq+=`<text data-dist="${i}-${j}" class="dist"
         x="${(a.x+b.x)/2}" y="${(a.y+b.y)/2-1.6}">${lieuesEntre(i,j)}</text>`;
-  }));
+  });
   lieux.forEach(i=>{
     const v=S.villes[i],pos=posCarte(i),porte=estFrontiere(i);
     cites+=`<g class="cite${i===cur?' ici':''}${porte?' porte':''}${v.capitale?' capitale':''}"
@@ -2709,9 +2853,15 @@ function rendreCarte(){
     </g>`;
   });
   const cc=CONTREES[c],cadre=cadreCarte(lieux);
-  const bord=`<text class="legende" x="6" y="${(cadre.haut+10).toFixed(1)}">${cc.nom}</text>
-    <text class="legende vers" x="174" y="${(cadre.bas-3).toFixed(1)}"
-      style="text-anchor:end">vers ${cc.vers} ➜</text>`;
+  /* Le titre de la carte : son nom propre quand le monde est écrit et qu'elle
+     porte plusieurs contrées, celui de la contrée sinon. */
+  const carte=MONDE&&CARTES[carteDeLieu(cur)];
+  const plusieurs=MONDE&&new Set(lieux.map(i=>contreeDe(i))).size>1;
+  const titre=plusieurs?(carte.nom||cc.nom):cc.nom;
+  const sortie=MONDE?motSortie(cur):cc.vers;
+  const bord=`<text class="legende" x="6" y="${(cadre.haut+10).toFixed(1)}">${titre}</text>`+
+    (sortie?`<text class="legende vers" x="174" y="${(cadre.bas-3).toFixed(1)}"
+      style="text-anchor:end">vers ${sortie} ➜</text>`:'');
   const hauteur=cadre.bas-cadre.haut,el=$('#carte-monde');
   el.innerHTML=
     `<svg viewBox="0 ${cadre.haut.toFixed(1)} 180 ${hauteur.toFixed(1)}"
@@ -2724,7 +2874,10 @@ function majSelectionCarte(){
   const carte=$('#carte-monde');
   if(!carte)return;
   const cur=indexVille(S.ville);
-  const d=(S.dest!==null&&S.dest!==undefined&&contreeDe(S.dest)===contreeDe(cur))?S.dest:null;
+  /* la sélection ne se montre que si la destination est sur la carte dessinée */
+  const memeCarte=MONDE?(j)=>carteDeLieu(j)===carteDeLieu(cur)
+                       :(j)=>contreeDe(j)===contreeDe(cur);
+  const d=(S.dest!==null&&S.dest!==undefined&&memeCarte(S.dest))?S.dest:null;
   carte.querySelectorAll('.cite').forEach(g=>
     g.classList.toggle('choisie',d!==null&&+g.dataset.ville===d));
   const paire=d===null?null:[Math.min(cur,d),Math.max(cur,d)].join('-');
@@ -2744,7 +2897,7 @@ function couleursCiel(p){
   return [mix(a[1],b[1]),mix(a[2],b[2])];
 }
 function partir(r){
-  if(r.km)r.etapes=etapesConvoi(r.km);   /* la charge a pu changer depuis l'affichage */
+  if(r.km)r.etapes=etapesConvoi(r.km*(r.lenteur||1));  /* la charge a pu changer */
   if(r.douane){
     if(S.or<r.douane){toast('La douane exige '+fmt(r.douane)+' po.');return;}
     S.or-=r.douane;
@@ -4020,7 +4173,7 @@ function rendreArchetypes(){
 function majTitre(){
   afficherRecordTitre();
   const d=partieEnCours(),b=$('#btn-reprendre');
-  if(d&&d.marchand&&d.villes&&d.villes.length===CONTREES.length*PAR_CONTREE){
+  if(d&&d.marchand&&d.villes&&d.villes.length===nbLieux()){
     b.hidden=false;b.textContent=`Reprendre · étape ${(d.etapes||0)+1}`;
     $('#btn-commencer').classList.add('creux');
   }else{b.hidden=true;$('#btn-commencer').classList.remove('creux');}
@@ -4375,6 +4528,255 @@ $('#nom-champ').addEventListener('keydown',e=>{if(e.key==='Enter')$('#nom-valide
 const FICHIERS_DONNEES=['biens','raretes','contrees','archetypes','armes',
   'chariots','ambiance','pnj','routes','missions','icones'];
 
+/* Les cinq fichiers d'auteur, ceux que produisent les ateliers de outils/, sont
+   en revanche **facultatifs**. Absents, le jeu tourne exactement comme avant :
+   monde inventé à chaque partie, événements écrits en JavaScript, ni personnages
+   nommés, ni objets uniques, ni missions scénarisées. Présents, ils prennent le
+   relais sans que rien d'autre change. C'est ce qui permet de les écrire à son
+   rythme, un par un.  */
+const FICHIERS_AUTEUR=['monde','evenements','personnages','objets','missions-ecrites'];
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LE MONDE D'AUTEUR
+   ───────────────────────────────────────────────────────────────────────────
+   Tant que data/monde.json est absent, MONDE reste null et tout ce qui suit
+   dort : creerMonde() invente ses trois contrées de six lieux comme avant, et
+   les fonctions de topologie gardent leur arithmétique d'index.
+
+   Présent, le fichier prend le relais. Il peut décrire **plusieurs cartes** qui
+   communiquent : le monde, une cité en plusieurs quartiers, un réseau
+   souterrain. Chaque carte a son échelle et sa vitesse de marche — parcourir un
+   kilomètre en ville coûte plus qu'en rase campagne —, et l'on passe de l'une à
+   l'autre par une voie déclarée entre deux de leurs lieux.
+
+   Le format v1 de l'atelier de carte (une seule carte) est accepté tel quel :
+   il est normalisé en une carte unique. Le format v2 en accepte autant qu'on
+   veut.                                                                       */
+
+let MONDE=null;      /* le fichier normalisé — null : monde procédural */
+let CARTES=null;     /* clé → { cle, nom, kmParJour, etalon… } */
+let LIEUX=null;      /* les lieux, dans l'ordre où S.villes les reprend */
+let PAR_CLE=null;    /* clé de lieu → son indice dans LIEUX */
+let VOISINS=null;    /* indice → [ { vers, lieues, franchit } ] */
+const KM_PAR_JOUR_DEFAUT=15;
+
+/* ── normalisation ── */
+function normaliserMonde(d){
+  if(!d||!Array.isArray(d.lieux)||!d.lieux.length)return null;
+  const m={};
+  /* les cartes : v2 en donne une liste, v1 une seule, sans clé */
+  if(Array.isArray(d.cartes)&&d.cartes.length)m.cartes=d.cartes.map(c=>({
+    cle:c.cle||'monde',nom:c.nom||'Le monde',fichier:c.fichier||'',
+    largeur:c.largeur||1000,hauteur:c.hauteur||1000,
+    kmParJour:c.kmParJour||(d.mesures&&d.mesures.kmParJour)||KM_PAR_JOUR_DEFAUT,
+    etalon:c.etalon||d.etalon||null}));
+  else m.cartes=[{cle:'monde',nom:(d.carte&&d.carte.nom)||'Le monde',
+    fichier:(d.carte&&d.carte.fichier)||'',
+    largeur:(d.carte&&d.carte.largeur)||1000,hauteur:(d.carte&&d.carte.hauteur)||1000,
+    kmParJour:(d.mesures&&d.mesures.kmParJour)||KM_PAR_JOUR_DEFAUT,
+    etalon:d.etalon||null}];
+  const premiere=m.cartes[0].cle;
+  m.contrees=(d.contrees||[]).map(c=>({cle:c.cle,nom:c.nom||c.cle,
+    gentile:c.gentile||'',teinte:c.teinte||'#C9A227',carte:c.carte||premiere}));
+  m.lieux=d.lieux.map(l=>({cle:l.cle,nom:l.nom||l.cle,contree:l.contree||'',
+    carte:l.carte||premiere,rang:l.rang||'ville',traits:l.traits||[],
+    x:l.x||0,y:l.y||0,etiq:l.etiq||null}));
+  const carteDe={};m.lieux.forEach(l=>{carteDe[l.cle]=l.carte;});
+  const contreeDeCle={};m.lieux.forEach(l=>{contreeDeCle[l.cle]=l.contree;});
+  m.voies=(d.voies||[]).filter(v=>carteDe[v.de]!==undefined&&carteDe[v.vers]!==undefined)
+    .map(v=>{
+      const c=(v.calcul||[]).find(x=>x.cle==='normal')||(v.calcul||[])[0]||{};
+      return {de:v.de,vers:v.vers,terrain:v.terrain||'plaine',
+        lieues:c.lieues||v.lieues||10,
+        /* Une voie « franchit » quand elle change de contrée ou de carte : on ne
+           l'emprunte qu'en passant par l'écran de frontière. C'est ce qui fait
+           qu'on entre dans une cité par sa porte, et pas n'importe comment. */
+        franchit:contreeDeCle[v.de]!==contreeDeCle[v.vers]||carteDe[v.de]!==carteDe[v.vers]};
+    });
+  m.rangs=d.rangs||{};
+  m.mesures=d.mesures||{};
+  return m;
+}
+/* La taille du marché, déduite du rang. Une capitale a tout, un hameau presque
+   rien : c'est ce qui donne un sens à cinq rangs au lieu de deux. */
+const TAILLE_RANG={capitale:1,ville:.82,village:.55,hameau:.3,poste:.18};
+const tailleDeRang=r=>TAILLE_RANG[r]!==undefined?TAILLE_RANG[r]:.7;
+
+let IDX_CONTREE=null;   /* indice de lieu → indice de contrée */
+let EST_POSTE=null;     /* indice de lieu → est-ce un poste frontière */
+
+function batirTopologie(){
+  LIEUX=MONDE.lieux;
+  PAR_CLE={};LIEUX.forEach((l,i)=>{PAR_CLE[l.cle]=i;});
+  CARTES={};MONDE.cartes.forEach(c=>{CARTES[c.cle]=c;});
+  VOISINS=LIEUX.map(()=>[]);
+  MONDE.voies.forEach(v=>{
+    const a=PAR_CLE[v.de],b=PAR_CLE[v.vers];
+    if(a===undefined||b===undefined)return;
+    VOISINS[a].push({vers:b,lieues:v.lieues,franchit:v.franchit});
+    VOISINS[b].push({vers:a,lieues:v.lieues,franchit:v.franchit});
+  });
+  /* Les contrées du monde écrit remplacent la liste de data/contrees.json, en
+     lui empruntant tout ce qui est économique : la forge, les types de cité, le
+     type de capitale. Le reste du moteur continue de lire CONTREES[c] sans
+     savoir que le monde vient d'un fichier. */
+  const source=CONTREES;
+  CONTREES=MONDE.contrees.map(c=>{
+    const eco=source.find(x=>x.cle===c.cle)||source[0];
+    return Object.assign({},eco,{cle:c.cle,nom:c.nom,
+      gentile:c.gentile||eco.gentile,teinte:c.teinte,
+      article:'les '+c.nom.toLowerCase(),carte:c.carte});
+  });
+  const rang={};CONTREES.forEach((c,i)=>{rang[c.cle]=i;});
+  IDX_CONTREE=LIEUX.map(l=>rang[l.contree]!==undefined?rang[l.contree]:0);
+  EST_POSTE=LIEUX.map(l=>l.rang==='poste');
+}
+const carteDeLieu=i=>(LIEUX&&LIEUX[i])?LIEUX[i].carte:'monde';
+function kmParJourDe(i){
+  const c=CARTES&&CARTES[carteDeLieu(i)];
+  return (c&&c.kmParJour)||KM_PAR_JOUR_DEFAUT;
+}
+
+/* ── le plus court chemin ──
+   Deux mesures à la fois : les lieues parcourues, et les étapes que ça coûte.
+   Les deux ne sont pas proportionnelles, parce que chaque carte a sa vitesse :
+   une lieue de ruelles se paie plus cher qu'une lieue de piste. */
+function cheminEntre(a,b,traverser){
+  if(a===b)return {lieues:0,etapes:0,par:[a]};
+  if(!VOISINS||!VOISINS[a])return null;
+  const vus={},prov={},coutL={},coutE={};
+  coutL[a]=0;coutE[a]=0;
+  for(;;){
+    let x=null;
+    Object.keys(coutE).forEach(k=>{if(!vus[k]&&(x===null||coutE[k]<coutE[x]))x=k;});
+    if(x===null)break;
+    x=+x;
+    if(x===b)break;
+    vus[x]=1;
+    VOISINS[x].forEach(v=>{
+      if(v.franchit&&!traverser)return;
+      /* les étapes se comptent sur la carte du tronçon parcouru */
+      const km=v.lieues*KM_PAR_LIEUE;
+      const e=Math.max(1,Math.ceil(km/kmParJourDe(v.vers)));
+      const nl=coutL[x]+v.lieues, ne=coutE[x]+e;
+      if(coutE[v.vers]===undefined||ne<coutE[v.vers]){
+        coutE[v.vers]=ne;coutL[v.vers]=nl;prov[v.vers]=x;}
+    });
+  }
+  if(coutE[b]===undefined)return null;
+  const par=[b];
+  for(let k=b;prov[k]!==undefined;k=prov[k])par.unshift(prov[k]);
+  return {lieues:Math.round(coutL[b]),etapes:coutE[b],par:par};
+}
+/* Les lieux qu'on peut rejoindre sans franchir : ce sont les destinations que
+   l'écran de carte propose. */
+function accessibles(i){
+  const vus={},file=[i];vus[i]=1;
+  while(file.length){
+    const x=file.shift();
+    VOISINS[x].forEach(v=>{
+      if(v.franchit||vus[v.vers])return;
+      vus[v.vers]=1;file.push(v.vers);
+    });
+  }
+  return Object.keys(vus).map(Number).filter(k=>k!==i);
+}
+/* Les franchissements offerts depuis un lieu : chaque voie qui change de
+   contrée ou de carte. Le joueur choisit, au lieu de subir un unique voisin. */
+function traversees(i){
+  if(!VOISINS||!VOISINS[i])return [];
+  return VOISINS[i].filter(v=>v.franchit).map(v=>({vers:v.vers,lieues:v.lieues}));
+}
+/* Aller de i à j est-il un franchissement ? Vrai quand une voie directe entre
+   les deux change de contrée ou de carte : c'est elle qui coûte la douane. */
+function estFranchissement(i,j){
+  if(!MONDE)return contreeDe(i)!==contreeDe(j);
+  return VOISINS[i].some(v=>v.vers===j&&v.franchit);
+}
+/* Ce qui s'annonce au bord de la carte : ce vers quoi mènent ses sorties. On ne
+   nomme que ce qui n'est pas déjà dessiné — une contrée présente sur la carte
+   n'est pas une sortie, même si une voie franchissable y mène. */
+function avecArticle(nom){
+  return /^(le |la |les |l')/i.test(nom)?nom.toLowerCase():'les '+nom.toLowerCase();
+}
+function motSortie(i){
+  if(!MONDE)return CONTREES[contreeDe(i)].vers;
+  const ici=carteDeLieu(i);
+  const lieux=lieuxDeCarte(i);
+  const contreesIci={};lieux.forEach(k=>{contreesIci[contreeDe(k)]=1;});
+  const noms=[];
+  lieux.forEach(k=>traversees(k).forEach(t=>{
+    const dehors=carteDeLieu(t.vers)!==ici;
+    if(!dehors&&contreesIci[contreeDe(t.vers)])return;
+    const autre=dehors?(CARTES[carteDeLieu(t.vers)]||{}).nom
+                      :CONTREES[contreeDe(t.vers)].nom;
+    if(autre&&noms.indexOf(autre)<0)noms.push(autre);
+  }));
+  if(!noms.length)return '';
+  if(noms.length===1)return avecArticle(noms[0]);
+  if(noms.length===2)return noms.map(avecArticle).join(' et ');
+  return noms.length+' autres terres';
+}
+
+/* ── construire S.villes depuis le monde écrit ── */
+function creerMondeEcrit(){
+  const parContree={};
+  MONDE.contrees.forEach((c,ci)=>{parContree[c.cle]=ci;});
+  /* Les tables économiques restent dans data/ : une contrée écrite qui ne s'y
+     trouve pas emprunte celle de la première, faute de mieux. On le dit. */
+  const clesConnues=Object.keys(RARETE_BASE);
+  const empruntees=[];
+  return LIEUX.map((l,i)=>{
+    const ci=parContree[l.contree]!==undefined?parContree[l.contree]:0;
+    const cle=(MONDE.contrees[ci]||{}).cle||clesConnues[0];
+    const eco=clesConnues.indexOf(cle)>=0?cle:clesConnues[0];
+    if(eco!==cle&&empruntees.indexOf(cle)<0)empruntees.push(cle);
+    const frontiere=l.rang==='poste', capitale=l.rang==='capitale';
+    const types=(TYPES_PAR_CLE[eco]||TYPES_HUMAIN);
+    const v={nom:l.nom,cleLieu:l.cle,carte:l.carte,rang:l.rang,traits:l.traits,
+      type:frontiere?TYPE_FRONTIERE:(capitale?(TYPES_CAP_PAR_CLE[eco]||TYPE_CAP_HUMAIN)
+        :types[i%types.length]),
+      contree:ci,cleContree:cle,ecoContree:eco,
+      frontiere:frontiere,capitale:capitale,taille:tailleDeRang(l.rang),
+      stat:{},mem:{},dec:{},dispo:{},visites:0,forge:1};
+    ORDRE_CAT.forEach(cat=>{v.dec[cat]=pick([-1,0,0,0,1]);});
+    v.amb={h:i%HEURES.length,o:ri(0,3),od:i%ODEURS.length,f:i%FOULES.length};
+    const forgeC=(CONTREES.find(c=>c.cle===eco)||{forge:1}).forge;
+    v.forge=rnd(.9,1.14)*forgeC*(/forge|minière|frontalier|fondeurs/.test(v.type.nom)?.85:1);
+    IDS.forEach(g=>{v.stat[g]=rnd(.9,1.1);v.mem[g]=1;});
+    if(empruntees.length&&i===LIEUX.length-1)
+      console.info('Contrées sans table de rareté, elles empruntent « '+eco+' » : '+
+        empruntees.join(', '));
+    return v;
+  });
+}
+
+/* ═══════════════ les contenus d'auteur ═══════════════ */
+let EVENEMENTS_DONNEES=[];   /* data/evenements.json → evenements */
+let PERSONNAGES=null;        /* clé → personnage */
+let OBJETS=null;             /* clé → objet unique */
+let MISSIONS_ECRITES=[];     /* data/missions-ecrites.json → missions */
+let TYPES_PAR_CLE=null, TYPES_CAP_PAR_CLE=null;
+
+function assignerAuteur(d){
+  TYPES_PAR_CLE={humain:TYPES_HUMAIN,nain:TYPES_NAIN,elfe:TYPES_ELFE};
+  TYPES_CAP_PAR_CLE={humain:TYPE_CAP_HUMAIN,nain:TYPE_CAP_NAIN,elfe:TYPE_CAP_ELFE};
+  MONDE=normaliserMonde(d.monde);
+  if(MONDE)batirTopologie();
+  EVENEMENTS_DONNEES=(d.evenements&&d.evenements.evenements)||[];
+  MISSIONS_ECRITES=(d['missions-ecrites']&&d['missions-ecrites'].missions)||[];
+  PERSONNAGES=null;
+  if(d.personnages&&d.personnages.personnages){
+    PERSONNAGES={};
+    d.personnages.personnages.forEach(p=>{PERSONNAGES[p.cle]=p;});
+  }
+  OBJETS=null;
+  if(d.objets&&d.objets.objets){
+    OBJETS={};
+    d.objets.objets.forEach(o=>{OBJETS[o.cle]=o;});
+  }
+}
+
 function assigner(d){
   /* — marchandises — */
   CATEGORIES=d.biens.categories;
@@ -4492,15 +4894,24 @@ function echecChargement(e){
 }
 
 function chargerDonnees(){
-  return Promise.all(FICHIERS_DONNEES.map(nom=>
-      fetch('data/'+nom+'.json').then(r=>{
-        if(!r.ok)throw new Error('data/'+nom+'.json → '+r.status+' '+r.statusText);
-        return r.json();
-      })))
+  const requis=nom=>fetch('data/'+nom+'.json').then(r=>{
+    if(!r.ok)throw new Error('data/'+nom+'.json → '+r.status+' '+r.statusText);
+    return r.json();
+  });
+  /* Un fichier d'auteur absent n'est pas une panne : on rend null et le jeu
+     garde son comportement d'origine. Un fichier présent mais illisible, en
+     revanche, doit se voir — on le signale sans arrêter le chargement. */
+  const facultatif=nom=>fetch('data/'+nom+'.json')
+    .then(r=>r.ok?r.json():null)
+    .catch(e=>{console.warn('data/'+nom+'.json illisible :',e.message);return null;});
+  return Promise.all(FICHIERS_DONNEES.map(requis)
+      .concat(FICHIERS_AUTEUR.map(facultatif)))
     .then(charges=>{
       const d={};
       FICHIERS_DONNEES.forEach((nom,i)=>{d[nom]=charges[i];});
+      FICHIERS_AUTEUR.forEach((nom,i)=>{d[nom]=charges[FICHIERS_DONNEES.length+i];});
       assigner(d);
+      assignerAuteur(d);
       demarrer();
     })
     .catch(echecChargement);
