@@ -1,0 +1,59 @@
+{
+  "format": "caravane.missions.v1",
+  "apropos": "Deux missions d'essai. La première se confie en conversation, pas depuis l'onglet des contrats : c'est ce qu'un dialogue sait faire de plus utile.",
+  "missions": [
+    {
+      "cle": "le-registre-rature",
+      "titre": "Le registre raturé",
+      "oeil": "Un service",
+      "commanditaire": "orlanne",
+      "ico": { "glyphe": "sceau", "nature": "tracas" },
+      "offre": {
+        "recit": "Onze lignes du registre des péages ont été grattées. {commanditaire} veut savoir par qui, et le clerc qui les tenait a passé le bac du Gué un soir de novembre.",
+        "delai": 22
+      },
+      "jalons": [
+        { "faire": "rencontrer", "personnage": "sylve" },
+        { "faire": "atteindre", "lieu": "vaulmier" }
+      ],
+      "reussite": {
+        "texte": "« Novembre. » {commanditaire} referme le registre sans le rouvrir. « Je vous remercie, marchand. Ce que vous m'apprenez là, je crois que je le savais. »",
+        "recompenses": [
+          { "donne": "or", "de": 340 },
+          { "donne": "reputation", "de": 6 },
+          { "donne": "objet", "objet": "registre-des-peages" }
+        ]
+      },
+      "echec": {
+        "texte": "Vous revenez trop tard. Le registre a été remplacé par un neuf, et personne à la halle ne se souvient de l'ancien.",
+        "recompenses": [{ "donne": "reputation", "de": -3 }]
+      }
+    },
+    {
+      "cle": "le-vin-de-gaubert",
+      "titre": "Le vin de Gaubert",
+      "oeil": "Une course",
+      "commanditaire": "gaubert",
+      "ico": { "glyphe": "outre", "nature": "halte" },
+      "offre": {
+        "recit": "Gaubert a besoin de trente kilos de vin avant que le bac ne reprenne. Il ne demande pas d'où il vient — c'est même tout l'intérêt.",
+        "delai": 14,
+        "si": [{ "quoi": "reputation", "min": 20 }]
+      },
+      "jalons": [
+        { "faire": "livrer", "lieu": "le-gue", "bien": "vin", "kg": 30 }
+      ],
+      "reussite": {
+        "texte": "Gaubert compte les outres deux fois, paie sans discuter, et vous verse un verre de l'ancien — le vrai, celui qu'il ne vend pas.",
+        "recompenses": [
+          { "donne": "or", "de": 260 },
+          { "donne": "karma", "de": 4 }
+        ]
+      },
+      "echec": {
+        "texte": "Le bac a repris sans le vin. Gaubert ne dit rien, ce qui est pire.",
+        "recompenses": [{ "donne": "reputation", "de": -2 }]
+      }
+    }
+  ]
+}

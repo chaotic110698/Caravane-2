@@ -562,6 +562,21 @@ details.regles li{margin-bottom:6px}
 .entree .ico{display:inline-block;vertical-align:-4px;margin-right:5px}
 .recit{font-size:16px;line-height:1.5;color:var(--encre);margin-bottom:16px}
 .recit::first-letter{color:var(--minium);font-family:var(--display);font-size:1.05em}
+/* — l'onglet des gens, et la boîte de dialogue — */
+.carte.gens{padding-top:11px}
+.gens-tete{display:flex;align-items:center;gap:11px;margin-bottom:7px}
+.gens-ico{width:34px;height:34px;flex:none}
+.gens-ico svg{width:100%;height:100%;display:block}
+.gens-txt{flex:1;min-width:0}
+.gens-txt h3{line-height:1.15}
+.gens-txt .oeil{font-size:11px;margin-top:1px}
+.pastille-dire{flex:none;min-width:21px;height:21px;padding:0 6px;border-radius:11px;
+  background:var(--minium);color:var(--velin-clair);font-size:12px;font-weight:700;
+  display:flex;align-items:center;justify-content:center}
+/* la parole d'un personnage se lit en romain, sans lettrine : ce n'est pas un
+   récit, c'est quelqu'un qui parle */
+.recit.dit{font-style:normal;padding-left:11px;border-left:2px solid var(--filet)}
+.recit.dit::first-letter{color:inherit;font-family:inherit;font-size:inherit}
 .choix{width:100%;text-align:left;background:var(--velin);border:1px solid var(--filet);
   border-radius:var(--r);padding:12px 13px;margin-bottom:8px;min-height:56px;
   box-shadow:1px 1px 0 var(--velin-ombre)}
@@ -662,6 +677,7 @@ details.regles li{margin-bottom:6px}
     <button class="menu-item" data-onglet="marche"></button>
     <button class="menu-item" data-onglet="boutique"></button>
     <button class="menu-item" data-onglet="contrats"></button>
+    <button class="menu-item" data-onglet="gens"></button>
     <button class="menu-item" data-onglet="carnet"></button>
     <button class="menu-item" data-onglet="convoi"></button>
     <button class="menu-item" data-onglet="troupe"></button>
@@ -805,6 +821,7 @@ details.regles li{margin-bottom:6px}
       <div class="panneau" id="panneau-troupe"></div>
       <div class="panneau" id="panneau-boutique"></div>
       <div class="panneau" id="panneau-contrats"></div>
+      <div class="panneau" id="panneau-gens"></div>
       <div class="panneau" id="panneau-carnet"></div>
       <div class="panneau" id="panneau-parametres"></div>
       <div class="panneau" id="panneau-sauvegarde"></div>
@@ -977,6 +994,19 @@ details.regles li{margin-bottom:6px}
     <div class="issue" id="ev-issue-texte">—</div>
     <button class="bouton" id="ev-suite">Reprendre la route</button>
   </div>
+</div>
+
+<div class="feuille evenement" id="feuille-dialogue" role="dialog" aria-modal="true">
+  <div class="poignee"></div>
+  <div class="ev-tete">
+    <div class="ev-ico" id="dlg-ico"></div>
+    <div class="ev-tete-txt">
+      <p class="oeil" id="dlg-oeil">—</p>
+      <h2 id="dlg-qui">—</h2>
+    </div>
+  </div>
+  <p class="recit dit" id="dlg-dit">—</p>
+  <div id="dlg-reponses"></div>
 </div>
 
 <input type="file" id="fichier" accept=".json,application/json" hidden>
@@ -1216,7 +1246,10 @@ function nouvellePartie(cle){
      villes:[],ville:null,dest:null,prix:{},routes:null,route:null,pas:0,
      rumeur:null,escorte:0,fini:false,mort:false,banniere:null,ref:lireRecord(),
      /* ce que retiennent les contenus d'auteur ; vides si les fichiers sont absents */
-     gens:{},objets:{},objetsDepuis:{},mecrites:{},chronique:[]};
+     gens:{},objets:{},objetsDepuis:{},mecrites:{},chronique:[],
+     /* les conversations : combien de fois chacune a été menée, et ce que
+        le monde retient de ce qu'on s'est dit */
+     dits:{},souvenirs:{}};
   S.chariots[1].essieu.etat=88;S.chariots[1].caisse.etat=92;
   CLES_MYTHIQUES.forEach(c=>S.mythes[c]='etal');
   S.marchand.arme=({hache:'hache-legere',epee:'epee-legere',arc:'arc-leger',
@@ -1520,6 +1553,8 @@ const MENU=[
  {cle:'marche',   nom:'Marché',    sous:'acheter et vendre',   ico:()=>svgIco(GLYPHE_ETAL,'#C9A227')},
  {cle:'boutique', nom:'Boutique',  sous:'armes et échoppes',   ico:()=>svgIco(GLYPHE_BOURSE,'#A34E2C')},
  {cle:'contrats', nom:'Missions',  sous:'commandes en cours',  ico:()=>svgIco(GLYPHES_EV.sceau,'#4A7BC8')},
+ {cle:'gens',     nom:'Les gens',  sous:'qui se tient ici',    ico:()=>svgIco(GLYPHE_PARLER,'#6E9B6A'),
+  si:()=>personnagesIci().length>0},
  {cle:'carnet',   nom:'Carnet',    sous:'gens, objets, histoires',ico:()=>svgIco(GLYPHE_REGISTRE,'#A084C0'),
   si:()=>!!(PERSONNAGES||OBJETS||MISSIONS_ECRITES.length)},
  {cle:'convoi',   nom:'Convoi',    sous:'chariots et soute',   ico:()=>icoChariot('bache')},
@@ -1527,6 +1562,13 @@ const MENU=[
  {cle:'parametres',nom:'Paramètres',sous:'partie et record',   ico:()=>svgIco(GLYPHE_CLEF,'#9A9488')},
  {cle:'sauvegarde',nom:'Sauvegarde',sous:'emporter la partie', ico:()=>svgIco(GLYPHE_REGISTRE,'#9A7343')}
 ];
+const GLYPHE_PARLER=`<path d="M2.4 5.4h13.2a2 2 0 0 1 2 2v6.4a2 2 0 0 1-2 2H8.2l-4.4 3.4v-3.4
+    a2 2 0 0 1-1.4-1.9V7.4a2 2 0 0 1 2-2z" fill="currentColor"/>
+  <path d="M8.6 4.2h11.4a2 2 0 0 1 2 2v5.6" fill="none" stroke="currentColor"
+    stroke-width="1.7" opacity=".55"/>
+  <circle cx="6.4" cy="10.6" r="1.15" fill="var(--velin)"/>
+  <circle cx="10" cy="10.6" r="1.15" fill="var(--velin)"/>
+  <circle cx="13.6" cy="10.6" r="1.15" fill="var(--velin)"/>`;
 const GLYPHE_ETAL=`<path d="M2.6 8.4h18.8l-2 3.4H4.6z" fill="currentColor"/>
   <path d="M4.6 11.8h14.8v9.6H4.6z" fill="currentColor"/><path d="M8.6 21.4v-6h6.8v6z" fill="var(--velin)"/>
   <path d="M6 8.4l2-4.6h8l2 4.6" fill="none" stroke="currentColor" stroke-width="1.8"/>`;
@@ -1576,6 +1618,8 @@ function montrerOnglet(nom){
     $('#tete-panneau-titre').textContent=m.nom;
     $('#tete-panneau-sous').textContent=m.sous;
   }
+  if(nom==='gens')rendreGens();
+  if(nom==='carnet')panneauCarnet();
   if(S)S.onglet=nom;
   fermerMenu();
 }
@@ -2445,6 +2489,23 @@ function panneauParametres(){
     </div>
   </div>
   <div class="carte">
+    <h3>Le jeu d'exemple</h3>
+    <p>Un petit monde tout prêt — cinq lieux, quatre personnages et leurs conversations,
+       deux missions, un objet unique — pour éprouver les dialogues sans attendre votre
+       carte. Il vit dans <b>data/exemples/</b> et ne touche pas à vos fichiers.</p>
+    <p style="margin-top:6px">${dossierAuteur()
+      ?'<b>Le jeu d\'exemple est chargé.</b> Vos propres fichiers de data/ sont mis de côté, pas effacés.'
+      :'Vos fichiers de <b>data/</b> sont chargés, ou aucun s\'il n\'y en a pas encore.'}</p>
+    <div class="rangee" style="margin-top:12px;gap:8px">
+      <button class="bouton petit${dossierAuteur()?' creux':''}" data-auteur="exemples/"
+        style="flex:1"${dossierAuteur()?' disabled':''}>Charger l'exemple</button>
+      <button class="bouton petit${dossierAuteur()?'':' creux'}" data-auteur=""
+        style="flex:1"${dossierAuteur()?'':' disabled'}>Revenir aux miens</button>
+    </div>
+    <p class="info" style="margin-top:8px">Changer recommence une partie neuve : le monde
+       n'est pas le même, et une sauvegarde ne s'y retrouverait pas.</p>
+  </div>
+  <div class="carte">
     <h3>Ce voyage</h3>
     <p>Étape ${S.etapes+1} · ${fmt(S.lieues)} lieues parcourues · fortune au sommet ${fmt(S.orMax)} po ·
        ${S.contratsHonores||0} contrat${(S.contratsHonores||0)>1?'s':''} honoré${(S.contratsHonores||0)>1?'s':''}.</p>
@@ -2459,6 +2520,12 @@ function panneauParametres(){
 
 /* ═══════════════ sauvegarde ═══════════════ */
 const CLE_PARTIE='caravane.partie.v2';
+/* Où le jeu va chercher les fichiers d'auteur : data/ par défaut, ou
+   data/exemples/ quand on demande le jeu d'exemple depuis les Paramètres. */
+const CLE_DOSSIER='caravane.auteur.v1';
+function dossierAuteur(){
+  try{return localStorage.getItem(CLE_DOSSIER)||'';}catch(e){return '';}
+}
 function paquet(){
   const idx=v=>S.villes.indexOf(v);
   return {jeu:'caravane',v:9,date:new Date().toISOString(),
@@ -2466,7 +2533,7 @@ function paquet(){
     marchand:S.marchand,chariots:S.chariots,gardes:S.gardes,recrues:S.recrues,armes:S.armes,
     mythes:S.mythes,karma:S.karma,chien:S.chien,contrats:S.contrats,
     gens:S.gens,objets:S.objets,objetsDepuis:S.objetsDepuis,mecrites:S.mecrites,
-    chronique:S.chronique,
+    chronique:S.chronique,dits:S.dits,souvenirs:S.souvenirs,
     contratsHonores:S.contratsHonores,contratsRates:S.contratsRates,
     rumeur:S.rumeur,ref:S.ref,prix:S.prix,dest:S.dest,
     villes:S.villes.map(v=>({n:v.nom,t:TOUS_TYPES.indexOf(v.type),s:v.stat,m:v.mem,
@@ -2494,6 +2561,7 @@ function ouvrirPaquet(d){
      karma:(d.karma===undefined?50:d.karma),chien:d.chien||null,
      gens:d.gens||{},objets:d.objets||{},objetsDepuis:d.objetsDepuis||{},
      mecrites:d.mecrites||{},chronique:d.chronique||[],
+     dits:d.dits||{},souvenirs:d.souvenirs||{},
      contrats:d.contrats||[],contratsHonores:d.contratsHonores||0,contratsRates:d.contratsRates||0,
      villes:villes,ville:villes[d.ville]||villes[0],prix:d.prix,
      routes:d.routes?d.routes.map(r=>Object.assign({},r,{dest:villes[r.dest]||villes[0]})):null,
@@ -4416,6 +4484,8 @@ document.addEventListener('click',e=>{
   }
   if(t.dataset.accepter){accepterOffre(+t.dataset.accepter);return;}
   if(t.dataset.mission){accepterMission(t.dataset.mission);return;}
+  if(t.dataset.dlg){ouvrirDialogue(t.dataset.dlg);return;}
+  if(t.dataset.rep!==undefined){repondre(Number(t.dataset.rep));return;}
   if(t.dataset.parler){
     const texte=rencontrer(t.dataset.parler);
     if(texte){
@@ -4506,6 +4576,21 @@ document.addEventListener('click',e=>{
     else toast('Collez d\'abord le texte d\'une sauvegarde.');
     return;
   }
+  if(t.dataset.auteur!==undefined){
+    /* changer de jeu de fichiers change le monde : on repart de zéro, et on le
+       dit avant, parce qu'une partie en cours ne s'y retrouverait pas */
+    if(!t.dataset.sur){
+      t.dataset.sur='1';t.textContent='Confirmer';
+      toast('Le voyage en cours sera perdu.');return;
+    }
+    try{
+      if(t.dataset.auteur)localStorage.setItem(CLE_DOSSIER,t.dataset.auteur);
+      else localStorage.removeItem(CLE_DOSSIER);
+    }catch(e){}
+    effacerPartie();
+    location.reload();
+    return;
+  }
   if(t.dataset.oublier){
     try{localStorage.removeItem(CLE);}catch(e){}
     S.ref=null;rendreMarche();toast('Meilleur score effacé.');return;
@@ -4587,7 +4672,8 @@ const FICHIERS_DONNEES=['biens','raretes','contrees','archetypes','armes',
    nommés, ni objets uniques, ni missions scénarisées. Présents, ils prennent le
    relais sans que rien d'autre change. C'est ce qui permet de les écrire à son
    rythme, un par un.  */
-const FICHIERS_AUTEUR=['monde','evenements','personnages','objets','missions-ecrites'];
+const FICHIERS_AUTEUR=['monde','evenements','personnages','objets','missions-ecrites',
+                       'dialogues'];
 
 /* ═══════════════════════════════════════════════════════════════════════════
    LE MONDE D'AUTEUR
@@ -4810,6 +4896,8 @@ let PERSONNAGES=null;        /* clé → personnage */
 let ROLES={};                /* clé de rôle → {nom, feminin} — voyage avec eux */
 let OBJETS=null;             /* clé → objet unique */
 let MISSIONS_ECRITES=[];     /* data/missions-ecrites.json → missions */
+let DIALOGUES=[];            /* data/dialogues.json → dialogues */
+let DIALOGUES_DE={};         /* clé de personnage → ses dialogues, du plus prioritaire */
 let TYPES_PAR_CLE=null, TYPES_CAP_PAR_CLE=null;
 
 function assignerAuteur(d){
@@ -4819,6 +4907,14 @@ function assignerAuteur(d){
   if(MONDE)batirTopologie();
   EVENEMENTS_DONNEES=(d.evenements&&d.evenements.evenements)||[];
   MISSIONS_ECRITES=(d['missions-ecrites']&&d['missions-ecrites'].missions)||[];
+  DIALOGUES=(d.dialogues&&d.dialogues.dialogues)||[];
+  DIALOGUES_DE={};
+  DIALOGUES.forEach(x=>{
+    if(!x.personnage)return;
+    (DIALOGUES_DE[x.personnage]=DIALOGUES_DE[x.personnage]||[]).push(x);
+  });
+  Object.keys(DIALOGUES_DE).forEach(k=>
+    DIALOGUES_DE[k].sort((a,b)=>(Number(b.priorite)||0)-(Number(a.priorite)||0)));
   PERSONNAGES=null;ROLES={};
   if(d.personnages&&d.personnages.personnages){
     PERSONNAGES={};
@@ -4888,14 +4984,44 @@ function interrogerEv(nom,o){
     case 'coutGarde':return coutGarde();
     case 'tribut':return tribut();
     case 'soin':return troupe().reduce((s,u)=>s+coutSoin(u),0);
+    /* ── ce qui n'a de sens qu'en conversation ── */
+    case 'souvenir':return !!S.souvenirs[(o&&o.nom)||''];
+    case 'dialogueVu':return (S.dits[(o&&o.dialogue)||''])||0;
+    case 'rencontres':{
+      const k=(o&&o.personnage)||QUI_PARLE;
+      return k?etatGens(k).r:0;}
+    case 'missionEtat':{
+      const e=S.mecrites[(o&&o.mission)||''];
+      return (e&&e.e)||'aucune';}
+    case 'objetPorte':return objetsEnSoute().indexOf((o&&o.objet)||'')>=0;
+    case 'coucheOuverte':{
+      const k=(o&&o.personnage)||QUI_PARLE;
+      const q=k&&PERSONNAGES&&PERSONNAGES[k];
+      if(!q)return false;
+      const i=indexCouche(q,(o&&o.couche));
+      return i>=0&&etatGens(k).c.indexOf(i)>=0;}
     default:return 0;
   }
+}
+/* À qui l'on parle en ce moment : les conditions d'un dialogue peuvent parler
+   de « lui » sans le nommer, puisqu'il n'y a pas d'ambiguïté. */
+let QUI_PARLE=null;
+/* Une couche se désigne par sa clé, ou par son rang si elle n'en a pas. */
+function indexCouche(q,quoi){
+  const l=(q&&q.couches)||[];
+  const i=l.findIndex((c,n)=>(c.cle||String(n))===String(quoi));
+  if(i>=0)return i;
+  const n=Number(quoi);
+  return (Number.isInteger(n)&&n>=0&&n<l.length)?n:-1;
 }
 function conditionsEv(l){
   if(!l||!l.length)return true;
   return l.every(c=>{
     const v=interrogerEv(c.quoi,c);
-    if(c.vaut!==undefined)return !!v===!!c.vaut;
+    /* « vaut » compare tel quel dès qu'on lui donne autre chose qu'un
+       booléen : missionEtat vaut « cours », pas vrai ou faux */
+    if(c.vaut!==undefined)
+      return typeof c.vaut==='boolean'?(!!v===c.vaut):(v===c.vaut);
     if(c.min!==undefined&&v<valeurEv(c.min))return false;
     if(c.max!==undefined&&v>valeurEv(c.max))return false;
     return true;
@@ -5059,6 +5185,30 @@ function effetsEv(liste,sac){
         S.rumeur={ville:ou,bien:g,mult:Number(e.mult)||1.45};
         retenu=G[g].nom.toLowerCase();break;}
       case 'escorte':S.escorte=Math.max(S.escorte||0,Number(e.de)||1);break;
+      /* ── les trois qui n'ont de sens qu'en conversation ── */
+      case 'souvenir':{
+        const n=e.nom||'';
+        if(!n)break;
+        if(e.vaut===false)delete S.souvenirs[n];
+        else S.souvenirs[n]=true;
+        break;}
+      case 'mission':{
+        const m=MISSIONS_ECRITES.find(x=>x.cle===e.mission);
+        /* une mission ne se donne pas deux fois, et le dire serait pire que
+           de se taire : le personnage passerait pour distrait */
+        if(!m||(S.mecrites[m.cle]&&S.mecrites[m.cle].e!=='offerte'))break;
+        accepterMission(m.cle,true);
+        retenu=m.titre;break;}
+      case 'ouvrirCouche':{
+        const k=e.personnage||QUI_PARLE;
+        const q=k&&PERSONNAGES&&PERSONNAGES[k];
+        if(!q)break;
+        const i=indexCouche(q,e.couche);
+        if(i<0){console.warn('couche inconnue dans data/dialogues.json :',e.couche);break;}
+        const et=etatGens(k);
+        if(et.c.indexOf(i)<0)et.c.push(i);
+        retenu=(q.couches[i]||{}).titre||'';
+        break;}
       default:console.warn('effet inconnu dans data/evenements.json :',e.faire);
     }
     if(e.nomme&&sac[e.nomme]===undefined)sac[e.nomme]=retenu;
@@ -5256,12 +5406,16 @@ function conditionsLore(l,ctx){
 }
 /* Les couches acquises, recalculées : elles s'ouvrent dans l'ordre, et chacune
    peut compter celles déjà connues. */
-function couchesAcquises(couches,ctx){
-  const out=[];
+function couchesAcquises(couches,ctx,deja){
+  /* « deja » : ce qu'on avait déjà délié autrement — en conversation, ou en
+     portant un objet. Recalculer sans en tenir compte l'effacerait, et le
+     joueur perdrait ce qu'il a appris. */
+  const out=(deja||[]).slice();
   (couches||[]).forEach((c,i)=>{
+    if(out.indexOf(i)>=0)return;
     if(conditionsLore(c.gagne,Object.assign({},ctx,{acquises:out.length})))out.push(i);
   });
-  return out;
+  return out.sort((a,b)=>a-b);
 }
 function ditManque(l){
   const noms={rencontres:'le croiser',missionsPour:'lui rendre service',
@@ -5280,7 +5434,7 @@ function rencontrer(cle){
   e.r++;
   const ctx={gens:cle};
   const avant=e.c.slice();
-  e.c=couchesAcquises(p.couches,ctx);
+  e.c=couchesAcquises(p.couches,ctx,avant);
   const neuves=e.c.filter(i=>avant.indexOf(i)<0);
   avancerJalons({rencontre:cle});
   const sac=sacGens(p);
@@ -5346,6 +5500,166 @@ function laissezPasser(j){
     p.faire==='laissezPasser'&&(!p.lieu||p.lieu===LIEUX[j].cle)));
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   LES DIALOGUES
+   ───────────────────────────────────────────────────────────────────────────
+   Une conversation écrite d'avance : le personnage dit quelque chose, on lui
+   répond, et selon la réponse la conversation continue ailleurs. Rien n'est en
+   code — les conditions sont celles de conditionsEv(), les effets ceux de
+   effetsEv(), et un dialogue ne peut donc rien faire qu'un événement ne sache
+   déjà faire. Ce qui s'y ajoute tient en trois mots : les souvenirs, pour
+   qu'une conversation se rappelle la précédente ; confier une mission ; et
+   délier une couche de lore.
+
+   Ce qui est dit reste dit : les couches ouvertes en conversation rejoignent
+   l'index du carnet, et la première description reste relisible pour toujours.
+   Voir data/vocabulaire-dialogues.json pour la forme du fichier.            */
+
+let CONV=null;   /* la conversation en cours : {d, ou, sac} */
+
+/* Ce que ce personnage a à dire maintenant. Un dialogue déjà mené ne revient
+   pas, sauf s'il se déclare rejouable. */
+function dialoguesOfferts(cle){
+  const l=DIALOGUES_DE[cle]||[];
+  const avant=QUI_PARLE;
+  QUI_PARLE=cle;
+  const out=l.filter(d=>{
+    if(!d.rejouable&&(S.dits[d.cle]||0)>0)return false;
+    return conditionsEv(d.si);
+  });
+  QUI_PARLE=avant;
+  return out;
+}
+const aQuelqueChoseADire=cle=>dialoguesOfferts(cle).length>0;
+
+/* Les trous d'un dialogue : ceux du personnage, plus le lieu et la bourse. */
+function sacDialogue(p){
+  const s=sacGens(p);
+  s.ici=S.ville?S.ville.nom:'';
+  if(!s.contree&&S.ville&&CONTREES&&CONTREES[S.ville.contree])
+    s.contree=CONTREES[S.ville.contree].nom;
+  s.or=fmt(S.or);
+  s.marchand=S.marchand?S.marchand.nom:'';
+  return s;
+}
+
+function ouvrirDialogue(cleD){
+  const d=DIALOGUES.find(x=>x.cle===cleD);
+  const p=d&&PERSONNAGES&&PERSONNAGES[d.personnage];
+  if(!d||!p)return;
+  QUI_PARLE=d.personnage;
+  /* parler, c'est se rencontrer : le compteur monte, et les couches que la
+     seule fréquentation mérite s'ouvrent d'elles-mêmes */
+  const e=etatGens(d.personnage);
+  e.r++;
+  e.c=couchesAcquises(p.couches,{gens:d.personnage},e.c);
+  avancerJalons({rencontre:d.personnage});
+  CONV={d:d,ou:d.entree||Object.keys(d.repliques||{})[0],sac:sacDialogue(p)};
+  allerA(CONV.ou);
+  ouvrirFeuille('#feuille-dialogue');
+}
+
+function allerA(nom){
+  if(!CONV)return;
+  const r=(CONV.d.repliques||{})[nom];
+  if(!r){console.warn('réplique inconnue dans data/dialogues.json :',nom);return finirDialogue();}
+  CONV.ou=nom;
+  /* les effets d'entrée se jouent une fois, à l'affichage */
+  if(r.effets)effetsEv(r.effets,CONV.sac);
+  rendreDialogue();
+}
+
+function rendreDialogue(){
+  if(!CONV)return;
+  const d=CONV.d, r=(d.repliques||{})[CONV.ou];
+  const p=PERSONNAGES[d.personnage];
+  $('#dlg-ico').innerHTML=svgIco(glypheDe(p),teinteDeGens(p));
+  $('#dlg-qui').textContent=appellationDe(p);
+  const role=nomRoleDe(p);
+  $('#dlg-oeil').textContent=r.oeil||[role,S.ville?S.ville.nom:''].filter(Boolean).join(' · ');
+  $('#dlg-dit').innerHTML=texteEv(r.dit,CONV.sac);
+
+  /* Une réponse dont la condition n'est pas remplie se montre grisée quand
+     l'auteur a écrit pourquoi, et se cache sinon : voir une porte fermée vaut
+     mieux que ne pas la voir, mais pas si l'on ne dit pas ce qui la ferme. */
+  const brutes=(r.reponses||[]).map(c=>({c:c,ouvert:conditionsEv(c.si)}));
+  const vues=brutes.filter(x=>x.ouvert||x.c.sinon);
+  const box=$('#dlg-reponses');
+  box.innerHTML=vues.length
+    ?vues.map((x,i)=>`<button class="choix" data-rep="${i}"${x.ouvert?'':' disabled'}>
+        <strong>${texteEv(x.c.txt,CONV.sac)}</strong>
+        ${x.ouvert?'':`<span>${texteEv(x.c.sinon,CONV.sac)}</span>`}</button>`).join('')
+    :`<button class="choix" data-rep="-1"><strong>Prendre congé.</strong></button>`;
+  box._vues=vues;
+}
+
+function repondre(i){
+  if(!CONV)return;
+  if(i<0)return finirDialogue();
+  const x=$('#dlg-reponses')._vues[i];
+  if(!x||!x.ouvert)return;
+  if(x.c.effets)effetsEv(x.c.effets,CONV.sac);
+  if(x.c.fin||!x.c.vers)return finirDialogue();
+  allerA(x.c.vers);
+}
+
+function finirDialogue(){
+  if(CONV){
+    /* on ne compte la conversation comme menée qu'ici : en sortir par la
+       poignée en cours de route la laisse offerte */
+    S.dits[CONV.d.cle]=(S.dits[CONV.d.cle]||0)+1;
+    CONV=null;
+  }
+  QUI_PARLE=null;
+  fermerFeuilles();
+  sauverAuto();
+  /* rendreMarche() refait tous les panneaux, y compris le carnet : ce qu'on
+     vient d'apprendre y est déjà quand on l'ouvrira */
+  rendreMarche();
+  rendreGens();
+}
+
+/* ── l'onglet des gens ── */
+function glypheDe(p){
+  const g=(p.ico&&p.ico.glyphe)||'ermite';
+  return GLYPHES_EV[g]||GLYPHES_EV.ermite;
+}
+function teinteDeGens(p){
+  if(p.ico&&p.ico.teinte)return p.ico.teinte;
+  return TEINTES_EV[(p.ico&&p.ico.nature)||'rencontre']||'#6E9B6A';
+}
+function rendreGens(){
+  const pan=$('#panneau-gens');
+  if(!pan)return;
+  const la=personnagesIci();
+  if(!la.length){
+    pan.innerHTML=`<div class="carte"><h3>Personne</h3><p>Nul ici dont on ait retenu
+      le nom. Les gens qu'on écrit se tiennent quelque part : c'est là qu'on les
+      trouve.</p></div>`;
+    return;
+  }
+  pan.innerHTML=la.map(p=>{
+    const e=etatGens(p.cle);
+    const offerts=dialoguesOfferts(p.cle);
+    const role=nomRoleDe(p);
+    return `<div class="carte gens">
+      <div class="gens-tete">
+        <span class="gens-ico" style="color:${teinteDeGens(p)}">${svgIco(glypheDe(p),teinteDeGens(p))}</span>
+        <div class="gens-txt">
+          <h3>${appellationDe(p)}</h3>
+          <p class="oeil">${[role,e.r?e.r+(e.r>1?' rencontres':' rencontre'):'jamais vu']
+            .filter(Boolean).join(' · ')}</p>
+        </div>
+        ${offerts.length?`<span class="pastille-dire">${offerts.length}</span>`:''}
+      </div>
+      <p>${e.r?texteEv(p.premiere,sacGens(p)):'Vous ne lui avez encore jamais parlé.'}</p>
+      ${offerts.map(d=>`<button class="bouton petit" data-dlg="${d.cle}"
+        style="width:100%;margin-top:8px">${d.titre||'Lui parler'}</button>`).join('')}
+      ${offerts.length?'':`<button class="bouton petit creux" data-parler="${p.cle}"
+        style="width:100%;margin-top:8px">${e.r?'Lui redire un mot':'Aller lui parler'}</button>`}
+    </div>`;}).join('');
+}
+
 /* ── les missions écrites ── */
 const etatMission=cle=>S.mecrites[cle];
 function missionsProposeesIci(){
@@ -5362,14 +5676,16 @@ function missionsProposeesIci(){
 }
 const missionsEnCours=()=>MISSIONS_ECRITES.filter(m=>{
   const e=etatMission(m.cle);return e&&e.e==='cours';});
-function accepterMission(cle){
+/* « enParlant » : la mission vient d'une conversation, on est déjà en train de
+   lui parler. Sans quoi la rencontre se compterait deux fois. */
+function accepterMission(cle,enParlant){
   const m=MISSIONS_ECRITES.find(x=>x.cle===cle);
   if(!m)return;
   S.mecrites[cle]={e:'cours',j:0,ech:S.etapes+((m.offre||{}).delai||20)};
   const q=m.commanditaire?PERSONNAGES[m.commanditaire]:null;
-  if(q)etatGens(m.commanditaire).r++;
+  if(q&&!enParlant)etatGens(m.commanditaire).r++;
   toast('Mission acceptée : '+m.titre+'.');
-  rendreMarche();
+  if(!enParlant)rendreMarche();
 }
 function sacMission(m){
   const q=m.commanditaire?(PERSONNAGES||{})[m.commanditaire]:null;
@@ -5525,20 +5841,8 @@ function panneauCarnet(){
       </div>`;}).join('');
   }
 
-  /* — qui se tient ici — */
-  const gensLa=personnagesIci();
-  if(gensLa.length){
-    h+=`<p class="oeil" style="padding:14px 2px 8px">Ici même</p>`;
-    h+=gensLa.map(q=>{
-      const e=etatGens(q.cle);
-      return `<div class="carte">
-        <div class="rangee"><h3>${appellationDe(q)}</h3>
-          <span class="oeil">${e.r?e.r+(e.r>1?' rencontres':' rencontre'):'jamais vu'}</span></div>
-        <p>${e.r?texteEv(q.premiere,sacGens(q)):'Vous ne lui avez encore jamais parlé.'}</p>
-        <button class="bouton petit creux" data-parler="${q.cle}"
-          style="width:100%;margin-top:10px">${e.r?'Lui reparler':'Aller lui parler'}</button>
-      </div>`;}).join('');
-  }
+  /* Qui se tient ici est l'affaire de l'onglet « Les gens » : c'est là qu'on
+     leur parle. Le carnet garde ce qu'on en a appris, pas la porte d'entrée. */
 
   /* — les objets qu'on porte — */
   const enSoute=objetsEnSoute();
@@ -5707,7 +6011,7 @@ function chargerDonnees(){
   /* Un fichier d'auteur absent n'est pas une panne : on rend null et le jeu
      garde son comportement d'origine. Un fichier présent mais illisible, en
      revanche, doit se voir — on le signale sans arrêter le chargement. */
-  const facultatif=nom=>fetch('data/'+nom+'.json')
+  const facultatif=nom=>fetch('data/'+dossierAuteur()+nom+'.json')
     .then(r=>r.ok?r.json():null)
     .catch(e=>{console.warn('data/'+nom+'.json illisible :',e.message);return null;});
   return Promise.all(FICHIERS_DONNEES.map(requis)

@@ -1,0 +1,32 @@
+{
+  "format": "caravane.carte.v1",
+  "apropos": "Un petit monde d'essai : cinq lieux sur deux contrées, de quoi éprouver les dialogues sans attendre la vraie carte. Il se charge depuis Paramètres › Le jeu d'exemple, et ne touche pas à data/.",
+  "cartes": [
+    { "cle": "val", "nom": "Le Val d'Ambre", "largeur": 1000, "hauteur": 700, "kmParJour": 32 }
+  ],
+  "mesures": { "kmParLieue": 4.4, "kmParJour": 32 },
+  "contrees": [
+    { "cle": "humain", "nom": "Le Val d'Ambre", "gentile": "valois", "teinte": "#C9A227", "carte": "val" },
+    { "cle": "nain", "nom": "Les Contreforts", "gentile": "contrefortain", "teinte": "#A3B2BB", "carte": "val" }
+  ],
+  "lieux": [
+    { "cle": "vaulmier", "nom": "Vaulmier", "contree": "humain", "carte": "val",
+      "rang": "capitale", "traits": ["halle", "port"], "x": 220, "y": 340 },
+    { "cle": "le-gue", "nom": "Le Gué", "contree": "humain", "carte": "val",
+      "rang": "village", "traits": ["bac"], "x": 430, "y": 250 },
+    { "cle": "sainte-ambre", "nom": "Sainte-Ambre", "contree": "humain", "carte": "val",
+      "rang": "ville", "traits": ["temple"], "x": 400, "y": 470 },
+    { "cle": "porte-haute", "nom": "La Porte Haute", "contree": "nain", "carte": "val",
+      "rang": "poste", "traits": ["douane"], "x": 640, "y": 330 },
+    { "cle": "fondgris", "nom": "Fondgris", "contree": "nain", "carte": "val",
+      "rang": "capitale", "traits": ["mine", "forge"], "x": 830, "y": 300 }
+  ],
+  "voies": [
+    { "de": "vaulmier", "vers": "le-gue", "terrain": "plaine", "lieues": 11 },
+    { "de": "vaulmier", "vers": "sainte-ambre", "terrain": "plaine", "lieues": 13 },
+    { "de": "le-gue", "vers": "sainte-ambre", "terrain": "foret", "lieues": 9 },
+    { "de": "le-gue", "vers": "porte-haute", "terrain": "colline", "lieues": 14 },
+    { "de": "sainte-ambre", "vers": "porte-haute", "terrain": "colline", "lieues": 16 },
+    { "de": "porte-haute", "vers": "fondgris", "terrain": "montagne", "lieues": 12 }
+  ]
+}

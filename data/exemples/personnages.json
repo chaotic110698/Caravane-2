@@ -1,0 +1,88 @@
+{
+  "format": "caravane.personnages.v1",
+  "apropos": "Quatre personnages d'essai, un par usage : une donneuse de mission, un marchand chez qui l'on repasse, un taiseux dont la langue se délie, et une garde qui ouvre un passage.",
+  "roles": {
+    "echevin": { "nom": "Échevin", "feminin": "Échevine" },
+    "aubergiste": { "nom": "Aubergiste" },
+    "batelier": { "nom": "Batelier", "feminin": "Batelière" },
+    "capitaine": { "nom": "Capitaine de garde" }
+  },
+  "personnages": [
+    {
+      "cle": "orlanne",
+      "nom": "Orlanne",
+      "titre": "Dame",
+      "accord": "f",
+      "role": "echevin",
+      "lieu": "vaulmier",
+      "ico": { "glyphe": "sceau", "nature": "tracas" },
+      "premiere": "Elle tient la halle de {lieu} depuis onze ans, et le registre des péages avec. On la dit juste, ce qui dans sa charge revient à dire qu'elle n'est aimée de personne.",
+      "couches": [
+        {
+          "cle": "le-clerc",
+          "titre": "Le clerc qui a fui",
+          "gagne": [{ "quoi": "rencontres", "min": 2 }],
+          "texte": "Le clerc qui tenait le registre avant elle est parti un matin sans rien dire. {il} n'a jamais porté plainte. « On ne poursuit pas un homme qui a eu peur », dit-{il}."
+        },
+        {
+          "cle": "sa-part",
+          "titre": "Ce qu'elle y a laissé",
+          "gagne": [{ "quoi": "rencontres", "min": 4 }],
+          "texte": "Deux des onze lignes grattées étaient les siennes. {il} le sait depuis le premier jour, et c'est pour ça qu'{il} veut qu'on trouve — pour savoir si l'on trouvera."
+        }
+      ]
+    },
+    {
+      "cle": "gaubert",
+      "nom": "Gaubert",
+      "accord": "m",
+      "role": "aubergiste",
+      "lieu": "le-gue",
+      "ico": { "glyphe": "outre", "nature": "halte" },
+      "premiere": "Le {role} du Gué, gros comme deux, qui sert un vin qu'il jure du Val et qui vient de bien plus bas. Tout ce qui passe le bac s'arrête chez lui.",
+      "couches": [
+        {
+          "cle": "le-bac",
+          "titre": "Ce que le bac transporte la nuit",
+          "gagne": [{ "quoi": "rencontres", "min": 3 }],
+          "texte": "« Le bac ne dort pas, marchand. Il passe des sacs quand la lune est basse, et personne au Gué n'a jamais eu la curiosité de demander de quoi. Moi le premier. »"
+        }
+      ]
+    },
+    {
+      "cle": "sylve",
+      "nom": "Sylve",
+      "accord": "f",
+      "role": "batelier",
+      "lieu": "le-gue",
+      "ico": { "glyphe": "goutte", "nature": "flanerie" },
+      "premiere": "Elle tient le bac. Elle parle peu, et jamais la première. Ses mains disent son âge, son regard dit qu'elle a vu passer autre chose que des chariots.",
+      "couches": [
+        {
+          "cle": "le-nom",
+          "titre": "Un nom qu'elle a reconnu",
+          "gagne": [{ "quoi": "rencontres", "min": 12 }],
+          "texte": "« Ce clerc. Je l'ai passé un soir de novembre, sans chariot, sans rien. Il regardait derrière lui tout le long. Je n'ai pas demandé, il n'a pas payé, on était quittes. »"
+        }
+      ]
+    },
+    {
+      "cle": "harn",
+      "nom": "Harn",
+      "titre": "Capitaine",
+      "accord": "m",
+      "role": "capitaine",
+      "lieu": "porte-haute",
+      "ico": { "glyphe": "heaume", "nature": "danger" },
+      "premiere": "Il tient la Porte Haute et les douze hommes qui vont avec. Sous la barbe, on devine qu'il a compté chaque chariot monté vers les Contreforts depuis quinze ans.",
+      "couches": [
+        {
+          "cle": "le-peage",
+          "titre": "Pourquoi le péage a doublé",
+          "gagne": [{ "quoi": "reputation", "min": 55 }],
+          "texte": "« Le péage a doublé le mois où le registre de Vaulmier a été gratté. Vous ferez le lien vous-même, marchand. Moi j'ai des ordres, pas des idées. »"
+        }
+      ]
+    }
+  ]
+}

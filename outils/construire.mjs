@@ -26,6 +26,7 @@ const V = litJson('data', 'vocabulaire-evenements.json');
 const VP = litJson('data', 'vocabulaire-personnages.json');
 const VO = litJson('data', 'vocabulaire-objets.json');
 const VM = litJson('data', 'vocabulaire-missions.json');
+const VD = litJson('data', 'vocabulaire-dialogues.json');
 
 /* ════════════════════ 1. le tutoriel ════════════════════ */
 
@@ -515,6 +516,107 @@ trace('## Où vos icônes servent', '',
 writeFileSync(join(ICI, 'TUTORIEL-ICONES.md'),
   t.join('\n').replace(/\n{3,}/g, '\n\n') + '\n', 'utf8');
 
+/* ════════════════════ 1 sexies. le tutoriel des dialogues ════════════════════ */
+
+const u = [];
+const conte = (...x) => u.push(...x);
+/* « par défaut : false » ne se lit pas — un catalogue en français le dit en français */
+const motDefaut = (v) => v === true ? 'oui' : v === false ? 'non'
+  : String(v).replace('.', ',');
+const table = (o, titre) => {
+  conte(`| ${titre} | ce que c'est | |`, '|---|---|---|');
+  Object.entries(o).forEach(([k, d]) => conte(
+    `| **${d.nom}** \`${k}\` | ${d.explique || d.aide || ''} | ` +
+    `${d.requis ? '**obligatoire**' : (d.defaut !== undefined ? 'par défaut : ' +
+      motDefaut(d.defaut) : '')} |`));
+  conte('');
+};
+
+conte('# Écrire un dialogue — mode d\'emploi', '',
+  '> Cette page est **engendrée** depuis [`data/vocabulaire-dialogues.json`](../data/vocabulaire-dialogues.json).',
+  '> Ne la corrigez pas à la main : corrigez le catalogue et relancez',
+  '> `node outils/construire.mjs`.', '',
+  VD.apropos, '', '## Le principe', '', VD.principe, '',
+  'En jeu, un onglet **Les gens** paraît dans une ville où quelqu\'un se tient. On y',
+  'voit qui est là, ce qu\'on sait de lui, et un bouton par conversation qu\'il a à',
+  'offrir. Une pastille compte celles qu\'on n\'a pas encore eues.', '');
+
+conte('## Un dialogue', '');
+table(VD.champs, 'champ');
+conte('> Un dialogue **ne se joue qu\'une fois** par défaut, et il n\'est compté comme',
+  '> mené que lorsqu\'on en sort par une réponse. Fermer la feuille en cours de route le',
+  '> laisse offert : on n\'est pas puni d\'avoir touché l\'écran au mauvais endroit.', '');
+
+conte('## Une réplique', '',
+  'Ce que le personnage dit, et les réponses qu\'on peut lui faire.', '');
+table(VD.replique, 'champ');
+
+conte('## Une réponse', '');
+table(VD.reponse, 'champ');
+conte('> Une réponse dont la condition n\'est pas remplie se montre **grisée** quand vous',
+  '> avez écrit un *pourquoi*, et se **cache** sinon. Voir une porte fermée vaut mieux que',
+  '> ne pas la voir — mais pas si l\'on ne dit pas ce qui la ferme.', '');
+
+conte('## Ce qu\'on peut demander', '',
+  'Toutes les interrogations des événements — l\'or, la réputation, le karma, la place,',
+  'l\'état du convoi — plus celles-ci, qui n\'ont de sens qu\'en conversation.', '');
+conte('| on demande | ce que ça vaut | il faut préciser |', '|---|---|---|');
+Object.entries(VD.interrogations).forEach(([k, d]) =>
+  conte(`| **${d.nom}** \`${k}\` | ${d.unite || ''} — ${d.explique} | \`${d.demande}\` |`));
+conte('');
+
+conte('## Ce qu\'un dialogue peut faire', '',
+  `Les ${Object.keys(V.effets).length} effets des événements, sans exception : donner de l'or, blesser,`,
+  'charger, recruter, lancer une rumeur. Un dialogue ne peut donc rien faire qu\'un',
+  'événement ne sache déjà faire, et les deux s\'équilibrent pareil.', '',
+  'S\'y ajoutent ces trois-là.', '');
+Object.entries(VD.effets).forEach(([k, e]) => {
+  conte(`### ${e.nom} — \`${k}\``, '', e.explique, '');
+  const ps = Object.entries(e.parametres || {});
+  if (ps.length) {
+    conte('| réglage | ce que c\'est | |', '|---|---|---|');
+    ps.forEach(([, d]) => conte(`| **${d.nom}** | ${d.aide || ''} | ` +
+      `${d.requis ? '**obligatoire**' : (d.defaut !== undefined ? 'par défaut : ' + motDefaut(d.defaut) : '')} |`));
+    conte('');
+  }
+});
+
+conte('## Les trous des textes', '',
+  'Le texte d\'une réplique, celui d\'une réponse et le *pourquoi* d\'une réponse fermée',
+  'acceptent tous les mêmes trous, accordés sur le personnage à qui l\'on parle.', '',
+  '| trou | ce que ça donne | exemple |', '|---|---|---|');
+Object.entries(VD.trous).forEach(([k, d]) =>
+  conte(`| \`{${k}}\` | ${d.explique} | ${d.exemple || ''} |`));
+conte('', 'Un texte peut proposer **plusieurs variantes**, et le jeu en tire une : dans le',
+  'fichier, c\'est un tableau de textes.', '');
+
+conte('## Un exemple complet', '',
+  'Le dossier [`data/exemples/`](../data/exemples/) contient un petit monde tout prêt —',
+  'cinq lieux, quatre personnages, cinq conversations, deux missions et un objet unique.',
+  'Il se charge depuis **Paramètres › Le jeu d\'exemple**, et ne touche pas à vos',
+  'fichiers de `data/`.', '',
+  'On y trouve, dans l\'ordre où l\'on s\'en sert :', '',
+  '- **donner une mission en conversation** — Orlanne, avec une branche de marchandage',
+  '  qui ne s\'ouvre qu\'à quarante-cinq de réputation ;',
+  '- **en reparler pendant qu\'elle court** — la même, rejouable, qui ne propose de lui',
+  '  rendre compte que si l\'on a vu la batelière ;',
+  '- **délier une langue** — Sylve, qui ne dit ce qu\'elle sait qu\'à qui a payé le',
+  '  passage, et dont la couche de lore rejoint le carnet pour toujours ;',
+  '- **la conversation où l\'on repasse** — Gaubert, qui sert à boire, vend des nouvelles',
+  '  et propose une course ;',
+  '- **une porte qu\'un objet ouvre** — Harn, qui ne parle du péage qu\'à qui porte le',
+  '  registre gagné chez Orlanne.', '');
+
+conte('## Ce que la partie retient', '',
+  '| dans `S` | quoi |', '|---|---|',
+  '| `S.dits[cle]` | combien de fois chaque conversation a été menée |',
+  '| `S.souvenirs[nom]` | ce que le monde retient de ce qu\'on s\'est dit |', '',
+  'Les deux voyagent dans la sauvegarde. Un souvenir posé ne s\'efface que si un',
+  'dialogue le repose à *faux*.', '');
+
+writeFileSync(join(ICI, 'TUTORIEL-DIALOGUES.md'),
+  u.join('\n').replace(/\n{3,}/g, '\n\n') + '\n', 'utf8');
+
 /* ════════════════════ 2. les exemples ════════════════════
    Découpés dans la spécification, pour qu'un exemple corrigé là-bas le soit dans
    l'outil sans qu'on ait à y penser. */
@@ -618,6 +720,7 @@ console.log(
   'TUTORIEL-OBJETS.md       %d genres · %d pouvoirs · %d provenances\n' +
   'TUTORIEL-MISSIONS.md     %d jalons · %d récompenses · %d trous\n' +
   'TUTORIEL-ICONES.md       %d formes · %d teintes nommées\n' +
+  'TUTORIEL-DIALOGUES.md    %d interrogations · %d effets propres · %d trous\n' +
   'référence                %d biens · %d armes · %d métiers · %d dessins · %d teintes\n' +
   'injecté dans             %s\n' +
   'poids embarqué           %s de catalogue, %s de machinerie',
@@ -627,6 +730,7 @@ console.log(
   compte(VO.genres), compte(VO.pouvoirs), compte(VO.provenances),
   compte(VM.jalons), compte(VM.recompenses), compte(VM.trous),
   formesDeclarees.length, compte(ICO.teintesEvenement),
+  compte(VD.interrogations), compte(VD.effets), compte(VD.trous),
   compte(reference.biens), compte(reference.armes), compte(reference.metiers),
   compte(reference.glyphes), compte(reference.natures),
   poses.join(', ') || '(aucun atelier trouvé)',

@@ -1,0 +1,246 @@
+{
+  "format": "caravane.vocabulaire-dialogues.v1",
+  "apropos": "Le catalogue de ce qu'un dialogue peut dire, demander et faire. Un dialogue est une conversation écrite d'avance : le personnage parle, on lui répond, et selon la réponse la conversation continue ailleurs. Il réutilise en entier le vocabulaire des événements — les dix-huit effets, les interrogations, les quatre écritures d'un montant — et n'ajoute que ce qui n'a de sens qu'en conversation : la mémoire de ce qu'on s'est dit, et le fait de confier une mission.",
+  "principe": "Un dialogue appartient à un personnage et se joue quand on lui parle en ville. Il se compose de répliques nommées : chacune est ce que le personnage dit, suivi des réponses qu'on peut lui faire. Une réponse mène à une autre réplique, ou clôt la conversation. Rien n'est écrit en code : les conditions et les effets sont ceux du catalogue.",
+  "champs": {
+    "cle": {
+      "nom": "La clé",
+      "explique": "Le nom technique du dialogue, unique dans tout le fichier. Minuscules, chiffres et tirets.",
+      "requis": true,
+      "exemple": "orlanne-le-registre"
+    },
+    "personnage": {
+      "nom": "Qui parle",
+      "explique": "La clé du personnage à qui ce dialogue appartient. Il se joue quand on lui parle, là où il se tient.",
+      "requis": true,
+      "exemple": "orlanne"
+    },
+    "titre": {
+      "nom": "Le titre",
+      "explique": "Ce qu'on lit sur le bouton, dans l'onglet des gens. Une poignée de mots, du point de vue du joueur.",
+      "requis": true,
+      "exemple": "Le registre raturé"
+    },
+    "si": {
+      "nom": "Quand il se propose",
+      "explique": "Des conditions, toutes vraies pour que le dialogue apparaisse. Vide, il se propose toujours.",
+      "requis": false
+    },
+    "priorite": {
+      "nom": "La priorité",
+      "explique": "Quand plusieurs dialogues d'un même personnage sont ouverts en même temps, le plus haut se propose en premier. Par défaut zéro.",
+      "requis": false,
+      "defaut": 0
+    },
+    "rejouable": {
+      "nom": "On peut le rejouer",
+      "explique": "Par défaut un dialogue ne se joue qu'une fois : une conversation qu'on a eue, on l'a eue. Coché, il reste offert — c'est ce qu'il faut pour un marchand chez qui l'on repasse.",
+      "requis": false,
+      "defaut": false
+    },
+    "entree": {
+      "nom": "Par où l'on commence",
+      "explique": "Le nom de la première réplique. À défaut, la première de la liste.",
+      "requis": false,
+      "defaut": "accueil"
+    },
+    "repliques": {
+      "nom": "Les répliques",
+      "explique": "La conversation elle-même, une réplique par nom. Chacune porte ce que le personnage dit et les réponses qu'on peut lui faire.",
+      "requis": true
+    }
+  },
+  "replique": {
+    "dit": {
+      "nom": "Ce qu'il dit",
+      "explique": "Le texte du personnage. Accepte les trous entre accolades. Pour plusieurs variantes dont le jeu tire une au hasard, écrivez un tableau de textes — dans l'atelier, une ligne vide entre chacune suffit.",
+      "requis": true,
+      "exemple": [
+        "« Marchand. »",
+        "« Vous voilà. »"
+      ]
+    },
+    "oeil": {
+      "nom": "La didascalie",
+      "explique": "Une ligne en petites capitales au-dessus du texte : où l'on est, ce qu'il fait pendant qu'il parle. Facultative.",
+      "requis": false,
+      "exemple": "Sous l'auvent de la halle"
+    },
+    "effets": {
+      "nom": "Ce qui arrive en y entrant",
+      "explique": "Des effets joués une fois, au moment où la réplique s'affiche. Sert à donner ce qu'on vient de promettre, plutôt que de l'accrocher à la réponse.",
+      "requis": false
+    },
+    "reponses": {
+      "nom": "Ce qu'on peut répondre",
+      "explique": "Les boutons offerts au joueur, dans l'ordre. Une réplique sans réponse clôt la conversation.",
+      "requis": false
+    }
+  },
+  "reponse": {
+    "txt": {
+      "nom": "La réponse",
+      "explique": "Ce que le joueur dit, écrit à la première personne. Court : c'est un bouton.",
+      "requis": true,
+      "exemple": "Je veux bien m'en charger."
+    },
+    "si": {
+      "nom": "Quand elle est possible",
+      "explique": "Des conditions. Non remplies, la réponse s'affiche grisée plutôt que de disparaître : voir qu'une porte existe et qu'elle est fermée vaut mieux que ne pas la voir.",
+      "requis": false
+    },
+    "sinon": {
+      "nom": "Pourquoi elle est fermée",
+      "explique": "La raison montrée sous une réponse grisée. Sans elle, la réponse est simplement cachée.",
+      "requis": false,
+      "exemple": "Il vous faudrait cinquante pièces."
+    },
+    "effets": {
+      "nom": "Ce qu'elle fait",
+      "explique": "Les effets joués quand on la choisit, avant d'aller à la réplique suivante.",
+      "requis": false
+    },
+    "vers": {
+      "nom": "La suite",
+      "explique": "Le nom de la réplique où l'on va. Absent, la conversation se termine.",
+      "requis": false
+    },
+    "fin": {
+      "nom": "Elle clôt",
+      "explique": "Ferme la conversation explicitement, même si une suite est indiquée. Sert à en sortir d'un mot.",
+      "requis": false
+    }
+  },
+  "interrogations": {
+    "souvenir": {
+      "nom": "Ce qu'on s'est dit",
+      "unite": "oui ou non",
+      "explique": "Un souvenir posé par un dialogue précédent. C'est ce qui fait qu'une conversation se rappelle la précédente.",
+      "demande": "nom"
+    },
+    "dialogueVu": {
+      "nom": "Un dialogue déjà joué",
+      "unite": "fois",
+      "explique": "Combien de fois cette conversation a été menée jusqu'au bout. Zéro si jamais.",
+      "demande": "dialogue"
+    },
+    "rencontres": {
+      "nom": "Les fois où on lui a parlé",
+      "unite": "fois",
+      "explique": "Le compteur de rencontres d'un personnage. Sans précision, celui à qui l'on parle.",
+      "demande": "personnage"
+    },
+    "missionEtat": {
+      "nom": "Où en est une mission",
+      "unite": "offerte, cours, faite, ratee",
+      "explique": "L'état d'une mission écrite. « offerte » tant qu'elle n'a pas été acceptée, « aucune » si le fichier des missions ne la contient pas.",
+      "demande": "mission"
+    },
+    "objetPorte": {
+      "nom": "Un objet unique en soute",
+      "unite": "oui ou non",
+      "explique": "Le convoi transporte-t-il cet objet unique en ce moment.",
+      "demande": "objet"
+    },
+    "coucheOuverte": {
+      "nom": "Une couche de lore déliée",
+      "unite": "oui ou non",
+      "explique": "Cette couche du personnage a-t-elle déjà été méritée.",
+      "demande": "couche"
+    }
+  },
+  "effets": {
+    "souvenir": {
+      "nom": "Retenir quelque chose",
+      "explique": "Pose un souvenir que les dialogues suivants pourront interroger. C'est la mémoire du monde : une promesse faite, un nom lâché, une porte qu'on a refusée.",
+      "parametres": {
+        "nom": {
+          "nom": "Sous quel nom",
+          "type": "texte",
+          "requis": true,
+          "aide": "Minuscules et tirets, comme une clé.",
+          "exemple": "a-promis-le-registre"
+        },
+        "vaut": {
+          "nom": "Vrai ou faux",
+          "type": "oui-non",
+          "requis": false,
+          "defaut": true,
+          "aide": "Faux efface le souvenir."
+        }
+      }
+    },
+    "mission": {
+      "nom": "Confier une mission",
+      "explique": "Le personnage confie une mission écrite, et l'échéance part de cette étape. Le jeu refuse en silence si elle est déjà en cours ou finie : une mission ne se donne pas deux fois.",
+      "parametres": {
+        "mission": {
+          "nom": "Laquelle",
+          "type": "texte",
+          "requis": true,
+          "aide": "La clé d'une mission de missions-ecrites.json."
+        }
+      }
+    },
+    "ouvrirCouche": {
+      "nom": "Délier une langue",
+      "explique": "Ouvre une couche de lore chez quelqu'un, sans qu'elle ait à être méritée par un compteur. Ce qu'on apprend en conversation reste relisible dans le carnet, pour toujours.",
+      "parametres": {
+        "personnage": {
+          "nom": "Chez qui",
+          "type": "texte",
+          "requis": false,
+          "aide": "À défaut, celui à qui l'on parle."
+        },
+        "couche": {
+          "nom": "Laquelle",
+          "type": "texte",
+          "requis": true,
+          "aide": "La clé de la couche, ou son rang à partir de zéro."
+        }
+      }
+    }
+  },
+  "trous": {
+    "nom": {
+      "explique": "Le nom du personnage.",
+      "exemple": "Orlanne"
+    },
+    "appellation": {
+      "explique": "Son titre et son nom.",
+      "exemple": "Dame Orlanne"
+    },
+    "role": {
+      "explique": "Ce qu'il fait, accordé.",
+      "exemple": "échevine"
+    },
+    "il": {
+      "explique": "« il » ou « elle », selon l'accord.",
+      "exemple": "elle"
+    },
+    "le": {
+      "explique": "« le » ou « la ».",
+      "exemple": "la"
+    },
+    "e": {
+      "explique": "Le e du féminin : arrivé{e}.",
+      "exemple": "e"
+    },
+    "ici": {
+      "explique": "Le nom du lieu où l'on se tient.",
+      "exemple": "Vaulmier"
+    },
+    "contree": {
+      "explique": "La contrée de ce lieu.",
+      "exemple": "Le Val"
+    },
+    "or": {
+      "explique": "Ce qu'on a en bourse, à la française.",
+      "exemple": "1 240"
+    },
+    "marchand": {
+      "explique": "Le nom du marchand qu'on joue.",
+      "exemple": "Aldric"
+    }
+  }
+}

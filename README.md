@@ -27,8 +27,31 @@ et de la reprendre ailleurs.
 index.html        le moteur : HTML, CSS, règles, calculs, rendu, dés, combat
 data/*.json       le contenu : biens, raretés, contrées, armes, chariots…
 data/FORMAT.md    le format de chaque fichier de données, clé par clé
+data/exemples/    un petit monde tout prêt, pour éprouver ce qu'on écrit
 outils/           les outils d'auteur, qui ne partent pas avec le jeu
 ```
+
+## Ce que vous pouvez écrire
+
+Six fichiers **facultatifs et indépendants** viennent se poser dans `data/`. Posez-en
+un, le jeu s'en sert ; n'en posez aucun, il tourne comme avant, avec son monde tiré
+au sort.
+
+| fichier | ce qu'il ajoute |
+|---|---|
+| `monde.json` | votre carte : les lieux, les voies, les contrées, l'échelle |
+| `personnages.json` | des gens à qui parler, et ce qu'on n'apprend d'eux qu'à force |
+| `objets.json` | des objets uniques, avec leurs six pouvoirs |
+| `missions-ecrites.json` | des missions données par quelqu'un, qui ne surviennent qu'une fois |
+| `evenements.json` | vos propres événements de route |
+| `dialogues.json` | des conversations écrites d'avance, avec choix et conséquences |
+
+Les cinq premiers s'écrivent dans les [ateliers](outils/) ; les dialogues encore à la
+main, en suivant [`outils/TUTORIEL-DIALOGUES.md`](outils/TUTORIEL-DIALOGUES.md).
+
+**Pour tout essayer sans rien écrire :** *Paramètres › Le jeu d'exemple › Charger
+l'exemple*. Cinq lieux, quatre personnages, leurs conversations, deux missions et un
+objet unique se chargent depuis `data/exemples/`, sans toucher à vos fichiers.
 
 Le moteur ne contient aucun contenu, et les fichiers de données aucune logique.
 Au démarrage, `chargerDonnees()` va chercher les onze fichiers `data/*.json` en

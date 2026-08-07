@@ -1,0 +1,661 @@
+{
+  "format": "caravane.dialogues.v1",
+  "apropos": "Cinq dialogues d'essai, un par usage : donner une mission, en reparler pendant qu'elle court, la conclure, marchander chez quelqu'un où l'on repasse, et délier une langue à force de revenir. La forme est décrite dans data/vocabulaire-dialogues.json.",
+  "dialogues": [
+    {
+      "cle": "orlanne-le-registre",
+      "personnage": "orlanne",
+      "titre": "Elle vous fait signe",
+      "priorite": 20,
+      "si": [
+        {
+          "quoi": "missionEtat",
+          "mission": "le-registre-rature",
+          "vaut": "offerte"
+        }
+      ],
+      "entree": "accueil",
+      "repliques": {
+        "accueil": {
+          "oeil": "Sous l'auvent de la halle",
+          "dit": [
+            "« Marchand. » {il} ne lève pas les yeux du registre. « On m'a dit que vous alliez vers le Gué. »",
+            "« Marchand. » {il} referme le registre d'un doigt, sans marquer la page. « Vous tombez bien, ou mal, c'est selon. »"
+          ],
+          "reponses": [
+            {
+              "txt": "Je vous écoute.",
+              "vers": "le-fait"
+            },
+            {
+              "txt": "J'ai un chargement qui m'attend.",
+              "effets": [
+                {
+                  "faire": "souvenir",
+                  "nom": "orlanne-econduite"
+                }
+              ],
+              "vers": "econduite"
+            }
+          ]
+        },
+        "le-fait": {
+          "dit": "« Onze lignes ont été grattées dans ce registre. Onze convois qui n'ont jamais payé le péage, ou qui l'ont payé à quelqu'un d'autre. » {il} pose la main à plat dessus. « Le clerc qui le tenait est parti un matin de novembre. Personne ne l'a vu prendre la route de l'est. »",
+          "reponses": [
+            {
+              "txt": "Le bac du Gué, alors.",
+              "effets": [
+                {
+                  "faire": "souvenir",
+                  "nom": "a-devine-le-bac"
+                }
+              ],
+              "vers": "devine"
+            },
+            {
+              "txt": "Et vous voulez que je retrouve un homme parti il y a des mois ?",
+              "vers": "la-demande"
+            },
+            {
+              "txt": "Ce n'est pas mon métier.",
+              "vers": "econduite"
+            }
+          ]
+        },
+        "devine": {
+          "dit": "{il} lève enfin les yeux. « Vous êtes plus rapide que mes sergents. Oui, le bac. Sylve le tient depuis vingt ans et n'a jamais rien dit à personne — mais elle n'a jamais rien dit à personne qui payait le passage, non plus. »",
+          "reponses": [
+            {
+              "txt": "Combien ?",
+              "vers": "la-demande"
+            }
+          ]
+        },
+        "la-demande": {
+          "dit": "« Trois cent quarante pièces, et le registre lui-même quand vous reviendrez. Il ne vaut rien et il pèse deux kilos, mais vous voudrez peut-être le lire. » {il} attend. « Vous avez trois semaines avant que la charge ne me soit retirée. »",
+          "reponses": [
+            {
+              "txt": "C'est entendu. Je passerai voir la batelière.",
+              "effets": [
+                {
+                  "faire": "mission",
+                  "mission": "le-registre-rature"
+                },
+                {
+                  "faire": "souvenir",
+                  "nom": "a-promis-le-registre"
+                }
+              ],
+              "vers": "accepte"
+            },
+            {
+              "txt": "Doublez, et je pars ce soir.",
+              "si": [
+                {
+                  "quoi": "reputation",
+                  "min": 45
+                }
+              ],
+              "sinon": "Il faudrait qu'{il} vous connaisse mieux — quarante-cinq de réputation.",
+              "vers": "marchande"
+            },
+            {
+              "txt": "Trouvez quelqu'un d'autre.",
+              "vers": "econduite"
+            }
+          ]
+        },
+        "marchande": {
+          "dit": "Un silence. « Non. Mais je vous donnerai cent de plus, et vous ne me le redemanderez pas. »",
+          "reponses": [
+            {
+              "txt": "Cela ira.",
+              "effets": [
+                {
+                  "faire": "mission",
+                  "mission": "le-registre-rature"
+                },
+                {
+                  "faire": "or",
+                  "de": 100
+                },
+                {
+                  "faire": "souvenir",
+                  "nom": "a-promis-le-registre"
+                },
+                {
+                  "faire": "souvenir",
+                  "nom": "a-marchande-avec-orlanne"
+                }
+              ],
+              "vers": "accepte"
+            },
+            {
+              "txt": "Alors non.",
+              "effets": [
+                {
+                  "faire": "reputation",
+                  "de": -2
+                }
+              ],
+              "vers": "econduite"
+            }
+          ]
+        },
+        "accepte": {
+          "dit": "« Le bac part à l'aube et à midi. Sylve ne parle pas beaucoup, mais elle se souvient de tout. » {il} rouvre le registre. « Ne lui dites pas que ça vient de moi. »",
+          "reponses": [
+            {
+              "txt": "Bonne journée, Dame Orlanne.",
+              "fin": true
+            }
+          ]
+        },
+        "econduite": {
+          "dit": "« C'est votre droit. » {il} rouvre le registre à la page qu'{il} n'avait pas marquée. « La halle ferme au crépuscule, si vous changez d'avis. »",
+          "reponses": [
+            {
+              "txt": "Prendre congé.",
+              "fin": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "cle": "orlanne-pendant",
+      "personnage": "orlanne",
+      "titre": "Lui rendre compte",
+      "priorite": 15,
+      "rejouable": true,
+      "si": [
+        {
+          "quoi": "missionEtat",
+          "mission": "le-registre-rature",
+          "vaut": "cours"
+        }
+      ],
+      "repliques": {
+        "accueil": {
+          "oeil": "Elle n'a pas bougé",
+          "dit": "« Déjà de retour ? » {il} vous regarde par-dessus le registre. « Ou bien vous n'êtes jamais parti. »",
+          "reponses": [
+            {
+              "txt": "J'ai parlé à la batelière.",
+              "si": [
+                {
+                  "quoi": "rencontres",
+                  "personnage": "sylve",
+                  "min": 1
+                }
+              ],
+              "sinon": "Vous n'avez pas encore vu Sylve.",
+              "vers": "a-vu-sylve"
+            },
+            {
+              "txt": "J'y vais de ce pas.",
+              "fin": true
+            }
+          ]
+        },
+        "a-vu-sylve": {
+          "dit": "« Et ? »",
+          "reponses": [
+            {
+              "txt": "Elle l'a passé. Un soir de novembre, sans chariot.",
+              "si": [
+                {
+                  "quoi": "coucheOuverte",
+                  "personnage": "sylve",
+                  "couche": "le-nom"
+                }
+              ],
+              "sinon": "Elle ne vous a pas encore dit ce qu'elle sait.",
+              "vers": "le-rapport"
+            },
+            {
+              "txt": "Elle n'a rien dit. Pas encore.",
+              "vers": "rien-encore"
+            }
+          ]
+        },
+        "rien-encore": {
+          "dit": "« Elle ne dira rien tant qu'elle ne saura pas à qui. » {il} hausse une épaule. « Repassez le bac. Payez le passage. Recommencez. »",
+          "reponses": [
+            {
+              "txt": "Je vois.",
+              "fin": true
+            }
+          ]
+        },
+        "le-rapport": {
+          "dit": "{il} ne dit rien pendant un long moment. « Novembre. » Puis, plus bas : « Revenez à la halle quand vous aurez fini votre tournée. Nous conclurons. »",
+          "reponses": [
+            {
+              "txt": "Comme vous voudrez.",
+              "fin": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "cle": "sylve-le-bac",
+      "personnage": "sylve",
+      "titre": "La batelière",
+      "priorite": 10,
+      "rejouable": true,
+      "repliques": {
+        "accueil": {
+          "oeil": "Sur l'appontement",
+          "dit": "Elle vous regarde arriver sans cesser d'enrouler sa corde. « Le passage, c'est deux pièces par roue. »",
+          "reponses": [
+            {
+              "txt": "Je ne passe pas. Je cherche quelqu'un.",
+              "vers": "cherche"
+            },
+            {
+              "txt": "Voici pour le passage, et gardez la monnaie.",
+              "si": [
+                {
+                  "quoi": "or",
+                  "min": 40
+                }
+              ],
+              "sinon": "Il vous faudrait quarante pièces.",
+              "effets": [
+                {
+                  "faire": "or",
+                  "de": -40
+                },
+                {
+                  "faire": "souvenir",
+                  "nom": "a-paye-sylve"
+                },
+                {
+                  "faire": "karma",
+                  "de": 2
+                }
+              ],
+              "vers": "paye"
+            },
+            {
+              "txt": "Une autre fois.",
+              "fin": true
+            }
+          ]
+        },
+        "cherche": {
+          "dit": "La corde continue de s'enrouler. « Beaucoup de gens cherchent quelqu'un, au bord d'une rivière. »",
+          "reponses": [
+            {
+              "txt": "Un clerc. Parti de Vaulmier en novembre.",
+              "si": [
+                {
+                  "quoi": "souvenir",
+                  "nom": "a-paye-sylve",
+                  "vaut": true
+                }
+              ],
+              "sinon": "Elle ne vous doit rien. Pas encore.",
+              "effets": [
+                {
+                  "faire": "ouvrirCouche",
+                  "couche": "le-nom"
+                },
+                {
+                  "faire": "souvenir",
+                  "nom": "sait-pour-le-clerc"
+                }
+              ],
+              "vers": "le-clerc"
+            },
+            {
+              "txt": "Laissez, ce n'était rien.",
+              "fin": true
+            }
+          ]
+        },
+        "paye": {
+          "dit": "Elle empoche sans compter, ce qui chez elle est une politesse. « Vous cherchiez quelqu'un, tout à l'heure. »",
+          "reponses": [
+            {
+              "txt": "Un clerc. Parti de Vaulmier en novembre.",
+              "effets": [
+                {
+                  "faire": "ouvrirCouche",
+                  "couche": "le-nom"
+                },
+                {
+                  "faire": "souvenir",
+                  "nom": "sait-pour-le-clerc"
+                }
+              ],
+              "vers": "le-clerc"
+            },
+            {
+              "txt": "Cela peut attendre.",
+              "fin": true
+            }
+          ]
+        },
+        "le-clerc": {
+          "dit": "La corde s'arrête. « Je l'ai passé. Sans chariot, sans rien, et il regardait derrière lui tout le long. Il n'a pas payé. » Elle reprend sa corde. « On était quittes. »",
+          "reponses": [
+            {
+              "txt": "Quittes de quoi ?",
+              "vers": "quittes"
+            },
+            {
+              "txt": "Merci, batelière.",
+              "fin": true
+            }
+          ]
+        },
+        "quittes": {
+          "dit": "« De rien qui vous regarde, marchand. » Un temps. « Dites à l'échevine que je n'ai pas oublié novembre. Elle comprendra. »",
+          "reponses": [
+            {
+              "txt": "Je le lui dirai.",
+              "effets": [
+                {
+                  "faire": "souvenir",
+                  "nom": "message-pour-orlanne"
+                }
+              ],
+              "fin": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "cle": "gaubert-l-auberge",
+      "personnage": "gaubert",
+      "titre": "Boire un coup",
+      "priorite": 5,
+      "rejouable": true,
+      "repliques": {
+        "accueil": {
+          "oeil": "Dans la salle basse",
+          "dit": [
+            "« Marchand ! » Il essuie une place au comptoir avec le pan de son tablier, ce qui ne l'améliore pas. « Du rouge, du blanc, ou des nouvelles ? »",
+            "« Vous voilà. » Il pousse un gobelet devant vous sans qu'on lui ait rien demandé. « C'est la maison. La première seulement. »"
+          ],
+          "reponses": [
+            {
+              "txt": "Du rouge. Et une chambre.",
+              "si": [
+                {
+                  "quoi": "or",
+                  "min": 25
+                }
+              ],
+              "sinon": "Vingt-cinq pièces, tout de même.",
+              "effets": [
+                {
+                  "faire": "or",
+                  "de": -25
+                },
+                {
+                  "faire": "reposer",
+                  "part": 0.18
+                }
+              ],
+              "vers": "repose"
+            },
+            {
+              "txt": "Des nouvelles.",
+              "vers": "nouvelles"
+            },
+            {
+              "txt": "Vous cherchiez du vin, je crois.",
+              "si": [
+                {
+                  "quoi": "missionEtat",
+                  "mission": "le-vin-de-gaubert",
+                  "vaut": "offerte"
+                },
+                {
+                  "quoi": "reputation",
+                  "min": 20
+                }
+              ],
+              "sinon": "Il ne vous a rien demandé de tel.",
+              "vers": "le-vin"
+            },
+            {
+              "txt": "Rien pour cette fois.",
+              "fin": true
+            }
+          ]
+        },
+        "repose": {
+          "dit": "La paillasse est propre et le vin passable. Au matin la troupe a meilleure mine, et vous aussi.",
+          "reponses": [
+            {
+              "txt": "Reprendre la route.",
+              "fin": true
+            }
+          ]
+        },
+        "nouvelles": {
+          "dit": "« Le péage de la Porte Haute a doublé. Personne ne sait pourquoi, tout le monde a une idée. » Il se penche. « Et la halle de Vaulmier cherche un clerc qui n'a pas laissé d'adresse. »",
+          "reponses": [
+            {
+              "txt": "Et vous, quelle est votre idée ?",
+              "vers": "son-idee"
+            },
+            {
+              "txt": "Merci, l'aubergiste.",
+              "fin": true
+            }
+          ]
+        },
+        "son-idee": {
+          "dit": "« Mon idée, c'est que le bac ne dort pas. » Il se redresse et retrouve son sourire. « Mais je n'ai rien dit, et vous n'avez rien entendu, et ce sera deux pièces pour le gobelet. »",
+          "reponses": [
+            {
+              "txt": "Payer les deux pièces.",
+              "effets": [
+                {
+                  "faire": "or",
+                  "de": -2
+                },
+                {
+                  "faire": "souvenir",
+                  "nom": "a-devine-le-bac"
+                }
+              ],
+              "fin": true
+            },
+            {
+              "txt": "Vous aviez dit que c'était la maison.",
+              "effets": [
+                {
+                  "faire": "karma",
+                  "de": -1
+                }
+              ],
+              "fin": true
+            }
+          ]
+        },
+        "le-vin": {
+          "dit": "« Trente kilos, avant que le bac ne reprenne. » Il ne précise pas d'où. « Deux cent soixante, et je ne demande pas de connaissement. »",
+          "reponses": [
+            {
+              "txt": "Trente kilos, entendu.",
+              "effets": [
+                {
+                  "faire": "mission",
+                  "mission": "le-vin-de-gaubert"
+                }
+              ],
+              "vers": "marche-conclu"
+            },
+            {
+              "txt": "Trouvez un autre voiturier.",
+              "fin": true
+            }
+          ]
+        },
+        "marche-conclu": {
+          "dit": "« Bon. » Il remplit deux gobelets, dont le sien. « À la vôtre, et au bac qui ne dort pas. »",
+          "reponses": [
+            {
+              "txt": "À la vôtre.",
+              "fin": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "cle": "harn-la-porte",
+      "personnage": "harn",
+      "titre": "Le capitaine de la Porte",
+      "priorite": 5,
+      "rejouable": true,
+      "repliques": {
+        "accueil": {
+          "oeil": "Sous la herse",
+          "dit": "« Chariots ? Charge ? Destination ? » Il récite. Derrière lui, deux hommes comptent vos essieux sans se presser.",
+          "reponses": [
+            {
+              "txt": "Montrer le registre des péages.",
+              "si": [
+                {
+                  "quoi": "objetPorte",
+                  "objet": "registre-des-peages",
+                  "vaut": true
+                }
+              ],
+              "sinon": "Vous n'avez rien qui l'intéresse.",
+              "effets": [
+                {
+                  "faire": "ouvrirCouche",
+                  "couche": "le-peage"
+                },
+                {
+                  "faire": "souvenir",
+                  "nom": "harn-a-vu-le-registre"
+                }
+              ],
+              "vers": "le-registre"
+            },
+            {
+              "txt": "Vous connaissiez le clerc de Vaulmier ?",
+              "si": [
+                {
+                  "quoi": "souvenir",
+                  "nom": "sait-pour-le-clerc",
+                  "vaut": true
+                }
+              ],
+              "sinon": "Vous n'avez rien à lui demander là-dessus.",
+              "vers": "le-clerc"
+            },
+            {
+              "txt": "Trois chariots, du sel, Fondgris.",
+              "vers": "passe"
+            }
+          ]
+        },
+        "le-registre": {
+          "dit": "Il le prend, l'ouvre à la bonne page du premier coup, et le referme. Ses hommes ont cessé de compter. « Où avez-vous eu ça, marchand ? »",
+          "reponses": [
+            {
+              "txt": "De l'échevine de Vaulmier.",
+              "effets": [
+                {
+                  "faire": "reputation",
+                  "de": 3
+                }
+              ],
+              "vers": "franchise"
+            },
+            {
+              "txt": "On me l'a vendu.",
+              "effets": [
+                {
+                  "faire": "karma",
+                  "de": -3
+                }
+              ],
+              "vers": "mensonge"
+            }
+          ]
+        },
+        "franchise": {
+          "dit": "« Alors elle a fini par regarder. » Il vous rend le livre. « Le péage a doublé le mois où ces lignes ont été grattées, et je n'ai pas signé l'ordre. Faites-en ce que vous voulez. »",
+          "reponses": [
+            {
+              "txt": "Vous savez qui l'a signé.",
+              "vers": "qui"
+            },
+            {
+              "txt": "Merci, capitaine.",
+              "fin": true
+            }
+          ]
+        },
+        "qui": {
+          "dit": "Un très long silence. « Passez, marchand. La herse est levée. »",
+          "reponses": [
+            {
+              "txt": "Passer.",
+              "fin": true
+            }
+          ]
+        },
+        "mensonge": {
+          "dit": "« Non. » Il vous le rend quand même. « Personne ne vend ça. Passez. »",
+          "reponses": [
+            {
+              "txt": "Passer sans insister.",
+              "fin": true
+            }
+          ]
+        },
+        "le-clerc": {
+          "dit": "« Tout le monde connaissait le clerc de Vaulmier. Il montait ici tous les mois avec ses comptes, et il repartait le lendemain. » Il regarde la route qui descend. « La dernière fois, il n'est pas reparti par là. »",
+          "reponses": [
+            {
+              "txt": "Par où, alors ?",
+              "vers": "par-ou"
+            },
+            {
+              "txt": "Merci, capitaine.",
+              "fin": true
+            }
+          ]
+        },
+        "par-ou": {
+          "dit": "« Par le haut. » Il ne montre rien du menton, ce qui est une façon de montrer. « On ne redescend pas de Fondgris quand on est monté à pied. »",
+          "reponses": [
+            {
+              "txt": "Je m'en souviendrai.",
+              "effets": [
+                {
+                  "faire": "souvenir",
+                  "nom": "le-clerc-est-monte"
+                }
+              ],
+              "fin": true
+            }
+          ]
+        },
+        "passe": {
+          "dit": "« Douze pièces par essieu. » Il tend la main sans regarder. « Bonne route, et ne vous arrêtez pas sur le pont. »",
+          "reponses": [
+            {
+              "txt": "Passer.",
+              "fin": true
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

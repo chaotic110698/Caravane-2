@@ -1,0 +1,31 @@
+{
+  "format": "caravane.objets.v1",
+  "apropos": "Un objet unique, donné à la fin de la mission d'Orlanne. Le porter délie la langue de Harn : c'est le pouvoir qui lie les objets aux gens.",
+  "objets": [
+    {
+      "cle": "registre-des-peages",
+      "nom": "Le registre des péages",
+      "accord": "m",
+      "genre": "document",
+      "poids": 2,
+      "valeur": 0,
+      "vendable": false,
+      "perdable": true,
+      "ico": { "glyphe": "sceau", "nature": "ruines" },
+      "provenance": { "genre": "mission", "mission": "le-registre-rature", "quand": "à la fin" },
+      "pouvoirs": [
+        { "faire": "ouvreCouche", "personnage": "harn", "couche": "le-peage" },
+        { "faire": "prix", "sens": "achat", "part": 0.04 }
+      ],
+      "premiere": "Un in-folio relié de peau, gonflé d'humidité. Onze années de convois y sont écrites d'une main appliquée, et onze lignes en ont été grattées si soigneusement qu'on voit encore le creux du couteau.",
+      "couches": [
+        {
+          "cle": "la-main",
+          "titre": "La main qui a gratté",
+          "gagne": [{ "quoi": "etapesPorte", "min": 8 }],
+          "texte": "À force de le porter on finit par voir : les onze lignes ont été grattées par deux mains différentes. Neuf d'un coup, à la hâte. Deux longtemps après, avec soin."
+        }
+      ]
+    }
+  ]
+}

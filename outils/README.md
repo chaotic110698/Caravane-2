@@ -14,6 +14,7 @@
 | [`TUTORIEL-OBJETS.md`](TUTORIEL-OBJETS.md) | les genres, les pouvoirs, les provenances — engendré aussi |
 | [`TUTORIEL-MISSIONS.md`](TUTORIEL-MISSIONS.md) | les jalons, les récompenses, le lien avec les gens — engendré aussi |
 | [`TUTORIEL-ICONES.md`](TUTORIEL-ICONES.md) | les six formes, les dix teintes, ce qui se voit à seize pixels — engendré aussi |
+| [`TUTORIEL-DIALOGUES.md`](TUTORIEL-DIALOGUES.md) | écrire une conversation : répliques, réponses, souvenirs — engendré aussi |
 | `commun.js` | la machinerie partagée, recopiée dans chaque atelier |
 | `construire.mjs` | refabrique les tutoriels, les catalogues et la machinerie embarqués |
 | `exporter-ateliers.mjs` | recopie les fichiers construits vers le dépôt `Caravane-Tool` |
@@ -65,6 +66,17 @@ Les rôles n'ont **pas de fichier à eux** : `contenuDuJeu('personnages', …)` 
 `personnages.json` une carte `roles` limitée à ceux dont les personnages se servent. Le
 jeu la lit dans `ROLES` et s'en sert pour `{role}` — auparavant `sacGens()` renvoyait
 `role:''`, et le trou sortait vide.
+
+## Les dialogues n'ont pas encore d'atelier
+
+Le format est écrit, le jeu le lit, et cinq conversations d'exemple tournent — mais on
+les écrit encore à la main dans `data/dialogues.json`, en suivant
+[`TUTORIEL-DIALOGUES.md`](TUTORIEL-DIALOGUES.md). C'est le prochain atelier à faire, et
+son vocabulaire l'attend déjà dans
+[`data/vocabulaire-dialogues.json`](../data/vocabulaire-dialogues.json).
+
+Le mode d'emploi n'est donc pas recopié vers `Caravane-Tool` : il renvoie à `data/`, qui
+n'existe pas là-bas. Il y ira avec son atelier.
 
 ## Les deux sortes de sauvegarde
 
