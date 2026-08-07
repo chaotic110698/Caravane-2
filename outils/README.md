@@ -46,6 +46,31 @@ Côté code, tout passe par cinq fonctions de `commun.js` : `depotLire`, `depotE
 a écrit) et `depotCodex` (la liste plate que le hub affiche). Ajouter une catégorie au
 codex, c'est ajouter une ligne au tableau `CATEGORIES`.
 
+## Les deux sortes de sauvegarde
+
+Elles ne servent pas à la même chose, et les confondre coûte du travail.
+
+**La sauvegarde d'atelier** — `caravane-atelier-AAAA-MM-JJ.json`, tout le dépôt dans un
+fichier, plus l'état de travail de chaque outil. C'est le fichier qui voyage : on le
+prend sur l'ordinateur, on le reprend sur le téléphone, et l'on continue où l'on s'était
+arrêté. Elle **ne se dépose pas** dans `data/`. À la reprise, le hub montre d'abord ce
+que le fichier contient, puis propose deux gestes :
+
+- **fusionner** — à clé égale la sauvegarde l'emporte, et ce qu'elle ignore reste ; c'est
+  ce qu'il faut quand on a travaillé les missions dans le train et la carte à la maison ;
+- **remplacer** — ce que le navigateur contient est jeté, y compris les sections absentes
+  du fichier.
+
+L'image de fond de la carte n'y est pas : trop lourde pour un JSON. On la redépose à la
+main sur l'autre appareil, et les lieux retombent dessus.
+
+**Les fichiers du jeu** — une section à la fois, sous le nom exact qu'attend `data/` :
+`monde.json`, `personnages.json`, `objets.json`, `missions-ecrites.json`,
+`evenements.json`, `icones.json`. Le tableau `FICHIERS_JEU` de `commun.js` en est la
+seule source, et l'atelier de missions s'en sert aussi pour son propre bouton
+*Exporter* — sans quoi il écrirait `missions.json`, qui est déjà pris dans `data/` par
+ce qui habille les contrats tirés au sort.
+
 ---
 
 # Atelier de carte

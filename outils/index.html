@@ -119,6 +119,32 @@ ol.ordre li b{color:var(--encre)}
 #codex-cherche::placeholder{color:var(--encre-pale)}
 #codex-rien{font-size:13.5px;color:var(--encre-pale);padding:2px}
 
+/* ── les sauvegardes ── */
+#sauvegardes{display:grid;gap:11px}
+.boutons{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+button.gros{font:inherit;font-size:14px;padding:11px 16px;border-radius:var(--r);
+  border:1px solid var(--bord);background:var(--fond);color:var(--encre);cursor:pointer;
+  text-align:left}
+button.gros:active{border-color:var(--or)}
+button.gros.fort{background:var(--or);border-color:var(--or);color:#1C1A17;font-weight:600}
+button.gros[disabled]{opacity:.45;cursor:default}
+.fichiers{display:grid;gap:7px;margin-top:12px}
+.fichier{display:flex;align-items:center;gap:11px;padding:10px 12px;background:var(--fond);
+  border:1px solid var(--bord);border-radius:var(--r);width:100%;
+  font:inherit;font-size:14px;color:var(--encre);cursor:pointer;text-align:left}
+.fichier:active{border-color:var(--or)}
+.fichier code{font-size:13px;color:var(--or);font-family:ui-monospace,Menlo,monospace}
+.fichier .combien{margin-left:auto;font-size:12.5px;color:var(--encre-pale);
+  font-variant-numeric:tabular-nums;flex:none}
+.fichier .fleche{flex:none;color:var(--encre-pale)}
+#reprise{margin-top:12px;padding:13px 14px;background:var(--fond);
+  border:1px solid var(--or);border-radius:var(--r);font-size:14px;line-height:1.55}
+#reprise ul{list-style:none;margin:8px 0 0;display:grid;gap:3px}
+#reprise li{font-size:13.5px;color:var(--encre-pale)}
+#reprise li b{color:var(--encre)}
+#reprise.rate{border-color:var(--minium)}
+.dit{margin-top:10px;font-size:13.5px;color:var(--vert)}
+
 /* ── pied ── */
 footer{margin-top:34px;padding-top:20px;border-top:1px solid var(--bord);
   font-size:12.5px;color:var(--encre-pale);text-align:center;line-height:1.7}
@@ -240,12 +266,16 @@ footer a{color:var(--or);text-decoration:none}
        ateliers viendra se ranger ici, par catégorie.</p>
   </div>
 
+  <h2 class="section">Sauvegarder</h2>
+  <div id="sauvegardes"></div>
+  <input type="file" id="fichier-sauve" accept=".json,application/json" hidden>
+
   <h2 class="section">Dans quel ordre</h2>
   <ol class="ordre">
     <li><b>La carte d'abord.</b> Elle donne les clés de lieu que tous les autres
-        citent. Exportez <b>monde.json</b>.</li>
-    <li><b>Les personnages ensuite.</b> Chargez-y votre <b>monde.json</b> pour
-        choisir où chacun se tient. Vous n'avez rien à leur attribuer : on revient
+        citent — et ils la voient dès qu'elle est tracée, sans export.</li>
+    <li><b>Les personnages ensuite.</b> Choisissez où chacun se tient parmi les
+        lieux de votre carte. Vous n'avez rien à leur attribuer : on revient
         plus tard.</li>
     <li><b>Les objets et les missions</b>, dans l'ordre qui vous arrange — ils se
         citent l'un l'autre par leurs clés, et les ateliers vérifient les deux sens
@@ -308,13 +338,12 @@ footer a{color:var(--or);text-decoration:none}
 
   <h2 class="section">Et après</h2>
   <div class="bloc">
-    <p>Les fichiers que vous exportez — <b>monde.json</b>, <b>personnages.json</b>,
-       <b>objets.json</b>, <b>missions.json</b>, <b>evenements.json</b> — se
-       déposent dans le dossier <b>data/</b> du jeu, qui les lit tels quels.</p>
-    <p>Ils sont tous <b>facultatifs</b> et indépendants : posez-en un, le jeu s'en
-       sert ; n'en posez aucun, il tourne comme avant. Une seule attention : le
-       fichier des missions s'y appelle <b>missions-ecrites.json</b>, pour ne pas
-       écraser celui qui habille déjà les contrats tirés au sort.</p>
+    <p>Les fichiers du jeu se déposent dans le dossier <b>data/</b>, qui les lit
+       tels quels. Ils sont tous <b>facultatifs</b> et indépendants : posez-en un,
+       le jeu s'en sert ; n'en posez aucun, il tourne comme avant.</p>
+    <p>Rien n'oblige à tout finir avant de livrer. Une liste de missions seule est
+       un fichier valable — écrivez-les, prenez <b>missions-ecrites.json</b>, et
+       laissez le reste pour plus tard.</p>
   </div>
 
   <footer>
@@ -582,6 +611,146 @@ function depotCodex(){
       }))
     };
   });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LES DEUX SORTES DE SAUVEGARDE
+   ───────────────────────────────────────────────────────────────────────────
+   Elles ne servent pas à la même chose, et les confondre coûte du travail.
+
+   1. La **sauvegarde d'atelier** — tout le dépôt dans un fichier, plus l'état
+      de travail de chaque outil. C'est le fichier qui voyage : on le prend sur
+      l'ordinateur, on le reprend sur le téléphone, et l'on continue où l'on
+      s'était arrêté. Il ne se dépose pas dans le jeu.
+
+   2. Les **fichiers du jeu** — une section à la fois, sous le nom exact que
+      data/ attend. C'est ce qu'on livre au jeu, et rien d'autre.
+
+   L'image de fond de la carte ne voyage dans ni l'une ni l'autre : elle est
+   trop lourde pour un JSON, et elle vous appartient. On la redépose à la main
+   sur l'autre appareil.                                                      */
+
+const FICHIERS_JEU={
+  monde:'monde.json',
+  personnages:'personnages.json',
+  objets:'objets.json',
+  /* pas « missions.json » : ce nom-là est déjà pris dans data/ par ce qui
+     habille les contrats tirés au sort, et l'écraser les ferait disparaître */
+  missions:'missions-ecrites.json',
+  evenements:'evenements.json',
+  icones:'icones.json'
+};
+/* Les petites clés d'état privé : quel élément est ouvert, le filtre, l'onglet.
+   La carte n'y est pas — son état privé, c'est le monde entier, et le monde est
+   déjà dans le dépôt. */
+const CLES_TRAVAIL=['personnages','objets','missions','evenements','icones']
+  .map(n=>'caravane.atelier-'+n+'.v1');
+
+function sauvegardeComplete(){
+  chargerDepot();
+  const travail={};
+  CLES_TRAVAIL.forEach(k=>{
+    try{const t=localStorage.getItem(k);if(t)travail[k]=JSON.parse(t);}catch(e){}
+  });
+  const sections={};
+  SECTIONS.forEach(s=>{if(D[s])sections[s]=D[s];});
+  return {
+    format:'caravane.atelier.v1',
+    faite:new Date().toISOString(),
+    resume:depotResume(),
+    sections:sections,
+    travail:travail
+  };
+}
+const nomDeSauvegarde=()=>
+  'caravane-atelier-'+new Date().toISOString().slice(0,10)+'.json';
+
+/* Ce qu'un fichier contient, avant d'y toucher : on montre toujours ce qu'on
+   s'apprête à reprendre, pour qu'aucun remplacement ne soit une surprise. */
+function lireSauvegarde(texte){
+  let d;
+  try{d=JSON.parse(texte);}catch(e){return {erreur:'Ce fichier n\'est pas du JSON.'};}
+  if(!d||typeof d!=='object')return {erreur:'Ce fichier ne contient rien qu\'on sache lire.'};
+  if(d.format!=='caravane.atelier.v1'){
+    /* un fichier de jeu isolé, déposé ici par méprise : on sait quoi en dire */
+    const seule=SECTIONS.find(s=>{
+      const c=CATEGORIES.find(x=>x.nom===s);
+      return c&&Array.isArray(d[c.champ]);
+    });
+    if(seule)return {erreur:'C\'est un fichier du jeu ('+FICHIERS_JEU[seule]+
+      '), pas une sauvegarde d\'atelier. Ouvrez-le depuis l\'atelier concerné.'};
+    return {erreur:'Ce n\'est pas une sauvegarde d\'atelier.'};
+  }
+  const dedans=CATEGORIES.map(c=>{
+    const s=(d.sections||{})[c.nom];
+    const n=((s&&s[c.champ])||[]).length;
+    return n?{nom:c.nom,titre:c.titre,n:n,mot:n+' '+(n>1?c.des:c.un)}:null;
+  }).filter(Boolean);
+  return {sauvegarde:d,faite:d.faite||'',dedans:dedans};
+}
+/* Fusionner plutôt que remplacer : on travaille les missions dans le train et
+   la carte à la maison, et l'on ne veut pas choisir. La clé fait foi — une
+   entrée de même clé est remplacée, une clé nouvelle s'ajoute à la suite. */
+function fondre(ancien,nouveau,champ){
+  const a=(ancien&&ancien[champ])||[], b=(nouveau&&nouveau[champ])||[];
+  const par={}; const ordre=[];
+  a.concat(b).forEach(x=>{
+    if(!x)return;
+    const k=x.cle||('__'+ordre.length);
+    if(!(k in par))ordre.push(k);
+    par[k]=x;
+  });
+  return Object.assign({},ancien||{},nouveau||{},{[champ]:ordre.map(k=>par[k])});
+}
+const LISTES_MONDE=['cartes','contrees','lieux','voies'];
+function fondreMonde(ancien,nouveau){
+  if(!ancien)return nouveau;
+  if(!nouveau)return ancien;
+  let m=Object.assign({},ancien,nouveau);
+  LISTES_MONDE.forEach(l=>{
+    if(Array.isArray(ancien[l])||Array.isArray(nouveau[l]))
+      m[l]=fondre(ancien,nouveau,l)[l];
+  });
+  return m;
+}
+function reprendreSauvegarde(d,mode){
+  chargerDepot();
+  const pris=[];
+  CATEGORIES.forEach(c=>{
+    const venu=(d.sections||{})[c.nom];
+    if(!venu)return;
+    if(mode==='fusionner'&&D[c.nom]){
+      D[c.nom]=c.nom==='monde'?fondreMonde(D[c.nom],venu):fondre(D[c.nom],venu,c.champ);
+    }else D[c.nom]=venu;
+    D.maj=D.maj||{};D.maj[c.nom]=Date.now();
+    pris.push(c.nom);
+  });
+  /* en remplacement, ce que la sauvegarde ignore disparaît : sans quoi
+     « remplacer » ne remplacerait rien du tout */
+  if(mode!=='fusionner')SECTIONS.forEach(s=>{
+    if(!(d.sections||{})[s])delete D[s];
+  });
+  ecrireDepot();
+  /* l'état de travail suit, pour rouvrir sur ce qu'on regardait */
+  Object.keys(d.travail||{}).forEach(k=>{
+    if(CLES_TRAVAIL.indexOf(k)<0)return;
+    try{localStorage.setItem(k,JSON.stringify(d.travail[k]));}catch(e){}
+  });
+  /* l'atelier de carte relit le dépôt à défaut de sa propre clé : on efface la
+     sienne pour qu'il reparte du monde qu'on vient de reprendre */
+  if((d.sections||{}).monde&&mode!=='fusionner'){
+    try{localStorage.removeItem('caravane.atelier-carte.v1');}catch(e){}
+  }
+  return pris;
+}
+/* Un fichier du jeu, tel que data/ l'attend. */
+function fichierDuJeu(section){
+  chargerDepot();
+  const c=CATEGORIES.find(x=>x.nom===section);
+  if(!c||!D[section])return null;
+  return {nom:FICHIERS_JEU[section],
+          contenu:nettoyer(JSON.parse(JSON.stringify(D[section]))),
+          combien:((D[section][c.champ])||[]).length};
 }
 
 /* ═══════════════ sauvegarde ═══════════════
@@ -1096,6 +1265,119 @@ function rendreCodex(){
   boite.innerHTML=h;
 }
 
+/* ═══════════════ les sauvegardes ═══════════════
+   Deux blocs, parce qu'il y a deux besoins : emporter son travail d'un appareil
+   à l'autre, et livrer un fichier au jeu. */
+let reprise=null;          /* la sauvegarde lue, en attente d'un choix */
+let dit='';                /* ce qu'on vient de faire, montré un instant */
+
+function rendreSauvegardes(){
+  const r=depotResume();
+  const rien=!Object.keys(r).some(k=>r[k]);
+  const prets=CATEGORIES.filter(c=>r[c.nom]);
+
+  let h=`<div class="bloc or">
+    <h3>La sauvegarde d'atelier</h3>
+    <p>Un seul fichier qui emporte <b>tout</b> — le monde, les gens, les objets,
+       les missions, les événements, les icônes, et jusqu'à l'élément que vous
+       aviez ouvert dans chaque outil. C'est ce fichier qui passe de l'ordinateur
+       au téléphone. Il ne se dépose pas dans le jeu.</p>
+    <div class="boutons">
+      <button class="gros fort" id="b-tout-sauver"${rien?' disabled':''}>
+        ↓ Tout sauvegarder</button>
+      <button class="gros" id="b-reprendre">↑ Reprendre une sauvegarde…</button>
+    </div>`;
+  if(rien)h+=`<p class="dit" style="color:var(--encre-pale)">Rien à sauvegarder
+    pour l'instant.</p>`;
+  h+=`<p class="aide" style="font-size:13px;color:var(--encre-pale);margin-top:11px">
+    L'<b>image de fond</b> de la carte ne voyage pas dedans : trop lourde pour un
+    JSON. Redéposez-la sur l'autre appareil, les lieux retomberont dessus.</p>`;
+  if(reprise)h+=blocReprise();
+  else if(dit)h+=`<p class="dit">✓ ${ech(dit)}</p>`;
+  h+=`</div>`;
+
+  h+=`<div class="bloc">
+    <h3>Les fichiers du jeu</h3>
+    <p>Une section à la fois, sous le nom exact que le dossier <b>data/</b> du
+       jeu attend. Ils sont tous facultatifs et indépendants.</p>`;
+  h+=prets.length
+    ?`<div class="fichiers">`+prets.map(c=>
+      `<button class="fichier" data-jeu="${ech(c.nom)}">
+        <code>${ech(FICHIERS_JEU[c.nom])}</code>
+        <span class="combien">${r[c.nom]} ${ech(r[c.nom]>1?c.des:c.un)}</span>
+        <span class="fleche">↓</span></button>`).join('')+`</div>`
+    :`<p class="dit" style="color:var(--encre-pale)">Rien encore à livrer au jeu.</p>`;
+  h+=`<p class="aide" style="font-size:13px;color:var(--encre-pale);margin-top:12px">
+    Le fichier des missions s'appelle <b>missions-ecrites.json</b> et non
+    <i>missions.json</i> : ce nom-là est déjà pris dans <b>data/</b> par ce qui
+    habille les contrats tirés au sort, et l'écraser les ferait disparaître.</p>
+  </div>`;
+
+  document.getElementById('sauvegardes').innerHTML=h;
+}
+
+function blocReprise(){
+  if(reprise.erreur)
+    return `<div id="reprise" class="rate">${ech(reprise.erreur)}
+      <div class="boutons"><button class="gros" data-act="annuler">Fermer</button></div>
+    </div>`;
+  const quand=reprise.faite?new Date(reprise.faite).toLocaleString('fr-FR',
+    {dateStyle:'long',timeStyle:'short'}):'sans date';
+  return `<div id="reprise">
+    <b>Sauvegarde du ${ech(quand)}</b>
+    ${reprise.dedans.length
+      ?`<ul>`+reprise.dedans.map(d=>`<li><b>${ech(d.mot)}</b> — ${ech(d.titre.toLowerCase())}</li>`).join('')+`</ul>`
+      :`<ul><li>Elle est vide.</li></ul>`}
+    <div class="boutons">
+      <button class="gros fort" data-act="fusionner">Fusionner avec ce que j'ai</button>
+      <button class="gros" data-act="remplacer">Tout remplacer</button>
+      <button class="gros" data-act="annuler">Annuler</button>
+    </div>
+    <p class="aide" style="font-size:13px;color:var(--encre-pale);margin-top:10px">
+      <b>Fusionner</b> garde tout : à clé égale, la sauvegarde l'emporte, et ce
+      qu'elle ne connaît pas reste. <b>Remplacer</b> jette ce que ce navigateur
+      contient.</p>
+  </div>`;
+}
+
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button');
+  if(!b)return;
+
+  if(b.id==='b-tout-sauver'){
+    telecharger(nomDeSauvegarde(),sauvegardeComplete());
+    dit='Sauvegarde téléchargée.';reprise=null;rendreSauvegardes();return;
+  }
+  if(b.id==='b-reprendre'){document.getElementById('fichier-sauve').click();return;}
+  if(b.dataset.jeu){
+    const f=fichierDuJeu(b.dataset.jeu);
+    if(!f)return;
+    telecharger(f.nom,f.contenu);
+    dit=f.nom+' téléchargé.';reprise=null;rendreSauvegardes();return;
+  }
+  const act=b.dataset.act;
+  if(act==='annuler'){reprise=null;dit='';rendreSauvegardes();return;}
+  if(act==='fusionner'||act==='remplacer'){
+    if(!reprise||!reprise.sauvegarde)return;
+    const pris=reprendreSauvegarde(reprise.sauvegarde,act);
+    reprise=null;
+    dit=pris.length
+      ?(act==='fusionner'?'Fusionné : ':'Repris : ')+pris.join(', ')+'.'
+      :'Cette sauvegarde ne contenait rien.';
+    rendreSauvegardes();rendreCodex();
+  }
+});
+
+document.getElementById('fichier-sauve').addEventListener('change',ev=>{
+  const f=ev.target.files&&ev.target.files[0];
+  ev.target.value='';                     /* pour qu'un même fichier repasse */
+  if(!f)return;
+  const l=new FileReader();
+  l.onload=()=>{reprise=lireSauvegarde(String(l.result));dit='';rendreSauvegardes();};
+  l.onerror=()=>{reprise={erreur:'Ce fichier n\'a pas pu être lu.'};rendreSauvegardes();};
+  l.readAsText(f);
+});
+
 /* la recherche : on ne refait que le codex, et l'on rend le focus au champ */
 document.addEventListener('input',e=>{
   if(e.target.id!=='codex-cherche')return;
@@ -1105,10 +1387,11 @@ document.addEventListener('input',e=>{
   const c=$c('#codex-cherche');
   if(c){c.focus();c.setSelectionRange(p,p);}
 });
-/* un atelier ouvert dans un autre onglet vient d'écrire : le codex suit */
-suivreDepot(rendreCodex);
-addEventListener('pageshow',rendreCodex);
-rendreCodex();
+/* un atelier ouvert dans un autre onglet vient d'écrire : tout suit */
+const rendreTout=()=>{rendreCodex();rendreSauvegardes();};
+suivreDepot(rendreTout);
+addEventListener('pageshow',rendreTout);
+rendreTout();
 
 /* Le service worker met les ateliers en cache dès la première visite : une
    fois la page ouverte avec du réseau, tout reste utilisable sans. */

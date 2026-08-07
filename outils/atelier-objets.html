@@ -486,6 +486,146 @@ function depotCodex(){
   });
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   LES DEUX SORTES DE SAUVEGARDE
+   ───────────────────────────────────────────────────────────────────────────
+   Elles ne servent pas à la même chose, et les confondre coûte du travail.
+
+   1. La **sauvegarde d'atelier** — tout le dépôt dans un fichier, plus l'état
+      de travail de chaque outil. C'est le fichier qui voyage : on le prend sur
+      l'ordinateur, on le reprend sur le téléphone, et l'on continue où l'on
+      s'était arrêté. Il ne se dépose pas dans le jeu.
+
+   2. Les **fichiers du jeu** — une section à la fois, sous le nom exact que
+      data/ attend. C'est ce qu'on livre au jeu, et rien d'autre.
+
+   L'image de fond de la carte ne voyage dans ni l'une ni l'autre : elle est
+   trop lourde pour un JSON, et elle vous appartient. On la redépose à la main
+   sur l'autre appareil.                                                      */
+
+const FICHIERS_JEU={
+  monde:'monde.json',
+  personnages:'personnages.json',
+  objets:'objets.json',
+  /* pas « missions.json » : ce nom-là est déjà pris dans data/ par ce qui
+     habille les contrats tirés au sort, et l'écraser les ferait disparaître */
+  missions:'missions-ecrites.json',
+  evenements:'evenements.json',
+  icones:'icones.json'
+};
+/* Les petites clés d'état privé : quel élément est ouvert, le filtre, l'onglet.
+   La carte n'y est pas — son état privé, c'est le monde entier, et le monde est
+   déjà dans le dépôt. */
+const CLES_TRAVAIL=['personnages','objets','missions','evenements','icones']
+  .map(n=>'caravane.atelier-'+n+'.v1');
+
+function sauvegardeComplete(){
+  chargerDepot();
+  const travail={};
+  CLES_TRAVAIL.forEach(k=>{
+    try{const t=localStorage.getItem(k);if(t)travail[k]=JSON.parse(t);}catch(e){}
+  });
+  const sections={};
+  SECTIONS.forEach(s=>{if(D[s])sections[s]=D[s];});
+  return {
+    format:'caravane.atelier.v1',
+    faite:new Date().toISOString(),
+    resume:depotResume(),
+    sections:sections,
+    travail:travail
+  };
+}
+const nomDeSauvegarde=()=>
+  'caravane-atelier-'+new Date().toISOString().slice(0,10)+'.json';
+
+/* Ce qu'un fichier contient, avant d'y toucher : on montre toujours ce qu'on
+   s'apprête à reprendre, pour qu'aucun remplacement ne soit une surprise. */
+function lireSauvegarde(texte){
+  let d;
+  try{d=JSON.parse(texte);}catch(e){return {erreur:'Ce fichier n\'est pas du JSON.'};}
+  if(!d||typeof d!=='object')return {erreur:'Ce fichier ne contient rien qu\'on sache lire.'};
+  if(d.format!=='caravane.atelier.v1'){
+    /* un fichier de jeu isolé, déposé ici par méprise : on sait quoi en dire */
+    const seule=SECTIONS.find(s=>{
+      const c=CATEGORIES.find(x=>x.nom===s);
+      return c&&Array.isArray(d[c.champ]);
+    });
+    if(seule)return {erreur:'C\'est un fichier du jeu ('+FICHIERS_JEU[seule]+
+      '), pas une sauvegarde d\'atelier. Ouvrez-le depuis l\'atelier concerné.'};
+    return {erreur:'Ce n\'est pas une sauvegarde d\'atelier.'};
+  }
+  const dedans=CATEGORIES.map(c=>{
+    const s=(d.sections||{})[c.nom];
+    const n=((s&&s[c.champ])||[]).length;
+    return n?{nom:c.nom,titre:c.titre,n:n,mot:n+' '+(n>1?c.des:c.un)}:null;
+  }).filter(Boolean);
+  return {sauvegarde:d,faite:d.faite||'',dedans:dedans};
+}
+/* Fusionner plutôt que remplacer : on travaille les missions dans le train et
+   la carte à la maison, et l'on ne veut pas choisir. La clé fait foi — une
+   entrée de même clé est remplacée, une clé nouvelle s'ajoute à la suite. */
+function fondre(ancien,nouveau,champ){
+  const a=(ancien&&ancien[champ])||[], b=(nouveau&&nouveau[champ])||[];
+  const par={}; const ordre=[];
+  a.concat(b).forEach(x=>{
+    if(!x)return;
+    const k=x.cle||('__'+ordre.length);
+    if(!(k in par))ordre.push(k);
+    par[k]=x;
+  });
+  return Object.assign({},ancien||{},nouveau||{},{[champ]:ordre.map(k=>par[k])});
+}
+const LISTES_MONDE=['cartes','contrees','lieux','voies'];
+function fondreMonde(ancien,nouveau){
+  if(!ancien)return nouveau;
+  if(!nouveau)return ancien;
+  let m=Object.assign({},ancien,nouveau);
+  LISTES_MONDE.forEach(l=>{
+    if(Array.isArray(ancien[l])||Array.isArray(nouveau[l]))
+      m[l]=fondre(ancien,nouveau,l)[l];
+  });
+  return m;
+}
+function reprendreSauvegarde(d,mode){
+  chargerDepot();
+  const pris=[];
+  CATEGORIES.forEach(c=>{
+    const venu=(d.sections||{})[c.nom];
+    if(!venu)return;
+    if(mode==='fusionner'&&D[c.nom]){
+      D[c.nom]=c.nom==='monde'?fondreMonde(D[c.nom],venu):fondre(D[c.nom],venu,c.champ);
+    }else D[c.nom]=venu;
+    D.maj=D.maj||{};D.maj[c.nom]=Date.now();
+    pris.push(c.nom);
+  });
+  /* en remplacement, ce que la sauvegarde ignore disparaît : sans quoi
+     « remplacer » ne remplacerait rien du tout */
+  if(mode!=='fusionner')SECTIONS.forEach(s=>{
+    if(!(d.sections||{})[s])delete D[s];
+  });
+  ecrireDepot();
+  /* l'état de travail suit, pour rouvrir sur ce qu'on regardait */
+  Object.keys(d.travail||{}).forEach(k=>{
+    if(CLES_TRAVAIL.indexOf(k)<0)return;
+    try{localStorage.setItem(k,JSON.stringify(d.travail[k]));}catch(e){}
+  });
+  /* l'atelier de carte relit le dépôt à défaut de sa propre clé : on efface la
+     sienne pour qu'il reparte du monde qu'on vient de reprendre */
+  if((d.sections||{}).monde&&mode!=='fusionner'){
+    try{localStorage.removeItem('caravane.atelier-carte.v1');}catch(e){}
+  }
+  return pris;
+}
+/* Un fichier du jeu, tel que data/ l'attend. */
+function fichierDuJeu(section){
+  chargerDepot();
+  const c=CATEGORIES.find(x=>x.nom===section);
+  if(!c||!D[section])return null;
+  return {nom:FICHIERS_JEU[section],
+          contenu:nettoyer(JSON.parse(JSON.stringify(D[section]))),
+          combien:((D[section][c.champ])||[]).length};
+}
+
 /* ═══════════════ sauvegarde ═══════════════
    Une échéance dure : le report d'écriture ne peut pas glisser indéfiniment,
    et la page qui part écrit avant de partir. Sans les deux, une séance entière
