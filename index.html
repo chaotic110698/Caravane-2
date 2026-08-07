@@ -1160,7 +1160,26 @@ function prixRevente(cle){
   return a.mythique?Math.round(a.prix*.45):Math.round(a.prix*(S.ville.forge||1)*.5);
 }
 function enReserve(){return CLES_ARMES.filter(c=>(S.armes[c]||0)>0);}
-function rangerArme(cle){if(cle)S.armes[cle]=(S.armes[cle]||0)+1;}
+/* ── le râtelier pèse ──
+   Une arme portée ne coûte rien : elle est au ceinturon. Une arme en réserve
+   voyage dans les chariots, et prend la place d'autant de kilos de sel. C'est
+   ce qui fait qu'on ne trimballe pas six haches lourdes « au cas où ».
+
+   Les clés « objet:… » que pose un objet unique armé n'ont pas d'entrée dans
+   ARMES : on les ignore ici, faute de quoi le poids serait nul par accident
+   plutôt que par décision. Les objets uniques ne pèsent nulle part ailleurs
+   non plus — les faire peser serait un autre équilibrage. */
+function poidsArme(cle){const a=ARMES[cle];return a?(a.poids||0):0;}
+function poidsArmes(){
+  return Object.keys(S.armes||{}).reduce((s,c)=>s+poidsArme(c)*(S.armes[c]||0),0);
+}
+/* Rend faux quand il n'y a plus la place : l'appelant doit le dire. */
+function rangerArme(cle){
+  if(!cle)return false;
+  if(poidsArme(cle)>libre())return false;
+  S.armes[cle]=(S.armes[cle]||0)+1;
+  return true;
+}
 
 /* ═══════════════ état ═══════════════ */
 let S=null, minuteur=null, allure=1;
@@ -1533,12 +1552,17 @@ function chariotLeplusLent(km){
 function chargeChariot(c){let s=0;for(const g in c.cargo)s+=c.cargo[g];return s;}
 function libreChariot(c){return Math.max(0,capChariot(c)-chargeChariot(c));}
 function capacite(){return S.chariots.reduce((s,c)=>s+capChariot(c),0);}
-function charge(){return S.chariots.reduce((s,c)=>s+chargeChariot(c),0);}
+/* le râtelier voyage avec le convoi : son poids compte comme le reste */
+function charge(){
+  return S.chariots.reduce((s,c)=>s+chargeChariot(c),0)+poidsArmes();
+}
 function libre(){return Math.max(0,capacite()-charge());}
 function stock(g){return S.chariots.reduce((s,c)=>s+(c.cargo[g]||0),0);}
 function place(){return libre();}
 function ajouter(g,n){
-  let reste=n;
+  /* le râtelier occupe de la place sans occuper de chariot en particulier :
+     on borne au total avant de répartir, sinon on dépasserait */
+  let reste=Math.max(0,Math.min(n,libre()));
   for(const c of S.chariots){
     const k=Math.min(reste,libreChariot(c));
     if(k>0){c.cargo[g]=(c.cargo[g]||0)+k;reste-=k;}
@@ -2072,8 +2096,10 @@ function panneauMarche(){
 }
 function panneauConvoi(){
   const p=$('#panneau-convoi');
+  const pa=poidsArmes();
   let h=`<p class="oeil" style="padding:4px 2px 10px">Charge totale
-    <span class="chiffre">${charge()} / ${capacite()}</span> kg</p>`;
+    <span class="chiffre">${charge()} / ${capacite()}</span> kg`+
+    (pa?` · dont <span class="chiffre">${fmt(pa)}</span> kg de râtelier`:'')+`</p>`;
   h+=S.chariots.map((c,i)=>{
     const cr=coutTotalChariot(c);
     const gs=Object.keys(c.cargo).filter(g=>c.cargo[g]>0)
@@ -2377,7 +2403,11 @@ function contenuArmurerie(){
 
   const res=enReserve();
   if(res.length){
-    h+=`<p class="oeil" style="padding:12px 2px 8px">En réserve dans les chariots</p>`;
+    h+=`<p class="oeil" style="padding:12px 2px 8px">En réserve dans les chariots —
+      <b class="chiffre">${fmt(poidsArmes())}</b> kg</p>
+      <p class="info" style="padding:0 2px 6px">Une arme portée ne pèse rien.
+        Celles-ci voyagent dans la soute, et prennent la place d'autant de
+        marchandise.</p>`;
     h+=res.map(c=>{
       const a=ARMES[c],n=S.armes[c];
       return `<div class="carte${a.mythique?' relique':''}">
@@ -2386,7 +2416,8 @@ function contenuArmurerie(){
         <div class="rangee" style="margin-top:9px">
           <p>frappe +<span class="chiffre">${a.frappe.toFixed(2)}</span> ·
              ${a.poids} kg · encaisse +<span class="chiffre">${Math.round(a.garde*100)} %</span></p>
-          <button class="bouton petit danger" data-vendre-arme="${c}">Revendre · ${fmt(prixRevente(c))} po</button>
+          <button class="bouton petit danger" data-vendre-arme="${c}">Revendre ·
+            ${fmt(prixRevente(c))} po</button>
         </div></div>`;
     }).join('');
   }
@@ -4518,7 +4549,10 @@ document.addEventListener('click',e=>{
   }
   if(t.dataset.renvoyer!==undefined&&t.dataset.renvoyer!==''){
     const g=S.gardes.splice(+t.dataset.renvoyer,1)[0];
-    if(g&&g.arme){rangerArme(g.arme);toast('Sa '+ARMES[g.arme].nom.toLowerCase()+' reste au convoi.');}
+    if(g&&g.arme){
+      if(rangerArme(g.arme))toast('Sa '+ARMES[g.arme].nom.toLowerCase()+' reste au convoi.');
+      else toast('Sa '+ARMES[g.arme].nom.toLowerCase()+' part avec lui : pas la place.');
+    }
     S.reputation=clamp(S.reputation-2,0,100);rendreMarche();return;
   }
   if(t.dataset.embaucher!==undefined&&t.dataset.embaucher!==''){
@@ -4618,11 +4652,16 @@ document.addEventListener('click',e=>{
     if(estMythique(c)){
       if(S.mythes[c]!=='etal'||mytheDeLaVille()!==c)return;
       if(S.or<px)return;
+      if(poidsArme(c)>libre())
+        return toast(`Pas la place : ${ARMES[c].poids} kg, et il vous reste ${fmt(libre())} kg.`);
       S.or-=px;S.mythes[c]='convoi';rangerArme(c);
       rendreMarche();toast(ARMES[c].nom+' est à vous. Il n\'y en aura pas d\'autre.');
       return;
     }
-    if(S.or>=px){S.or-=px;rangerArme(c);rendreMarche();toast(ARMES[c].nom+' achetée.');}
+    if(S.or<px)return;
+    if(poidsArme(c)>libre())
+      return toast(`Pas la place : ${ARMES[c].poids} kg, et il vous reste ${fmt(libre())} kg.`);
+    S.or-=px;rangerArme(c);rendreMarche();toast(ARMES[c].nom+' achetée.');
     return;
   }
   if(t.dataset.vendreArme){
@@ -4646,7 +4685,13 @@ document.addEventListener('click',e=>{
         if((S.armes[cle]||0)<=0)return;
         S.armes[cle]--;if(!S.armes[cle])delete S.armes[cle];
       }
-      rangerArme(u.arme);
+      /* l'arme qu'on lui retire retourne au râtelier, et le râtelier pèse :
+         on la remet à sa place plutôt que de la faire disparaître */
+      if(u.arme&&!rangerArme(u.arme)){
+        if(cle)S.armes[cle]=(S.armes[cle]||0)+1;
+        return toast(`Pas la place pour ranger sa ${ARMES[u.arme].nom.toLowerCase()} : `+
+          `${ARMES[u.arme].poids} kg, et il reste ${fmt(libre())} kg.`);
+      }
       u.arme=cle||undefined;
       fermerFeuilles();rendreMarche();
     }
@@ -5879,13 +5924,17 @@ function ceder(cle){
   const e=S.terrains[cle], t=terrainDe(cle);
   if(!e)return;
   S.or+=e.or||0;
-  Object.entries(e.armes||{}).forEach(([a,n])=>{for(let i=0;i<n;i++)rangerArme(a);});
+  let laissees=0;
+  Object.entries(e.armes||{}).forEach(([a,n])=>{
+    for(let i=0;i<n;i++)if(!rangerArme(a))laissees++;
+  });
   (e.gardes||[]).forEach(g=>S.gardes.push(g));
   (e.chariots||[]).forEach(c=>S.chariots.push(c));
   (e.chevaux||[]).forEach(c=>S.chevaux.push(c));
   delete S.terrains[cle];
-  chronique(`Vous cédez ${t?t.nom:'un terrain'} : ce qu'il gardait revient au convoi.`,
-    'mauvais');
+  chronique(`Vous cédez ${t?t.nom:'un terrain'} : ce qu'il gardait revient au convoi`+
+    (laissees?`, sauf ${laissees} arme${laissees>1?'s'
+      :''} que les chariots n'ont pu prendre`:'')+'.','mauvais');
 }
 /* Ce qu'on perdrait à céder : rien, sauf la place qui manque. */
 function ceQueCederRend(cle){
@@ -5903,7 +5952,7 @@ function ceQueCederRend(cle){
 
 /* ── ranger et reprendre ──
    Chaque bâtiment garde une sorte de chose, et sa capacité vient du terrain. */
-function capacite(cle,b,quoi){
+function capaciteBatiment(cle,b,quoi){
   const t=terrainDe(cle);
   const d=t&&(t.batiments||{})[b];
   if(!d)return 0;
@@ -5915,11 +5964,11 @@ function resteMaison(cle,quoi){
   const pris=quoi==='armes'
     ?Object.values(e.armes).reduce((s,n)=>s+n,0)
     :e.gardes.length;
-  return capacite(cle,'maison',quoi)-pris;
+  return capaciteBatiment(cle,'maison',quoi)-pris;
 }
-const resteGrange=cle=>capacite(cle,'grange','chariots')-etatTerrain(cle).chariots.length;
-const resteCache=cle=>capacite(cle,'cache','or')-etatTerrain(cle).or;
-const resteEcurie=cle=>capacite(cle,'ecurie','chevaux')-etatTerrain(cle).chevaux.length;
+const resteGrange=cle=>capaciteBatiment(cle,'grange','chariots')-etatTerrain(cle).chariots.length;
+const resteCache=cle=>capaciteBatiment(cle,'cache','or')-etatTerrain(cle).or;
+const resteEcurie=cle=>capaciteBatiment(cle,'ecurie','chevaux')-etatTerrain(cle).chevaux.length;
 
 function rangerArmeLa(cle,a){
   if(!aBati(cle,'maison')||resteMaison(cle,'armes')<=0)return false;
@@ -5932,8 +5981,8 @@ function rangerArmeLa(cle,a){
 function reprendreArmeLa(cle,a){
   const e=etatTerrain(cle);
   if(!(e.armes[a]>0))return false;
+  if(!rangerArme(a))return false;      /* le râtelier pèse : il faut la place */
   e.armes[a]--;if(!e.armes[a])delete e.armes[a];
-  rangerArme(a);
   return true;
 }
 function logerGarde(cle,i){

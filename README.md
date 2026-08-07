@@ -71,6 +71,11 @@ Trois règles font tout le sel :
 Les **chevaux** sont devenus une possession à part : on les attelle, on les dételle,
 et le convoi n'en mène qu'un libre par chariot. Au-delà, il faut une écurie.
 
+Les **armes** aussi pèsent. Une arme portée ne coûte rien — elle est au ceinturon — mais
+une arme en réserve voyage dans les chariots et prend la place d'autant de marchandise.
+On ne trimballe donc plus six haches lourdes « au cas où » : on les revend, ou on les
+laisse à la maison d'une propriété, ce qui rend leur poids au convoi.
+
 **Pour tout essayer sans rien écrire :** *Paramètres › Le jeu d'exemple › Charger
 l'exemple*. Cinq lieux, quatre personnages, leurs conversations, deux missions et un
 objet unique se chargent depuis `data/exemples/`, sans toucher à vos fichiers.
