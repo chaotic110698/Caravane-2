@@ -1289,6 +1289,24 @@ function sortirArmure(cle){
   return true;
 }
 
+/* ═══════════════ le banc d'essai ═══════════════
+   De quoi éprouver ce qui coûte cher — une panoplie de plates vaut deux mille
+   pièces — sans jouer douze étapes pour se la payer. Et de quoi éprouver
+   l'inverse : la bourse vide montre les états « il vous manque tant ».
+
+   Une partie qui y touche est marquée, et la marque voyage dans la sauvegarde :
+   sans cela il suffirait de recharger pour la perdre. Marquée, la partie
+   n'écrit plus de record — c'est la seule conséquence, et elle est là pour que
+   le tableau des voyages reste celui des vrais. */
+const OR_AU_BANC=9999999;
+function fixerOr(n){
+  n=clamp(Math.round(Number(n)||0),0,OR_AU_BANC);
+  if(n===S.or)return false;
+  S.or=n;
+  S.banc=true;
+  return true;
+}
+
 /* ═══════════════ état ═══════════════ */
 let S=null, minuteur=null, allure=1;
 
@@ -1372,7 +1390,7 @@ function nouvellePartie(cle){
      chariots:[nouveauChariot('Le Patient','bache'),nouveauChariot('La Grise','charrette')],
      gardes:[],recrues:[],
      armes:{},armures:{},mythes:{},karma:50,chien:null,onglet:'marche',echoppe:'armes',
-     troupeVue:'marchand',contrats:[],contratsHonores:0,contratsRates:0,
+     troupeVue:'marchand',banc:false,contrats:[],contratsHonores:0,contratsRates:0,
      villes:[],ville:null,dest:null,prix:{},routes:null,route:null,pas:0,
      rumeur:null,escorte:0,fini:false,mort:false,banniere:null,ref:lireRecord(),
      /* ce que retiennent les contenus d'auteur ; vides si les fichiers sont absents */
@@ -2899,11 +2917,37 @@ function panneauParametres(){
        n'est pas le même, et une sauvegarde ne s'y retrouverait pas.</p>
   </div>
   <div class="carte">
+    <h3>Le banc d'essai</h3>
+    <p>De quoi éprouver ce qui coûte cher sans jouer dix étapes pour se le payer —
+       une panoplie de plates vaut deux mille pièces. Et l'inverse : la bourse vide
+       montre tous les états « il vous manque tant ».</p>
+    <p style="margin-top:7px">Vous avez <b class="chiffre">${fmt(S.or)}</b> po en bourse.</p>
+    <div class="rangee" style="margin-top:10px;gap:8px">
+      <input type="number" min="0" step="100" max="${OR_AU_BANC}" value="${S.or}"
+        data-banc-champ="1" inputmode="numeric"
+        style="flex:1;min-width:0;padding:9px;background:var(--velin);border:1px solid var(--filet);
+        border-radius:var(--r);color:var(--encre);font-family:var(--chiffres);font-size:17px">
+      <button class="bouton petit" data-banc-fixer="1">Fixer</button>
+    </div>
+    <div class="rangee" style="margin-top:8px;gap:6px;flex-wrap:wrap">
+      ${[500,2000,10000].map(n=>`<button class="bouton petit creux" data-banc-plus="${n}"
+        style="flex:1 1 28%">+ ${fmt(n)}</button>`).join('')}
+      <button class="bouton petit creux" data-banc-plus="-${OR_AU_BANC}"
+        style="flex:1 1 100%">Vider la bourse</button>
+    </div>
+    <p class="info" style="margin-top:9px">${S.banc
+      ?'<b>Cette partie est passée au banc.</b> Elle n\'écrira pas de record, même si elle va loin — '+
+       'le tableau des voyages reste celui des vrais. Recommencer suffit à repartir propre.'
+      :'Toucher à la bourse marque la partie : elle n\'écrira plus de record. C\'est la seule '+
+       'conséquence, et le reste du jeu ne change pas.'}</p>
+  </div>
+  <div class="carte">
     <h3>Ce voyage</h3>
     <p>Étape ${S.etapes+1} · ${fmt(S.lieues)} lieues parcourues · fortune au sommet ${fmt(S.orMax)} po ·
        ${S.contratsHonores||0} contrat${(S.contratsHonores||0)>1?'s':''} honoré${(S.contratsHonores||0)>1?'s':''}.</p>
     <p style="margin-top:6px">${r?`Meilleur voyage enregistré : ${r.etapes} étapes, ${fmt(r.or)} po.`
-      :'Aucun record enregistré pour l\'instant.'}</p>
+      :'Aucun record enregistré pour l\'instant.'}${S.banc
+      ?' <b>Ce voyage-ci n\'y prétendra pas</b> — il est passé au banc.':''}</p>
     <div class="rangee" style="margin-top:12px;gap:8px">
       <button class="bouton petit creux" data-oublier="1" style="flex:1">Effacer le record</button>
       <button class="bouton petit danger" data-abandonner="1" style="flex:1">Abandonner</button>
@@ -2924,7 +2968,7 @@ function paquet(){
   return {jeu:'caravane',v:9,date:new Date().toISOString(),
     or:S.or,etapes:S.etapes,lieues:S.lieues,orMax:S.orMax,reputation:S.reputation,
     marchand:S.marchand,chariots:S.chariots,gardes:S.gardes,recrues:S.recrues,
-    armes:S.armes,armures:S.armures,mythes:S.mythes,karma:S.karma,chien:S.chien,contrats:S.contrats,
+    armes:S.armes,armures:S.armures,mythes:S.mythes,banc:S.banc,karma:S.karma,chien:S.chien,contrats:S.contrats,
     gens:S.gens,objets:S.objets,objetsDepuis:S.objetsDepuis,mecrites:S.mecrites,
     chronique:S.chronique,dits:S.dits,souvenirs:S.souvenirs,
     chevaux:S.chevaux,terrains:S.terrains,
@@ -2952,7 +2996,7 @@ function ouvrirPaquet(d){
   S={or:d.or,etapes:d.etapes,lieues:d.lieues,orMax:d.orMax,reputation:d.reputation,
      marchand:d.marchand,chariots:d.chariots,gardes:d.gardes||[],recrues:d.recrues||[],
      armes:d.armes||{},armures:d.armures||{},mythes:d.mythes||{},
-     troupeVue:'marchand',
+     troupeVue:'marchand',banc:!!d.banc,
      karma:(d.karma===undefined?50:d.karma),chien:d.chien||null,
      gens:d.gens||{},objets:d.objets||{},objetsDepuis:d.objetsDepuis||{},
      mecrites:d.mecrites||{},chronique:d.chronique||[],
@@ -4569,13 +4613,18 @@ function ecrireRecord(r){
 }
 function scoreActuel(){return {etapes:S.etapes,or:Math.round(S.orMax),lieues:Math.round(S.lieues)};}
 function meilleur(a,b){return !b||a.etapes>b.etapes||(a.etapes===b.etapes&&a.or>b.or);}
-function majRecord(){const s=scoreActuel();if(meilleur(s,lireRecord()))ecrireRecord(s);}
+/* Une partie passée au banc d'essai n'écrit plus de record : on ne veut pas
+   qu'un essai à cent mille pièces s'installe au tableau. */
+function majRecord(){
+  if(S.banc)return;
+  const s=scoreActuel();if(meilleur(s,lireRecord()))ecrireRecord(s);
+}
 function afficherFin(){
   fermerFeuilles();
   effacerPartie();
   const anc=S.ref;
   const score=scoreActuel();
-  const neuf=meilleur(score,anc);
+  const neuf=!S.banc&&meilleur(score,anc);
   if(neuf)ecrireRecord(score);
   $('#fin-texte').textContent=S.finTexte||'La route s\'arrête ici.';
   $('#fin-titre').textContent=S.etapes>=12?'Une longue route':(S.etapes>=5?'La caravane s\'arrête':'Voyage écourté');
@@ -5169,6 +5218,22 @@ document.addEventListener('click',e=>{
   if(t.id==='nom-fermer'){fermerFeuilles();return;}
 
   /* réglages */
+  if(t.dataset.bancFixer){
+    const c=$('[data-banc-champ]');
+    if(!c)return;
+    const av=S.or;
+    if(!fixerOr(c.value))return toast('La bourse tient déjà cette somme.');
+    rendreMarche();
+    toast(`Bourse à ${fmt(S.or)} po (${S.or>av?'+':'−'}${fmt(Math.abs(S.or-av))}).`);
+    return;
+  }
+  if(t.dataset.bancPlus){
+    const n=Number(t.dataset.bancPlus);
+    if(!fixerOr(S.or+n))return toast('La bourse est déjà à ce point.');
+    rendreMarche();
+    toast(n<0&&!S.or?'Bourse vide.':`Bourse à ${fmt(S.or)} po.`);
+    return;
+  }
   if(t.dataset.exporter){exporterFichier();return;}
   if(t.dataset.copier){copierSauvegarde();return;}
   if(t.dataset.importer){
