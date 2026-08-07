@@ -70,9 +70,10 @@ function bouger(l,i,d){
 /* ═══════════════════════════════════════════════════════════════════════════
    LE DÉPÔT PARTAGÉ
    ───────────────────────────────────────────────────────────────────────────
-   Les six ateliers étant servis depuis la même adresse, ils partagent le même
+   Les sept ateliers étant servis depuis la même adresse, ils partagent le même
    localStorage. On y tient **une seule réserve** : le monde, les personnages,
-   les objets, les missions, les événements, les icônes.
+   les rôles, les objets, les missions, les événements, les dialogues, les
+   icônes.
 
    La distinction qui fait tout marcher :
      — le **contenu** est commun. Un personnage écrit dans son atelier est
@@ -84,7 +85,8 @@ function bouger(l,i,d){
    chargement : on ne perd pas ce qui était déjà écrit.                       */
 
 const DEPOT='caravane.depot.v1';
-const SECTIONS=['monde','personnages','roles','objets','missions','evenements','icones'];
+const SECTIONS=['monde','personnages','roles','objets','missions','evenements',
+                'dialogues','icones'];
 /* d'où venait chaque section avant le dépôt, et sous quelle forme */
 const ANCIENNES={
   personnages:['caravane.atelier-personnages.v1','repertoire'],
@@ -127,6 +129,19 @@ function depotLire(nom){
 }
 function depotEcrire(nom,valeur){
   chargerDepot();
+  /* On relit le disque avant d'écrire, et l'on ne pose que sa propre section :
+     un autre onglet a pu en poser une entre notre chargement et maintenant, et
+     réécrire tout le dépôt depuis un cache périmé la perdrait. L'événement
+     « storage » nous en avertit, mais il arrive après coup. */
+  let frais=null;
+  try{frais=JSON.parse(localStorage.getItem(DEPOT)||'null');}catch(e){}
+  if(frais&&typeof frais==='object'){
+    SECTIONS.forEach(s=>{
+      if(s===nom)return;
+      if(frais[s]!==undefined)D[s]=frais[s];
+    });
+    if(frais.maj)D.maj=Object.assign({},frais.maj,D.maj||{});
+  }
   if(valeur===null||valeur===undefined)delete D[nom];
   else D[nom]=valeur;
   D.maj=D.maj||{};D.maj[nom]=Date.now();
@@ -142,6 +157,7 @@ function depotResume(){
     objets:n('objets','objets'),
     missions:n('missions','missions'),
     evenements:n('evenements','evenements'),
+    dialogues:n('dialogues','dialogues'),
     icones:n('icones','icones'),
     roles:n('roles','roles')
   };
@@ -167,6 +183,8 @@ const CATEGORIES=[
    atelier:'atelier-missions.html',     champ:'missions'},
   {nom:'evenements', titre:'Les événements',  un:'événement',  des:'événements',
    atelier:'atelier-evenements.html',   champ:'evenements'},
+  {nom:'dialogues',  titre:'Les dialogues',   un:'dialogue',   des:'dialogues',
+   atelier:'atelier-dialogues.html',    champ:'dialogues'},
   {nom:'icones',     titre:'Les icônes',      un:'icône',      des:'icônes',
    atelier:'atelier-icones.html',       champ:'icones'}
 ];
@@ -216,6 +234,14 @@ function detailCodex(section,x,depot){
     if(x.genre)bouts.push(x.genre);
     const c=(x.choix||[]).length;
     if(c)bouts.push(c+(c>1?' issues':' issue'));
+  }else if(section==='dialogues'){
+    const q=((depot.personnages&&depot.personnages.personnages)||[])
+      .find(p=>p&&p.cle===x.personnage);
+    bouts.push(q?'de '+(q.nom||x.personnage):(x.personnage?'de '+x.personnage
+      :'sans personnage'));
+    const n=Object.keys(x.repliques||{}).length;
+    bouts.push(n?n+(n>1?' répliques':' réplique'):'aucune réplique');
+    if(x.rejouable)bouts.push('rejouable');
   }else if(section==='icones'){
     if(x.source)bouts.push('SVG collé');
     else{
@@ -235,6 +261,7 @@ function inacheveCodex(section,x){
   if(section==='missions'&&!(x.jalons||[]).length)return 'sans jalon';
   if(section==='personnages'&&!x.premiere)return 'sans description';
   if(section==='roles'&&!x.explique)return 'sans explication';
+  if(section==='dialogues'&&!x.personnage)return 'sans personnage';
   return '';
 }
 function teinteContree(depot,cle){
@@ -255,6 +282,7 @@ function depotCodex(){
         glyphe:c.nom==='icones'?x.cle
               :c.nom==='monde'?'borne'
               :c.nom==='roles'?'ermite'
+              :c.nom==='dialogues'?'bulle'
               :(x.ico&&x.ico.glyphe)||'',
         svg:c.nom==='icones'?(x.svg||''):'',
         /* l'icône porte sa teinte en propre, un lieu prend celle de sa
@@ -262,6 +290,7 @@ function depotCodex(){
         teinte:c.nom==='icones'?teinteDe(x)
               :c.nom==='monde'?teinteContree(D,x.contree)
               :c.nom==='roles'?'#9C9484'
+              :c.nom==='dialogues'?'#6E9B6A'
               :teinteDe(x.ico||{}),
         /* un rôle se rouvre par « #role= », pour ne pas se confondre avec le
            personnage qui porterait la même clé */
@@ -297,12 +326,13 @@ const FICHIERS_JEU={
      habille les contrats tirés au sort, et l'écraser les ferait disparaître */
   missions:'missions-ecrites.json',
   evenements:'evenements.json',
+  dialogues:'dialogues.json',
   icones:'icones.json'
 };
 /* Les petites clés d'état privé : quel élément est ouvert, le filtre, l'onglet.
    La carte n'y est pas — son état privé, c'est le monde entier, et le monde est
    déjà dans le dépôt. */
-const CLES_TRAVAIL=['personnages','objets','missions','evenements','icones']
+const CLES_TRAVAIL=['personnages','objets','missions','evenements','dialogues','icones']
   .map(n=>'caravane.atelier-'+n+'.v1');
 
 function sauvegardeComplete(){
@@ -644,6 +674,16 @@ function choixListe(ch,options,vide){
       return `<option value="${ech(k)}"${k===v?' selected':''}>${ech(n)}</option>`;}).join('')+
     `</select>`;
 }
+/* Un « oui ou non » se choisit dans une liste mais se range en booléen. Le
+   marqueur est explicite : le deviner d'après le nom du champ a fini par
+   mordre — l'état d'une mission s'écrit lui aussi dans « vaut », et ce n'est
+   pas un oui. */
+function choixOuiNon(ch){
+  const v=lire(ch);
+  return `<select data-ch="${ech(ch)}" data-t="ouinon">`+
+    `<option value="oui"${v===true?' selected':''}>oui</option>`+
+    `<option value="non"${v!==true?' selected':''}>non</option></select>`;
+}
 function coche(ch,label){
   const v=lire(ch);
   return `<label class="chip${v?' actif':''}"><input type="checkbox" data-ch="${ech(ch)}" `+
@@ -723,6 +763,9 @@ function accueillirFichiers(surJson){
    Rien de tout cela ne s'active au-dessus de 860 pixels : sur un ordinateur,
    les trois colonnes restent côte à côte comme avant.                        */
 const CSS_MOBILE=`
+/* En grand écran, rien de tout cet habillage ne se voit : le tiroir est vide,
+   la barre du bas n'a pas lieu d'être, et les trois zones tiennent ensemble. */
+#tiroir,#voile-tiroir,#vues,#b-tiroir{display:none}
 @media (max-width:860px){
   body{overflow:hidden}
   /* — la barre du haut, réduite à un titre et un tiroir — */
@@ -781,6 +824,7 @@ const CSS_MOBILE=`
 }`;
 /* Les trois zones, dans l'ordre où la barre du bas les propose. Chaque atelier
    nomme la sienne : « le recueil », « le répertoire », « le coffre »… */
+const PETIT='(max-width:860px)';
 function installerMobile(noms){
   const scene=$('#scene');
   if(!scene)return;
@@ -791,20 +835,32 @@ function installerMobile(noms){
     tiroir.id='tiroir';
     const voile=document.createElement('div');
     voile.id='voile-tiroir';
-    Array.prototype.slice.call(barre.children).forEach(el=>{
-      if(el.tagName==='H1')return;
-      tiroir.appendChild(el);
-    });
     /* Un retour au hub, en tête du tiroir : sur un téléphone, le bouton « page
        précédente » du navigateur n'est pas toujours à portée de pouce. */
     const retour=document.createElement('a');
     retour.className='outil plein';
     retour.href='index.html';
     retour.innerHTML='◂ Tous les ateliers';
-    tiroir.insertBefore(retour,tiroir.firstChild);
+    tiroir.appendChild(retour);
     const b=document.createElement('button');
     b.id='b-tiroir';b.innerHTML='<b>☰</b> Outils';
     barre.appendChild(b);
+    /* Les boutons vivent dans la barre en grand écran, et dans le tiroir en
+       petit. On les **déplace** au franchissement plutôt que de les cacher :
+       cachés, la barre serait vide d'un côté ou le tiroir de l'autre. C'est
+       aussi ce qui rend la même page utilisable au doigt et à la souris. */
+    const outils=Array.prototype.slice.call(barre.children)
+      .filter(el=>el.tagName!=='H1'&&el!==b);
+    const q=matchMedia(PETIT);
+    const ranger=()=>{
+      const ou=q.matches?tiroir:barre;
+      outils.forEach(el=>{if(el.parentNode!==ou)ou.appendChild(el);});
+      /* le bouton du tiroir reste le dernier de la barre */
+      if(!q.matches)barre.appendChild(b);
+    };
+    if(q.addEventListener)q.addEventListener('change',ranger);
+    else q.addListener(ranger);
+    ranger();
     document.body.appendChild(voile);
     document.body.appendChild(tiroir);
     const fermer=()=>{tiroir.classList.remove('ouvert');voile.classList.remove('ouvert');};
@@ -887,11 +943,8 @@ function ecouterSaisie(apres){
     if(t.dataset.ch===undefined)return;
     const ch=t.dataset.ch, k=t.dataset.t;
     if(/\.__/.test(ch))return;                    /* champs de travail, pas de données */
-    if(k==='txt'){
-      const v=t.tagName==='TEXTAREA'?texteSaisi(t.value):t.value;
-      if(/\.vaut$/.test(ch))ecrire(ch,v==='oui');
-      else ecrire(ch,v);
-    }
+    if(k==='txt')ecrire(ch,t.tagName==='TEXTAREA'?texteSaisi(t.value):t.value);
+    else if(k==='ouinon')ecrire(ch,t.value==='oui');
     else if(k==='num')ecrire(ch,t.value===''?undefined:Number(t.value));
     else if(k==='bool'){
       ecrire(ch,t.checked||undefined);

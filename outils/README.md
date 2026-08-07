@@ -7,6 +7,7 @@
 | [`atelier-personnages.html`](atelier-personnages.html) | écrire les gens : qui ils sont, et ce qu'on apprend d'eux à force |
 | [`atelier-objets.html`](atelier-objets.html) | écrire les objets uniques : ce qu'ils font, d'où ils viennent, ce qu'ils cachent |
 | [`atelier-missions.html`](atelier-missions.html) | écrire les missions : qui les donne, ce qu'il faut faire, ce qu'elles rapportent |
+| [`atelier-dialogues.html`](atelier-dialogues.html) | écrire les conversations : répliques, réponses branchées, conditions |
 | [`atelier-icones.html`](atelier-icones.html) | dessiner les icônes : six formes, une teinte, et le SVG qui en sort |
 | [`index.html`](index.html) | le hub et son codex : tout ce qui est écrit, avec de quoi le rouvrir |
 | [`TUTORIEL-EVENEMENTS.md`](TUTORIEL-EVENEMENTS.md) | ce que fait chaque effet, en français — engendré, jamais écrit à la main |
@@ -67,16 +68,31 @@ Les rôles n'ont **pas de fichier à eux** : `contenuDuJeu('personnages', …)` 
 jeu la lit dans `ROLES` et s'en sert pour `{role}` — auparavant `sacGens()` renvoyait
 `role:''`, et le trou sortait vide.
 
-## Les dialogues n'ont pas encore d'atelier
+## L'atelier de dialogues
 
-Le format est écrit, le jeu le lit, et cinq conversations d'exemple tournent — mais on
-les écrit encore à la main dans `data/dialogues.json`, en suivant
-[`TUTORIEL-DIALOGUES.md`](TUTORIEL-DIALOGUES.md). C'est le prochain atelier à faire, et
-son vocabulaire l'attend déjà dans
-[`data/vocabulaire-dialogues.json`](../data/vocabulaire-dialogues.json).
+Une conversation appartient à quelqu'un, se compose de répliques nommées, et chaque
+réponse mène ailleurs ou clôt l'échange. Trois choses demandent du soin, et ce sont les
+trois que l'atelier surveille :
 
-Le mode d'emploi n'est donc pas recopié vers `Caravane-Tool` : il renvoie à `data/`, qui
-n'existe pas là-bas. Il y ira avec son atelier.
+- **le personnage** se choisit dans une liste qui vient du dépôt, avec son lieu à côté ;
+  l'onglet *Personnages* les montre tous, avec le nombre de conversations qu'ils portent
+  et un bouton *Confier* ;
+- **les réponses** se branchent par une liste des répliques existantes, et *+ Nouvelle*
+  en crée une et y mène d'un coup — c'est ainsi qu'on écrit une conversation, de proche
+  en proche. Renommer une réplique emmène avec elle tout ce qui y menait ;
+- **les conditions** se disent en français. Pour « quand la mission est accomplie »,
+  on prend *Où en est une mission*, on choisit la mission dans le carnet, et l'état dans
+  une liste — *pas encore acceptée*, *en cours*, *accomplie*, *échouée*. Le résumé
+  s'écrit en tête de bloc : « Le registre raturé » est accomplie.
+
+L'onglet **Le fil** montre toute la conversation d'un coup d'œil, la réplique de départ
+bordée d'or et les injoignables en rouge. L'onglet **Aperçu** la joue pour de faux : on
+suit les branches sans rien appliquer, et une réponse conditionnée dit ce qui la ferme.
+
+Les contrôles refusent une réponse qui mène nulle part, une réplique que personne
+n'atteint, une mission absente du carnet, une couche de lore qui n'existe pas, un trou
+de texte inconnu, et signalent une condition sans raison — elle serait *cachée* plutôt
+que grisée, et le joueur ne saurait jamais qu'elle existait.
 
 ## Les deux sortes de sauvegarde
 

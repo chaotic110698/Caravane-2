@@ -35,8 +35,10 @@ const A_COPIER = [
   'manifest.webmanifest', 'sw.js', 'icone.png',   /* ce qui le rend installable */
   'atelier-carte.html', 'atelier-personnages.html', 'atelier-objets.html',
   'atelier-missions.html', 'atelier-evenements.html', 'atelier-icones.html',
+  'atelier-dialogues.html',
   'TUTORIEL-EVENEMENTS.md', 'TUTORIEL-PERSONNAGES.md',
-  'TUTORIEL-OBJETS.md', 'TUTORIEL-MISSIONS.md', 'TUTORIEL-ICONES.md'
+  'TUTORIEL-OBJETS.md', 'TUTORIEL-MISSIONS.md', 'TUTORIEL-ICONES.md',
+  'TUTORIEL-DIALOGUES.md'
 ];
 
 /* Un atelier qui n'a pas reçu sa machinerie serait vide sur le dépôt d'en face :
@@ -44,7 +46,7 @@ const A_COPIER = [
 const manquent = [];
 /* les cinq ateliers d'écriture reçoivent la machinerie et un catalogue ;
    l'atelier de carte n'a besoin ni de l'une ni de l'autre */
-A_COPIER.filter(n => /^atelier-(personnages|objets|missions|evenements|icones)\.html$/.test(n))
+A_COPIER.filter(n => /^atelier-(personnages|objets|missions|evenements|icones|dialogues)\.html$/.test(n))
   .forEach(n => {
     const h = readFileSync(join(ICI, n), 'utf8');
     if (!/function racineEst/.test(h)) manquent.push(n + ' (sans machinerie)');

@@ -6,13 +6,14 @@
    Stratégie : réseau d'abord, cache en secours. On voit donc toujours la dernière
    version quand il y a du réseau, et on garde la précédente quand il n'y en a
    plus. Changer VERSION purge l'ancien cache.                                  */
-const VERSION='caravane-ateliers-v2';
+const VERSION='caravane-ateliers-v3';
 const PAGES=[
   './','./index.html','./manifest.webmanifest',
   './atelier-carte.html','./atelier-personnages.html','./atelier-objets.html',
-  './atelier-missions.html','./atelier-evenements.html','./atelier-icones.html',
+  './atelier-missions.html','./atelier-evenements.html','./atelier-icones.html','./atelier-dialogues.html',
   './TUTORIEL-EVENEMENTS.md','./TUTORIEL-PERSONNAGES.md',
   './TUTORIEL-OBJETS.md','./TUTORIEL-MISSIONS.md','./TUTORIEL-ICONES.md',
+  './TUTORIEL-DIALOGUES.md',
   './README.md'
 ];
 self.addEventListener('install',e=>{

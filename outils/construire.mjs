@@ -654,6 +654,7 @@ const reference = {
   vocabulairePersonnages: VP,
   vocabulaireObjets: VO,
   vocabulaireMissions: VM,
+  vocabulaireDialogues: VD,
   /* les chiffres bruts des armes : l'atelier d'objets en a besoin pour situer
      une arme de légende parmi celles qui existent déjà */
   armesChiffres: Object.fromEntries(Object.entries(armes.armes).map(
@@ -678,7 +679,7 @@ const reference = {
 const commun = lit('outils', 'commun.js');
 const ATELIERS = ['atelier-evenements.html', 'atelier-personnages.html',
                   'atelier-objets.html', 'atelier-missions.html',
-                  'atelier-icones.html'];
+                  'atelier-icones.html', 'atelier-dialogues.html'];
 
 const injecte = (html, id, contenu, quoi) => {
   const balise = new RegExp(`(<script id="${id}"[^>]*>)[\\s\\S]*?(</script>)`);
