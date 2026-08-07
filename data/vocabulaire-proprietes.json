@@ -47,15 +47,15 @@
   "batiments": {
     "maison": {
       "nom": "La maison",
-      "explique": "De quoi loger ce qu'on ne veut pas trimballer : le râtelier d'armes, et les gardes qu'on n'emmène pas. Un garde laissé à la maison ne suit plus le convoi et ne se bat plus — mais il attend, et l'on n'a pas à le réembaucher.",
+      "explique": "De quoi loger ce qu'on ne veut pas trimballer : le râtelier d'équipement — armes et pièces d'armure sans distinction — et les gardes qu'on n'emmène pas. Un garde laissé à la maison ne suit plus le convoi et ne se bat plus — mais il attend, et l'on n'a pas à le réembaucher.",
       "garde": [
         "armes",
         "gardes"
       ],
       "capacites": {
         "armes": {
-          "nom": "Armes en râtelier",
-          "aide": "Combien d'armes le râtelier tient.",
+          "nom": "Équipement en râtelier",
+          "aide": "Combien de pièces le râtelier tient. Une arme et une pièce d'armure prennent chacune une place.",
           "defaut": 12
         },
         "gardes": {

@@ -530,6 +530,24 @@ details.regles li{margin-bottom:6px}
   color:var(--encre-pale)}
 .trio div.gain b{color:var(--vert)}
 .trio div.perte b{color:var(--minium)}
+/* l'arbitrage : d'où vient le nombre, sous le nom de la statistique */
+.trio.arbitre div{padding-bottom:4px}
+.trio i{display:block;font-style:normal;font-family:var(--chiffres);font-size:9.5px;
+  line-height:1.35;letter-spacing:.01em;color:var(--encre-pale);margin-top:1px}
+/* les quatre emplacements du harnois */
+.harnois{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:10px}
+.part{display:flex;align-items:center;gap:8px;width:100%;text-align:left;
+  padding:7px 8px;border:1px solid var(--velin-ombre);background:var(--velin);
+  border-radius:2px;cursor:pointer;font:inherit;color:inherit}
+.part:hover{border-color:var(--minium)}
+.part.nue{border-style:dashed}
+.part .quoi{flex:1;min-width:0;font-size:12.5px;line-height:1.25}
+.part .quoi b{display:block;font-family:var(--display);font-size:13px;font-weight:400;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.part .quoi small{display:block;font-size:9.5px;font-variant:small-caps;
+  letter-spacing:.06em;color:var(--encre-pale)}
+.part.nue .quoi b{color:var(--encre-pale);font-style:italic}
+@media (max-width:359px){.harnois{grid-template-columns:1fr}}
 .organe{margin-top:11px;padding-top:9px;border-top:1px dotted var(--velin-ombre)}
 .organe:first-of-type{border-top:0;padding-top:2px}
 .organe-tete{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
@@ -951,6 +969,15 @@ details.regles li{margin-bottom:6px}
   <button class="bouton creux petit" id="ar-fermer" style="width:100%;margin-top:8px">Fermer</button>
 </div>
 
+<!-- feuille du harnois : une pièce d'armure pour un emplacement -->
+<div class="feuille" id="feuille-harnois" role="dialog" aria-modal="true">
+  <div class="poignee"></div>
+  <h2 id="hn-titre">—</h2>
+  <p class="info" id="hn-info">—</p>
+  <div id="hn-choix"></div>
+  <button class="bouton creux petit" id="hn-fermer" style="width:100%;margin-top:8px">Fermer</button>
+</div>
+
 <!-- feuille de montage d'une pièce -->
 <div class="feuille" id="feuille-piece" role="dialog" aria-modal="true">
   <div class="poignee"></div>
@@ -1122,20 +1149,72 @@ function frappeArme(u,cle){
   const a=ARMES[cle];
   return a?a.frappe*maitrise(u,cle):0;
 }
-function frappeTotale(u,cle){return fiche(u).force+frappeArme(u,cle);}
-function agilite(u,cle){
-  cle=cle===undefined?u.arme:cle;
-  const a=ARMES[cle];
-  return clamp(Math.round((fiche(u).agilite||60)-(a?a.poids*3.4:0)),5,100);
+/* ═══════════════ l'armure ═══════════════
+   Quatre pièces — tête, torse, jambes, bottes — et trois types. Chaque pièce
+   déclare elle-même ce qu'elle donne et ce qu'elle prend : il n'y a pas de
+   seconde voie cachée, ce que la fiche affiche est exactement ce que le calcul
+   utilise. C'est pourquoi le poids d'une armure portée ne retranche rien de
+   l'agilité par lui-même — la gêne est **le malus d'agilité déclaré** de la
+   pièce. Un haubergeon bien coupé et un mal coupé pèsent pareil et n'entravent
+   pas pareil ; le dire en données plutôt qu'en formule laisse le choix à
+   l'auteur. Le poids ne sert donc qu'à la soute : une pièce portée ne coûte
+   rien de place, une pièce en réserve voyage dans les chariots.
+
+   Les quatre emplacements ne se valent pas : le torse porte 40 % d'une
+   panoplie, la tête 25 %, les jambes 20 %, les bottes 15 %. Les quatre pièces
+   du même type ajoutent en plus le supplément de panoplie — mélanger reste
+   permis, mais l'ensemble paie.
+
+   L'armure est modélisée sur n'importe quelle unité (u.armure) ; seul le
+   marchand a de quoi s'en équiper pour l'instant. Un garde armuré marcherait
+   sans qu'une ligne change. */
+let TYPES_ARMURE=null;      /* data/armures.json → types */
+let ORDRE_TYPES=null;       /* data/armures.json → ordreTypes */
+let PARTS=null;             /* data/armures.json → parts */
+let CLES_PARTS=null;        /* data/armures.json → ordreParts */
+let ARMURES=null;           /* data/armures.json → armures */
+let CLES_ARMURES=null;      /* dérivé : les pièces dans l'ordre type puis part */
+
+/* arm vaut u.armure quand on ne le passe pas, et {} pour calculer « sans rien ». */
+function harnois(u,arm){
+  arm=arm||(u.armure||{});
+  return CLES_PARTS.map(p=>ARMURES[arm[p]]).filter(Boolean);
 }
-function gardeTotale(u,cle){
+/* La panoplie n'existe que si les quatre pièces sont là et du même type. */
+function panoplieDe(u,arm){
+  const l=harnois(u,arm);
+  if(l.length<CLES_PARTS.length)return null;
+  const t=l[0].type;
+  return l.every(a=>a.type===t)?t:null;
+}
+function apportArmure(u,quoi,arm){
+  const s=harnois(u,arm).reduce((s,a)=>s+(a[quoi]||0),0);
+  const t=panoplieDe(u,arm);
+  const p=t&&(TYPES_ARMURE[t].panoplie||{});
+  return s+((p&&p[quoi])||0);
+}
+
+function frappeTotale(u,cle,arm){
+  return fiche(u).force+apportArmure(u,'force',arm)+frappeArme(u,cle);
+}
+function agilite(u,cle,arm){
   cle=cle===undefined?u.arme:cle;
   const a=ARMES[cle];
-  return clamp(fiche(u).garde+(a?a.garde:0)+agilite(u,cle)/100*.12,0,.62);
+  return clamp(Math.round((fiche(u).agilite||60)+apportArmure(u,'agilite',arm)
+    -(a?a.poids*3.4:0)),5,100);
+}
+function gardeTotale(u,cle,arm){
+  cle=cle===undefined?u.arme:cle;
+  const a=ARMES[cle];
+  return clamp(fiche(u).garde+apportArmure(u,'garde',arm)+(a?a.garde:0)
+    +agilite(u,cle,arm)/100*.12,0,.62);
 }
 function stat(u,cle,defaut){const v=fiche(u)[cle];return v===undefined?defaut:v;}
-function endurance(u){return stat(u,'endurance',60);}
-function vigilance(u){return stat(u,'vigilance',50);}
+/* Bornées sur cent comme l'agilité : ces trois nombres se lisent « sur 100 »
+   partout, et aucune fiche de base ne les dépasse — le bornage ne change donc
+   rien de ce qui existait, il tient seulement l'armure. */
+function endurance(u,arm){return clamp(stat(u,'endurance',60)+apportArmure(u,'endurance',arm),5,100);}
+function vigilance(u,arm){return clamp(stat(u,'vigilance',50)+apportArmure(u,'vigilance',arm),5,100);}
 function negoce(u){return stat(u,'negoce',40);}
 /* Les trois aptitudes de la troupe, plus ce qu'un objet unique en soute leur
    ajoute. bonusObjet() rend 0 tant qu'aucun objets.json n'est chargé, donc ces
@@ -1178,6 +1257,35 @@ function rangerArme(cle){
   if(!cle)return false;
   if(poidsArme(cle)>libre())return false;
   S.armes[cle]=(S.armes[cle]||0)+1;
+  return true;
+}
+/* ── le coffre d'armures ──
+   Même règle que le râtelier, pour la même raison : ce qui est sur le dos ne
+   coûte rien, ce qui attend dans la soute prend la place d'autant de sel. Un
+   plastron d'acier vaut treize kilos de marchandise — c'est ce qui empêche
+   d'emporter les trois panoplies « au cas où ». */
+function prixArmure(cle){
+  const a=ARMURES[cle];
+  return a?Math.round(a.prix*(S.ville.forge||1)):0;
+}
+function prixReventeArmure(cle){
+  const a=ARMURES[cle];
+  return a?Math.round(a.prix*(S.ville.forge||1)*.5):0;
+}
+function poidsArmure(cle){const a=ARMURES[cle];return a?(a.poids||0):0;}
+function poidsArmures(){
+  return Object.keys(S.armures||{}).reduce((s,c)=>s+poidsArmure(c)*(S.armures[c]||0),0);
+}
+function armuresEnReserve(){return CLES_ARMURES.filter(c=>(S.armures[c]||0)>0);}
+function rangerArmure(cle){
+  if(!cle)return false;
+  if(poidsArmure(cle)>libre())return false;
+  S.armures[cle]=(S.armures[cle]||0)+1;
+  return true;
+}
+function sortirArmure(cle){
+  if(!((S.armures||{})[cle]>0))return false;
+  S.armures[cle]--;if(!S.armures[cle])delete S.armures[cle];
   return true;
 }
 
@@ -1263,7 +1371,8 @@ function nouvellePartie(cle){
      marchand:{nom:'Vous',archetype:ARCHETYPES[cle]?cle:'guerrier',pv:a.pvMax,pvMax:a.pvMax},
      chariots:[nouveauChariot('Le Patient','bache'),nouveauChariot('La Grise','charrette')],
      gardes:[],recrues:[],
-     armes:{},mythes:{},karma:50,chien:null,onglet:'marche',echoppe:'armes',contrats:[],contratsHonores:0,contratsRates:0,
+     armes:{},armures:{},mythes:{},karma:50,chien:null,onglet:'marche',echoppe:'armes',
+     troupeVue:'marchand',contrats:[],contratsHonores:0,contratsRates:0,
      villes:[],ville:null,dest:null,prix:{},routes:null,route:null,pas:0,
      rumeur:null,escorte:0,fini:false,mort:false,banniere:null,ref:lireRecord(),
      /* ce que retiennent les contenus d'auteur ; vides si les fichiers sont absents */
@@ -1277,6 +1386,9 @@ function nouvellePartie(cle){
   CLES_MYTHIQUES.forEach(c=>S.mythes[c]='etal');
   S.marchand.arme=({hache:'hache-legere',epee:'epee-legere',arc:'arc-leger',
     lance:'lance-legere',masse:'masse-legere',dague:'dague-legere'})[a.affinite];
+  /* On part chaussé et rien de plus : une pièce suffit à montrer les quatre
+     emplacements, et les bottes souples ne pèsent sur aucun équilibre. */
+  S.marchand.armure={bottes:'cuir-bottes'};
   S.villes=creerMonde();
   /* on commence dans une cité de la première contrée, jamais à un poste */
   const departs=lieuxDe(0).filter(i=>!estFrontiere(i));
@@ -1554,7 +1666,7 @@ function libreChariot(c){return Math.max(0,capChariot(c)-chargeChariot(c));}
 function capacite(){return S.chariots.reduce((s,c)=>s+capChariot(c),0);}
 /* le râtelier voyage avec le convoi : son poids compte comme le reste */
 function charge(){
-  return S.chariots.reduce((s,c)=>s+chargeChariot(c),0)+poidsArmes();
+  return S.chariots.reduce((s,c)=>s+chargeChariot(c),0)+poidsArmes()+poidsArmures();
 }
 function libre(){return Math.max(0,capacite()-charge());}
 function stock(g){return S.chariots.reduce((s,c)=>s+(c.cargo[g]||0),0);}
@@ -1837,6 +1949,18 @@ function icoArme(cle,cls){
   if(a.mythique)return svgIco(corps+ETOILES,'#C6A24C',(cls||'')+' relique-ico');
   return svgIco(corps,TEINTES_RANG[RANG_ARME[cle]||0],cls);
 }
+/* les quatre emplacements d'armure : une silhouette par pièce, teintée selon la
+   matière — cuir fauve, mailles grises, plates d'acier bleuté */
+let GLYPHES_ARMURE=null;    /* data/icones.json → partsArmure */
+let TEINTES_ARMURE=null;    /* data/icones.json → teintesArmure */
+function icoPart(part,teinte,cls){
+  return svgIco(GLYPHES_ARMURE[part]||'',teinte||'#9A9488',cls);
+}
+function icoArmure(cle,cls){
+  const a=ARMURES[cle];
+  if(!a)return '';
+  return icoPart(a.part,TEINTES_ARMURE[a.type],cls);
+}
 let CHIEN_GLYPHE=null;      /* data/icones.json → chien */
 function icoChien(cls){return svgIco(CHIEN_GLYPHE,'#9A7343',cls);}
 function icoChariot(cle,cls){
@@ -2096,10 +2220,11 @@ function panneauMarche(){
 }
 function panneauConvoi(){
   const p=$('#panneau-convoi');
-  const pa=poidsArmes();
+  const pa=poidsArmes(),ph=poidsArmures();
   let h=`<p class="oeil" style="padding:4px 2px 10px">Charge totale
     <span class="chiffre">${charge()} / ${capacite()}</span> kg`+
-    (pa?` · dont <span class="chiffre">${fmt(pa)}</span> kg de râtelier`:'')+`</p>`;
+    (pa?` · dont <span class="chiffre">${fmt(pa)}</span> kg de râtelier`:'')+
+    (ph?` · <span class="chiffre">${fmt(ph)}</span> kg de harnois en coffre`:'')+`</p>`;
   h+=S.chariots.map((c,i)=>{
     const cr=coutTotalChariot(c);
     const gs=Object.keys(c.cargo).filter(g=>c.cargo[g]>0)
@@ -2153,14 +2278,37 @@ function panneauConvoi(){
       ajoute une journée, et <b>le convoi va du pas de son chariot le plus lent</b>.</p>`;
   p.innerHTML=h;
 }
-function grilleStats(u){
-  return `<div class="trio">
-    <div><b>${frappeTotale(u).toFixed(2)}</b><span>frappe</span></div>
-    <div><b>${Math.round(gardeTotale(u)*100)} %</b><span>garde</span></div>
-    <div><b>${agilite(u)}</b><span>agilité</span></div>
-    <div><b>${endurance(u)}</b><span>endurance</span></div>
-    <div><b>${vigilance(u)}</b><span>vigilance</span></div>
-    <div><b>${negoce(u)}</b><span>négoce</span></div>
+/* ── ce que chaque nombre doit à quoi ──
+   Une statistique sort de trois sources : la fiche du métier, l'armure portée
+   et l'arme en main. Les afficher séparément est le seul moyen de comprendre un
+   mélange de pièces ; sans cela on voit le total bouger sans savoir pourquoi.
+   detail() rend la ligne « base +armure −arme » quand il y a quelque chose à
+   dire, et rien du tout quand tout vient de la fiche. */
+function signe(n,d){const s=(n>0?'+':(n<0?'−':''));return s+Math.abs(n).toFixed(d===undefined?0:d);}
+function detailStat(u,quoi){
+  const arm=apportArmure(u,quoi);
+  const a=ARMES[u.arme];
+  let l=[];
+  if(quoi==='agilite'){
+    if(arm)l.push(signe(arm)+' harnois');
+    if(a&&a.poids)l.push('−'+Math.round(a.poids*3.4)+' arme');
+  }else if(quoi==='garde'){
+    if(arm)l.push(signe(Math.round(arm*100))+' harnois');
+    if(a&&a.garde)l.push(signe(Math.round(a.garde*100))+' arme');
+  }else if(quoi==='force'){
+    if(arm)l.push(signe(arm,2)+' harnois');
+  }else if(arm)l.push(signe(arm)+' harnois');
+  return l.length?`<i>${l.join(' ')}</i>`:'';
+}
+function grilleStats(u,detaille){
+  const d=detaille?(q=>detailStat(u,q)):(()=>'');
+  return `<div class="trio${detaille?' arbitre':''}">
+    <div><b>${frappeTotale(u).toFixed(2)}</b><span>frappe</span>${d('force')}</div>
+    <div><b>${Math.round(gardeTotale(u)*100)} %</b><span>garde</span>${d('garde')}</div>
+    <div><b>${agilite(u)}</b><span>agilité</span>${d('agilite')}</div>
+    <div><b>${endurance(u)}</b><span>endurance</span>${d('endurance')}</div>
+    <div><b>${vigilance(u)}</b><span>vigilance</span>${d('vigilance')}</div>
+    <div><b>${negoce(u)}</b><span>négoce</span>${d('negoce')}</div>
   </div>`;
 }
 function etiquetteArme(u,cle){
@@ -2172,7 +2320,39 @@ function etiquetteArme(u,cle){
   if(r==='malhabile')return '<span class="marque haut">malhabile</span>';
   return '';
 }
-function carteUnite(u,cible,extra){
+/* ── le harnois d'une unité ──
+   Quatre boutons, un par emplacement, plus l'état de la panoplie. Il n'est
+   dessiné que là où l'on peut s'équiper — le marchand pour l'instant. */
+function blocHarnois(u,cible){
+  const t=panoplieDe(u);
+  const porte=harnois(u);
+  const kg=porte.reduce((s,a)=>s+(a.poids||0),0);
+  let h=`<div class="harnois">`+CLES_PARTS.map(p=>{
+    const cle=(u.armure||{})[p],a=ARMURES[cle],P=PARTS[p];
+    return `<button class="part${a?'':' nue'}" data-harnois="${cible}:${p}">
+      ${a?icoArmure(cle,'ico-min'):icoPart(p,'var(--velin-ombre)','ico-min')}
+      <span class="quoi"><b>${a?a.nom:P.nu}</b>
+        <small>${a?TYPES_ARMURE[a.type].nom.toLowerCase()+' · '+a.poids+' kg'
+          :P.nom.toLowerCase()+' · '+Math.round(P.part*100)+' %'}</small></span>
+    </button>`;
+  }).join('')+`</div>`;
+  h+=`<p class="info" style="margin-top:7px">`;
+  if(t)h+=`<b>Panoplie ${TYPES_ARMURE[t].nom.toLowerCase()}</b> — les quatre pièces s'accordent,
+    et le supplément court : ${ditPanoplie(t)}. ${kg} kg sur le dos, rien en soute.`;
+  else if(porte.length)h+=`${porte.length} pièce${porte.length>1?'s':''} sur quatre, ${kg} kg
+    sur le dos — rien en soute. Les quatre du même type ajouteraient le supplément de panoplie.`;
+  else h+=`Rien sur le dos. Le torse porte 40 % d'une panoplie, la tête 25 %, les jambes 20 %,
+    les bottes 15 %.`;
+  return h+`</p>`;
+}
+function ditPanoplie(t){
+  const p=TYPES_ARMURE[t].panoplie||{};
+  return Object.keys(p).map(q=>
+    q==='garde'?`garde ${signe(Math.round(p[q]*100))} %`
+    :(q==='force'?`frappe ${signe(p[q],2)}`:`${q==='agilite'?'agilité':q} ${signe(p[q])}`)
+  ).join(', ')||'rien de plus';
+}
+function carteUnite(u,cible,extra,harnais){
   const f=fiche(u),pv=Math.round(100*u.pv/u.pvMax),soin=coutSoin(u);
   const a=ARMES[u.arme];
   return `<div class="carte">
@@ -2181,13 +2361,14 @@ function carteUnite(u,cible,extra){
     <p><span class="chiffre">${Math.round(u.pv)}/${u.pvMax}</span> de vigueur ·
       prédilection : ${FAMILLES[f.affinite].nom.toLowerCase()}${
       f.malhabile?` · malhabile à la ${FAMILLES[f.malhabile].nom.toLowerCase()}`:''}</p>
-    ${grilleStats(u)}
+    ${grilleStats(u,harnais)}
     <div class="arme-l">
       ${a?icoArme(u.arme,'ico-min'):''}
       <span class="quoi">${a?a.nom:'À mains nues'}${a?etiquetteArme(u,u.arme):''}
         <small>${a?a.surnom+' · '+a.poids+' kg':'aucune arme au poing'}</small></span>
       <button class="mini" data-armer="${cible}">changer</button>
     </div>
+    ${harnais?blocHarnois(u,cible):''}
     ${extra||''}
     <div class="rangee" style="margin-top:10px">
       ${soin>0?`<button class="bouton petit creux" data-soigner="${cible}" ${S.or>=soin?'':'disabled'}>Soigner · ${fmt(soin)} po</button>`
@@ -2195,11 +2376,28 @@ function carteUnite(u,cible,extra){
       ${cible==='m'?'':`<button class="bouton petit danger" data-renvoyer="${cible}">Renvoyer</button>`}
     </div></div>`;
 }
+/* ── deux onglets ──
+   Le marchand d'un côté, avec son arme et son harnois ; l'escorte de l'autre,
+   avec sa solde, ses gardes et ceux qui cherchent une place. La caravane et le
+   karma restent du côté du marchand : c'est la vue par défaut, et c'est là qu'on
+   lit son voyage. */
+const VUES_TROUPE=[
+ {cle:'marchand',nom:'Le marchand'},
+ {cle:'escorte',nom:'L\'escorte'}
+];
 function panneauTroupe(){
   const p=$('#panneau-troupe');
+  const vue=(S&&S.troupeVue)||'marchand';
+  let h=`<div class="sous-onglets">`+VUES_TROUPE.map(v=>
+    `<button class="sous-onglet${v.cle===vue?' actif':''}" data-troupe="${v.cle}">${v.nom}${
+      v.cle==='escorte'&&S.gardes.length?` · <span class="chiffre">${S.gardes.length}</span>`:''}</button>`
+  ).join('')+`</div>`;
+  h+=(vue==='escorte')?vueEscorte():vueMarchand();
+  p.innerHTML=h;
+}
+function vueMarchand(){
   const a=ARCHETYPES[S.marchand.archetype];
-  let h=`<p class="oeil" style="padding:4px 2px 8px">Le marchand</p>`;
-  h+=carteUnite(S.marchand,'m',`<p style="margin-top:6px">${a.texte}</p>`);
+  let h=carteUnite(S.marchand,'m',`<p style="margin-top:6px">${a.texte}</p>`,true);
   h+=`<div class="carte">
     <h3>La caravane</h3>
     <p>Vigilance moyenne <b class="chiffre">${Math.round(vigilanceTroupe())}</b> — d'autant moins
@@ -2231,7 +2429,10 @@ function panneauTroupe(){
          ne trouve personne. Au combat, il ne quitte pas le marchand d'une semelle.</p>
     </div>`;
   }
-  h+=`<p class="oeil" style="padding:14px 2px 8px">Escorte · solde de
+  return h;
+}
+function vueEscorte(){
+  let h=`<p class="oeil" style="padding:2px 2px 8px">Solde de
       <span class="chiffre">${fmt(solde())}</span> po à la prochaine arrivée</p>`;
   h+=S.gardes.length?S.gardes.map((g,i)=>carteUnite(g,String(i),
       `<p style="margin-top:4px">Solde <span class="chiffre">${fmt(soldeUnite(g))}</span> po par étape.</p>`)).join('')
@@ -2258,7 +2459,7 @@ function panneauTroupe(){
         </div></div>`;
     }).join('');
   }
-  p.innerHTML=h;
+  return h;
 }
 
 function legendesConnues(){
@@ -2280,17 +2481,20 @@ function legendesConnues(){
   return mot+' qu\'en un exemplaire : '+l.join(' ; ')+'.';
 }
 const ECHOPPES=[
- {cle:'armes',nom:'Armurerie'},
+ {cle:'armes',nom:'Armes'},
+ {cle:'armures',nom:'Armures'},
  {cle:'charron',nom:'Charron'},
  {cle:'bazar',nom:'Bazar'}
 ];
+const ECHOPPES_OUVERTES=['armes','armures','charron'];
 function panneauBoutique(){
   const p=$('#panneau-boutique');
   const page=(S&&S.echoppe)||'armes';
   let h=`<div class="sous-onglets">`+ECHOPPES.map(e=>
     `<button class="sous-onglet${e.cle===page?' actif':''}" data-echoppe="${e.cle}">${e.nom}</button>`
   ).join('')+`</div>`;
-  h+=(page==='armes')?contenuArmurerie():(page==='charron')?contenuCharron():`
+  h+=(page==='armes')?contenuArmurerie():(page==='armures')?contenuArmurier()
+    :(page==='charron')?contenuCharron():`
     <div class="bientot">
       ${svgIco(GLYPHE_BOURSE,'#9A9488')}
       <h3>Le bazar est encore vide</h3>
@@ -2435,6 +2639,111 @@ function contenuArmurerie(){
             a.garde?` · encaisse +${Math.round(a.garde*100)} %`:''}</div></div>
         <div class="prix">${fmt(px)}</div>
         <button class="pastille acheter" data-acheter-arme="${c}" ${S.or>=px?'':'disabled'}>acheter</button>
+      </div>`;
+    }).join('');
+  });
+  return h;
+}
+
+/* ═══════════════ l'étal du harnois ═══════════════ */
+/* L'ordre dans lequel une pièce raconte ce qu'elle fait : d'abord ce qui sert
+   au combat, ensuite ce qui sert à la route. */
+const STATS_ARMURE=[
+ {cle:'force',     nom:'frappe',    fois:1,   dec:2, pc:false},
+ {cle:'garde',     nom:'garde',     fois:100, dec:0, pc:true},
+ {cle:'agilite',   nom:'agilité',   fois:1,   dec:0, pc:false},
+ {cle:'endurance', nom:'endurance', fois:1,   dec:0, pc:false},
+ {cle:'vigilance', nom:'vigilance', fois:1,   dec:0, pc:false}
+];
+function traitsArmure(a){
+  return STATS_ARMURE.filter(s=>a[s.cle]).map(s=>({
+    mot:`${s.nom} ${signe(a[s.cle]*s.fois,s.dec)}${s.pc?' %':''}`,
+    bon:a[s.cle]>0}));
+}
+function tagsArmure(a){
+  return `<div class="tags">`+traitsArmure(a).map(t=>
+    `<span class="tag ${t.bon?'sur':'perilleux'}">${t.mot}</span>`).join('')+
+    `<span class="tag">${a.poids} kg</span></div>`;
+}
+function contenuArmurier(){
+  const u=S.marchand;
+  const t=panoplieDe(u);
+  const porte=harnois(u);
+  let h=`<div class="carte">
+    <h3>L'armurier</h3>
+    <p>Quatre pièces à couvrir — <b>tête, torse, jambes, bottes</b> — et elles ne pèsent pas
+       le même poids dans le calcul : le torse porte 40 % d'une panoplie, la tête 25 %,
+       les jambes 20 %, les bottes 15 %. On peut dépareiller ; les quatre du même type
+       ajoutent en plus le supplément de panoplie.</p>
+    <p style="margin-top:7px">Ce qui est <b>sur le dos ne pèse rien en soute</b> — la gêne du
+       harnois se lit dans son agilité, pas dans les chariots. Ce qui attend <b>en réserve</b>,
+       en revanche, voyage dans la soute et prend la place d'autant de marchandise : un plastron
+       d'acier vaut treize kilos de sel.</p>
+    <p style="margin-top:7px">${S.ville.forge<.95?'Les forges tournent ici : le harnois est bon marché.':
+      (S.ville.forge>1.06?'L\'acier est rare en ville, l\'armurier le fait payer.':
+       'Les prix de l\'armurier sont dans la moyenne.')}</p>
+  </div>`;
+
+  /* — ce qu'il a déjà sur le dos, pour ne pas racheter deux fois — */
+  h+=`<p class="oeil" style="padding:12px 2px 8px">Sur le dos du marchand${
+    t?` — panoplie ${TYPES_ARMURE[t].nom.toLowerCase()}`:''}</p>`;
+  h+=`<div class="carte"><div class="harnois">`+CLES_PARTS.map(p=>{
+    const cle=(u.armure||{})[p],a=ARMURES[cle],P=PARTS[p];
+    return `<button class="part${a?'':' nue'}" data-harnois="m:${p}">
+      ${a?icoArmure(cle,'ico-min'):icoPart(p,'var(--velin-ombre)','ico-min')}
+      <span class="quoi"><b>${a?a.nom:P.nu}</b>
+        <small>${P.nom.toLowerCase()} · ${Math.round(P.part*100)} %</small></span>
+    </button>`;
+  }).join('')+`</div>`;
+  h+=`<p class="info" style="margin-top:8px">${porte.length===CLES_PARTS.length&&!t
+    ?'Les quatre emplacements sont couverts, mais dépareillés : aucun supplément de panoplie.'
+    :(t?`Le supplément court : ${ditPanoplie(t)}.`
+       :`${CLES_PARTS.length-porte.length} emplacement${CLES_PARTS.length-porte.length>1?'s':''} à couvrir.`)}</p>
+  </div>`;
+
+  /* — la réserve, qui pèse — */
+  const res=armuresEnReserve();
+  if(res.length){
+    h+=`<p class="oeil" style="padding:12px 2px 8px">En réserve dans les chariots —
+      <b class="chiffre">${fmt(poidsArmures())}</b> kg</p>`;
+    h+=res.map(c=>{
+      const a=ARMURES[c],n=S.armures[c];
+      return `<div class="carte">
+        <div class="rangee"><h3>${icoArmure(c,'ico-inline')}${a.nom}${
+          n>1?` <span class="chiffre">×${n}</span>`:''}</h3>
+          <span class="oeil">${PARTS[a.part].nom.toLowerCase()}</span></div>
+        ${tagsArmure(a)}
+        <div class="rangee" style="margin-top:9px">
+          <button class="bouton petit creux" data-vetir-de="${c}">Le mettre</button>
+          <button class="bouton petit danger" data-vendre-armure="${c}">Revendre ·
+            ${fmt(prixReventeArmure(c))} po</button>
+        </div></div>`;
+    }).join('');
+  }
+
+  /* — l'étal, par type — */
+  h+=`<p class="oeil" style="padding:14px 2px 8px">À l'étal</p>`;
+  ORDRE_TYPES.forEach(ty=>{
+    const T=TYPES_ARMURE[ty];
+    const total=CLES_ARMURES.filter(c=>ARMURES[c].type===ty)
+      .reduce((s,c)=>s+prixArmure(c),0);
+    h+=`<p class="oeil" style="padding:8px 2px 4px;color:var(--minium)">${T.nom} · ${T.matiere}
+        — <em style="font-variant:normal;letter-spacing:0">${T.trait}</em></p>
+      <p class="info" style="padding:0 2px 5px">Panoplie complète : ${fmt(total)} po,
+        ${CLES_ARMURES.filter(c=>ARMURES[c].type===ty).reduce((s,c)=>s+ARMURES[c].poids,0)} kg,
+        et le supplément ${ditPanoplie(ty)}.</p>`;
+    h+=CLES_ARMURES.filter(c=>ARMURES[c].type===ty).map(c=>{
+      const a=ARMURES[c],px=prixArmure(c);
+      const porteCelle=(u.armure||{})[a.part]===c;
+      return `<div class="ligne">
+        ${icoArmure(c)}
+        <div class="nom"><strong>${a.nom}</strong>
+          <div class="meta">${PARTS[a.part].nom.toLowerCase()} · ${a.surnom} · ${a.poids} kg ·
+            ${traitsArmure(a).map(x=>x.mot).join(' · ')}</div></div>
+        <div class="prix">${fmt(px)}</div>
+        ${porteCelle?'<span class="pastille" style="opacity:.55">au dos</span>'
+          :`<button class="pastille acheter" data-acheter-armure="${c}"
+             ${S.or>=px?'':'disabled'}>acheter</button>`}
       </div>`;
     }).join('');
   });
@@ -2614,8 +2923,8 @@ function paquet(){
   const idx=v=>S.villes.indexOf(v);
   return {jeu:'caravane',v:9,date:new Date().toISOString(),
     or:S.or,etapes:S.etapes,lieues:S.lieues,orMax:S.orMax,reputation:S.reputation,
-    marchand:S.marchand,chariots:S.chariots,gardes:S.gardes,recrues:S.recrues,armes:S.armes,
-    mythes:S.mythes,karma:S.karma,chien:S.chien,contrats:S.contrats,
+    marchand:S.marchand,chariots:S.chariots,gardes:S.gardes,recrues:S.recrues,
+    armes:S.armes,armures:S.armures,mythes:S.mythes,karma:S.karma,chien:S.chien,contrats:S.contrats,
     gens:S.gens,objets:S.objets,objetsDepuis:S.objetsDepuis,mecrites:S.mecrites,
     chronique:S.chronique,dits:S.dits,souvenirs:S.souvenirs,
     chevaux:S.chevaux,terrains:S.terrains,
@@ -2642,7 +2951,8 @@ function ouvrirPaquet(d){
     frontiere:v.fr===undefined?estFrontiere(i):!!v.fr}));
   S={or:d.or,etapes:d.etapes,lieues:d.lieues,orMax:d.orMax,reputation:d.reputation,
      marchand:d.marchand,chariots:d.chariots,gardes:d.gardes||[],recrues:d.recrues||[],
-     armes:d.armes||{},mythes:d.mythes||{},
+     armes:d.armes||{},armures:d.armures||{},mythes:d.mythes||{},
+     troupeVue:'marchand',
      karma:(d.karma===undefined?50:d.karma),chien:d.chien||null,
      gens:d.gens||{},objets:d.objets||{},objetsDepuis:d.objetsDepuis||{},
      mecrites:d.mecrites||{},chronique:d.chronique||[],
@@ -4454,6 +4764,92 @@ function ligneChoixArme(u,cle){
       garde ${Math.round(gardeTotale(u,cle)*100)} % (${sg(dG)}) ·
       agilité ${agilite(u,cle)} (${sg(dA)})</span></button>`;
 }
+/* ── mettre et ôter une pièce ──
+   Rend true si c'est fait, false si l'on ne peut pas, et null quand c'est la
+   place en soute qui manque — le seul cas où l'appelant a quelque chose à dire.
+   La pièce qu'on retire retourne au coffre, et le coffre pèse : si elle n'y
+   tient pas, on annule tout plutôt que de la faire disparaître. */
+function vetir(u,cle){
+  const a=ARMURES[cle];
+  if(!a)return false;
+  u.armure=u.armure||{};
+  const avant=u.armure[a.part];
+  if(avant===cle)return false;
+  if(!sortirArmure(cle))return false;
+  if(avant&&!rangerArmure(avant)){
+    S.armures[cle]=(S.armures[cle]||0)+1;
+    return null;
+  }
+  u.armure[a.part]=cle;
+  return true;
+}
+function devetir(u,part){
+  u.armure=u.armure||{};
+  const cle=u.armure[part];
+  if(!cle)return false;
+  if(!rangerArmure(cle))return null;
+  delete u.armure[part];
+  return true;
+}
+/* Les cinq nombres tels qu'ils seraient avec ce harnois-là. */
+function statsAvec(u,arm){
+  return {frappe:frappeTotale(u,undefined,arm),garde:gardeTotale(u,undefined,arm),
+    agilite:agilite(u,undefined,arm),endurance:endurance(u,arm),vigilance:vigilance(u,arm)};
+}
+const NOM_STAT={frappe:'frappe',garde:'garde',agilite:'agilité',
+  endurance:'endurance',vigilance:'vigilance'};
+function ecartHarnois(u,av,ap){
+  const A=statsAvec(u,av),B=statsAvec(u,ap),l=[];
+  if(B.frappe.toFixed(2)!==A.frappe.toFixed(2))
+    l.push(`frappe ${B.frappe.toFixed(2)} (${signe(B.frappe-A.frappe,2)})`);
+  const ga=Math.round(A.garde*100),gb=Math.round(B.garde*100);
+  if(ga!==gb)l.push(`garde ${gb} % (${signe(gb-ga)})`);
+  ['agilite','endurance','vigilance'].forEach(k=>{
+    if(B[k]!==A[k])l.push(`${NOM_STAT[k]} ${B[k]} (${signe(B[k]-A[k])})`);
+  });
+  return l;
+}
+
+let cibleHarnois=null;      /* {cible, part} tant que la feuille est ouverte */
+function ligneChoixArmure(u,part,cle){
+  const a=ARMURES[cle];
+  const av=Object.assign({},u.armure||{});
+  const ap=Object.assign({},av);
+  if(cle)ap[part]=cle;else delete ap[part];
+  const porte=av[part]===cle;
+  const l=ecartHarnois(u,av,ap);
+  const pAv=panoplieDe(u,av),pAp=panoplieDe(u,ap);
+  let note='';
+  if(pAp&&pAp!==pAv)note=` <span class="marque bas">complète la panoplie ${TYPES_ARMURE[pAp].nom.toLowerCase()}</span>`;
+  else if(pAv&&!pAp)note=` <span class="marque haut">rompt la panoplie</span>`;
+  const n=cle?(S.armures[cle]||0):0;
+  return `<button class="choix" data-vetir="${cle||''}" ${porte?'disabled':''}>
+    <strong>${cle?icoArmure(cle,'ico-inline'):''}${cle?a.nom:'Ôter la pièce'}${
+      porte?' <span class="oeil">— au dos</span>'
+           :(cle?` <span class="oeil">(${n} en réserve)</span>`:'')}${note}</strong>
+    <span>${cle?`${TYPES_ARMURE[a.type].nom.toLowerCase()} · ${a.surnom} · ${a.poids} kg`
+              :`l'emplacement reste nu ; la pièce retourne au coffre`}${
+      l.length?'<br>'+l.join(' · '):(porte?'':'<br>rien ne bouge')}</span></button>`;
+}
+function ouvrirHarnois(cible,part){
+  const u=uniteDe(cible);
+  if(!u||!PARTS[part])return;
+  cibleHarnois={cible:cible,part:part};
+  const P=PARTS[part];
+  const porte=(u.armure||{})[part];
+  $('#hn-titre').textContent=P.nom+' — '+(cible==='m'?'le marchand':u.nom);
+  $('#hn-info').textContent=`Cet emplacement porte ${Math.round(P.part*100)} % d'une panoplie. `+
+    (porte?`Au dos : ${ARMURES[porte].nom}.`:'Rien pour l\'instant.');
+  const dispo=armuresEnReserve().filter(c=>ARMURES[c].part===part&&c!==porte);
+  let h=porte?ligneChoixArmure(u,part,porte):'';
+  h+=dispo.map(c=>ligneChoixArmure(u,part,c)).join('');
+  if(porte)h+=ligneChoixArmure(u,part,'');
+  if(!dispo.length&&!porte)
+    h+='<p class="vide">Rien pour cet emplacement en réserve. L\'échoppe Armures en vend.</p>';
+  $('#hn-choix').innerHTML=h;
+  ouvrirFeuille('#feuille-harnois');
+}
+
 function ouvrirArmurerie(cible){
   const u=uniteDe(cible);
   if(!u)return;
@@ -4568,9 +4964,10 @@ document.addEventListener('click',e=>{
   if(t.dataset.echoppe){
     S.echoppe=t.dataset.echoppe;
     panneauBoutique();
-    if(t.dataset.echoppe!=='armes')toast('Cette échoppe n\'a pas encore ouvert.');
+    if(ECHOPPES_OUVERTES.indexOf(S.echoppe)<0)toast('Cette échoppe n\'a pas encore ouvert.');
     return;
   }
+  if(t.dataset.troupe){S.troupeVue=t.dataset.troupe;panneauTroupe();return;}
   if(t.dataset.accepter){accepterOffre(+t.dataset.accepter);return;}
   if(t.dataset.mission){accepterMission(t.dataset.mission);return;}
   /* ── les propriétés ── */
@@ -4590,6 +4987,14 @@ document.addEventListener('click',e=>{
     rendreTerrains();return;
   }
   if(t.dataset.tReprArme){reprendreArmeLa(t.dataset.tReprArme,t.dataset.a);
+    rendreMarche();rendreTerrains();return;}
+  if(t.dataset.tRangArmure){
+    const c=t.dataset.tRangArmure;
+    const sel=$(`[data-choix-armure="${c}"]`);
+    if(sel&&rangerArmureLa(c,sel.value))rendreMarche();
+    rendreTerrains();return;
+  }
+  if(t.dataset.tReprArmure){reprendreArmureLa(t.dataset.tReprArmure,t.dataset.a);
     rendreMarche();rendreTerrains();return;}
   if(t.dataset.tLoger){
     const c=t.dataset.tLoger;
@@ -4698,6 +5103,45 @@ document.addEventListener('click',e=>{
     return;
   }
   if(t.id==='ar-fermer'){fermerFeuilles();return;}
+
+  /* ── le harnois ── */
+  if(t.dataset.acheterArmure){
+    const c=t.dataset.acheterArmure,px=prixArmure(c);
+    if(!ARMURES[c]||S.or<px)return;
+    if(poidsArmure(c)>libre())
+      return toast(`Pas la place : ${ARMURES[c].poids} kg, et il vous reste ${fmt(libre())} kg.`);
+    S.or-=px;rangerArmure(c);rendreMarche();
+    toast(`${ARMURES[c].nom} achetée — au coffre, prête à mettre.`);
+    return;
+  }
+  if(t.dataset.vendreArmure){
+    const c=t.dataset.vendreArmure;
+    if(sortirArmure(c)){S.or+=prixReventeArmure(c);rendreMarche();}
+    return;
+  }
+  if(t.dataset.harnois){
+    const [cible,part]=t.dataset.harnois.split(':');
+    ouvrirHarnois(cible,part);return;
+  }
+  /* « Le mettre » depuis la réserve : la pièce sait à quel emplacement elle va */
+  if(t.dataset.vetirDe){
+    const c=t.dataset.vetirDe,r=vetir(S.marchand,c);
+    if(r===null)return toast('Pas la place au coffre pour ranger la pièce qu\'elle remplace.');
+    if(r){rendreMarche();toast(`${ARMURES[c].nom} sur le dos.`);}
+    return;
+  }
+  if(t.dataset.vetir!==undefined){
+    const u=uniteDe(cibleHarnois&&cibleHarnois.cible),cle=t.dataset.vetir;
+    if(!u||!cibleHarnois)return;
+    const r=cle?vetir(u,cle):devetir(u,cibleHarnois.part);
+    if(r===null)return toast(cle
+      ?'Pas la place au coffre pour ranger la pièce qu\'elle remplace.'
+      :`Pas la place au coffre : ${poidsArmure((u.armure||{})[cibleHarnois.part])} kg, `+
+       `et il reste ${fmt(libre())} kg.`);
+    if(r){fermerFeuilles();rendreMarche();}
+    return;
+  }
+  if(t.id==='hn-fermer'){fermerFeuilles();return;}
   if(t.dataset.deplacer){
     const [i,g]=t.dataset.deplacer.split(':');
     ouvrirTransfert(+i,g);return;
@@ -4819,8 +5263,8 @@ $('#nom-champ').addEventListener('keydown',e=>{if(e.key==='Enter')$('#nom-valide
    pictogrammes — vit dans data/*.json et se charge ici. Les chemins sont
    relatifs et sans barre oblique initiale, pour que la page fonctionne aussi
    bien à la racine d'un domaine que dans un sous-dossier de GitHub Pages.
-   Rien du jeu ne s'exécute avant que les onze fichiers soient là. */
-const FICHIERS_DONNEES=['biens','raretes','contrees','archetypes','armes',
+   Rien du jeu ne s'exécute avant que les douze fichiers soient là. */
+const FICHIERS_DONNEES=['biens','raretes','contrees','archetypes','armes','armures',
   'chariots','ambiance','pnj','routes','missions','icones'];
 
 /* Les cinq fichiers d'auteur, ceux que produisent les ateliers de outils/, sont
@@ -5841,16 +6285,20 @@ function rendreGens(){
    cède la première, et ce qu'elle gardait revient au convoi — on le dit avant.
 
    Ce que la partie retient, dans S :
-     S.terrains[cle] = { bati:{maison,grange,cache,ecurie}, armes:{}, gardes:[],
-                         chariots:[], or:0, chevaux:[] }                      */
+     S.terrains[cle] = { bati:{maison,grange,cache,ecurie}, armes:{}, armures:{},
+                         gardes:[], chariots:[], or:0, chevaux:[] }           */
 
 const BATIMENTS=['maison','grange','cache','ecurie'];
 const NOM_BATIMENT={maison:'la maison',grange:'la grange',
                     cache:'la cache secrète',ecurie:'l\'écurie'};
 
 const terrainDe=cle=>PROPRIETES&&PROPRIETES[cle];
-const etatTerrain=cle=>(S.terrains[cle]=S.terrains[cle]||
-  {bati:{},armes:{},gardes:[],chariots:[],or:0,chevaux:[]});
+const etatTerrain=cle=>{
+  const e=(S.terrains[cle]=S.terrains[cle]||
+    {bati:{},armes:{},gardes:[],chariots:[],or:0,chevaux:[]});
+  if(!e.armures)e.armures={};   /* ajouté après coup : les vieilles parties n'en ont pas */
+  return e;
+};
 const possede=cle=>!!S.terrains[cle];
 const aBati=(cle,b)=>!!(S.terrains[cle]&&S.terrains[cle].bati[b]);
 
@@ -5928,13 +6376,16 @@ function ceder(cle){
   Object.entries(e.armes||{}).forEach(([a,n])=>{
     for(let i=0;i<n;i++)if(!rangerArme(a))laissees++;
   });
+  Object.entries(e.armures||{}).forEach(([a,n])=>{
+    for(let i=0;i<n;i++)if(!rangerArmure(a))laissees++;
+  });
   (e.gardes||[]).forEach(g=>S.gardes.push(g));
   (e.chariots||[]).forEach(c=>S.chariots.push(c));
   (e.chevaux||[]).forEach(c=>S.chevaux.push(c));
   delete S.terrains[cle];
   chronique(`Vous cédez ${t?t.nom:'un terrain'} : ce qu'il gardait revient au convoi`+
-    (laissees?`, sauf ${laissees} arme${laissees>1?'s'
-      :''} que les chariots n'ont pu prendre`:'')+'.','mauvais');
+    (laissees?`, sauf ${laissees} pièce${laissees>1?'s'
+      :''} d'équipement que les chariots n'ont pu prendre`:'')+'.','mauvais');
 }
 /* Ce qu'on perdrait à céder : rien, sauf la place qui manque. */
 function ceQueCederRend(cle){
@@ -5944,6 +6395,8 @@ function ceQueCederRend(cle){
   if(e.or)l.push(`${fmt(e.or)} po`);
   const na=Object.values(e.armes||{}).reduce((s,n)=>s+n,0);
   if(na)l.push(`${na} arme${na>1?'s':''}`);
+  const nh=Object.values(e.armures||{}).reduce((s,n)=>s+n,0);
+  if(nh)l.push(`${nh} pièce${nh>1?'s':''} d'armure`);
   if((e.gardes||[]).length)l.push(`${e.gardes.length} garde${e.gardes.length>1?'s':''}`);
   if((e.chariots||[]).length)l.push(`${e.chariots.length} chariot${e.chariots.length>1?'s':''}`);
   if((e.chevaux||[]).length)l.push(`${e.chevaux.length} cheval${e.chevaux.length>1?'aux':''}`);
@@ -5959,10 +6412,14 @@ function capaciteBatiment(cle,b,quoi){
   const v=d[quoi];
   return v===undefined?0:Math.max(0,Math.round(v));
 }
+/* Le râtelier de la maison compte l'équipement, sans distinguer l'arme de la
+   pièce d'armure : une place est une place. C'est plus simple à équilibrer d'un
+   seul nombre, et un terrain déjà paramétré n'a rien à changer. */
 function resteMaison(cle,quoi){
   const e=etatTerrain(cle);
   const pris=quoi==='armes'
-    ?Object.values(e.armes).reduce((s,n)=>s+n,0)
+    ?Object.values(e.armes).reduce((s,n)=>s+n,0)+
+     Object.values(e.armures).reduce((s,n)=>s+n,0)
     :e.gardes.length;
   return capaciteBatiment(cle,'maison',quoi)-pris;
 }
@@ -5983,6 +6440,20 @@ function reprendreArmeLa(cle,a){
   if(!(e.armes[a]>0))return false;
   if(!rangerArme(a))return false;      /* le râtelier pèse : il faut la place */
   e.armes[a]--;if(!e.armes[a])delete e.armes[a];
+  return true;
+}
+function rangerArmureLa(cle,a){
+  if(!aBati(cle,'maison')||resteMaison(cle,'armes')<=0)return false;
+  if(!sortirArmure(a))return false;
+  const e=etatTerrain(cle);
+  e.armures[a]=(e.armures[a]||0)+1;
+  return true;
+}
+function reprendreArmureLa(cle,a){
+  const e=etatTerrain(cle);
+  if(!(e.armures[a]>0))return false;
+  if(!rangerArmure(a))return false;    /* le coffre pèse : il faut la place */
+  e.armures[a]--;if(!e.armures[a])delete e.armures[a];
   return true;
 }
 function logerGarde(cle,i){
@@ -6066,7 +6537,7 @@ function ditCapacite(t,b){
   const d=(t.batiments||{})[b]||{};
   const l=[];
   if(b==='maison'){
-    if(d.armes)l.push(`${d.armes} armes`);
+    if(d.armes)l.push(`${d.armes} pièces d'équipement`);
     if(d.gardes)l.push(`${d.gardes} garde${d.gardes>1?'s':''}`);
   }
   if(b==='grange'&&d.chariots)l.push(`${d.chariots} chariot${d.chariots>1?'s':''}`);
@@ -6160,13 +6631,18 @@ function carteTerrain(cle,surPlace){
 function blocMaison(cle,surPlace){
   const e=etatTerrain(cle);
   const nb=Object.entries(e.armes).filter(([,n])=>n>0);
+  const nh=Object.entries(e.armures).filter(([,n])=>n>0);
   let h=`<p class="oeil" style="padding:11px 0 5px">La maison —
     ${resteMaison(cle,'armes')} place${resteMaison(cle,'armes')>1?'s':''} au râtelier,
     ${resteMaison(cle,'gardes')} lit${resteMaison(cle,'gardes')>1?'s':''}</p>`;
-  h+=nb.length
+  h+=(nb.length||nh.length)
     ?nb.map(([a,n])=>`<div class="rangee" style="margin-top:5px">
        <span style="flex:1">${(ARMES[a]||{nom:a}).nom}${n>1?' ×'+n:''}</span>
        ${surPlace?`<button class="bouton petit creux" data-t-repr-arme="${cle}"
+         data-a="${a}">Reprendre</button>`:''}</div>`).join('')+
+     nh.map(([a,n])=>`<div class="rangee" style="margin-top:5px">
+       <span style="flex:1">${(ARMURES[a]||{nom:a}).nom}${n>1?' ×'+n:''}</span>
+       ${surPlace?`<button class="bouton petit creux" data-t-repr-armure="${cle}"
          data-a="${a}">Reprendre</button>`:''}</div>`).join('')
     :`<p class="info">Le râtelier est vide.</p>`;
   h+=e.gardes.length
@@ -6182,6 +6658,12 @@ function blocMaison(cle,surPlace){
         style="flex:1">${armesLa.map(a=>`<option value="${a}">${ARMES[a].nom}
         (${S.armes[a]})</option>`).join('')}</select>
         <button class="bouton petit" data-t-rang-arme="${cle}">Y ranger</button></div>`;
+    const harnoisLa=armuresEnReserve();
+    if(harnoisLa.length&&resteMaison(cle,'armes')>0)
+      h+=`<div class="rangee" style="margin-top:6px"><select data-choix-armure="${cle}"
+        style="flex:1">${harnoisLa.map(a=>`<option value="${a}">${ARMURES[a].nom}
+        (${S.armures[a]})</option>`).join('')}</select>
+        <button class="bouton petit" data-t-rang-armure="${cle}">Y ranger</button></div>`;
     if(S.gardes.length&&resteMaison(cle,'gardes')>0)
       h+=`<div class="rangee" style="margin-top:6px"><select data-choix-garde="${cle}"
         style="flex:1">${S.gardes.map((g,i)=>`<option value="${i}">${g.nom}</option>`).join('')}
@@ -6524,6 +7006,19 @@ function assigner(d){
   CLES_ARMES=Object.keys(ARMES);
   CLES_COMMUNES=CLES_ARMES.filter(c=>!ARMES[c].mythique);
   CLES_MYTHIQUES=CLES_ARMES.filter(c=>ARMES[c].mythique);
+  /* — armures : trois types, quatre emplacements — */
+  TYPES_ARMURE=d.armures.types;
+  ORDRE_TYPES=d.armures.ordreTypes;
+  PARTS=d.armures.parts;
+  CLES_PARTS=d.armures.ordreParts;
+  ARMURES=d.armures.armures;
+  /* rangées par type puis par emplacement : c'est l'ordre de l'étal, et celui
+     dans lequel les réserves se lisent */
+  CLES_ARMURES=[];
+  ORDRE_TYPES.forEach(t=>CLES_PARTS.forEach(p=>{
+    Object.keys(ARMURES).forEach(c=>{
+      if(ARMURES[c].type===t&&ARMURES[c].part===p)CLES_ARMURES.push(c);});
+  }));
   /* — chariots et leurs organes — */
   CHARIOTS=d.chariots.chariots;
   CLES_CHARIOTS=Object.keys(CHARIOTS);
@@ -6562,6 +7057,8 @@ function assigner(d){
   CHARIOT_GLYPHE=d.icones.chariot;
   ICONES_CHARIOTS=d.icones.teintesChariots;
   CHIEN_GLYPHE=d.icones.chien;
+  GLYPHES_ARMURE=d.icones.partsArmure;
+  TEINTES_ARMURE=d.icones.teintesArmure;
   GLYPHES_PIECE=d.icones.pieces;
   TEINTES_PIECE=d.icones.teintesPiece;
   GLYPHES_EV=d.icones.glyphesEvenement;

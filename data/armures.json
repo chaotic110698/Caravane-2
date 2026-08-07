@@ -1,0 +1,160 @@
+{
+  "types": {
+    "legere": {
+      "nom": "Légère",
+      "matiere": "cuir bouilli",
+      "trait": "On la porte sans la sentir : on marche plus longtemps et on décroche mieux.",
+      "panoplie": { "agilite": 4, "endurance": 3 }
+    },
+    "moyenne": {
+      "nom": "Moyenne",
+      "matiere": "mailles",
+      "trait": "Le compromis du convoyeur : du souffle et l'œil ouvert, pour un peu de raideur.",
+      "panoplie": { "endurance": 4, "vigilance": 3 }
+    },
+    "lourde": {
+      "nom": "Lourde",
+      "matiere": "plates d'acier",
+      "trait": "On encaisse et le poids porte le coup — mais on ne fuit plus rien.",
+      "panoplie": { "garde": 0.03, "force": 0.05 }
+    }
+  },
+  "ordreTypes": ["legere", "moyenne", "lourde"],
+  "parts": {
+    "tete": { "nom": "Tête", "nu": "tête nue", "part": 0.25 },
+    "torse": { "nom": "Torse", "nu": "torse nu", "part": 0.4 },
+    "jambes": { "nom": "Jambes", "nu": "jambes nues", "part": 0.2 },
+    "bottes": { "nom": "Bottes", "nu": "pieds nus", "part": 0.15 }
+  },
+  "ordreParts": ["tete", "torse", "jambes", "bottes"],
+  "armures": {
+    "cuir-tete": {
+      "nom": "Cervelière de cuir",
+      "surnom": "calotte lacée",
+      "type": "legere",
+      "part": "tete",
+      "poids": 1,
+      "prix": 55,
+      "agilite": 3,
+      "endurance": 3
+    },
+    "cuir-torse": {
+      "nom": "Corselet de cuir",
+      "surnom": "cuir bouilli sur toile",
+      "type": "legere",
+      "part": "torse",
+      "poids": 3,
+      "prix": 150,
+      "agilite": 6,
+      "endurance": 4
+    },
+    "cuir-jambes": {
+      "nom": "Chausses de cuir",
+      "surnom": "grègues de routier",
+      "type": "legere",
+      "part": "jambes",
+      "poids": 2,
+      "prix": 90,
+      "agilite": 3,
+      "endurance": 2
+    },
+    "cuir-bottes": {
+      "nom": "Bottes souples",
+      "surnom": "houseaux de marche",
+      "type": "legere",
+      "part": "bottes",
+      "poids": 1,
+      "prix": 60,
+      "agilite": 2,
+      "endurance": 1
+    },
+    "maille-tete": {
+      "nom": "Camail de mailles",
+      "surnom": "coiffe et couvre-nuque",
+      "type": "moyenne",
+      "part": "tete",
+      "poids": 3,
+      "prix": 140,
+      "agilite": -2,
+      "endurance": 3,
+      "vigilance": 3
+    },
+    "maille-torse": {
+      "nom": "Haubergeon",
+      "surnom": "cotte de mailles courte",
+      "type": "moyenne",
+      "part": "torse",
+      "poids": 8,
+      "prix": 400,
+      "agilite": -3,
+      "endurance": 6,
+      "vigilance": 5
+    },
+    "maille-jambes": {
+      "nom": "Chausses de mailles",
+      "surnom": "grèves treillissées",
+      "type": "moyenne",
+      "part": "jambes",
+      "poids": 5,
+      "prix": 240,
+      "agilite": -2,
+      "endurance": 3,
+      "vigilance": 2
+    },
+    "maille-bottes": {
+      "nom": "Chaussons de mailles",
+      "surnom": "semelles cloutées",
+      "type": "moyenne",
+      "part": "bottes",
+      "poids": 3,
+      "prix": 150,
+      "agilite": -1,
+      "endurance": 2,
+      "vigilance": 2
+    },
+    "plates-tete": {
+      "nom": "Heaume à visière",
+      "surnom": "armet de tournoi",
+      "type": "lourde",
+      "part": "tete",
+      "poids": 5,
+      "prix": 320,
+      "agilite": -4,
+      "garde": 0.025,
+      "force": 0.05
+    },
+    "plates-torse": {
+      "nom": "Plastron d'acier",
+      "surnom": "cuirasse de plates",
+      "type": "lourde",
+      "part": "torse",
+      "poids": 13,
+      "prix": 900,
+      "agilite": -7,
+      "garde": 0.04,
+      "force": 0.08
+    },
+    "plates-jambes": {
+      "nom": "Cuissots et grèves",
+      "surnom": "harnois de jambes",
+      "type": "lourde",
+      "part": "jambes",
+      "poids": 8,
+      "prix": 540,
+      "agilite": -3,
+      "garde": 0.02,
+      "force": 0.04
+    },
+    "plates-bottes": {
+      "nom": "Solerets d'acier",
+      "surnom": "souliers à poulaine ferrés",
+      "type": "lourde",
+      "part": "bottes",
+      "poids": 4,
+      "prix": 330,
+      "agilite": -2,
+      "garde": 0.015,
+      "force": 0.03
+    }
+  }
+}

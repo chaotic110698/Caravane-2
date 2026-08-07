@@ -3,9 +3,9 @@
 `index.html` contient le **moteur** : le HTML, le CSS, les règles, les calculs,
 le rendu, les dés, le combat, l'économie. Il ne contient aucun contenu.
 
-Ce dossier contient le **contenu** : onze fichiers JSON chargés au démarrage par
+Ce dossier contient le **contenu** : douze fichiers JSON chargés au démarrage par
 `chargerDonnees()` (tout en bas de `index.html`), en chemin relatif
-`fetch('data/…json')`. Rien du jeu ne s'exécute avant que les onze soient là.
+`fetch('data/…json')`. Rien du jeu ne s'exécute avant que les douze soient là.
 
 Toutes les clés sont en français et reprennent le vocabulaire du code. Les
 fichiers sont en UTF-8, sans commentaires (le JSON n'en accepte pas) : ce
@@ -26,6 +26,7 @@ document en tient lieu.
 | `contrees.json` | contrées, types de cités, toponymie | `CONTREES`, `TYPES_*`, `TYPE_CAP_*`, `NOMS_LIEUX` |
 | `archetypes.json` | archétypes du marchand, métiers des gardes | `ARCHETYPES`, `METIERS` |
 | `armes.json` | familles d'armes, armes, armes de légende | `FAMILLES`, `ORDRE_FAMILLES`, `ARMES`, `MAITRISE` |
+| `armures.json` | trois types d'armure, quatre emplacements, douze pièces | `TYPES_ARMURE`, `ORDRE_TYPES`, `PARTS`, `CLES_PARTS`, `ARMURES` |
 | `chariots.json` | types de chariots, organes et leurs qualités | `CHARIOTS`, `ORGANES`, `PIECES`, `VERBE_PIECE` |
 | `ambiance.json` | heures, silhouettes, phrases d'ambiance | `HEURES`, `PROFILS_VILLE`, `OUVERTURES`, `ODEURS`, `FOULES` |
 | `pnj.json` | noms de gardes, noms de chiens | `NOMS_GARDES`, `NOMS_CHIENS` |
@@ -313,6 +314,93 @@ combattants qui n'ont pas leur propre tableau `maitrise`.
 
 ---
 
+## `armures.json`
+
+```json
+{
+  "types": {
+    "lourde": { "nom": "Lourde", "matiere": "plates d'acier",
+                "trait": "On encaisse et le poids porte le coup — mais on ne fuit plus rien.",
+                "panoplie": { "garde": 0.03, "force": 0.05 } }
+  },
+  "ordreTypes": ["legere", "moyenne", "lourde"],
+  "parts": {
+    "torse": { "nom": "Torse", "nu": "torse nu", "part": 0.4 }
+  },
+  "ordreParts": ["tete", "torse", "jambes", "bottes"],
+  "armures": {
+    "plates-torse": { "nom": "Plastron d'acier", "surnom": "cuirasse de plates",
+                      "type": "lourde", "part": "torse", "poids": 13, "prix": 900,
+                      "agilite": -7, "garde": 0.04, "force": 0.08 }
+  }
+}
+```
+
+Une armure est faite de **quatre pièces**, une par emplacement. Chaque pièce
+déclare elle-même ce qu'elle donne et ce qu'elle prend : il n'y a pas de seconde
+voie cachée, ce que la fiche du personnage affiche est exactement ce que le
+calcul utilise. C'est pourquoi le `poids` d'une pièce **portée** ne retranche
+rien de l'agilité par lui-même — la gêne est le malus `agilite` déclaré. Le
+`poids` ne sert qu'à la soute : une pièce portée ne coûte aucune place, une
+pièce en réserve voyage dans les chariots et prend la place d'autant de
+marchandise.
+
+**`types`** — les trois types. La clé sert de `type` dans `armures` et de clé de
+teinte dans `icones.json → teintesArmure`.
+
+| clé | type | rôle |
+|---|---|---|
+| `nom` | texte | nom affiché |
+| `matiere` | texte | de quoi c'est fait, en sous-titre d'étal |
+| `trait` | texte | ce que le type promet, en une phrase |
+| `panoplie` | objet | supplément accordé quand **les quatre** pièces sont de ce type |
+
+**`ordreTypes`** — l'ordre d'affichage à l'échoppe Armures.
+
+**`parts`** — les quatre emplacements. La clé sert de `part` dans `armures` et
+de clé de pictogramme dans `icones.json → partsArmure`.
+
+| clé | type | rôle |
+|---|---|---|
+| `nom` | texte | nom de l'emplacement |
+| `nu` | texte | ce qu'on lit quand l'emplacement est vide (« torse nu ») |
+| `part` | fraction | la part d'une panoplie que porte cet emplacement |
+
+`part` est **indicatif** : le moteur l'affiche pour que le joueur sache où
+investir, mais ne l'applique pas — les nombres de chaque pièce sont écrits en
+clair. La somme des quatre parts doit valoir 1, et les pièces livrées avec le
+jeu respectent le partage torse 40 %, tête 25 %, jambes 20 %, bottes 15 %. Une
+pièce ajoutée hors de ce partage n'est pas une erreur, seulement un mensonge de
+plus à l'affichage.
+
+**`armures`** — une entrée par pièce. Le jeu en fournit douze : trois types ×
+quatre emplacements. En ajouter un cinquième type, ou une meilleure qualité dans
+un type existant, ne demande que de nouvelles entrées.
+
+| clé | type | rôle |
+|---|---|---|
+| `nom` | texte | nom affiché |
+| `surnom` | texte | second nom, en gris |
+| `type` | clé de `types` | décide de la panoplie et de la teinte du pictogramme |
+| `part` | clé de `parts` | l'emplacement occupé — un seul par pièce |
+| `poids` | kilos | ce qu'elle prend en soute **en réserve seulement** |
+| `prix` | nombre | prix de base, multiplié par la `forge` de la ville ; revente à la moitié |
+| `force` | nombre | ajouté à la `force` du porteur (donc à sa frappe) |
+| `garde` | nombre | ajouté à sa garde (0,04 = quatre points de pourcentage) |
+| `agilite` | nombre | ajouté à son agilité — **négatif** pour ce qui entrave |
+| `endurance` | nombre | ajouté à son endurance |
+| `vigilance` | nombre | ajouté à sa vigilance |
+
+Les cinq statistiques sont toutes facultatives : une pièce n'agit que sur ce
+qu'elle déclare. L'agilité, l'endurance et la vigilance restent bornées entre 5
+et 100 après addition, la garde à 62 %.
+
+L'armure est modélisée sur n'importe quelle unité (`u.armure`) ; seul le
+marchand a de quoi s'en équiper dans le jeu actuel. Un garde armuré marcherait
+sans qu'une ligne du moteur change.
+
+---
+
 ## `chariots.json`
 
 Un chariot n'a pas une santé mais trois : l'essieu souffre de la route, la
@@ -545,6 +633,8 @@ balise `<svg>` englobante. Deux couleurs conventionnelles :
   "chien": "<path d=\"M5.4 9.2l2-4.2…\" fill=\"currentColor\"/>",
   "pieces": { "essieu": "<circle cx=\"6\" cy=\"12\" r=\"3.9\"…/>" },
   "teintesPiece": ["#8A8F98", "#5F8A5A", "#C6A24C"],
+  "partsArmure": { "torse": "<path d=\"M7.3 3.2h9.4l2.8 2.9…\" fill=\"currentColor\"/>" },
+  "teintesArmure": { "legere": "#9A7343", "moyenne": "#8A8F98", "lourde": "#5F7A9A" },
   "glyphesEvenement": { "lames": "<path d=\"M4.6 2.6l2.2-1.5…\" fill=\"currentColor\"/>" },
   "teintesEvenement": { "danger": "#B84636", "meteo": "#7C8AA0" },
   "evenements": { "Embuscade": ["lames", "danger"] }
@@ -561,6 +651,8 @@ balise `<svg>` englobante. Deux couleurs conventionnelles :
 | `chariot`, `teintesChariots` | un seul tracé, une teinte par clé de `chariots.json` |
 | `chien` | le chien du convoi |
 | `pieces`, `teintesPiece` | un tracé par organe ; trois teintes, du niveau commun au niveau rare |
+| `partsArmure` | un tracé par emplacement de `armures.json → parts`, même clé. Toutes les pièces d'un emplacement partagent le dessin |
+| `teintesArmure` | une teinte par type de `armures.json → types`, même clé : c'est la matière qu'on lit d'un coup d'œil |
 | `glyphesEvenement` | la bibliothèque de dessins des situations, nommés librement |
 | `teintesEvenement` | une teinte par nature d'événement (`danger`, `meteo`, `tracas`, `rencontre`, `halte`, `trouvaille`, `ruines`, `pari`, `flanerie`, `charite`) |
 | `evenements` | pour chaque **titre** d'événement : `[clé de glyphe, nature]`. Le titre doit correspondre **exactement** à celui de l'événement dans `index.html`, accents et apostrophes compris ; sinon l'événement s'affiche sans pictogramme |
