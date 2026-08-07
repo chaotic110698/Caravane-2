@@ -1148,7 +1148,16 @@ let tSauve=null, echeance=0;
 function ecrire(){
   clearTimeout(tSauve);tSauve=null;echeance=0;
   try{localStorage.setItem(CLE,JSON.stringify(M));}catch(e){}
+  /* Le monde va au dépôt partagé : les cinq autres ateliers y trouveront les
+     lieux et les contrées sans qu'on ait à leur porter un fichier. */
+  try{
+    const d=JSON.parse(localStorage.getItem(DEPOT_CLE)||'null')||{v:1};
+    d.monde=mondePublie();
+    d.maj=d.maj||{};d.maj.monde=Date.now();
+    localStorage.setItem(DEPOT_CLE,JSON.stringify(d));
+  }catch(e){}
 }
+const DEPOT_CLE='caravane.depot.v1';
 /* On temporise pour ne pas écrire à chaque pixel d'un glissé — mais avec une
    échéance ferme : à force de se reprogrammer, une temporisation simple ne
    s'exécute jamais tant qu'on travaille sans pause, et tout se perd si l'onglet
@@ -1162,16 +1171,27 @@ function sauverAuto(){
 }
 addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')ecrire();});
 addEventListener('pagehide',ecrire);
+/* On reprend d'abord ce que cet atelier avait laissé, puis, à défaut, le monde
+   du dépôt partagé — celui qu'un autre appareil, un autre onglet ou une
+   restauration a pu y déposer. Sans ce second recours, ouvrir l'atelier de
+   carte sur un navigateur qui n'a que le dépôt le trouverait vide, et la
+   première sauvegarde écraserait le monde de tout le monde. */
 function reprendre(){
-  try{
-    const t=localStorage.getItem(CLE);
-    if(!t)return false;
-    const d=JSON.parse(t);
+  const poser=d=>{
     if(!d||!d.format)return false;
     M=normaliser(d);
     contreeCourante=M.contrees.length?M.contrees[0].cle:null;
     return true;
-  }catch(e){return false;}
+  };
+  try{
+    const t=localStorage.getItem(CLE);
+    if(t&&poser(JSON.parse(t)))return true;
+  }catch(e){}
+  try{
+    const d=JSON.parse(localStorage.getItem(DEPOT_CLE)||'null');
+    if(d&&poser(d.monde))return true;
+  }catch(e){}
+  return false;
 }
 /* l'image vit dans IndexedDB : trop lourde pour localStorage, et on ne veut pas
    la redéposer à chaque ouverture */
@@ -1233,16 +1253,19 @@ function reechelonner(ax,ay){
     p.x=Math.round(p.x*fx);p.y=Math.round(p.y*fy);});}
   message(`Repères rééchelonnés (×${arrondi(fx,3)}) pour la nouvelle image.`);
 }
-function exporter(){
-  /* on emporte les tables de référence : le jeu lira les mêmes chiffres */
-  const sortie=Object.assign({},M,{
+/* Le monde tel que les autres ateliers et le jeu le liront : le modèle de
+   travail plus les tables de référence et les distances déjà calculées. */
+function mondePublie(){
+  return Object.assign({},M,{
     genere:new Date().toISOString(),
     rangs:RANGS,traits:TRAITS,terrains:TERRAINS,profils:PROFILS,
     mesures:{kmParLieue:KM_PAR_LIEUE,kmParJour:KM_PAR_JOUR,
       lieuesParPixel:lieuesParPixel()?arrondi(lieuesParPixel(),6):null},
     voies:M.voies.map(v=>Object.assign({},v,{calcul:profilsDe(v)}))
   });
-  const t=JSON.stringify(sortie,null,2);
+}
+function exporter(){
+  const t=JSON.stringify(mondePublie(),null,2);
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([t],{type:'application/json'}));
   a.download='monde.json';
@@ -1305,6 +1328,22 @@ choisirOutil('select');
 cadrer();
 dessiner();
 reprendreImage();
+
+/* Le codex du hub ouvre un lieu par son lien : atelier-carte.html#cle=vaulmier.
+   On le choisit, et l'on cadre dessus — sans quoi il serait hors de l'écran. */
+(function(){
+  const m=/[#&]cle=([^&]+)/.exec(location.hash||'');
+  if(!m)return;
+  const cle=decodeURIComponent(m[1]);
+  const l=M.lieux.find(x=>x.cle===cle);
+  if(!l)return;
+  choix={genre:'lieu',cle:cle};
+  const r=svg.getBoundingClientRect();
+  V.tx=r.width/2-l.x*V.k;
+  V.ty=r.height/2-l.y*V.k;
+  appliquerVue();
+  dessiner();
+})();
 
 /* ── le tiroir du panneau, sur téléphone ──
    Une poignée en haut du panneau le relève et le range. On ne l'installe qu'en

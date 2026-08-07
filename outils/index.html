@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Les ateliers de Caravane</title>
-<meta name="description" content="Les cinq ateliers d'auteur de Caravane : la carte, les personnages, les objets, les missions, les événements.">
+<meta name="description" content="Les six ateliers d'auteur de Caravane : la carte, les personnages, les objets, les missions, les événements, les icônes.">
 <meta name="theme-color" content="#1C1A17">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icone.png">
@@ -83,6 +83,42 @@ ol.ordre li b{color:var(--encre)}
   border-radius:20px;color:var(--encre);text-decoration:none;background:var(--fond)}
 .liens a:active{border-color:var(--or);color:var(--or)}
 
+/* ── le codex ── */
+#codex{display:grid;gap:11px}
+.cat{background:var(--fond-clair);border:1px solid var(--bord);border-radius:var(--r);
+  overflow:hidden}
+.cat>summary{display:flex;align-items:center;gap:10px;padding:13px 15px;cursor:pointer;
+  list-style:none;font-family:var(--display);font-size:17px;font-weight:600}
+.cat>summary::-webkit-details-marker{display:none}
+.cat>summary .chevron{color:var(--encre-pale);font-size:13px;transition:transform .15s;
+  flex:none;width:12px}
+.cat[open]>summary .chevron{transform:rotate(90deg)}
+.cat>summary .compte{margin-left:auto;font-size:12.5px;color:var(--encre-pale);
+  font-variant-numeric:tabular-nums;font-family:system-ui,sans-serif;font-weight:400}
+.cat>summary .pastille{width:9px;height:9px;border-radius:50%;flex:none;
+  background:var(--teinte,var(--or))}
+.cat .entrees{border-top:1px solid var(--bord)}
+.entree{display:flex;align-items:center;gap:12px;padding:11px 15px;
+  border-bottom:1px solid #2E2A24}
+.entree:last-child{border-bottom:none}
+.entree .jeton{width:26px;height:26px;flex:none;color:var(--teinte,var(--or))}
+.entree .jeton svg{width:100%;height:100%;display:block}
+.entree .txt{flex:1;min-width:0}
+.entree .txt b{display:block;font-size:14.5px;font-weight:600;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.entree .txt small{display:block;font-size:12px;color:var(--encre-pale);margin-top:2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.entree .manque{color:var(--or)}
+.entree .ouvrir{flex:none;font-size:12.5px;padding:7px 13px;border:1px solid var(--bord);
+  border-radius:20px;color:var(--encre);text-decoration:none;background:var(--fond)}
+.entree .ouvrir:active{border-color:var(--or);color:var(--or)}
+.cat .rien{padding:12px 15px;font-size:13.5px;color:var(--encre-pale)}
+#codex-cherche{width:100%;padding:10px 13px;font-size:15px;color:var(--encre);
+  background:var(--fond-clair);border:1px solid var(--bord);border-radius:var(--r);
+  font-family:inherit}
+#codex-cherche::placeholder{color:var(--encre-pale)}
+#codex-rien{font-size:13.5px;color:var(--encre-pale);padding:2px}
+
 /* ── pied ── */
 footer{margin-top:34px;padding-top:20px;border-top:1px solid var(--bord);
   font-size:12.5px;color:var(--encre-pale);text-align:center;line-height:1.7}
@@ -112,9 +148,9 @@ footer a{color:var(--or);text-decoration:none}
     <path d="M8 18l3-8h20l3 8z" fill="none" stroke="#C9A227" stroke-width="1.8"/>
   </svg>
   <h1>Les ateliers de <b>Caravane</b></h1>
-  <p>Cinq outils pour écrire le monde : la carte, les gens, les objets,
-     les missions et les événements. Aucune installation, aucun compte —
-     tout se garde dans ce navigateur jusqu'à ce que vous exportiez.</p>
+  <p>Six outils pour écrire le monde : la carte, les gens, les objets,
+     les missions, les événements et les icônes. Aucune installation, aucun
+     compte — et ce que vous faites dans l'un, les autres le voient aussitôt.</p>
 </header>
 
 <main class="large">
@@ -183,6 +219,25 @@ footer a{color:var(--or);text-decoration:none}
       <span class="fleche">›</span>
     </a>
 
+    <a class="atelier pleine" href="atelier-icones.html" style="--teinte:#A084C0">
+      <span class="jeton"><svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="8.6" cy="8.6" r="5.4" fill="currentColor" opacity=".9"/>
+        <circle cx="15.4" cy="15.4" r="5.4" fill="none" stroke="currentColor"
+          stroke-width="2"/>
+        <path d="M2.4 21.6l4-8 4 8z" fill="currentColor" opacity=".6"/>
+      </svg></span>
+      <span class="txt"><b>Icônes</b>
+        <span>Dessiner un symbole en six formes, choisir sa couleur, et le
+              retrouver dans tous les autres ateliers.</span></span>
+      <span class="fleche">›</span>
+    </a>
+
+  </div>
+
+  <h2 class="section">Le codex</h2>
+  <div id="codex">
+    <p class="bloc" id="codex-vide">Rien encore. Ce que vous créerez dans les
+       ateliers viendra se ranger ici, par catégorie.</p>
   </div>
 
   <h2 class="section">Dans quel ordre</h2>
@@ -197,11 +252,22 @@ footer a{color:var(--or);text-decoration:none}
         quand les deux fichiers sont chargés.</li>
     <li><b>Les événements</b> quand vous voulez : ils ne dépendent de rien, sinon
         de la carte si vous les localisez.</li>
+    <li><b>Les icônes</b> à n'importe quel moment. Un dessin fait ici apparaît
+        aussitôt dans les listes de tous les autres ateliers.</li>
   </ol>
+  <div class="bloc vert" style="margin-top:11px">
+    <h3>Vous n'avez plus rien à charger</h3>
+    <p>Les six ateliers partagent un <b>même dépôt</b> dans ce navigateur. La
+       carte que vous tracez, l'atelier de personnages la connaît ; les
+       personnages que vous écrivez, l'atelier de missions les propose déjà dans
+       son onglet <b>Personnages</b>. Passer d'un outil à l'autre suffit — le
+       bouton <b>Ouvrir un fichier</b> ne sert plus qu'à reprendre un travail
+       venu d'ailleurs.</p>
+  </div>
 
   <h2 class="section">Les modes d'emploi</h2>
   <div class="bloc">
-    <p>Chaque atelier explique ses champs au fur et à mesure. Ces quatre pages
+    <p>Chaque atelier explique ses champs au fur et à mesure. Ces cinq pages
        expliquent <b>ce que chaque chose fait</b> — et elles sont engendrées depuis
        les mêmes catalogues que les formulaires, donc elles ne peuvent pas
        les contredire.</p>
@@ -210,6 +276,7 @@ footer a{color:var(--or);text-decoration:none}
       <a href="TUTORIEL-PERSONNAGES.md">Les personnages</a>
       <a href="TUTORIEL-OBJETS.md">Les objets</a>
       <a href="TUTORIEL-MISSIONS.md">Les missions</a>
+      <a href="TUTORIEL-ICONES.md">Les icônes</a>
       <a href="README.md">À propos de ce dépôt</a>
     </div>
   </div>
@@ -229,12 +296,13 @@ footer a{color:var(--or);text-decoration:none}
   <div class="bloc vert" style="margin-top:11px">
     <h3>À garder sur l'écran d'accueil</h3>
     <p>Ajoutez cette page à votre écran d'accueil (<b>Partager › Sur l'écran
-       d'accueil</b> sur iPhone, <b>⋮ › Installer</b> sur Android) : les cinq
+       d'accueil</b> sur iPhone, <b>⋮ › Installer</b> sur Android) : les six
        ateliers sont alors <b>utilisables hors connexion</b>, dans le train comme
        ailleurs.</p>
-    <p>Votre travail est sauvegardé tout seul dans le navigateur, atelier par
-       atelier, et il survit à la fermeture de l'onglet. <b>Exportez quand
-       même</b> : un navigateur qu'on nettoie emporte sa mémoire.</p>
+    <p>Votre travail est sauvegardé tout seul dans le navigateur, dans un dépôt
+       que les six ateliers partagent, et il survit à la fermeture de l'onglet.
+       <b>Exportez quand même</b> : un navigateur qu'on nettoie emporte sa
+       mémoire.</p>
     <p id="hors-ligne">✓ Les ateliers sont en cache : ils s'ouvriront sans réseau.</p>
   </div>
 
@@ -257,9 +325,792 @@ footer a{color:var(--or);text-decoration:none}
 
 </main>
 
+<!-- la machinerie partagée, posée par outils/construire.mjs -->
+<script id="commun">
+/* La machinerie partagée des ateliers de Caravane.
+
+   Ce fichier n'est jamais chargé par une page : outils/construire.mjs le recopie
+   à l'intérieur de chaque atelier, entre les balises <script id="commun">. Les
+   ateliers doivent en effet s'ouvrir d'un simple double-clic, donc en file://,
+   où aucune page ne peut aller chercher un fichier voisin.
+
+   Il tient trois choses :
+     — les petites fonctions dont tout le monde se sert ;
+     — la lecture et l'écriture du modèle par chemin, sur quoi reposent tous les
+       formulaires engendrés ;
+     — la sauvegarde dans le navigateur, avec son échéance dure.
+
+   Chaque atelier déclare d'où il lit avec racineEst(), et ce qu'il sauve avec
+   sauvegardeEst().                                                          */
+
+/* ═══════════════ le menu fretin ═══════════════ */
+const $=(s,p=document)=>p.querySelector(s);
+const $$=(s,p=document)=>Array.prototype.slice.call(p.querySelectorAll(s));
+const ech=s=>String(s==null?'':s).replace(/[&<>"]/g,
+  c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const ri=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const fmt=n=>Math.round(n).toLocaleString('fr-FR');
+const dec=n=>(Math.round(n*1000)/1000).toString().replace('.',',');
+const slug=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase()
+  .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,48);
+
+/* ═══════════════ lecture et écriture par chemin ═══════════════
+   Les formulaires sont engendrés : chaque champ porte le chemin de la donnée
+   qu'il édite, « couches.2.texte » ou « choix.0.reussi.effets.1.part ». Écrire
+   une valeur vide efface la clé, pour que le fichier exporté ne porte que ce
+   qui a été rempli. */
+let RACINE=()=>null;
+function racineEst(f){RACINE=f;}
+function lire(ch){
+  return String(ch).split('.').reduce((o,k)=>(o==null?undefined:o[k]),RACINE());
+}
+function ecrire(ch,v){
+  const p=String(ch).split('.'), der=p.pop();
+  let o=RACINE();
+  if(o==null)return;
+  for(const k of p){
+    if(o[k]==null)o[k]=/^\d+$/.test(k)?[]:{};
+    o=o[k];
+  }
+  if(v===''||v===undefined||v===null)delete o[der];
+  else o[der]=v;
+}
+function nettoyer(o){                      /* enlève les objets et listes vides */
+  if(Array.isArray(o)){o.forEach(nettoyer);return o;}
+  if(o&&typeof o==='object'){
+    for(const k of Object.keys(o)){
+      nettoyer(o[k]);
+      const v=o[k];
+      if(v===''||v===undefined||v===null||
+         (Array.isArray(v)&&!v.length)||
+         (v&&typeof v==='object'&&!Array.isArray(v)&&!Object.keys(v).length))delete o[k];
+    }
+  }
+  return o;
+}
+function bouger(l,i,d){
+  if(!l||i+d<0||i+d>=l.length)return;
+  const x=l[i];l[i]=l[i+d];l[i+d]=x;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LE DÉPÔT PARTAGÉ
+   ───────────────────────────────────────────────────────────────────────────
+   Les six ateliers étant servis depuis la même adresse, ils partagent le même
+   localStorage. On y tient **une seule réserve** : le monde, les personnages,
+   les objets, les missions, les événements, les icônes.
+
+   La distinction qui fait tout marcher :
+     — le **contenu** est commun. Un personnage écrit dans son atelier est
+       aussitôt là dans celui des missions, sans rien exporter ni recharger ;
+     — l'**état de travail** — quel élément est ouvert, le filtre, le convoi
+       d'essai — reste privé à chaque atelier, dans sa propre clé.
+
+   Les anciennes sauvegardes, une par atelier, sont reprises au premier
+   chargement : on ne perd pas ce qui était déjà écrit.                       */
+
+const DEPOT='caravane.depot.v1';
+const SECTIONS=['monde','personnages','objets','missions','evenements','icones'];
+/* d'où venait chaque section avant le dépôt, et sous quelle forme */
+const ANCIENNES={
+  personnages:['caravane.atelier-personnages.v1','repertoire'],
+  objets:['caravane.atelier-objets.v1','coffre'],
+  missions:['caravane.atelier-missions.v1','carnet'],
+  evenements:['caravane.atelier-evenements.v1','recueil'],
+  monde:['caravane.atelier-carte.v1',null]
+};
+let D=null;
+
+function chargerDepot(){
+  if(D)return D;
+  try{D=JSON.parse(localStorage.getItem(DEPOT)||'null');}catch(e){D=null;}
+  if(!D||typeof D!=='object')D={v:1};
+  /* reprise : ce qui dormait dans les clés d'avant rejoint la réserve */
+  let repris=[];
+  Object.keys(ANCIENNES).forEach(nom=>{
+    if(D[nom])return;
+    const [cle,champ]=ANCIENNES[nom];
+    let vieux=null;
+    try{vieux=JSON.parse(localStorage.getItem(cle)||'null');}catch(e){}
+    if(!vieux)return;
+    const v=champ?vieux[champ]:vieux;
+    if(v&&typeof v==='object'){D[nom]=v;repris.push(nom);}
+    /* le monde de l'atelier de carte y était aussi rangé sous « monde » */
+    if(!champ&&vieux.monde&&typeof vieux.monde==='object'){D[nom]=vieux.monde;repris.push(nom);}
+  });
+  if(repris.length){ecrireDepot();console.info('Dépôt : repris '+repris.join(', '));}
+  return D;
+}
+function ecrireDepot(){
+  try{localStorage.setItem(DEPOT,JSON.stringify(D));}
+  catch(e){/* quota, mode privé : on continue sans */}
+}
+/* Lire une section que l'on ne tient pas soi-même : c'est par là que l'atelier
+   de missions voit les personnages. */
+function depotLire(nom){
+  chargerDepot();
+  return D[nom]||null;
+}
+function depotEcrire(nom,valeur){
+  chargerDepot();
+  if(valeur===null||valeur===undefined)delete D[nom];
+  else D[nom]=valeur;
+  D.maj=D.maj||{};D.maj[nom]=Date.now();
+  ecrireDepot();
+}
+/* Ce que le dépôt contient, en un coup d'œil — le codex du hub s'en sert. */
+function depotResume(){
+  chargerDepot();
+  const n=(s,c)=>((D[s]&&D[s][c])||[]).length;
+  return {
+    monde:D.monde?((D.monde.lieux||[]).length):0,
+    personnages:n('personnages','personnages'),
+    objets:n('objets','objets'),
+    missions:n('missions','missions'),
+    evenements:n('evenements','evenements'),
+    icones:n('icones','icones')
+  };
+}
+
+/* ═══════════════ le codex ═══════════════
+   Le hub ne connaît la forme d'aucun atelier : il demande ici une liste plate,
+   toujours la même — une clé, un nom, une ligne de détail, un dessin, une
+   teinte — et un lien qui rouvre l'élément dans l'outil qui l'a fait.
+   Ajouter une catégorie, c'est ajouter une ligne à ce tableau. */
+const CATEGORIES=[
+  {nom:'monde',      titre:'Les lieux',       un:'lieu',       des:'lieux',
+   atelier:'atelier-carte.html',        champ:'lieux'},
+  {nom:'personnages',titre:'Les personnages', un:'personnage', des:'personnages',
+   atelier:'atelier-personnages.html',  champ:'personnages'},
+  {nom:'objets',     titre:'Les objets',      un:'objet',      des:'objets',
+   atelier:'atelier-objets.html',       champ:'objets'},
+  {nom:'missions',   titre:'Les missions',    un:'mission',    des:'missions',
+   atelier:'atelier-missions.html',     champ:'missions'},
+  {nom:'evenements', titre:'Les événements',  un:'événement',  des:'événements',
+   atelier:'atelier-evenements.html',   champ:'evenements'},
+  {nom:'icones',     titre:'Les icônes',      un:'icône',      des:'icônes',
+   atelier:'atelier-icones.html',       champ:'icones'}
+];
+/* Ce qu'on dit d'un élément en une ligne, sous son nom. Chaque catégorie a sa
+   phrase, parce qu'un lieu ne se résume pas comme une mission. */
+function detailCodex(section,x,depot){
+  const nomDe=(s,c,cle)=>{
+    const l=(depot[s]&&depot[s][c])||[];
+    const t=l.find(y=>y&&y.cle===cle);
+    return t?(t.nom||t.titre||cle):cle;
+  };
+  const bouts=[];
+  if(section==='monde'){
+    if(x.rang)bouts.push(x.rang);
+    if(x.contree)bouts.push('en '+nomDe('monde','contrees',x.contree));
+    if(x.carte)bouts.push('carte '+x.carte);
+  }else if(section==='personnages'){
+    if(x.titre)bouts.push(x.titre);
+    if(x.role)bouts.push(x.role);
+    if(x.lieu)bouts.push('à '+nomDe('monde','lieux',x.lieu));
+    const c=(x.couches||[]).length;
+    if(c)bouts.push(c+(c>1?' couches':' couche'));
+    if(!x.accord)bouts.push('accord à choisir');
+  }else if(section==='objets'){
+    if(x.genre)bouts.push(x.genre);
+    const p=(x.pouvoirs||[]).length;
+    if(p)bouts.push(p+(p>1?' pouvoirs':' pouvoir'));
+    const pr=x.provenance&&x.provenance.genre;
+    if(pr==='mission'&&x.provenance.mission)
+      bouts.push('de « '+nomDe('missions','missions',x.provenance.mission)+' »');
+    else if(pr)bouts.push(pr);
+  }else if(section==='missions'){
+    if(x.commanditaire)bouts.push('de '+nomDe('personnages','personnages',x.commanditaire));
+    else bouts.push('sans commanditaire');
+    const j=(x.jalons||[]).length;
+    bouts.push(j?j+(j>1?' jalons':' jalon'):'aucun jalon');
+    const d=x.offre&&x.offre.delai;
+    if(d)bouts.push(d+' étapes');
+  }else if(section==='evenements'){
+    if(x.oeil)bouts.push(x.oeil);
+    if(x.genre)bouts.push(x.genre);
+    const c=(x.choix||[]).length;
+    if(c)bouts.push(c+(c>1?' issues':' issue'));
+  }else if(section==='icones'){
+    if(x.source)bouts.push('SVG collé');
+    else{
+      const f=(x.formes||[]).length;
+      bouts.push(f?f+(f>1?' formes':' forme'):'vide');
+    }
+    if(x.nature)bouts.push(x.nature);
+  }
+  return bouts.join(' · ');
+}
+/* Un élément est « en chantier » quand il lui manque de quoi exister : pas de
+   clé, pas de nom. Le codex le montre sans le cacher — c'est normal en cours
+   de travail — mais il le dit. */
+function inacheveCodex(section,x){
+  if(!x.cle)return 'sans clé';
+  if(!(x.nom||x.titre))return 'sans nom';
+  if(section==='missions'&&!(x.jalons||[]).length)return 'sans jalon';
+  if(section==='personnages'&&!x.premiere)return 'sans description';
+  return '';
+}
+function teinteContree(depot,cle){
+  const c=((depot.monde&&depot.monde.contrees)||[]).find(x=>x&&x.cle===cle);
+  return (c&&c.teinte)||'#9C9484';
+}
+function depotCodex(){
+  chargerDepot();
+  return CATEGORIES.map(c=>{
+    const liste=(D[c.nom]&&D[c.nom][c.champ])||[];
+    return {
+      nom:c.nom,titre:c.titre,un:c.un,des:c.des,atelier:c.atelier,
+      entrees:liste.map(x=>({
+        cle:x.cle||'',
+        nom:x.nom||x.titre||'',
+        detail:detailCodex(c.nom,x,D),
+        manque:inacheveCodex(c.nom,x),
+        glyphe:c.nom==='icones'?x.cle
+              :c.nom==='monde'?'borne'
+              :(x.ico&&x.ico.glyphe)||'',
+        svg:c.nom==='icones'?(x.svg||''):'',
+        /* l'icône porte sa teinte en propre, un lieu prend celle de sa
+           contrée, et tout le reste la range dans son petit objet « ico » */
+        teinte:c.nom==='icones'?teinteDe(x)
+              :c.nom==='monde'?teinteContree(D,x.contree)
+              :teinteDe(x.ico||{}),
+        lien:x.cle?c.atelier+'#cle='+encodeURIComponent(x.cle):c.atelier
+      }))
+    };
+  });
+}
+
+/* ═══════════════ sauvegarde ═══════════════
+   Une échéance dure : le report d'écriture ne peut pas glisser indéfiniment,
+   et la page qui part écrit avant de partir. Sans les deux, une séance entière
+   de travail peut ne jamais toucher le disque. */
+/* Sans clé, personne ne sauvegarde : le hub prend la même machinerie mais ne
+   tient aucun atelier, et n'a rien à écrire. */
+let CLE_SAUVE=null, PAQUET=()=>({});
+let SECTION=null, SECTION_LIRE=null;
+let tSauve=null, echeance=0;
+function sauvegardeEst(cle,paquet){CLE_SAUVE=cle;PAQUET=paquet;}
+/* L'atelier déclare la section du dépôt qu'il tient. */
+function sectionEst(nom,lire){SECTION=nom;SECTION_LIRE=lire;}
+function ecrireSauve(){
+  clearTimeout(tSauve);tSauve=null;echeance=0;
+  if(SECTION&&SECTION_LIRE)depotEcrire(SECTION,SECTION_LIRE());
+  if(!CLE_SAUVE)return;
+  try{localStorage.setItem(CLE_SAUVE,JSON.stringify(PAQUET()));}
+  catch(e){}
+}
+function sauver(){
+  const t=Date.now();
+  if(!echeance)echeance=t+2000;
+  clearTimeout(tSauve);
+  tSauve=setTimeout(ecrireSauve,Math.max(0,Math.min(400,echeance-t)));
+}
+function relireSauve(){
+  try{return JSON.parse(localStorage.getItem(CLE_SAUVE)||'null');}catch(e){return null;}
+}
+addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')ecrireSauve();});
+addEventListener('pagehide',ecrireSauve);
+/* Un autre onglet a écrit : on relit, pour que la liste des personnages soit à
+   jour dans l'atelier de missions sans avoir à recharger la page. */
+function suivreDepot(quand){
+  addEventListener('storage',e=>{
+    if(e.key!==DEPOT)return;
+    D=null;chargerDepot();
+    if(quand)quand();
+  });
+}
+
+/* ═══════════════ le monde ═══════════════
+   Il vit dans le dépôt : l'atelier de carte l'y écrit, les cinq autres l'y
+   lisent sans que personne ait à charger un fichier. */
+function MONDE_(){return depotLire('monde');}
+let MONDE=null;
+function mondeEst(d){MONDE=d;if(d)depotEcrire('monde',d);}
+function mondeDuDepot(){MONDE=depotLire('monde');return MONDE;}
+function listeMonde(quoi){
+  if(!MONDE)return null;
+  if(quoi==='lieux')return (MONDE.lieux||[]).map(l=>[l.cle,l.nom]);
+  if(quoi==='contrees')return (MONDE.contrees||[]).map(c=>[c.cle,c.nom]);
+  if(quoi==='rangs')return Object.entries(MONDE.rangs||{}).map(([k,v])=>[k,v.nom||k]);
+  if(quoi==='traits')return Object.entries(MONDE.traits||{}).map(([k,v])=>[k,v.nom||k]);
+  if(quoi==='terrains')return Object.entries(MONDE.terrains||{}).map(([k,v])=>[k,v.nom||k]);
+  if(quoi==='profils')return (MONDE.profils||[]).map(p=>[p.cle,p.nom||p.cle]);
+  if(quoi==='cartes')return (MONDE.cartes||[{cle:(MONDE.carte&&MONDE.carte.fichier)||'monde',
+    nom:'La carte du monde'}]).map(c=>[c.cle,c.nom||c.cle]);
+  return null;
+}
+const REPLI={
+  rangs:[['capitale','Capitale'],['ville','Ville'],['village','Village'],
+         ['hameau','Hameau'],['poste','Poste frontière']],
+  traits:[['port','Port'],['souterrain','Ville souterraine']],
+  terrains:[['plaine','Plaine'],['forestier','Forestier'],['montagneux','Montagneux'],
+            ['marecageux','Marécageux']],
+  profils:[['securise','Sécurisé'],['normal','Normal'],['dangereux','Dangereux']],
+  lieux:[],contrees:[],cartes:[]
+};
+const listeOu=q=>listeMonde(q)||REPLI[q]||[];
+const estMonde=d=>d&&(d.format==='caravane.carte.v1'||
+  (d.lieux!==undefined&&d.contrees!==undefined));
+
+/* ═══════════════ les icônes ═══════════════
+   Deux réservoirs, comme partout : les quarante-neuf dessins d'origine, livrés
+   avec le jeu, et ceux que l'atelier d'icônes ajoute. Les seconds sont rangés
+   dans le dépôt et apparaissent partout sans que rien d'autre change.
+
+   La teinte se choisit librement. Les dix teintes nommées restent proposées
+   comme raccourcis — elles disent quelque chose (danger, halte, trouvaille) —
+   mais une couleur écrite à la main l'emporte. */
+function glyphesTous(){
+  const propres=depotLire('icones');
+  const dessines={};
+  ((propres&&propres.icones)||[]).forEach(i=>{if(i.cle&&i.svg)dessines[i.cle]=i.svg;});
+  return Object.assign({},(typeof REF!=='undefined'&&REF.glyphes)||{},dessines);
+}
+function nomsGlyphes(){
+  const propres=depotLire('icones');
+  const noms={};
+  ((propres&&propres.icones)||[]).forEach(i=>{if(i.cle)noms[i.cle]=i.nom||i.cle;});
+  return noms;
+}
+const estGlypheDessine=k=>Object.prototype.hasOwnProperty.call(nomsGlyphes(),k);
+function teinteDe(ico){
+  if(ico&&ico.teinte)return ico.teinte;
+  const t=(typeof REF!=='undefined'&&REF.natures)||{};
+  return t[(ico||{}).nature]||'#9C9484';
+}
+function svgGlypheDe(cle,teinte){
+  const g=glyphesTous()[cle];
+  if(!g)return '';
+  return `<svg viewBox="0 0 24 24" style="color:${teinte||'#9C9484'};--velin:#E3D6B2">`+
+    `${g}</svg>`;
+}
+/* Le champ de teinte : les dix nommées, plus une couleur libre. */
+function champTeinte(chNature,chTeinte){
+  const nature=lire(chNature)||'';
+  const libre=lire(chTeinte)||'';
+  const t=(typeof REF!=='undefined'&&REF.natures)||{};
+  const pastilles=Object.keys(t).map(k=>
+    `<button type="button" class="teinte${!libre&&k===nature?' actif':''}"
+      data-act="teinte-nommee" data-n="${ech(k)}" data-c="${ech(chNature)}"
+      data-l="${ech(chTeinte)}" title="${ech(k)}"
+      style="background:${t[k]}"></button>`).join('');
+  const courante=libre||t[nature]||'#9C9484';
+  return `<div class="teintes">${pastilles}
+    <label class="teinte-libre${libre?' actif':''}" title="Une couleur à vous">
+      <input type="color" value="${ech(courante)}" data-ch="${ech(chTeinte)}" data-t="txt">
+    </label>
+    ${libre?`<button type="button" class="outil petit" data-act="teinte-oter"
+      data-l="${ech(chTeinte)}">Revenir à la teinte nommée</button>`:''}
+  </div>`;
+}
+const CSS_TEINTES=`
+.teintes{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.teintes .teinte{width:26px;height:26px;border-radius:50%;border:2px solid transparent;
+  cursor:pointer;padding:0}
+.teintes .teinte.actif{border-color:var(--encre);box-shadow:0 0 0 2px var(--fond)}
+.teintes .teinte-libre{width:26px;height:26px;border-radius:50%;overflow:hidden;
+  border:2px dashed var(--bord);cursor:pointer;position:relative;flex:none}
+.teintes .teinte-libre.actif{border-style:solid;border-color:var(--encre)}
+.teintes .teinte-libre input{position:absolute;inset:-6px;width:150%;height:150%;
+  padding:0;border:none;cursor:pointer}
+.teintes .outil.petit{padding:3px 9px;font-size:11.5px;flex:none}`;
+
+/* ═══════════════ les liens profonds ═══════════════
+   Le codex du hub ouvre un élément directement dans son atelier :
+   atelier-personnages.html#cle=orlanne */
+function cleDemandee(){
+  const m=/[#&]cle=([^&]+)/.exec(location.hash||'');
+  return m?decodeURIComponent(m[1]):null;
+}
+function ouvrirDemande(liste,poser){
+  const c=cleDemandee();
+  if(!c)return false;
+  const i=(liste||[]).findIndex(x=>x&&x.cle===c);
+  if(i<0)return false;
+  poser(i);
+  return true;
+}
+
+/* ═══════════════ les champs engendrés ═══════════════ */
+function champ(label,corps,aide,large){
+  return `<div class="champ${large?' large':''}"><label>${ech(label)}</label><div>${corps}`+
+    (aide?`<div class="aide">${aide}</div>`:'')+`</div></div>`;
+}
+function texte(ch,ph,lignes){
+  const v=lire(ch);
+  if(lignes)return `<textarea rows="${lignes}" data-ch="${ech(ch)}" data-t="txt" `+
+    `placeholder="${ech(ph||'')}">${ech(Array.isArray(v)?v.join('\n\n'):v||'')}</textarea>`;
+  return `<input data-ch="${ech(ch)}" data-t="txt" placeholder="${ech(ph||'')}" `+
+    `value="${ech(v||'')}" autocomplete="off" spellcheck="false">`;
+}
+function nombre(ch,ph,pas){
+  const v=lire(ch);
+  return `<input type="number" step="${pas||'any'}" data-ch="${ech(ch)}" data-t="num" `+
+    `placeholder="${ech(ph||'')}" value="${v===undefined||v===null?'':v}">`;
+}
+function choixListe(ch,options,vide){
+  const v=lire(ch);
+  return `<select data-ch="${ech(ch)}" data-t="txt">`+
+    (vide?`<option value="">${ech(vide)}</option>`:'')+
+    options.map(o=>{const[k,n]=Array.isArray(o)?o:[o,o];
+      return `<option value="${ech(k)}"${k===v?' selected':''}>${ech(n)}</option>`;}).join('')+
+    `</select>`;
+}
+function coche(ch,label){
+  const v=lire(ch);
+  return `<label class="chip${v?' actif':''}"><input type="checkbox" data-ch="${ech(ch)}" `+
+    `data-t="bool"${v?' checked':''}>${ech(label)}</label>`;
+}
+function multi(ch,options,rien){
+  const v=lire(ch)||[];
+  if(!options.length)return `<p class="vide">${rien}</p>`;
+  return `<div class="chips">`+options.map(o=>{
+    const[k,n]=Array.isArray(o)?o:[o,o];
+    return `<label class="chip${v.indexOf(k)>=0?' actif':''}"><input type="checkbox" `+
+      `data-ch="${ech(ch)}" data-t="multi" value="${ech(k)}"${v.indexOf(k)>=0?' checked':''}>`+
+      `${ech(n)}</label>`;}).join('')+`</div>`;
+}
+/* Les textes à trous : {ceci} entre accolades, remplacé par ce qu'on a sous la main. */
+function trous(txt){
+  const out=[], l=Array.isArray(txt)?txt:[txt];
+  l.forEach(t=>{const re=/\{([a-zA-Z0-9_.]+)\}/g;let m;
+    while((m=re.exec(String(t||''))))out.push(m[1]);});
+  return out;
+}
+function boucher(txt,sac){
+  const t=Array.isArray(txt)?pick(txt):txt;
+  return String(t==null?'':t).replace(/\{([a-zA-Z0-9_.]+)\}/g,
+    (m,k)=>sac[k]!==undefined?sac[k]:m);
+}
+/* Une valeur de texte : plusieurs paragraphes séparés par une ligne vide font
+   plusieurs variantes, dont le jeu tire une au hasard. */
+function texteSaisi(v){
+  if(v.indexOf('\n\n')<0)return v;
+  const l=v.split(/\n{2,}/).map(s=>s.trim()).filter(Boolean);
+  return l.length>1?l:(l[0]||'');
+}
+
+/* ═══════════════ ouvrir et exporter ═══════════════ */
+function telecharger(nom,donnees){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(donnees,null,2)],
+    {type:'application/json'}));
+  a.download=nom;a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+}
+/* Le dépôt de fichier, commun aux trois ateliers : on lit, on rend l'objet. */
+function accueillirFichiers(surJson){
+  let survol=0;
+  const voile=$('#toile-depot');
+  const lire1=f=>{const r=new FileReader();
+    r.onload=()=>{let d;
+      try{d=JSON.parse(r.result);}
+      catch(e){alert('Ce fichier n\'est pas du JSON lisible.');return;}
+      surJson(d);};
+    r.readAsText(f);};
+  addEventListener('dragenter',e=>{e.preventDefault();survol++;
+    if(voile)voile.classList.add('on');});
+  addEventListener('dragover',e=>e.preventDefault());
+  addEventListener('dragleave',()=>{if(--survol<=0&&voile)voile.classList.remove('on');});
+  addEventListener('drop',e=>{e.preventDefault();survol=0;
+    if(voile)voile.classList.remove('on');
+    if(e.dataTransfer.files[0])lire1(e.dataTransfer.files[0]);});
+  const champFichier=$('#fichier');
+  if(champFichier)champFichier.onchange=e=>{
+    if(e.target.files[0])lire1(e.target.files[0]);
+    e.target.value='';
+  };
+  return ()=>{if(champFichier)champFichier.click();};
+}
+
+/* ═══════════════ la disposition sur téléphone ═══════════════
+   Sur un écran de 390 pixels, les trois colonnes empilées ne laissent que
+   180 pixels au formulaire : on ne peut rien y écrire. Ici, on donne l'écran
+   entier à **une** zone à la fois, et une barre en bas sert à passer de l'une à
+   l'autre. Les boutons de la barre du haut se rangent dans un tiroir.
+
+   Les quatre ateliers partagent la même ossature — #scene > aside, main, aside —
+   donc ce code les sert tous les quatre sans qu'aucun n'ait à s'en occuper.
+
+   Rien de tout cela ne s'active au-dessus de 860 pixels : sur un ordinateur,
+   les trois colonnes restent côte à côte comme avant.                        */
+const CSS_MOBILE=`
+@media (max-width:860px){
+  body{overflow:hidden}
+  /* — la barre du haut, réduite à un titre et un tiroir — */
+  #barre{flex-wrap:nowrap;gap:8px;padding:8px 10px;align-items:center}
+  #barre h1{font-size:15px;flex:1;min-width:0;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap;margin:0}
+  #tiroir{position:fixed;left:0;right:0;top:0;z-index:20;
+    background:var(--fond-clair);border-bottom:1px solid var(--bord);
+    padding:10px;display:none;grid-template-columns:1fr 1fr;gap:8px;
+    box-shadow:0 14px 30px #0009;max-height:78vh;overflow-y:auto}
+  #tiroir.ouvert{display:grid}
+  #tiroir .outil{justify-content:center;padding:11px 10px;font-size:13.5px}
+  #tiroir .sep,#tiroir .pousse{display:none}
+  #tiroir .plein{grid-column:1/-1}
+  #voile-tiroir{position:fixed;inset:0;background:#0009;z-index:19;display:none}
+  #voile-tiroir.ouvert{display:block}
+  #b-tiroir{flex:none;display:inline-flex;align-items:center;gap:7px;
+    padding:8px 12px;border:1px solid var(--bord);border-radius:var(--r);
+    background:var(--fond);font-size:13px}
+  #b-tiroir b{color:var(--or)}
+
+  /* — une seule zone à l'écran — */
+  #scene{flex-direction:column;position:relative}
+  #scene>aside,#scene>main{display:none;width:auto;max-height:none;flex:1;
+    min-height:0;border:none}
+  #scene.vue-liste>aside:first-of-type{display:flex}
+  #scene.vue-feuille>main{display:flex}
+  #scene.vue-cote>aside:last-of-type{display:flex}
+  #scene>main{padding:12px 12px 24px}
+
+  /* — la barre du bas — */
+  #vues{flex:none;display:flex;background:var(--fond-clair);
+    border-top:1px solid var(--bord);padding-bottom:env(safe-area-inset-bottom,0)}
+  #vues button{flex:1;padding:11px 4px 12px;font-size:11.5px;color:var(--encre-pale);
+    border-top:2px solid transparent;display:flex;flex-direction:column;
+    align-items:center;gap:3px;line-height:1.15}
+  #vues button.actif{color:var(--or);border-top-color:var(--or)}
+  #vues .pastille{font-size:16px;line-height:1}
+
+  /* — l'état, sur une ligne qu'on peut faire défiler — */
+  #etat{flex-wrap:nowrap;overflow-x:auto;gap:12px;font-size:11.5px;padding:5px 10px}
+  #etat>span{white-space:nowrap;flex:none}
+  #etat>span:last-child{display:none}
+
+  /* — les champs, au doigt — */
+  .champ{grid-template-columns:1fr;gap:4px}
+  .champ>label{padding-top:0;font-size:12px}
+  input,select,textarea{padding:9px 10px;font-size:15px}   /* 15px : pas de zoom iOS */
+  .chip{padding:7px 12px;font-size:13px}
+  .ajout{padding:9px 12px;width:100%;text-align:center}
+  .glyphes{grid-template-columns:repeat(auto-fill,minmax(46px,1fr));max-height:210px}
+  #onglets button{padding:10px 2px;font-size:11px}
+  #volet{padding:12px 12px 24px}
+  .bloc>h2 button{padding:5px 10px;font-size:12px}
+  .piece>header button,.couche>header button,.effet>header button{padding:5px 9px;font-size:12px}
+}`;
+/* Les trois zones, dans l'ordre où la barre du bas les propose. Chaque atelier
+   nomme la sienne : « le recueil », « le répertoire », « le coffre »… */
+function installerMobile(noms){
+  const scene=$('#scene');
+  if(!scene)return;
+  const barre=$('#barre');
+  /* on range les boutons de la barre dans un tiroir, sans toucher au HTML */
+  if(barre&&!$('#tiroir')){
+    const tiroir=document.createElement('div');
+    tiroir.id='tiroir';
+    const voile=document.createElement('div');
+    voile.id='voile-tiroir';
+    Array.prototype.slice.call(barre.children).forEach(el=>{
+      if(el.tagName==='H1')return;
+      tiroir.appendChild(el);
+    });
+    /* Un retour au hub, en tête du tiroir : sur un téléphone, le bouton « page
+       précédente » du navigateur n'est pas toujours à portée de pouce. */
+    const retour=document.createElement('a');
+    retour.className='outil plein';
+    retour.href='index.html';
+    retour.innerHTML='◂ Tous les ateliers';
+    tiroir.insertBefore(retour,tiroir.firstChild);
+    const b=document.createElement('button');
+    b.id='b-tiroir';b.innerHTML='<b>☰</b> Outils';
+    barre.appendChild(b);
+    document.body.appendChild(voile);
+    document.body.appendChild(tiroir);
+    const fermer=()=>{tiroir.classList.remove('ouvert');voile.classList.remove('ouvert');};
+    b.onclick=()=>{const o=tiroir.classList.toggle('ouvert');
+      voile.classList.toggle('ouvert',o);};
+    voile.onclick=fermer;
+    /* refermer dès qu'on a choisi quelque chose, sauf pour un menu déroulant */
+    tiroir.addEventListener('click',e=>{
+      if(e.target.closest('.outil'))setTimeout(fermer,60);});
+  }
+  /* la barre du bas */
+  if(!$('#vues')){
+    const zones=[['liste',noms&&noms[0]||'La liste','☰'],
+                 ['feuille',noms&&noms[1]||'La fiche','✎'],
+                 ['cote',noms&&noms[2]||'L\'aperçu','◫']];
+    const v=document.createElement('div');
+    v.id='vues';
+    v.innerHTML=zones.map(([k,n,p])=>
+      `<button data-vue="${k}"><span class="pastille">${p}</span>${ech(n)}</button>`).join('');
+    const etat=$('#etat');
+    if(etat)etat.parentNode.insertBefore(v,etat);
+    else document.body.appendChild(v);
+    v.addEventListener('click',e=>{
+      const b=e.target.closest('[data-vue]');
+      if(b)montrerVue(b.dataset.vue);
+    });
+  }
+  montrerVue(localStorage.getItem('caravane.vue')||'feuille');
+}
+function montrerVue(quoi){
+  const scene=$('#scene');
+  if(!scene)return;
+  scene.classList.remove('vue-liste','vue-feuille','vue-cote');
+  scene.classList.add('vue-'+quoi);
+  $$('#vues [data-vue]').forEach(b=>b.classList.toggle('actif',b.dataset.vue===quoi));
+  try{localStorage.setItem('caravane.vue',quoi);}catch(e){}
+  /* on repart du haut : arriver au milieu d'un formulaire désoriente */
+  const z=quoi==='feuille'?$('#scene>main'):
+    (quoi==='cote'?$('#volet'):$('#scene>aside'));
+  if(z)z.scrollTop=0;
+}
+/* Choisir un élément dans la liste passe naturellement à la fiche. */
+function suivreChoix(){
+  const scene=$('#scene');
+  if(!scene)return;
+  scene.addEventListener('click',e=>{
+    if(!matchMedia('(max-width:860px)').matches)return;
+    const b=e.target.closest('[data-sel]');
+    if(b&&b.closest('aside'))setTimeout(()=>montrerVue('feuille'),40);
+  });
+}
+/* À appeler une fois, à la fin de chaque atelier. */
+function habillerMobile(noms){
+  const st=document.createElement('style');
+  st.textContent=CSS_MOBILE+CSS_TEINTES;
+  document.head.appendChild(st);
+  installerMobile(noms);
+  suivreChoix();
+}
+/* Les pastilles de teinte : choisir une teinte nommée efface la couleur libre,
+   et réciproquement. L'atelier fournit ce qu'il faut refaire ensuite. */
+function ecouterTeintes(apres){
+  document.addEventListener('click',e=>{
+    const b=e.target.closest('[data-act="teinte-nommee"],[data-act="teinte-oter"]');
+    if(!b)return;
+    if(b.dataset.act==='teinte-nommee'){
+      ecrire(b.dataset.c,b.dataset.n);
+      ecrire(b.dataset.l,undefined);
+    }else ecrire(b.dataset.l,undefined);
+    apres();
+  });
+}
+
+/* ═══════════════ la saisie, en délégation ═══════════════
+   Un seul écouteur pour tous les champs de tous les formulaires : ils portent
+   leur chemin, le reste suit. L'atelier fournit ce qu'il faut refaire ensuite. */
+function ecouterSaisie(apres){
+  document.addEventListener('input',ev=>{
+    const t=ev.target;
+    if(t.dataset.ch===undefined)return;
+    const ch=t.dataset.ch, k=t.dataset.t;
+    if(/\.__/.test(ch))return;                    /* champs de travail, pas de données */
+    if(k==='txt'){
+      const v=t.tagName==='TEXTAREA'?texteSaisi(t.value):t.value;
+      if(/\.vaut$/.test(ch))ecrire(ch,v==='oui');
+      else ecrire(ch,v);
+    }
+    else if(k==='num')ecrire(ch,t.value===''?undefined:Number(t.value));
+    else if(k==='bool'){
+      ecrire(ch,t.checked||undefined);
+      t.closest('.chip').classList.toggle('actif',t.checked);
+    }
+    else if(k==='multi'){
+      const cur=lire(ch)||[], i=cur.indexOf(t.value);
+      if(t.checked&&i<0)cur.push(t.value);
+      if(!t.checked&&i>=0)cur.splice(i,1);
+      ecrire(ch,cur.length?cur:undefined);
+      t.closest('.chip').classList.toggle('actif',t.checked);
+    }
+    apres(t,ch,k);
+  });
+}
+
+</script>
+<!-- les dessins du jeu et leurs teintes, pour que le codex sache les montrer -->
+<script id="reference" type="application/json">
+{"glyphes":{"lames":"<path d=\"M4.6 2.6l2.2-1.5 8 11.6-2.2 1.5z\" fill=\"currentColor\"/><path d=\"M19.4 2.6l-2.2-1.5-8 11.6 2.2 1.5z\" fill=\"currentColor\"/>\n   <rect x=\"8.4\" y=\"14\" width=\"7.2\" height=\"2.4\" rx=\"1.2\" fill=\"currentColor\"/><rect x=\"10.4\" y=\"16.4\" width=\"3.2\" height=\"5.4\" rx=\"1\" fill=\"currentColor\"/>","traits":"<path d=\"M2 3.6l7.2 7.2M2 3.6v4.8M2 3.6h4.8\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.1\" stroke-linecap=\"round\"/>\n   <path d=\"M22 3.6l-7.2 7.2M22 3.6v4.8M22 3.6h-4.8\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.1\" stroke-linecap=\"round\"/>\n   <circle cx=\"12\" cy=\"15\" r=\"3.2\" fill=\"currentColor\"/><path d=\"M12 18.2V22\" stroke=\"currentColor\" stroke-width=\"2.2\"/>","vent":"<path d=\"M2.6 8h11.4a2.8 2.8 0 1 0-2.8-2.8\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\"/>\n   <path d=\"M2.6 13h14a2.8 2.8 0 1 1-2.8 2.8\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\"/>\n   <path d=\"M4.4 18h8a2.4 2.4 0 1 0-2.4-2.4\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\"/>","bat":"<rect x=\"3.6\" y=\"7\" width=\"16.8\" height=\"8\" rx=\"2.2\" fill=\"currentColor\"/>\n   <path d=\"M6.4 15v6M10 15v6M14 15v6M17.6 15v6\" stroke=\"currentColor\" stroke-width=\"2.1\" stroke-linecap=\"round\"/>\n   <path d=\"M8.4 7V4.2h7.2V7\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"/>","pont":"<path d=\"M1.6 9.6h7.4l2.2 3.4M22.4 9.6H15l-2.2 3.4\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\"/>\n   <path d=\"M4.6 9.6V21M19.4 9.6V21\" stroke=\"currentColor\" stroke-width=\"2.2\"/><path d=\"M1.6 21h20.8\" stroke=\"currentColor\" stroke-width=\"2.2\"/>","bulle":"<path d=\"M2.6 3.4h18.8v11.8H9.4l-5.2 4.2v-4.2H2.6z\" fill=\"currentColor\"/>\n   <circle cx=\"8.4\" cy=\"9.3\" r=\"1.5\" fill=\"var(--velin)\"/><circle cx=\"12\" cy=\"9.3\" r=\"1.5\" fill=\"var(--velin)\"/>\n   <circle cx=\"15.6\" cy=\"9.3\" r=\"1.5\" fill=\"var(--velin)\"/>","barriere":"<rect x=\"1.8\" y=\"3.6\" width=\"3.4\" height=\"16.8\" rx=\"1\" fill=\"currentColor\"/><rect x=\"18.8\" y=\"3.6\" width=\"3.4\" height=\"16.8\" rx=\"1\" fill=\"currentColor\"/>\n   <rect x=\"5.2\" y=\"8.6\" width=\"13.6\" height=\"3.2\" rx=\"1.4\" fill=\"currentColor\"/><circle cx=\"12\" cy=\"16.4\" r=\"2.2\" fill=\"currentColor\"/>","roue_fendue":"<circle cx=\"12\" cy=\"12\" r=\"9\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\"/>\n   <path d=\"M12 3v18M3 12h18\" stroke=\"currentColor\" stroke-width=\"1.5\"/>\n   <path d=\"M17.4 5.6l-3.6 5.2 3 1.6-3.8 5.4\" fill=\"none\" stroke=\"var(--velin)\" stroke-width=\"2.4\"/>","caravanserail":"<path d=\"M1.8 21V9.2h20.4V21z\" fill=\"currentColor\"/><path d=\"M1.8 9.2L12 2.6l10.2 6.6z\" fill=\"currentColor\"/>\n   <path d=\"M8.2 21v-6.6a3.8 3.8 0 0 1 7.6 0V21z\" fill=\"var(--velin)\"/>","heaume":"<path d=\"M4 13.4a8 8 0 0 1 16 0V20h-4.2v-4.2H8.2V20H4z\" fill=\"currentColor\"/><rect x=\"9.8\" y=\"7.6\" width=\"4.4\" height=\"5.4\" fill=\"var(--velin)\"/>","soleil":"<circle cx=\"12\" cy=\"12\" r=\"5\" fill=\"currentColor\"/>\n   <path d=\"M12 1.4v3.2M12 19.4v3.2M1.4 12h3.2M19.4 12h3.2M4.4 4.4l2.3 2.3M17.3 17.3l2.3 2.3M19.6 4.4l-2.3 2.3M6.7 17.3l-2.3 2.3\"\n     stroke=\"currentColor\" stroke-width=\"2.1\" stroke-linecap=\"round\"/>","chariot_verse":"<path d=\"M2.8 15.4h18.4l-2.6 6H5.4z\" fill=\"currentColor\"/>\n   <path d=\"M2.8 15.4h18.4\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\"/>\n   <circle cx=\"7.6\" cy=\"10.4\" r=\"3.2\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.1\"/>\n   <circle cx=\"16.4\" cy=\"10.4\" r=\"3.2\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.1\"/>\n   <path d=\"M7.6 7.2v6.4M4.4 10.4h6.4M16.4 7.2v6.4M13.2 10.4h6.4\" stroke=\"currentColor\" stroke-width=\"1.2\"/>","fauve":"<path d=\"M4 9l2.2-5.4 3.2 3.2h5.2l3.2-3.2L20 9v6a6.2 6.2 0 0 1-6.2 6.2h-3.6A6.2 6.2 0 0 1 4 15z\" fill=\"currentColor\"/>\n   <path d=\"M9 12.2l1.6 1.6-1.6 1.6zM15 12.2l-1.6 1.6 1.6 1.6z\" fill=\"var(--velin)\"/>\n   <path d=\"M9.6 18h4.8\" stroke=\"var(--velin)\" stroke-width=\"1.6\" stroke-linecap=\"round\"/>","sceau":"<circle cx=\"12\" cy=\"8.6\" r=\"5.8\" fill=\"currentColor\"/><path d=\"M7.8 13.4L6 22l6-3 6 3-1.8-8.6z\" fill=\"currentColor\"/>\n   <path d=\"M9.6 8.6h4.8M12 6.2v4.8\" stroke=\"var(--velin)\" stroke-width=\"1.6\"/>","poteau":"<rect x=\"10.9\" y=\"3.4\" width=\"2.4\" height=\"18.2\" rx=\"1\" fill=\"currentColor\"/>\n   <path d=\"M10.9 5.4H2.6l2.6 2.6-2.6 2.6h8.3z\" fill=\"currentColor\"/><path d=\"M13.3 12.6h8.1l-2.6 2.6 2.6 2.6h-8.1z\" fill=\"currentColor\"/>","tente":"<path d=\"M12 2.6L1.8 21h20.4z\" fill=\"currentColor\"/><path d=\"M12 21v-8.6L8.2 21zM12 21v-8.6L15.8 21z\" fill=\"var(--velin)\"/>","roue_sable":"<circle cx=\"12\" cy=\"10\" r=\"6.8\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\"/>\n   <path d=\"M12 3.2v13.6M5.2 10h13.6M7.2 5.2l9.6 9.6M16.8 5.2l-9.6 9.6\" stroke=\"currentColor\" stroke-width=\"1.4\"/>\n   <path d=\"M1.4 16.6c4.4 2 6.6 2.4 10.6 2.4s6.2-.4 10.6-2.4V22H1.4z\" fill=\"currentColor\"/>","lien":"<path d=\"M2 12h7.4M14.6 12H22\" stroke=\"currentColor\" stroke-width=\"3.2\" stroke-linecap=\"round\"/>\n   <path d=\"M9.4 8.4l2 3.6-2 3.6M14.6 8.4l-2 3.6 2 3.6\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.1\" stroke-linecap=\"round\"/>","mule":"<path d=\"M4.6 9.4h11.2l3-4.2 1.6 5.2v5.2H4.6z\" fill=\"currentColor\"/>\n   <rect x=\"5.8\" y=\"15.2\" width=\"2.4\" height=\"6.2\" rx=\"1\" fill=\"currentColor\"/><rect x=\"15.4\" y=\"15.2\" width=\"2.4\" height=\"6.2\" rx=\"1\" fill=\"currentColor\"/>\n   <circle cx=\"18.6\" cy=\"7.4\" r=\"1.1\" fill=\"var(--velin)\"/>","nuee":"<circle cx=\"5.6\" cy=\"6.6\" r=\"1.7\" fill=\"currentColor\"/><circle cx=\"11.6\" cy=\"4.4\" r=\"1.7\" fill=\"currentColor\"/><circle cx=\"17.4\" cy=\"7.6\" r=\"1.7\" fill=\"currentColor\"/>\n   <circle cx=\"8.6\" cy=\"11.6\" r=\"1.7\" fill=\"currentColor\"/><circle cx=\"15\" cy=\"13.4\" r=\"1.7\" fill=\"currentColor\"/><circle cx=\"6.4\" cy=\"17\" r=\"1.7\" fill=\"currentColor\"/>\n   <circle cx=\"12.6\" cy=\"19\" r=\"1.7\" fill=\"currentColor\"/><circle cx=\"18.6\" cy=\"16.4\" r=\"1.7\" fill=\"currentColor\"/>","outre":"<path d=\"M8 3.4h8l.8 3.4c2 2 2 9.4-4.8 9.4S5.2 8.8 7.2 6.8z\" fill=\"currentColor\"/>\n   <path d=\"M12 18.4c-.6 1-1.4 1.8-1.4 2.6a1.4 1.4 0 0 0 2.8 0c0-.8-.8-1.6-1.4-2.6z\" fill=\"currentColor\"/>","goutte":"<path d=\"M12 2c4 6.2 6.2 8.4 6.2 12.2A6.2 6.2 0 0 1 5.8 14.2C5.8 10.4 8 8.2 12 2z\" fill=\"currentColor\"/>","mortier":"<path d=\"M3.6 11.4h16.8a8.4 8.4 0 0 1-8.4 8.4 8.4 8.4 0 0 1-8.4-8.4z\" fill=\"currentColor\"/>\n   <rect x=\"14.6\" y=\"2.4\" width=\"2.6\" height=\"9.6\" rx=\"1.3\" transform=\"rotate(18 15.9 7.2)\" fill=\"currentColor\"/>\n   <path d=\"M2.6 20.8h18.8\" stroke=\"currentColor\" stroke-width=\"2\"/>","ermite":"<circle cx=\"12\" cy=\"6\" r=\"3.4\" fill=\"currentColor\"/><path d=\"M4.8 21.4c0-5.2 3.2-8.4 7.2-8.4s7.2 3.2 7.2 8.4z\" fill=\"currentColor\"/>\n   <path d=\"M12 9.4v4.6\" stroke=\"var(--velin)\" stroke-width=\"1.6\"/>","chevre":"<ellipse cx=\"10.4\" cy=\"13.4\" rx=\"6.8\" ry=\"4.8\" fill=\"currentColor\"/><circle cx=\"17.6\" cy=\"9.4\" r=\"3.2\" fill=\"currentColor\"/>\n   <path d=\"M19.4 7l2.4-2.2M16.4 6.6l-1-2.6\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\"/>\n   <path d=\"M6 18.2v3.2M9.6 18.2v3.2M13.4 18.2v3.2\" stroke=\"currentColor\" stroke-width=\"2.1\" stroke-linecap=\"round\"/>","vol":"<path d=\"M1.8 12.4c4-5 7 .8 10.2-2.2s6-3 10 1c-4 1-6 4-10.2 4s-6-3.8-10-2.8z\" fill=\"currentColor\"/>","enfant":"<circle cx=\"12\" cy=\"5.2\" r=\"3.1\" fill=\"currentColor\"/>\n   <path d=\"M12 8.6v7.4M12 10.6l-3.6 2.8M12 10.6l3.6 2.8M12 16l-2.8 5.4M12 16l2.8 5.4\"\n     stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" fill=\"none\"/>","pelerin":"<circle cx=\"9.4\" cy=\"5.4\" r=\"3.2\" fill=\"currentColor\"/><path d=\"M9.4 9c-3 0-4.2 3-4.2 6.2V21.4h8.4V15.2C13.6 12 12.4 9 9.4 9z\" fill=\"currentColor\"/>\n   <path d=\"M18.4 2v20\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\"/>","charrette":"<path d=\"M2.6 15h12.8V9.4H2.6z\" fill=\"currentColor\"/><circle cx=\"6.4\" cy=\"18.8\" r=\"2.6\" fill=\"currentColor\"/>\n   <circle cx=\"18.6\" cy=\"16.6\" r=\"3.6\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\"/>\n   <path d=\"M18.6 13v7.2M15 16.6h7.2\" stroke=\"currentColor\" stroke-width=\"1.5\"/>","puits":"<path d=\"M4.6 11h14.8v10.4H4.6z\" fill=\"currentColor\"/><path d=\"M3.4 11L12 5.6l8.6 5.4\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.1\"/>\n   <rect x=\"9.8\" y=\"14\" width=\"4.4\" height=\"4.4\" fill=\"var(--velin)\"/><path d=\"M12 5.6V2.4\" stroke=\"currentColor\" stroke-width=\"2.1\"/>","bouclier":"<path d=\"M12 2l9 3.2v6.6c0 5.2-4.2 8.4-9 10.2-4.8-1.8-9-5-9-10.2V5.2z\" fill=\"currentColor\"/>\n   <path d=\"M8.4 8.4l7.2 7.2M15.6 8.4l-7.2 7.2\" stroke=\"var(--velin)\" stroke-width=\"2.1\"/>","coffre":"<path d=\"M2.6 10h18.8v11.4H2.6z\" fill=\"currentColor\"/><path d=\"M2.6 10a9.4 5.4 0 0 1 18.8 0z\" fill=\"currentColor\"/>\n   <rect x=\"10.2\" y=\"8.6\" width=\"3.6\" height=\"5.6\" rx=\"1\" fill=\"var(--velin)\"/>","cairn":"<ellipse cx=\"12\" cy=\"19.8\" rx=\"7.2\" ry=\"2.4\" fill=\"currentColor\"/><ellipse cx=\"12\" cy=\"15.4\" rx=\"5.6\" ry=\"2.2\" fill=\"currentColor\"/>\n   <ellipse cx=\"12\" cy=\"11.4\" rx=\"4.2\" ry=\"2\" fill=\"currentColor\"/><ellipse cx=\"12\" cy=\"7.8\" rx=\"2.8\" ry=\"1.8\" fill=\"currentColor\"/>","amphore":"<path d=\"M9 2.6h6v2.2l-1 2.2c2.2 1.1 3.2 3.2 3.2 6.2v3.6H6.8v-3.6c0-3 1-5.1 3.2-6.2l-1-2.2z\" fill=\"currentColor\"/>\n   <path d=\"M1.4 17.2h21.2v4.4H1.4z\" fill=\"currentColor\" opacity=\".55\"/>","sacoche":"<path d=\"M4.8 7.6h14.4l1.2 13.8H3.6z\" fill=\"currentColor\"/>\n   <path d=\"M8.4 7.6V5.6a3.6 3.6 0 0 1 7.2 0v2\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.1\"/>\n   <rect x=\"9.6\" y=\"12\" width=\"4.8\" height=\"4.4\" fill=\"var(--velin)\"/>","mur":"<path d=\"M2.6 2.6h18.8v18.8H2.6z\" fill=\"currentColor\"/>\n   <path d=\"M2.6 7.8h18.8M2.6 12.6h18.8M2.6 17.4h18.8M8 2.6v5.2M14.4 7.8v4.8M8 12.6v4.8M14.4 17.4v4\" stroke=\"var(--velin)\" stroke-width=\"1.4\"/>\n   <path d=\"M9 21.4v-6.8a3 3 0 0 1 6 0v6.8z\" fill=\"var(--velin)\"/>","tour":"<path d=\"M6 21.4V5h2.8V2.4h2.2V5h2.2V2.4h2.2V5H18v6.2l-4 4v6.2z\" fill=\"currentColor\"/>","temple":"<path d=\"M1.8 8L12 2l10.2 6z\" fill=\"currentColor\"/><rect x=\"3.8\" y=\"9\" width=\"2.8\" height=\"9\" fill=\"currentColor\"/>\n   <rect x=\"10.6\" y=\"9\" width=\"2.8\" height=\"9\" fill=\"currentColor\"/><rect x=\"17.4\" y=\"9\" width=\"2.8\" height=\"9\" fill=\"currentColor\"/>\n   <rect x=\"1.8\" y=\"18.4\" width=\"20.4\" height=\"3\" fill=\"currentColor\"/>","escaliers":"<path d=\"M1.8 21.4V17h4.2v-4.2h4.2V8.6h4.2V4.4h7.8v17z\" fill=\"currentColor\"/>","colosse":"<path d=\"M5.8 21.4V13.4a6.2 6.2 0 0 1 12.4 0v8z\" fill=\"currentColor\"/>\n   <circle cx=\"9.4\" cy=\"14.2\" r=\"1.4\" fill=\"var(--velin)\"/><circle cx=\"14.6\" cy=\"14.2\" r=\"1.4\" fill=\"var(--velin)\"/>\n   <path d=\"M7.8 9.2l1.2-4.4 3 2.2 3-2.2 1.2 4.4z\" fill=\"currentColor\"/><path d=\"M3.6 21.4h16.8\" stroke=\"currentColor\" stroke-width=\"2.1\"/>","des":"<rect x=\"2.2\" y=\"9\" width=\"10.4\" height=\"10.4\" rx=\"2.2\" fill=\"currentColor\"/><rect x=\"12.4\" y=\"3.6\" width=\"9.4\" height=\"9.4\" rx=\"2.2\" fill=\"currentColor\"/>\n   <circle cx=\"5.4\" cy=\"12\" r=\"1.15\" fill=\"var(--velin)\"/><circle cx=\"9.4\" cy=\"16.4\" r=\"1.15\" fill=\"var(--velin)\"/>\n   <circle cx=\"7.4\" cy=\"14.2\" r=\"1.15\" fill=\"var(--velin)\"/><circle cx=\"17.1\" cy=\"8.3\" r=\"1.15\" fill=\"var(--velin)\"/>","lutte":"<circle cx=\"6.8\" cy=\"5.6\" r=\"3\" fill=\"currentColor\"/><circle cx=\"17.2\" cy=\"5.6\" r=\"3\" fill=\"currentColor\"/>\n   <path d=\"M6.8 8.8c-2.2 0-3.2 2.2-3.2 5.2v7.4h6.6v-7.4M17.2 8.8c2.2 0 3.2 2.2 3.2 5.2v7.4h-6.6v-7.4\" fill=\"currentColor\"/>\n   <path d=\"M8.6 13.4h6.8\" stroke=\"currentColor\" stroke-width=\"2.6\" stroke-linecap=\"round\"/>","cible":"<circle cx=\"11\" cy=\"13\" r=\"8.6\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\"/>\n   <circle cx=\"11\" cy=\"13\" r=\"4.8\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\"/>\n   <circle cx=\"11\" cy=\"13\" r=\"1.7\" fill=\"currentColor\"/><path d=\"M11 13l9.4-9.4M17.6 2.6h3.4v3.4\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\"/>","course":"<circle cx=\"15.4\" cy=\"14.6\" r=\"5.4\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\"/>\n   <circle cx=\"15.4\" cy=\"14.6\" r=\"1.5\" fill=\"currentColor\"/>\n   <path d=\"M2.2 7.6h8.6M2 11.8h6.6M3.6 16h4.2\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\"/>","enigme":"<path d=\"M7.8 8a4.2 4.2 0 1 1 5.4 4c-1.1.4-1.6 1.3-1.6 2.4v1.2\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.7\" stroke-linecap=\"round\"/>\n   <circle cx=\"11.6\" cy=\"19.4\" r=\"1.9\" fill=\"currentColor\"/>","oiseau":"<ellipse cx=\"10.4\" cy=\"13\" rx=\"6\" ry=\"4.6\" fill=\"currentColor\"/><circle cx=\"16.6\" cy=\"9.4\" r=\"3\" fill=\"currentColor\"/>\n   <path d=\"M19.2 8l3.2-1.4-2.8-1.5z\" fill=\"currentColor\"/><circle cx=\"17.4\" cy=\"8.8\" r=\".85\" fill=\"var(--velin)\"/>\n   <path d=\"M5.6 15.4L2 19.4M7.6 16.6L4.6 21\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\"/>","etoile":"<path d=\"M17 2.6l1.5 3.9 3.9 1.5-3.9 1.5L17 13.4l-1.5-3.9L11.6 8l3.9-1.5z\" fill=\"currentColor\"/>\n   <path d=\"M11.4 12.4L3.4 20.4M9.4 7.6L5.2 10.8M14.6 16.4l-3.2 4.4\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\"/>","borne":"<path d=\"M7.8 21.4V7.2a4.2 4.2 0 0 1 8.4 0v14.2z\" fill=\"currentColor\"/>\n   <path d=\"M9.8 10.4h4.4M9.8 13.4h4.4M9.8 16.4h3.2\" stroke=\"var(--velin)\" stroke-width=\"1.5\"/>\n   <path d=\"M4.6 21.4h14.8\" stroke=\"currentColor\" stroke-width=\"2.1\"/>","notes":"<path d=\"M8.8 18V4.8l10.4-2.2V15\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\"/>\n   <circle cx=\"6.2\" cy=\"18.4\" r=\"2.9\" fill=\"currentColor\"/><circle cx=\"16.6\" cy=\"16.2\" r=\"2.9\" fill=\"currentColor\"/>"},"natures":{"danger":"#B84636","meteo":"#7C8AA0","tracas":"#9A7343","rencontre":"#6E9B6A","halte":"#5CA79E","trouvaille":"#C6A24C","ruines":"#9A9488","pari":"#A084C0","flanerie":"#7FA8C4","charite":"#C08A6A"}}
+</script>
 <script>
 'use strict';
-/* Le service worker met les cinq ateliers en cache dès la première visite : une
+const REF=JSON.parse(document.getElementById('reference').textContent);
+
+/* ═══════════════ le codex ═══════════════
+   Tout ce que les ateliers ont écrit, rangé par catégorie, avec de quoi rouvrir
+   chaque élément là où il a été fait. Le hub ne connaît la forme d'aucun
+   atelier : depotCodex() lui rend une liste plate, toujours la même. */
+const $c=s=>document.querySelector(s);
+let cherche='';
+
+function jetonDe(e){
+  if(e.svg)return `<svg viewBox="0 0 24 24">${e.svg}</svg>`;
+  if(e.glyphe)return svgGlypheDe(e.glyphe,'currentColor')||rond();
+  return rond();
+}
+const rond=()=>`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"`+
+  ` fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
+
+function rendreCodex(){
+  const cats=depotCodex();
+  const q=cherche.trim().toLowerCase();
+  const garde=e=>!q||((e.nom+' '+e.cle+' '+e.detail).toLowerCase().indexOf(q)>=0);
+  const total=cats.reduce((n,c)=>n+c.entrees.length,0);
+  const boite=$c('#codex');
+
+  if(!total){
+    boite.innerHTML=`<p class="bloc" id="codex-vide">Rien encore. Ce que vous
+      créerez dans les ateliers viendra se ranger ici, par catégorie —
+      et un bouton rouvrira chaque élément dans l'outil qui l'a fait.</p>`;
+    return;
+  }
+
+  const pleines=cats.filter(c=>c.entrees.length);
+  const vus=pleines.reduce((n,c)=>n+c.entrees.filter(garde).length,0);
+  let h=`<input id="codex-cherche" placeholder="Chercher dans le codex…"
+    value="${ech(cherche)}" autocomplete="off" spellcheck="false">`;
+  if(q&&!vus)h+=`<p id="codex-rien">Rien de ce nom-là dans le codex.</p>`;
+
+  h+=pleines.map(c=>{
+    const gardees=c.entrees.filter(garde);
+    if(q&&!gardees.length)return '';
+    const n=c.entrees.length;
+    /* on déplie tout quand on cherche : sinon le résultat resterait caché */
+    const ouvert=q||n<=12?' open':'';
+    return `<details class="cat"${ouvert} data-cat="${ech(c.nom)}">
+      <summary><span class="chevron">▶</span>${ech(c.titre)}
+        <span class="compte">${n} ${ech(n>1?c.des:c.un)}</span>
+      </summary>
+      <div class="entrees">`+
+      (gardees.length?gardees.map(e=>`
+        <div class="entree" style="--teinte:${ech(e.teinte)}">
+          <span class="jeton">${jetonDe(e)}</span>
+          <span class="txt">
+            <b>${ech(e.nom||e.cle||'sans nom')}</b>
+            <small>${ech(e.detail)}${e.detail&&e.manque?' · ':''}`+
+            `${e.manque?`<span class="manque">${ech(e.manque)}</span>`:''}</small>
+          </span>
+          <a class="ouvrir" href="${ech(e.lien)}">Ouvrir</a>
+        </div>`).join('')
+        :`<p class="rien">Rien de ce nom-là ici.</p>`)+
+      `</div></details>`;
+  }).join('');
+
+  boite.innerHTML=h;
+}
+
+/* la recherche : on ne refait que le codex, et l'on rend le focus au champ */
+document.addEventListener('input',e=>{
+  if(e.target.id!=='codex-cherche')return;
+  cherche=e.target.value;
+  const p=e.target.selectionStart;
+  rendreCodex();
+  const c=$c('#codex-cherche');
+  if(c){c.focus();c.setSelectionRange(p,p);}
+});
+/* un atelier ouvert dans un autre onglet vient d'écrire : le codex suit */
+suivreDepot(rendreCodex);
+addEventListener('pageshow',rendreCodex);
+rendreCodex();
+
+/* Le service worker met les ateliers en cache dès la première visite : une
    fois la page ouverte avec du réseau, tout reste utilisable sans. */
 if('serviceWorker' in navigator){
   addEventListener('load',()=>{

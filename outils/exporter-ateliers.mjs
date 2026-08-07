@@ -34,23 +34,30 @@ const A_COPIER = [
   'index.html',                      /* le hub */
   'manifest.webmanifest', 'sw.js', 'icone.png',   /* ce qui le rend installable */
   'atelier-carte.html', 'atelier-personnages.html', 'atelier-objets.html',
-  'atelier-missions.html', 'atelier-evenements.html',
+  'atelier-missions.html', 'atelier-evenements.html', 'atelier-icones.html',
   'TUTORIEL-EVENEMENTS.md', 'TUTORIEL-PERSONNAGES.md',
-  'TUTORIEL-OBJETS.md', 'TUTORIEL-MISSIONS.md'
+  'TUTORIEL-OBJETS.md', 'TUTORIEL-MISSIONS.md', 'TUTORIEL-ICONES.md'
 ];
 
 /* Un atelier qui n'a pas reçu sa machinerie serait vide sur le dépôt d'en face :
    on refuse de publier avant que construire.mjs soit passé. */
 const manquent = [];
-/* les quatre ateliers d'écriture reçoivent la machinerie et un catalogue ;
-   l'atelier de carte n'a besoin ni de l'une ni de l'autre, et le hub non plus */
-A_COPIER.filter(n => /^atelier-(personnages|objets|missions|evenements)\.html$/.test(n))
+/* les cinq ateliers d'écriture reçoivent la machinerie et un catalogue ;
+   l'atelier de carte n'a besoin ni de l'une ni de l'autre */
+A_COPIER.filter(n => /^atelier-(personnages|objets|missions|evenements|icones)\.html$/.test(n))
   .forEach(n => {
     const h = readFileSync(join(ICI, n), 'utf8');
     if (!/function racineEst/.test(h)) manquent.push(n + ' (sans machinerie)');
     if (/<script id="reference" type="application\/json">\s*\{\s*"vocabulaire"\s*:\s*\{\}/.test(h))
       manquent.push(n + ' (catalogue vide)');
   });
+/* le hub, lui, porte le codex : sans la machinerie il ne montrerait rien */
+{
+  const h = readFileSync(join(ICI, 'index.html'), 'utf8');
+  if (!/function depotCodex/.test(h)) manquent.push('index.html (sans machinerie)');
+  if (/<script id="reference" type="application\/json">\s*\{\s*"glyphes"\s*:\s*\{\}/.test(h))
+    manquent.push('index.html (sans les dessins)');
+}
 if (manquent.length) {
   console.error('Relancez d\'abord « node outils/construire.mjs » : ' + manquent.join(', '));
   process.exit(1);

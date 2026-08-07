@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Atelier d'événements — Caravane</title>
+<title>Atelier d'icônes — Caravane</title>
 <style>
 :root{
   --fond:#1C1A17; --fond-clair:#26231F; --bord:#3A352E;
   --encre:#E8E1D4; --encre-pale:#9C9484;
-  --or:#C9A227; --minium:#C24A32; --vert:#6E9B6A; --azur:#4A7BC8; --mauve:#A084C0;
+  --or:#C9A227; --minium:#C24A32; --vert:#6E9B6A; --azur:#4A7BC8;
   --r:3px;
 }
 *{margin:0;padding:0;box-sizing:border-box;font:inherit;color:inherit;background:none;border:none}
@@ -24,13 +24,13 @@ input,select,textarea{background:var(--fond);border:1px solid var(--bord);border
   padding:5px 7px;color:var(--encre);width:100%;font-family:inherit}
 input:focus,select:focus,textarea:focus{outline:1px solid var(--or);border-color:var(--or)}
 select{cursor:pointer}
-option,optgroup{background:var(--fond-clair)}
-textarea{resize:vertical;line-height:1.5}
+option{background:var(--fond-clair)}
+textarea{resize:vertical;line-height:1.45;font-family:ui-monospace,monospace;font-size:12px}
 input[type=checkbox]{width:auto;accent-color:var(--or)}
+input[type=range]{padding:0;accent-color:var(--or)}
 ::-webkit-scrollbar{width:10px;height:10px}
 ::-webkit-scrollbar-thumb{background:#3A352E;border-radius:5px}
 
-/* ── barre ── */
 #barre{flex:none;display:flex;align-items:center;gap:6px;padding:7px 10px;
   background:var(--fond-clair);border-bottom:1px solid var(--bord);flex-wrap:wrap}
 #barre h1{font-size:15px;font-weight:600;letter-spacing:.02em;margin-right:6px;white-space:nowrap}
@@ -41,29 +41,29 @@ input[type=checkbox]{width:auto;accent-color:var(--or)}
 .outil:hover{border-color:var(--encre-pale)}
 .outil.fort{background:var(--or);color:#1C1A17;border-color:var(--or);font-weight:600}
 .outil.danger{color:var(--minium);border-color:#5A2A20}
-.outil:disabled{opacity:.4;cursor:default}
+.outil.petit{padding:3px 8px;font-size:12px}
 .sep{width:1px;align-self:stretch;background:var(--bord);margin:0 3px}
 .pousse{margin-left:auto}
 
-/* ── scène ── */
 #scene{flex:1;min-height:0;display:flex}
-#recueil{flex:none;width:224px;background:var(--fond-clair);border-right:1px solid var(--bord);
+#coffret{flex:none;width:230px;background:var(--fond-clair);border-right:1px solid var(--bord);
   display:flex;flex-direction:column;min-height:0}
-#recueil>input{margin:8px;width:auto;flex:none}
+#coffret>input{margin:8px;width:auto;flex:none}
 #liste{flex:1;overflow-y:auto;padding:0 8px 8px}
-.entree{display:block;width:100%;text-align:left;padding:6px 8px;border:1px solid transparent;
-  border-radius:var(--r);margin-bottom:3px;font-size:13px;line-height:1.3}
+.groupe{font-size:11px;font-variant:small-caps;letter-spacing:.09em;color:var(--or);
+  padding:9px 4px 4px}
+.entree{display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:6px 8px;
+  border:1px solid transparent;border-radius:var(--r);margin-bottom:3px;font-size:13px}
 .entree:hover{background:#2E2A22}
 .entree.actif{background:#2E2A22;border-color:var(--or)}
-.entree b{display:block;font-weight:600}
-.entree span{font-size:11px;color:var(--encre-pale)}
-.entree .puce{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:5px;
-  vertical-align:middle}
-.entree.faux b{color:var(--minium)}
+.entree .jeton{width:24px;height:24px;flex:none}
+.entree .jeton svg{width:100%;height:100%;display:block}
+.entree .txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.entree small{display:block;font-size:10.5px;color:var(--encre-pale)}
 
 #feuille{flex:1;min-width:0;overflow-y:auto;padding:14px 16px 60px;display:flex;
   flex-direction:column;gap:13px}
-#cote{flex:none;width:352px;background:var(--fond-clair);border-left:1px solid var(--bord);
+#cote{flex:none;width:320px;background:var(--fond-clair);border-left:1px solid var(--bord);
   display:flex;flex-direction:column;min-height:0}
 #onglets{flex:none;display:flex;border-bottom:1px solid var(--bord)}
 #onglets button{flex:1;padding:8px 4px;font-size:12px;border-bottom:2px solid transparent;
@@ -71,189 +71,112 @@ input[type=checkbox]{width:auto;accent-color:var(--or)}
 #onglets button.actif{color:var(--or);border-bottom-color:var(--or)}
 #volet{flex:1;overflow-y:auto;padding:12px}
 
-/* ── blocs de formulaire ── */
 .bloc{border:1px solid var(--bord);border-radius:var(--r);background:var(--fond-clair)}
 .bloc>h2{font-size:12px;font-variant:small-caps;letter-spacing:.09em;color:var(--or);
   padding:7px 10px;border-bottom:1px solid var(--bord);display:flex;align-items:center;gap:8px}
 .bloc>h2 .pousse{margin-left:auto}
 .bloc>h2 button{font-size:11px;padding:2px 7px;border:1px solid var(--bord);border-radius:var(--r);
   color:var(--encre-pale)}
-.bloc>h2 button:hover{color:var(--encre);border-color:var(--encre-pale)}
 .bloc>.corps{padding:10px;display:flex;flex-direction:column;gap:9px}
-.champ{display:grid;grid-template-columns:132px 1fr;gap:8px;align-items:start}
-.champ>label{font-size:12.5px;color:var(--encre-pale);padding-top:6px;line-height:1.3}
+.champ{display:grid;grid-template-columns:120px 1fr;gap:8px;align-items:center}
+.champ>label{font-size:12.5px;color:var(--encre-pale);line-height:1.3}
 .champ.large{grid-template-columns:1fr}
-.champ.large>label{padding-top:0}
 .aide{font-size:11.5px;color:var(--encre-pale);line-height:1.45;margin-top:3px}
-.aide b{color:var(--encre);font-weight:600}
+.aide b{color:var(--encre)}
 .rangee{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .rangee>*{flex:1;min-width:0}
 .rangee>.fixe{flex:none}
 .mot{font-size:12px;color:var(--encre-pale);flex:none}
-.chips{display:flex;flex-wrap:wrap;gap:4px}
-.chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:3px 8px;
-  border:1px solid var(--bord);border-radius:11px;cursor:pointer}
-.chip.actif{border-color:var(--or);background:#2E2A22;color:var(--or)}
-.chip input{display:none}
 .vide{font-size:12.5px;color:var(--encre-pale);font-style:italic}
 
-/* ── choix ── */
-.choix-bloc{border:1px solid var(--bord);border-left:3px solid var(--azur);border-radius:var(--r);
-  background:var(--fond-clair)}
-.choix-bloc>h3{font-size:12.5px;padding:7px 10px;border-bottom:1px solid var(--bord);
-  display:flex;align-items:center;gap:7px}
-.choix-bloc>h3 b{color:var(--or);font-variant:small-caps;letter-spacing:.07em}
-.choix-bloc>h3 .titre{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  color:var(--encre-pale)}
-.choix-bloc>h3 button{font-size:11px;padding:2px 6px;border:1px solid var(--bord);
+/* ── la planche à dessin ── */
+#planche{display:flex;justify-content:center;padding:8px}
+#toile{width:min(340px,72vw);aspect-ratio:1;background:
+  repeating-conic-gradient(#211E1A 0% 25%,#1A1815 0% 50%) 50%/16px 16px;
+  border:1px solid var(--bord);border-radius:var(--r);touch-action:none;
+  position:relative}
+#toile svg{width:100%;height:100%;display:block}
+.grille-fond line{stroke:#ffffff12;stroke-width:.06}
+.grille-fond line.fort{stroke:#ffffff20;stroke-width:.1}
+.forme{cursor:move}
+.forme.choisi{outline:none}
+.cadre{fill:none;stroke:var(--or);stroke-width:.22;stroke-dasharray:.5 .35}
+.poignee{fill:var(--or);stroke:#1C1A17;stroke-width:.12;cursor:nwse-resize}
+
+.formes{display:flex;flex-wrap:wrap;gap:5px}
+.formes button{flex:1;min-width:74px;padding:8px 6px;border:1px solid var(--bord);
+  border-radius:var(--r);font-size:12.5px;background:var(--fond)}
+.formes button:hover{border-color:var(--or);color:var(--or)}
+.pile{display:flex;flex-direction:column;gap:6px}
+.couche{display:flex;align-items:center;gap:7px;padding:6px 8px;border:1px solid var(--bord);
+  border-radius:var(--r);background:var(--fond);font-size:12.5px}
+.couche.choisi{border-color:var(--or);background:#2E2A22}
+.couche .nom{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  cursor:pointer}
+.couche button{font-size:11px;padding:2px 6px;border:1px solid var(--bord);
   border-radius:var(--r);color:var(--encre-pale)}
-.choix-bloc>h3 button:hover{color:var(--encre);border-color:var(--encre-pale)}
-.issue{border:1px solid var(--bord);border-radius:var(--r);padding:9px;display:flex;
-  flex-direction:column;gap:8px}
-.issue>h4{font-size:11.5px;font-variant:small-caps;letter-spacing:.08em;color:var(--encre-pale)}
-.issue.bon>h4{color:var(--vert)}
-.issue.mauvais>h4{color:var(--minium)}
+.couche button:hover{color:var(--encre);border-color:var(--encre-pale)}
 
-/* ── effets ── */
-.effet{border:1px solid var(--bord);border-radius:var(--r);background:var(--fond)}
-.effet>header{display:flex;align-items:center;gap:7px;padding:5px 8px;font-size:12.5px;
-  border-bottom:1px solid var(--bord)}
-.effet>header b{flex:1;min-width:0;color:var(--encre)}
-.effet>header button{font-size:11px;color:var(--encre-pale);padding:1px 5px}
-.effet>header button:hover{color:var(--minium)}
-.effet>.corps{padding:8px;display:flex;flex-direction:column;gap:7px}
-.effet .explique{font-size:11.5px;color:var(--encre-pale);line-height:1.45}
-.pile{display:flex;flex-direction:column;gap:7px}
-.ajout{font-size:12px;padding:5px 9px;border:1px dashed var(--bord);border-radius:var(--r);
-  color:var(--encre-pale);align-self:flex-start}
-.ajout:hover{border-color:var(--or);color:var(--or)}
+.tailles{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+.tailles figure{text-align:center}
+.tailles figure div{background:var(--fond-clair);border:1px solid var(--bord);
+  border-radius:var(--r);padding:5px}
+.tailles svg{display:block}
+.tailles figcaption{font-size:10.5px;color:var(--encre-pale);margin-top:4px}
 
-/* ── valeur ── */
-.valeur{display:flex;flex-direction:column;gap:5px}
-.valeur .apercu-val{font-size:11.5px;color:var(--or);font-variant-numeric:tabular-nums}
-.grille4{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
-.grille4 label{font-size:11px;color:var(--encre-pale);display:block;margin-bottom:2px}
-
-/* ── glyphes ── */
-.glyphes{display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:4px;
-  max-height:168px;overflow-y:auto;padding:4px;border:1px solid var(--bord);border-radius:var(--r)}
-.glyphes button{aspect-ratio:1;border:1px solid transparent;border-radius:var(--r);padding:4px}
-.glyphes button:hover{border-color:var(--encre-pale)}
-.glyphes button.actif{border-color:var(--or);background:#2E2A22}
-.glyphes svg{width:100%;height:100%;display:block}
-
-/* ── aperçu, dans les couleurs du jeu ── */
-.apercu{--velin:#E3D6B2;--velin-clair:#F0E7CE;--velin-ombre:#C6B58C;--filet:#2B2116;
-  --gencre:#2B2116;--gencre-pale:#6C5C46;--gminium:#A32C1C;--gvert:#4C6A44;--gor:#96751F;
-  --display:'Iowan Old Style','Hoefler Text','Palatino Linotype',Palatino,Georgia,serif;
-  background:var(--velin-clair);color:var(--gencre);border:1px solid var(--filet);
-  border-radius:var(--r);padding:13px;font-family:var(--display)}
-.apercu .tete{display:flex;align-items:center;gap:11px;margin-bottom:9px}
-.apercu .ico{width:44px;height:44px;flex:none}
-.apercu .ico svg{width:100%;height:100%;display:block}
-.apercu .oeil{font-size:12px;font-variant:small-caps;letter-spacing:.13em;color:var(--gencre-pale)}
-.apercu h3{font-size:20px;font-weight:600;line-height:1.15}
-.apercu .recit{font-size:15px;line-height:1.5;margin-bottom:13px}
-.apercu .recit::first-letter{color:var(--gminium);font-size:1.05em}
-.apercu .bouton{width:100%;text-align:left;background:var(--velin);border:1px solid var(--filet);
-  border-radius:var(--r);padding:8px 10px;margin-bottom:7px;box-shadow:2px 2px 0 #2B211630}
-.apercu .bouton:hover{background:#EAE0BE}
-.apercu .bouton strong{display:block;font-size:16px;font-weight:600}
-.apercu .bouton span{display:block;font-size:12.5px;color:var(--gencre-pale);font-style:italic;
-  margin-top:1px}
-.apercu .bouton.mauvais strong{color:var(--gminium)}
-.apercu .bouton:disabled{opacity:.45;box-shadow:none;cursor:default}
-.apercu .marque{font-size:11px;font-variant:small-caps;letter-spacing:.07em;color:var(--gencre-pale);
-  font-family:system-ui,sans-serif;margin-left:7px}
-.apercu .de-bloc{display:flex;align-items:center;gap:11px;padding:9px 10px;background:var(--velin);
-  border:1px solid var(--filet);border-radius:var(--r);margin-bottom:11px}
-.apercu .de{width:52px;height:52px;flex:none;position:relative}
-.apercu .de-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-  font-size:21px;font-weight:600}
-.apercu .de-detail{flex:1;font-size:12px;color:var(--gencre-pale);line-height:1.4}
-.apercu .verdict{display:block;font-size:16px;font-weight:600}
-.apercu .r-reussi .verdict,.apercu .r-reussi .de-num{color:var(--gvert)}
-.apercu .r-rate .verdict,.apercu .r-rate .de-num{color:var(--gminium)}
-.apercu .r-crit .verdict,.apercu .r-crit .de-num{color:var(--gor)}
-.apercu .sortie{font-size:14.5px;line-height:1.5;padding:10px 11px;background:var(--velin);
-  border-left:3px solid var(--filet);border-radius:0 var(--r) var(--r) 0}
-.apercu .rejouer{margin-top:9px;font-size:12px;padding:5px 10px;border:1px solid var(--filet);
-  border-radius:var(--r);font-family:system-ui,sans-serif}
-
-/* ── contrôles ── */
 .avert{font-size:12.5px;padding:7px 9px;border-left:2px solid var(--minium);background:#2A211E;
   margin-bottom:6px;border-radius:0 var(--r) var(--r) 0;line-height:1.45}
 .avert.doux{border-color:var(--or);background:#2A2620}
 .avert.bien{border-color:var(--vert);background:#212A20}
 .avert b{color:var(--encre)}
-.avert em{font-style:normal;color:var(--encre-pale)}
 h4.section{font-size:11.5px;font-variant:small-caps;letter-spacing:.09em;color:var(--or);
   margin:12px 0 6px}
 h4.section:first-child{margin-top:0}
-.mesures{display:grid;grid-template-columns:1fr auto;gap:3px 10px;font-size:12.5px;
-  font-variant-numeric:tabular-nums}
+.mesures{display:grid;grid-template-columns:1fr auto;gap:3px 10px;font-size:12.5px}
 .mesures b{text-align:right}
-.barre-part{height:6px;background:#332F28;border-radius:3px;overflow:hidden;margin:2px 0 7px}
-.barre-part i{display:block;height:100%}
-.tableau{width:100%;font-size:12px;border-collapse:collapse}
-.tableau td,.tableau th{padding:3px 5px;border-bottom:1px solid var(--bord);text-align:left}
-.tableau th{color:var(--encre-pale);font-weight:400;font-size:11px}
-.tableau td.n{text-align:right;font-variant-numeric:tabular-nums}
 
 #etat{flex:none;display:flex;gap:14px;padding:5px 11px;background:var(--fond-clair);
-  border-top:1px solid var(--bord);font-size:12px;color:var(--encre-pale);
-  font-variant-numeric:tabular-nums;flex-wrap:wrap}
+  border-top:1px solid var(--bord);font-size:12px;color:var(--encre-pale);flex-wrap:wrap}
 #etat b{color:var(--encre);font-weight:600}
-#etat .rouge{color:var(--minium)}
 #toile-depot{position:fixed;inset:0;background:#1C1A17E0;display:none;align-items:center;
   justify-content:center;font-size:17px;color:var(--or);z-index:9;pointer-events:none}
 #toile-depot.on{display:flex}
-@media (max-width:1100px){
-  #cote{width:300px}
-  #recueil{width:186px}
-}
-@media (max-width:860px){
-  #scene{flex-direction:column}
-  #recueil{width:auto;max-height:150px;border-right:none;border-bottom:1px solid var(--bord)}
-  #cote{width:auto;max-height:44%;border-left:none;border-top:1px solid var(--bord)}
-}
+@media (max-width:1100px){#cote{width:290px}#coffret{width:186px}}
 </style>
 </head>
 <body>
 
 <div id="barre">
-  <h1>Atelier d'<b>événements</b></h1>
-  <button class="outil" id="b-nouveau">+ Événement</button>
+  <h1>Atelier d'<b>icônes</b></h1>
+  <button class="outil" id="b-nouveau">+ Icône</button>
   <button class="outil" id="b-dupliquer">Dupliquer</button>
   <button class="outil danger" id="b-supprimer">Supprimer</button>
   <span class="sep"></span>
-  <button class="outil" id="b-ouvrir">Ouvrir un recueil…</button>
-  <button class="outil" id="b-monde">Charger monde.json…</button>
-  <button class="outil" id="b-exemples">Exemples</button>
+  <button class="outil" id="b-ouvrir">Ouvrir un jeu d'icônes…</button>
+  <button class="outil" id="b-partir">Partir d'une icône du jeu</button>
   <span class="pousse"></span>
-  <a class="outil" href="TUTORIEL-EVENEMENTS.md" target="_blank" rel="noopener">Mode d'emploi</a>
+  <a class="outil" href="TUTORIEL-ICONES.md" target="_blank" rel="noopener">Mode d'emploi</a>
   <button class="outil fort" id="b-exporter">Exporter</button>
 </div>
 
 <div id="scene">
-  <aside id="recueil">
+  <aside id="coffret">
     <input id="filtre" placeholder="Filtrer…" autocomplete="off" spellcheck="false">
     <div id="liste"></div>
   </aside>
   <main id="feuille"></main>
   <aside id="cote">
     <div id="onglets">
-      <button data-onglet="apercu" class="actif">Aperçu</button>
-      <button data-onglet="controles">Contrôles</button>
-      <button data-onglet="tirage">Tirage à blanc</button>
-      <button data-onglet="convoi">Convoi</button>
+      <button data-onglet="planche" class="actif">La planche</button>
+      <button data-onglet="tailles">Aux vraies tailles</button>
+      <button data-onglet="source">La source</button>
     </div>
     <div id="volet"></div>
   </aside>
 </div>
 
 <div id="etat"></div>
-<div id="toile-depot">Déposez un <b>recueil</b> ou un <b>monde.json</b></div>
+<div id="toile-depot">Déposez un <b>icones.json</b></div>
 <input type="file" id="fichier" accept=".json,application/json" hidden>
 
 <script id="reference" type="application/json">
@@ -962,1002 +885,466 @@ function ecouterSaisie(apres){
 
 <script>
 'use strict';
-/* ═══════════════ le catalogue, injecté par outils/construire.mjs ═══════════════
-   Tout ce que cet outil sait dire vient de data/vocabulaire-evenements.json : les
-   effets, leurs réglages, leurs explications, les interrogations, les formes de
-   choix. Rien n'est écrit en dur ici. Ajouter une entrée au catalogue et relancer
-   « node outils/construire.mjs » suffit à la faire apparaître dans les formulaires,
-   dans les contrôles et dans le mode d'emploi. */
+/* ═══════════════════════════════════════════════════════════════════════════
+   L'ATELIER D'ICÔNES
+   ───────────────────────────────────────────────────────────────────────────
+   Les quarante-neuf dessins livrés avec le jeu sont tous faits de la même
+   matière : quelques formes géométriques simples, pleines ou au trait, sur une
+   grille de vingt-quatre. Cet atelier fabrique les suivantes de la même façon —
+   on empile des formes, on les déplace, on les redimensionne.
+
+   Ce n'est pas un éditeur vectoriel, et c'est délibéré : on dessine ici des
+   pictogrammes de seize pixels de côté, pas des illustrations. Six formes
+   suffisent, et elles se manipulent au doigt.
+
+   Pour ce qui ne rentre pas dans ces six formes, « La source » accepte du SVG
+   collé depuis n'importe quel éditeur.
+
+   Ce qu'on écrit part dans le dépôt partagé : les icônes apparaissent aussitôt
+   dans les cinq autres ateliers, à côté de celles du jeu.                    */
 const REF=JSON.parse(document.getElementById('reference').textContent);
-const V=REF.vocabulaire;
+
+/* ═══════════════ les six formes ═══════════════ */
+const FORMES={
+  disque:{nom:'Disque',neuf:()=>({f:'disque',x:12,y:12,r:6,plein:true,ep:2}),
+    svg:o=>o.plein
+      ?`<circle cx="${n(o.x)}" cy="${n(o.y)}" r="${n(o.r)}" fill="currentColor"/>`
+      :`<circle cx="${n(o.x)}" cy="${n(o.y)}" r="${n(o.r)}" fill="none" `+
+       `stroke="currentColor" stroke-width="${n(o.ep)}"/>`},
+  rectangle:{nom:'Rectangle',neuf:()=>({f:'rectangle',x:6,y:8,l:12,h:8,arr:1,plein:true,ep:2}),
+    svg:o=>`<rect x="${n(o.x)}" y="${n(o.y)}" width="${n(o.l)}" height="${n(o.h)}" `+
+      `rx="${n(o.arr)}" ${o.plein?'fill="currentColor"'
+        :`fill="none" stroke="currentColor" stroke-width="${n(o.ep)}"`}/>`},
+  triangle:{nom:'Triangle',neuf:()=>({f:'triangle',x:12,y:12,l:12,h:11,plein:true,ep:2}),
+    svg:o=>{const p=`${n(o.x)},${n(o.y-o.h/2)} ${n(o.x+o.l/2)},${n(o.y+o.h/2)} `+
+      `${n(o.x-o.l/2)},${n(o.y+o.h/2)}`;
+      return `<polygon points="${p}" ${o.plein?'fill="currentColor"'
+        :`fill="none" stroke="currentColor" stroke-width="${n(o.ep)}" stroke-linejoin="round"`}/>`}},
+  trait:{nom:'Trait',neuf:()=>({f:'trait',x:4,y:12,x2:20,y2:12,ep:2}),
+    svg:o=>`<path d="M${n(o.x)} ${n(o.y)}L${n(o.x2)} ${n(o.y2)}" fill="none" `+
+      `stroke="currentColor" stroke-width="${n(o.ep)}" stroke-linecap="round"/>`},
+  etoile:{nom:'Étoile',neuf:()=>({f:'etoile',x:12,y:12,r:8,branches:5,creux:.45,plein:true,ep:2}),
+    svg:o=>{
+      const b=Math.max(3,Math.round(o.branches||5)),pts=[];
+      for(let i=0;i<b*2;i++){
+        const a=-Math.PI/2+i*Math.PI/b;
+        const r=i%2?o.r*(o.creux===undefined?.45:o.creux):o.r;
+        pts.push(n(o.x+Math.cos(a)*r)+','+n(o.y+Math.sin(a)*r));
+      }
+      return `<polygon points="${pts.join(' ')}" ${o.plein?'fill="currentColor"'
+        :`fill="none" stroke="currentColor" stroke-width="${n(o.ep)}" stroke-linejoin="round"`}/>`}},
+  arc:{nom:'Arc',neuf:()=>({f:'arc',x:12,y:14,r:7,ouvert:180,ep:2}),
+    svg:o=>{
+      const a=Math.max(10,Math.min(350,o.ouvert||180))*Math.PI/180;
+      const d1=-Math.PI/2-a/2,d2=-Math.PI/2+a/2;
+      const x1=o.x+Math.cos(d1)*o.r,y1=o.y+Math.sin(d1)*o.r;
+      const x2=o.x+Math.cos(d2)*o.r,y2=o.y+Math.sin(d2)*o.r;
+      return `<path d="M${n(x1)} ${n(y1)}A${n(o.r)} ${n(o.r)} 0 ${a>Math.PI?1:0} 1 `+
+        `${n(x2)} ${n(y2)}" fill="none" stroke="currentColor" `+
+        `stroke-width="${n(o.ep)}" stroke-linecap="round"/>`}}
+};
+const n=v=>Math.round((Number(v)||0)*100)/100;
+/* Les réglages que chaque forme propose, et rien d'autre : un trait n'a pas de
+   rayon, un disque n'a pas de second point. */
+const REGLAGES={
+  disque:[['r','Rayon',1,12,.5],['ep','Épaisseur du trait',.4,4,.2]],
+  rectangle:[['l','Largeur',1,24,.5],['h','Hauteur',1,24,.5],
+             ['arr','Arrondi',0,6,.25],['ep','Épaisseur du trait',.4,4,.2]],
+  triangle:[['l','Base',1,24,.5],['h','Hauteur',1,24,.5],['ep','Épaisseur du trait',.4,4,.2]],
+  trait:[['ep','Épaisseur',.4,6,.2]],
+  etoile:[['r','Rayon',1,12,.5],['branches','Branches',3,12,1],
+          ['creux','Creux',.15,.9,.05],['ep','Épaisseur du trait',.4,4,.2]],
+  arc:[['r','Rayon',1,12,.5],['ouvert','Ouverture (degrés)',20,340,10],
+       ['ep','Épaisseur',.4,4,.2]]
+};
 
 /* ═══════════════ le modèle ═══════════════ */
-let R={format:'caravane.evenements.v1',evenements:[]};
-let sel=0, onglet='apercu', filtre='';
-let ESSAI={etapes:6,or:900,lieues:120,reputation:52,karma:50,gardes:2,place:400,
-  charge:620,valeurSoute:1400,etatConvoi:78,vigilance:58,agilite:62,negoce:60,
-  puissance:1,chien:false};
-
-const EV=()=>R.evenements[sel]||null;
-racineEst(EV);
-/* Le contenu va au dépôt partagé, l'état de travail reste privé ici. */
-sectionEst('evenements',()=>R);
-sauvegardeEst('caravane.atelier-evenements.v1',
-  ()=>({recueil:R,essai:ESSAI,sel:sel,monde:MONDE}));
+let R={format:'caravane.icones.v1',icones:[]};
+let sel=0, selForme=-1, onglet='planche', filtre='';
+const IC=()=>R.icones[sel]||null;
+racineEst(IC);
+/* Ce que les autres reçoivent : le dessin déjà tracé. Ni les autres ateliers ni
+   le jeu n'ont à connaître les formes — ils ne veulent que le SVG. */
+function publier(){
+  return {format:R.format,
+    icones:R.icones.map(ic=>Object.assign({},ic,{svg:corpsSvg(ic)}))};
+}
+sectionEst('icones',publier);
+sauvegardeEst('caravane.atelier-icones.v1',()=>({sel:sel}));
 function relire(){
-  /* le contenu : celui du dépôt, qu'un autre atelier a peut-être enrichi */
-  const c=depotLire('evenements');
-  if(c&&Array.isArray(c.evenements))R=c;
-  mondeDuDepot();
-  /* l'état de travail : le nôtre seulement */
+  const c=depotLire('icones');
+  /* on reprend les formes, pas le SVG : il se retrace à chaque publication */
+  if(c&&Array.isArray(c.icones)){
+    R=c;
+    R.icones.forEach(ic=>{delete ic.svg;});
+  }
   const d=relireSauve();
-  if(!d)return !!c;
-  if(d.essai)Object.assign(ESSAI,d.essai);
-  sel=Math.max(0,Math.min(R.evenements.length-1,d.sel|0));
-  return true;
+  if(d)sel=Math.max(0,Math.min(R.icones.length-1,d.sel|0));
+  return !!c;
 }
 
-/* ═══════════════ l'état d'essai ═══════════════
-   Les mêmes formules que le moteur, pour que les montants annoncés ici soient
-   ceux que le joueur verra. */
-function inter(nom,extra){
-  const S=ESSAI;
-  switch(nom){
-    case 'or':return S.or;
-    case 'etapes':return S.etapes;
-    case 'lieues':return S.lieues;
-    case 'reputation':return S.reputation;
-    case 'karma':return S.karma;
-    case 'gardes':return S.gardes;
-    case 'troupe':return S.gardes+1;
-    case 'place':return S.place;
-    case 'charge':return S.charge;
-    case 'stock':return Math.round(S.charge/4);        /* estimation : un bien sur quatre */
-    case 'valeurSoute':return S.valeurSoute;
-    case 'etatConvoi':return S.etatConvoi;
-    case 'chien':return !!S.chien;
-    case 'vigilance':return S.vigilance;
-    case 'agilite':return S.agilite;
-    case 'negoce':return S.negoce;
-    case 'puissance':return S.puissance;
-    case 'armeFamille':return S.gardes>0;
-    case 'mise':return Math.round(clamp(18+S.etapes*4,18,9e9));
-    case 'coutGarde':return Math.round(70+S.etapes*7);
-    case 'tribut':return Math.round(clamp((S.or+S.valeurSoute)*(.16+S.etapes*.005),15,9e9));
-    case 'soin':return Math.round((100-S.etatConvoi)*2.2);
-    default:return 0;
-  }
+/* ═══════════════ le dessin ═══════════════ */
+function corpsSvg(ic){
+  if(!ic)return '';
+  if(ic.source)return ic.source;          /* du SVG collé l'emporte */
+  return (ic.formes||[]).map(o=>{
+    const d=FORMES[o.f];
+    return d?d.svg(o):'';
+  }).join('\n  ');
 }
-const bonusKarma=()=>clamp(Math.round((ESSAI.karma-50)/17),-3,3);
-const bonusConvoi=()=>clamp(Math.round((ESSAI.etatConvoi-66)/15),-2,2);
-
-/* ═══════════════ les valeurs ═══════════════ */
-function formeValeur(v){
-  if(v===undefined||v===null)return 'vide';
-  if(typeof v==='number')return 'nombre';
-  if(Array.isArray(v))return 'fourchette';
-  if(typeof v==='object'&&v.selon!==undefined)return 'reference';
-  return 'formule';
-}
-function evaluer(v,moyenne){
-  if(v===undefined||v===null)return 0;
-  if(typeof v==='number')return v;
-  if(Array.isArray(v))return moyenne?(v[0]+v[1])/2:rnd(v[0],v[1]);
-  let n=0;
-  if(v.selon!==undefined)n=Number(inter(v.selon))||0;
-  if(v.base!==undefined)n+=v.base;
-  if(v.parEtape!==undefined)n+=v.parEtape*ESSAI.etapes;
-  if(v.parGarde!==undefined)n+=v.parGarde*ESSAI.gardes;
-  if(v.parLieue!==undefined)n+=v.parLieue*ESSAI.lieues;
-  if(v.divise!==undefined&&v.divise)n=n/v.divise;
-  if(v.fois!==undefined)n*=Array.isArray(v.fois)
-    ?(moyenne?(v.fois[0]+v.fois[1])/2:rnd(v.fois[0],v.fois[1])):v.fois;
-  return n;
-}
-const REFERENCES=['mise','coutGarde','tribut','or','valeurSoute','charge','soin'];
-
-/* ═══════════════ jouer un événement ═══════════════
-   Sert deux fois : l'aperçu, qui en joue un exemplaire, et le tirage à blanc,
-   qui en joue deux cents pour montrer la dispersion. */
-function jeter(carac,seuil){
-  const de=ri(1,20),mods=[];
-  const c=Math.round(evaluer(carac));
-  if(c)mods.push(['aptitude',c]);
-  const k=bonusKarma();if(k)mods.push(['karma',k]);
-  const b=bonusConvoi();if(b)mods.push(['convoi',b]);
-  const total=de+mods.reduce((s,m)=>s+m[1],0);
-  return {de:de,mods:mods,total:total,seuil:seuil,
-    reussi:de===20?true:(de===1?false:total>=seuil),
-    critique:de===20,desastre:de===1};
-}
-function conditionsVraies(liste){
-  if(!liste||!liste.length)return true;
-  return liste.every(c=>{
-    const v=inter(c.quoi,c);
-    if(c.vaut!==undefined)return !!v===!!c.vaut;
-    if(c.min!==undefined&&v<evaluer(c.min,true))return false;
-    if(c.max!==undefined&&v>evaluer(c.max,true))return false;
-    return true;
-  });
-}
-function nomBien(k){return REF.biens[k]||k;}
-function appliquer(effets,sac,bilan){
-  (effets||[]).forEach(e=>{
-    const d=V.effets[e.faire];
-    let retenu='—';
-    switch(e.faire){
-      case 'or':{const n=Math.round(evaluer(e.de));bilan.or+=n;retenu=fmt(Math.abs(n));break;}
-      case 'reputation':bilan.reputation+=Number(e.de)||0;break;
-      case 'karma':bilan.karma+=Number(e.de)||0;break;
-      case 'allonger':{const n=Math.min(Number(e.de)||0,Math.max(0,4-bilan.etapes));
-        bilan.etapes+=n;retenu=fmt(n);break;}
-      case 'abimer':bilan.usure+=evaluer(e.combien);break;
-      case 'delester':case 'briserFragile':{
-        const p=evaluer(e.part);bilan.largue+=p;
-        const kg=Math.round(ESSAI.charge*p);
-        bilan.orPerdu+=Math.round(ESSAI.valeurSoute*p);
-        retenu=fmt(Math.round(kg*.6))+' kg de '+nomBien(pick(Object.keys(REF.biens))).toLowerCase()+
-          ' et '+fmt(Math.round(kg*.4))+' kg de '+nomBien(pick(Object.keys(REF.biens))).toLowerCase();
-        break;}
-      case 'reposer':bilan.soin+=evaluer(e.part);break;
-      case 'blesserTroupe':{const t=evaluer(e.total);bilan.degats+=t;
-        retenu=pick(REF.nomsGardes||['Corvin']);break;}
-      case 'combat':{const j=jeter(Math.round(4*Math.log(Math.max(1.6*(1+ESSAI.gardes),.25))),
-          clamp(14+Math.round(4*Math.log(Math.max(.5+ESSAI.etapes*.28,.25))),3,30));
-        bilan.combats++;
-        if(j.reussi){const butin=Math.round((25+ESSAI.etapes*9)*rnd(.7,1.4));
-          bilan.or+=butin;bilan.combatsGagnes++;
-          retenu='La ligne tient ; les pillards décrochent en laissant '+fmt(butin)+' po derrière eux.';
-        }else{bilan.largue+=rnd(.25,.45);bilan.degats+=ri(42,74);
-          retenu='La ligne cède : les chariots sont éventrés et la troupe saigne.';}
-        break;}
-      case 'charger':{const kg=Math.round(evaluer(e.kg));
-        const paye=e.prixAuKilo!==undefined?Math.round(kg*evaluer(e.prixAuKilo)):0;
-        bilan.or-=paye;bilan.kg+=kg;
-        retenu=fmt(kg)+' kg de '+nomBien(e.bien==='auHasard'?pick(Object.keys(REF.biens)):e.bien).toLowerCase();
-        break;}
-      case 'decharger':{const kg=Math.round(evaluer(e.kg));
-        const gain=e.prixAuKilo!==undefined?Math.round(kg*evaluer(e.prixAuKilo)):0;
-        bilan.or+=gain;bilan.kg-=kg;
-        retenu=fmt(kg)+' kg pour '+fmt(gain)+' po';break;}
-      case 'armeTrouvee':retenu=(REF.armes[pick(Object.keys(REF.armes))]||'une arme').toLowerCase();break;
-      case 'donnerArme':retenu=REF.armes[e.arme]||e.arme||'—';break;
-      case 'chien':retenu=pick(REF.nomsChiens||['Ronce']);break;
-      case 'recruter':retenu=pick(REF.nomsGardes||['Maren']);bilan.gardes++;break;
-      case 'rumeur':retenu=nomBien(e.bien==='auHasard'||!e.bien?pick(Object.keys(REF.biens)):e.bien).toLowerCase();break;
-      case 'escorte':bilan.escorte+=Number(e.de)||0;break;
-      default:retenu=d?d.nom:e.faire;
-    }
-    if(e.nomme){
-      sac[e.nomme]=retenu;
-      /* les résultats à facettes, pour que {melee.butin} ne reste pas en plan */
-      sac[e.nomme+'.noms']=retenu;sac[e.nomme+'.morts']='personne';
-      sac[e.nomme+'.butin']=retenu;sac[e.nomme+'.gagne']='oui';
-      sac[e.nomme+'.kg']=retenu;sac[e.nomme+'.bien']=retenu;
-      sac[e.nomme+'.paye']=retenu;sac[e.nomme+'.gain']=retenu;
-    }
-  });
-}
-function bilanVierge(){
-  return {or:0,reputation:0,karma:0,etapes:0,usure:0,largue:0,soin:0,degats:0,
-    kg:0,gardes:0,escorte:0,orPerdu:0,combats:0,combatsGagnes:0};
-}
-function contexte(){
-  const l=listeOu('lieux');
-  const ville=l.length?pick(l)[1]:'Aurelium', dest=l.length?pick(l)[1]:'Le Marteau-Bas';
-  const c=listeOu('contrees');
-  const s={ville:ville,destination:dest,contree:c.length?pick(c)[1]:'les Terres humaines',
-    chien:ESSAI.chien?pick(REF.nomsChiens||['Ronce']):'le chien',
-    garde:pick(REF.nomsGardes||['Corvin']),
-    bien:nomBien(pick(Object.keys(REF.biens))).toLowerCase()};
-  Object.keys(V.interrogations).forEach(k=>{
-    const v=inter(k);
-    s[k]=typeof v==='boolean'?(v?'oui':'non'):fmt(v);
-  });
-  return s;
-}
-/* La note sous un bouton annonce ce que le choix coûtera — avant de le prendre.
-   Elle peut donc citer un résultat qui n'a pas encore eu lieu : on l'évalue à
-   vide, en moyenne, pour montrer une prévision stable plutôt qu'un tirage. */
-function toutesLesListes(c){
-  const l=[c.effets];
-  ['reussi','rate','gagne','perd','oui','non'].forEach(k=>{if(c[k])l.push(c[k].effets);});
-  if(c.jet&&c.jet.paliers)c.jet.paliers.forEach(p=>l.push(p.effets));
-  return l;
-}
-function nomsChoix(c){
-  const out=[];
-  toutesLesListes(c).forEach(l=>(l||[]).forEach(e=>{if(e.nomme)out.push(e.nomme);}));
-  return out;
-}
-function prevoir(c){
-  const out={};
-  toutesLesListes(c).forEach(l=>(l||[]).forEach(e=>{
-    if(!e.nomme||out[e.nomme]!==undefined)return;
-    switch(e.faire){
-      case 'or':out[e.nomme]=fmt(Math.abs(evaluer(e.de,true)));break;
-      case 'allonger':out[e.nomme]=fmt(evaluer(e.de,true));break;
-      case 'delester':case 'briserFragile':
-        out[e.nomme]=Math.round(evaluer(e.part,true)*100)+' %';break;
-      case 'charger':case 'decharger':out[e.nomme]=fmt(evaluer(e.kg,true))+' kg';break;
-      case 'blesserTroupe':out[e.nomme]='la troupe';break;
-      default:out[e.nomme]=(V.effets[e.faire]||{nom:e.faire}).nom.toLowerCase();
-    }
-  }));
-  return out;
-}
-/* La forme d'un choix : une seule des quatre, on la reconnaît à ses champs. */
-function forme(c){
-  if(c.jet)return 'jet';
-  if(c.pari)return 'pari';
-  if(c.selon)return 'selon';
-  return 'direct';
-}
-function resoudre(c){
-  const sac=contexte(), bilan=bilanVierge();
-  let issue=null, de=null, verdict='', classe='';
-  const f=forme(c);
-  if(f==='direct'){issue=c;}
-  else if(f==='jet'){
-    const j=c.jet;
-    if(j.paliers&&j.paliers.length){
-      de=jeter(j.carac,0);
-      issue=j.paliers.find(p=>(p.min===undefined||de.total>=evaluer(p.min,true))&&
-        (p.max===undefined||de.total<=evaluer(p.max,true)))||j.paliers[j.paliers.length-1];
-      verdict=issue.verdict||'';classe=issue.classe||'';
-    }else{
-      de=jeter(j.carac,evaluer(j.seuil,true));
-      issue=de.reussi?c.reussi:c.rate;
-      verdict=de.critique?'Coup du sort !':(de.desastre?'Catastrophe':(de.reussi?'Réussite':'Échec'));
-      classe=(de.critique||de.desastre)?'crit':(de.reussi?'reussi':'rate');
-    }
-    de.titre=j.titre||'';
-  }else if(f==='pari'){
-    const p=c.pari, mise=Math.round(evaluer(p.mise,true));
-    const carac=Math.round(evaluer(p.carac));
-    const seuil=clamp(Math.round(21-20*clamp(p.chance===undefined?.5:p.chance,.05,.95))+carac+2,2,26);
-    de=jeter(p.carac,seuil);de.titre='Pari';
-    verdict=de.reussi?'Gagné':'Perdu';classe=de.reussi?'reussi':'rate';
-    issue=de.reussi?c.gagne:c.perd;
-    bilan.or+=de.reussi?mise:-mise;
-    sac.mise=fmt(mise);
-  }else{
-    const oui=conditionsVraies(c.selon);
-    issue=oui?c.oui:c.non;
-    verdict=oui?'Oui':'Non';
-  }
-  issue=issue||{};
-  /* pour une issue certaine, l'issue est le choix lui-même : ses effets sont déjà là */
-  appliquer(issue.effets,sac,bilan);
-  return {texte:boucher(issue.texte,sac),de:de,verdict:verdict,classe:classe,
-    bilan:bilan,sac:sac,issue:issue};
-}
-
-/* ═══════════════ engendrer les formulaires ═══════════════ */
-/* Le champ « valeur » : quatre écritures possibles, aucune à taper. */
-function valeur(ch,libre){
-  const v=lire(ch), f=formeValeur(v);
-  const opts=[['vide','— rien —'],['nombre','Un nombre'],['fourchette','Une fourchette'],
-    ['formule','Une formule'],['reference','Une référence']].filter(o=>libre||o[0]!=='vide');
-  let corps='';
-  if(f==='nombre')corps=nombre(ch);
-  else if(f==='fourchette')corps=`<div class="rangee"><span class="mot fixe">de</span>`+
-    nombre(ch+'.0')+`<span class="mot fixe">à</span>`+nombre(ch+'.1')+`</div>`;
-  else if(f==='formule')corps=`<div class="grille4">`+
-    `<div><label>au départ</label>${nombre(ch+'.base')}</div>`+
-    `<div><label>par étape</label>${nombre(ch+'.parEtape')}</div>`+
-    `<div><label>par garde</label>${nombre(ch+'.parGarde')}</div>`+
-    `<div><label>multiplié par</label>${nombre(ch+'.fois')}</div></div>`;
-  else if(f==='reference')corps=`<div class="rangee">`+
-    choixListe(ch+'.selon',REFERENCES.map(k=>[k,V.interrogations[k]?V.interrogations[k].nom:k]))+
-    `<span class="mot fixe">×</span>`+nombre(ch+'.fois')+`</div>`;
-  const val=f==='vide'?'':`<div class="apercu-val">≈ ${fmt(evaluer(v,true))} `+
-    `<span style="opacity:.6">avec le convoi d'essai</span></div>`;
-  return `<div class="valeur"><select data-ch="${ech(ch)}" data-t="forme">`+
-    opts.map(o=>`<option value="${o[0]}"${o[0]===f?' selected':''}>${ech(o[1])}</option>`).join('')+
-    `</select>${corps}${val}</div>`;
-}
-function neuveValeur(f){
-  if(f==='nombre')return 0;
-  if(f==='fourchette')return [0,1];
-  if(f==='formule')return {base:0};
-  if(f==='reference')return {selon:'mise'};
-  return undefined;
-}
-/* Un réglage d'effet, engendré depuis sa description dans le catalogue. */
-function reglage(ch,d){
-  let corps;
-  if(d.type==='valeur')corps=valeur(ch,!d.requis);
-  else if(d.type==='fraction'||d.type==='nombre')corps=nombre(ch,d.defaut!==undefined?String(d.defaut):'',
-    d.type==='fraction'?'0.01':'any');
-  else if(d.type==='choix')corps=choixListe(ch,d.valeurs.map(x=>[x,x]),d.requis?'':'— au choix —');
-  else if(d.type==='bien')corps=choixListe(ch,[['auHasard','Au hasard']].concat(
-    Object.entries(REF.biens)),d.requis?'':'— rien —');
-  else if(d.type==='arme')corps=choixListe(ch,Object.entries(REF.armes),d.requis?'':'— au hasard —');
-  else if(d.type==='metier')corps=choixListe(ch,[['auHasard','Au hasard']].concat(
-    Object.entries(REF.metiers)),'');
-  else if(d.type==='booleen')corps=coche(ch,'oui');
-  else corps=texte(ch);
-  return champ(d.nom,corps,(d.aide||'')+(d.requis?' <b>Obligatoire.</b>':''));
-}
-function blocEffets(ch){
-  const l=lire(ch)||[];
-  return `<div class="pile">`+l.map((e,i)=>{
-    const d=V.effets[e.faire]||{nom:e.faire,explique:'Effet inconnu du catalogue.',parametres:{}};
-    return `<div class="effet"><header><b>${ech(d.nom)}</b>`+
-      `<button data-act="effet-haut" data-ch="${ech(ch)}" data-i="${i}" title="Monter">↑</button>`+
-      `<button data-act="effet-bas" data-ch="${ech(ch)}" data-i="${i}" title="Descendre">↓</button>`+
-      `<button data-act="effet-oter" data-ch="${ech(ch)}" data-i="${i}" title="Retirer">✕</button>`+
-      `</header><div class="corps"><p class="explique">${ech(d.explique)}</p>`+
-      Object.entries(d.parametres||{}).map(([p,dd])=>reglage(ch+'.'+i+'.'+p,dd)).join('')+
-      (d.nomme?champ('Retenir sous le nom',texte(ch+'.'+i+'.nomme','perdu'),
-        ech(d.nomme.explique)+(d.nomme.exemple?` <em>Ex. : ${ech(d.nomme.exemple)}</em>`:'')):'')+
-      `</div></div>`;}).join('')+
-    `<select class="ajout" data-act="effet-ajout" data-ch="${ech(ch)}">`+
-    `<option value="">+ Ajouter un effet…</option>`+
-    Object.entries(V.effets).map(([k,d])=>`<option value="${ech(k)}">${ech(d.nom)}</option>`).join('')+
-    `</select></div>`;
-}
-function blocConditions(ch,avecSinon,titre){
-  const l=lire(ch)||[];
-  const inters=Object.entries(V.interrogations).map(([k,d])=>[k,d.nom]);
-  return `<div class="pile">`+(l.length?'':`<p class="vide">Aucune — ${ech(titre)}</p>`)+
-    l.map((c,i)=>{
-      const d=V.interrogations[c.quoi]||{};
-      const oui=d.unite==='oui ou non';
-      return `<div class="effet"><header><b>${ech(d.nom||c.quoi||'?')}</b>`+
-        `<button data-act="cond-oter" data-ch="${ech(ch)}" data-i="${i}">✕</button></header>`+
-        `<div class="corps">`+
-        champ('Ce qu\'on regarde',choixListe(ch+'.'+i+'.quoi',inters))+
-        (d.demande==='bien'?champ('Quelle marchandise',
-          choixListe(ch+'.'+i+'.bien',Object.entries(REF.biens))):'')+
-        (d.demande==='famille'?champ('Quelle famille',
-          choixListe(ch+'.'+i+'.famille',Object.entries(REF.familles))):'')+
-        (oui?champ('Doit valoir',choixListe(ch+'.'+i+'.vaut',[['oui','oui'],['non','non']]))
-            :champ('Au moins',valeur(ch+'.'+i+'.min',true))+
-             champ('Au plus',valeur(ch+'.'+i+'.max',true)))+
-        (avecSinon?champ('Raison affichée',texte(ch+'.'+i+'.sinon','Il vous manque 40 po'),
-          'Le joueur voit ce texte sur le bouton grisé. <b>Sans lui, il ne comprend pas.</b>'):'')+
-        `</div></div>`;}).join('')+
-    `<button class="ajout" data-act="cond-ajout" data-ch="${ech(ch)}">+ Ajouter une condition</button>`+
-    `</div>`;
-}
-function blocIssue(ch,titre,teinte){
-  return `<div class="issue ${teinte||''}"><h4>${ech(titre)}</h4>`+
-    champ('Ce qui se passe',blocEffets(ch+'.effets'),'',true)+
-    champ('Ce qu\'on lit',texte(ch+'.texte','',3),
-      'Les accolades citent un résultat retenu : <b>{perdu}</b>. Une ligne vide entre deux '+
-      'paragraphes fait deux variantes, tirées au hasard.',true)+
-    `</div>`;
+function svgDe(ic,teinte,taille){
+  return `<svg viewBox="0 0 24 24" ${taille?`width="${taille}" height="${taille}"`:''} `+
+    `style="color:${teinte||ic&&ic.teinte||'#C9A227'};--velin:#E3D6B2">`+
+    `${corpsSvg(ic)}</svg>`;
 }
 
 /* ═══════════════ la feuille ═══════════════ */
 function rendreFeuille(){
-  const f=$('#feuille'), garde=f.scrollTop;
-  const e=EV();
-  if(!e){f.innerHTML=`<p class="vide" style="padding:30px;text-align:center">`+
-    `Aucun événement. <b>+ Événement</b> pour commencer, ou <b>Exemples</b> pour partir `+
-    `de quatre événements du jeu déjà convertis.</p>`;return;}
-
+  const f=$('#feuille'), garde=f.scrollTop, ic=IC();
+  if(!ic){
+    f.innerHTML=`<p class="vide" style="padding:30px;text-align:center">`+
+      `Aucune icône. <b>+ Icône</b> pour en dessiner une, ou <b>Partir d'une icône `+
+      `du jeu</b> pour en reprendre une et la modifier.</p>`;
+    return;
+  }
   let h='';
-  /* ── identité ── */
-  h+=`<div class="bloc"><h2>L'événement</h2><div class="corps">`+
-    champ('Titre',texte('titre','Le quai des brumes'))+
-    champ('Clé',`<div class="rangee">${texte('cle','quai-des-brumes')}`+
-      `<button class="outil fixe" data-act="cle-auto">Depuis le titre</button></div>`,
-      'L\'identifiant du fichier. Minuscules et tirets, unique dans le recueil.')+
-    champ('Ligne au-dessus',texte('oeil','Sur la route'),
-      'La petite ligne en petites capitales : <b>Sur la route</b>, <b>Rencontre</b>, <b>Halte</b>.')+
-    champ('Importance',choixListe('genre',[['majeur','Majeur — une vraie décision'],
-      ['mineur','Mineur — une saynète']]))+
-    champ('Fréquence',`<div class="rangee"><span class="mot fixe">de base</span>`+
-      nombre('poids.base','1')+`<span class="mot fixe">et par étape</span>`+
-      nombre('poids.parEtape','0')+`</div>`,
-      `Relative aux autres. <b>${ech(dec(poidsIci()))}</b> à l'étape ${ESSAI.etapes} : `+
-      `${ech(motPoids())}.`)+
+  h+=`<div class="bloc"><h2>L'icône</h2><div class="corps">`+
+    champ('Nom',texte('nom','Le fanal du port'))+
+    champ('Clé',`<div class="rangee">${texte('cle','fanal-du-port')}`+
+      `<button class="outil fixe" data-act="cle-auto">Depuis le nom</button></div>`,
+      'C\'est ce nom que les autres ateliers citeront. Minuscules et tirets.')+
+    champ('Teinte d\'essai',champTeinte('nature','teinte'),
+      'Elle ne part pas avec l\'icône : chaque événement, personnage ou objet '+
+      'choisit la sienne. C\'est seulement pour voir ce que ça donne ici.',true)+
     `</div></div>`;
 
-  /* ── quand et où ── */
-  h+=`<div class="bloc"><h2>Quand et où</h2><div class="corps">`+
-    champ('Le moment',choixListe('quand',Object.entries(V.moments).map(([k,m])=>
-      [k,m.nom+' — '+m.explique.replace(/\.$/,'')]),''),'À défaut : en chemin.')+
-    champ('Sur la carte',multi('ou.cartes',listeOu('cartes'),
-      'Chargez un <b>monde.json</b> pour choisir une carte.'),'',true)+
-    champ('Dans ces lieux',multi('ou.lieux',listeOu('lieux'),
-      'Chargez un <b>monde.json</b> pour choisir des lieux précis.'),'',true)+
-    champ('Dans ces contrées',multi('ou.contrees',listeOu('contrees'),
-      'Chargez un <b>monde.json</b> pour choisir des contrées.'),'',true)+
-    champ('Ces tailles de lieu',multi('ou.rangs',listeOu('rangs'),''),'',true)+
-    champ('Ces natures de lieu',multi('ou.traits',listeOu('traits'),''),'',true)+
-    champ('Ces terrains',multi('ou.terrains',listeOu('terrains'),''),'',true)+
-    champ('Ces itinéraires',multi('ou.profils',listeOu('profils'),''),
-      'Rien de coché = partout. Chaque case cochée <b>restreint</b>.',true)+
-    champ('Conditions',blocConditions('si',false,'il peut sortir dès le départ'),
-      'Toutes doivent être vraies pour que l\'événement puisse tomber.',true)+
-    `</div></div>`;
+  if(ic.source){
+    h+=`<div class="bloc"><h2>Du SVG collé<span class="pousse"></span>`+
+      `<button data-act="source-oter">Revenir aux formes</button></h2><div class="corps">`+
+      champ('Le contenu',texte('source','',8),
+        'Ce qui va <b>entre</b> les balises svg — des &lt;path&gt;, &lt;circle&gt;, '+
+        '&lt;rect&gt;… sur une grille de 24 sur 24. Utilisez <b>currentColor</b> pour '+
+        'que la teinte suive celle qu\'on choisira.',true)+
+      `</div></div>`;
+  }else{
+    const formes=ic.formes||[];
+    h+=`<div class="bloc"><h2>Les formes<span class="pousse"></span>`+
+      `<button data-act="coller">Coller du SVG</button></h2><div class="corps">`+
+      `<div class="formes">`+Object.entries(FORMES).map(([k,d])=>
+        `<button data-act="ajouter" data-f="${ech(k)}">+ ${ech(d.nom)}</button>`).join('')+
+      `</div>`+
+      (formes.length?`<div class="pile">`+formes.map((o,i)=>{
+        const d=FORMES[o.f]||{nom:o.f};
+        return `<div class="couche${i===selForme?' choisi':''}">`+
+          `<span class="nom" data-act="choisir" data-i="${i}">`+
+          `${ech(d.nom)}${o.plein===false?' (au trait)':''}</span>`+
+          (i>0?`<button data-act="monter" data-i="${i}" title="Passer devant">↑</button>`:'')+
+          (i<formes.length-1?`<button data-act="descendre" data-i="${i}" title="Passer derrière">↓</button>`:'')+
+          `<button data-act="copier-forme" data-i="${i}" title="Dupliquer">⧉</button>`+
+          `<button data-act="oter-forme" data-i="${i}">✕</button></div>`;}).join('')+
+        `</div>`
+        :`<p class="vide">Rien encore. Posez une première forme.</p>`)+
+      `</div></div>`;
 
-  /* ── pictogramme ── */
-  const gl=lire('ico.glyphe'), teinte=teinteDe(lire('ico')||{});
-  h+=`<div class="bloc"><h2>Le pictogramme</h2><div class="corps">`+
-    champ('Teinte',champTeinte('ico.nature','ico.teinte'),
-      'Les dix teintes nommées disent quelque chose — danger, halte, trouvaille. '+
-      'La pastille en pointillés ouvre une couleur à vous, qui l\'emporte.',true)+
-    champ('Dessin',`<div class="glyphes">`+Object.keys(glyphesTous()).map(k=>
-      `<button data-act="glyphe" data-g="${ech(k)}" class="${k===gl?'actif':''}" title="${ech(k)}">`+
-      svgGlyphe(k,teinte)+`</button>`).join('')+`</div>`,'',true)+
-    `</div></div>`;
-
-  /* ── récit ── */
-  h+=`<div class="bloc"><h2>Le récit</h2><div class="corps">`+
-    champ('La situation',texte('recit','',4),
-      'Ce que le joueur lit avant de choisir. Les accolades citent le contexte : '+
-      '<b>{destination}</b>, <b>{gardes}</b>, <b>{garde}</b>. Séparez par une ligne vide '+
-      'pour proposer plusieurs variantes.',true)+
-    `</div></div>`;
-
-  /* ── choix ── */
-  const choix=e.choix||[];
-  h+=`<div class="bloc"><h2>Les issues<span class="pousse"></span>`+
-    `<button data-act="choix-ajout"${choix.length>=4?' disabled':''}>+ Choix</button></h2>`+
-    `<div class="corps">`+
-    (choix.length<2?`<p class="avert">Il faut <b>au moins deux</b> choix : un événement à une `+
-      `seule issue n'est pas une décision.</p>`:'')+
-    choix.map((c,i)=>rendreChoix(c,i,choix.length)).join('')+
-    `</div></div>`;
-
+    /* les réglages de la forme choisie */
+    const o=formes[selForme];
+    if(o){
+      const d=FORMES[o.f];
+      h+=`<div class="bloc"><h2>${ech(d.nom)} — ses réglages</h2><div class="corps">`;
+      if(o.f!=='trait'){
+        h+=champ('Rempli',`<div class="chips">${coche('formes.'+selForme+'.plein',
+          'plein, sinon au trait')}</div>`);
+      }
+      (REGLAGES[o.f]||[]).forEach(([k,nom,mi,ma,pas])=>{
+        if(k==='ep'&&o.plein&&o.f!=='trait')return;   /* inutile sur une forme pleine */
+        h+=champ(nom,`<div class="rangee">`+
+          `<input type="range" min="${mi}" max="${ma}" step="${pas}" `+
+          `value="${o[k]===undefined?mi:o[k]}" data-reg="${k}">`+
+          `<span class="mot fixe" style="min-width:38px;text-align:right">`+
+          `${dec(o[k]===undefined?mi:o[k])}</span></div>`);
+      });
+      h+=champ('Position',`<div class="rangee">`+
+        `<span class="mot fixe">x</span>${nombre('formes.'+selForme+'.x','12','0.5')}`+
+        `<span class="mot fixe">y</span>${nombre('formes.'+selForme+'.y','12','0.5')}</div>`,
+        'Ou faites-la glisser sur la planche.');
+      if(o.f==='trait')h+=champ('Second point',`<div class="rangee">`+
+        `<span class="mot fixe">x</span>${nombre('formes.'+selForme+'.x2','20','0.5')}`+
+        `<span class="mot fixe">y</span>${nombre('formes.'+selForme+'.y2','12','0.5')}</div>`);
+      h+=`<div class="rangee"><button class="outil" data-act="centrer">Centrer</button>`+
+        `<button class="outil" data-act="miroir">Miroir horizontal</button></div>`;
+      h+=`</div></div>`;
+    }
+  }
   f.innerHTML=h;
   f.scrollTop=garde;
 }
-function rendreChoix(c,i,n){
-  const f=forme(c);
-  const p='choix.'+i;
-  let h=`<div class="choix-bloc"><h3><b>Choix ${i+1}</b>`+
-    `<span class="titre">${ech(c.txt||'sans libellé')}</span>`+
-    (i>0?`<button data-act="choix-haut" data-i="${i}">↑</button>`:'')+
-    (i<n-1?`<button data-act="choix-bas" data-i="${i}">↓</button>`:'')+
-    `<button data-act="choix-oter" data-i="${i}">✕</button></h3><div class="corps" `+
-    `style="padding:10px;display:flex;flex-direction:column;gap:9px">`;
-  h+=champ('Libellé du bouton',texte(p+'.txt','Payer le tribut'))+
-    champ('Note en dessous',texte(p+'.note','environ {tribut} po'),
-      'La conséquence annoncée, en italique sous le libellé.')+
-    champ('Mot sur le dé',texte(p+'.de','aplomb'),
-      'Le nom de l\'aptitude affiché à côté du libellé. Laissez vide s\'il n\'y a pas de jet.')+
-    champ('Teinte',`<div class="chips">${coche(p+'.ton_mauvais','Bouton rouge')}</div>`,
-      'Pour les choix qui font mal.')+
-    champ('N\'apparaît que si',blocConditions(p+'.si',false,'toujours proposé'),'',true)+
-    champ('Grisé tant que',blocConditions(p+'.bloque',true,'jamais grisé'),
-      'Le choix reste visible mais inactif, avec sa raison.',true)+
-    champ('Comment ça se résout',choixListe(p+'.__forme',
-      Object.entries(V.formes).map(([k,d])=>[k,d.nom+' — '+d.explique.split('.')[0]])),
-      ech(V.formes[f].explique));
-
-  if(f==='direct'){
-    h+=blocIssue(p,'Ce qui arrive','');
-  }else if(f==='jet'){
-    const gradue=!!(c.jet&&c.jet.paliers);
-    h+=champ('Titre du jet',texte(p+'.jet.titre','Décrocher'))+
-      champ('L\'aptitude jetée',`<div class="rangee">`+
-        choixListe(p+'.jet.carac.selon',Object.entries(V.interrogations)
-          .filter(([k,d])=>d.unite!=='oui ou non').map(([k,d])=>[k,d.nom]),'— rien, dé sec —')+
-        `<span class="mot fixe">÷</span>`+nombre(p+'.jet.carac.divise','20')+`</div>`,
-        'Le bonus au dé. <b>Agilité ÷ 20</b> donne +3 à une troupe agile à 62.')+
-      champ('Découpage',choixListe(p+'.jet.__gradue',[['simple','Réussi ou raté'],
-        ['gradue','Par paliers — autant de degrés qu\'on veut']]),
-        gradue?ech(V.formes.jet.variante.explique):'');
-    if(!gradue){
-      h+=champ('Seuil à atteindre',valeur(p+'.jet.seuil'),
-        `Un dé de 20 réussit toujours, un 1 rate toujours. ${chanceJet(c)}`)+
-        blocIssue(p+'.reussi','Si c\'est réussi','bon')+
-        blocIssue(p+'.rate','Si c\'est raté','mauvais');
-    }else{
-      const pal=(c.jet.paliers||[]);
-      h+=`<div class="pile">`+pal.map((x,j)=>
-        `<div class="issue"><h4>Palier ${j+1}${x.verdict?' — '+ech(x.verdict):''}`+
-        `<button style="float:right;font-size:11px;color:var(--encre-pale)" `+
-        `data-act="palier-oter" data-ch="${p}.jet.paliers" data-i="${j}">✕</button></h4>`+
-        champ('Total du dé au moins',valeur(p+'.jet.paliers.'+j+'.min',true))+
-        champ('Total du dé au plus',valeur(p+'.jet.paliers.'+j+'.max',true))+
-        champ('Mot sur le dé',texte(p+'.jet.paliers.'+j+'.verdict','Magot !'))+
-        champ('Couleur',choixListe(p+'.jet.paliers.'+j+'.classe',
-          [['crit','Or — exceptionnel'],['reussi','Vert — réussite'],['rate','Rouge — échec']],'— neutre —'))+
-        champ('Ce qui se passe',blocEffets(p+'.jet.paliers.'+j+'.effets'),'',true)+
-        champ('Ce qu\'on lit',texte(p+'.jet.paliers.'+j+'.texte','',3),'',true)+
-        `</div>`).join('')+
-        `<button class="ajout" data-act="palier-ajout" data-ch="${p}.jet.paliers">`+
-        `+ Ajouter un palier</button>`+
-        (pal.length&&(pal[pal.length-1].min!==undefined||pal[pal.length-1].max!==undefined)
-          ?`<p class="avert doux">Le <b>dernier palier</b> doit être sans bornes : c'est lui qui `+
-           `ramasse tout ce que les autres n'ont pas pris.</p>`:'')+
-        `</div>`;
-    }
-  }else if(f==='pari'){
-    h+=champ('La mise',valeur(p+'.pari.mise'))+
-      champ('Chance de gagner',nombre(p+'.pari.chance','0.48','0.01'),
-        `Entre 0 et 1. <b>0,48</b> = presque équitable. Le seuil du dé s'en déduit : `+
-        `${seuilPari(c)}.`)+
-      champ('Bonus d\'adresse',valeur(p+'.pari.carac',true),
-        'Laissez vide pour un pur hasard.')+
-      champ('Mot sur le dé',texte(p+'.pari.nom','hasard'))+
-      blocIssue(p+'.gagne','Si on gagne','bon')+
-      blocIssue(p+'.perd','Si on perd','mauvais');
-  }else{
-    h+=champ('La condition',blocConditions(p+'.selon',false,'à remplir'),
-      'Si elle est remplie, c\'est <b>oui</b> ; sinon c\'est <b>non</b>. Les deux arrivent '+
-      'vraiment : le joueur qui n\'a pas les moyens subit la seconde branche.',true)+
-      blocIssue(p+'.oui','Si la condition est remplie','bon')+
-      blocIssue(p+'.non','Sinon','mauvais');
-  }
-  return h+`</div></div>`;
-}
-function poidsIci(){
-  const p=lire('poids');
-  if(p===undefined)return 1;
-  if(typeof p==='number')return p;
-  return (p.base===undefined?1:p.base)+(p.parEtape||0)*ESSAI.etapes;
-}
-function motPoids(){
-  const v=poidsIci();
-  if(v>=3)return 'très fréquent';
-  if(v>=1.6)return 'fréquent';
-  if(v>=.7)return 'ordinaire';
-  return 'rare';
-}
-function chanceJet(c){
-  if(!c.jet||c.jet.paliers)return '';
-  const s=evaluer(c.jet.seuil,true), b=Math.round(evaluer(c.jet.carac))+bonusKarma()+bonusConvoi();
-  const n=clamp(21-(s-b),1,20);
-  return `Avec le convoi d'essai : <b>${Math.round(n/20*100)} %</b> de réussite.`;
-}
-function seuilPari(c){
-  const p=c.pari||{},carac=Math.round(evaluer(p.carac));
-  const s=clamp(Math.round(21-20*clamp(p.chance===undefined?.5:p.chance,.05,.95))+carac+2,2,26);
-  return `<b>${s}</b> à battre`;
-}
-function svgGlyphe(k,teinte){return svgGlypheDe(k,teinte);}
 
 /* ═══════════════ la liste ═══════════════ */
 function rendreListe(){
   const q=filtre.trim().toLowerCase();
-  $('#liste').innerHTML=R.evenements.map((e,i)=>({e:e,i:i}))
-    .filter(o=>!q||((o.e.titre||'')+' '+(o.e.cle||'')).toLowerCase().indexOf(q)>=0)
-    .map(o=>{
-      const pb=controler(o.e,o.i).filter(x=>x.dur).length;
-      const t=teinteDe((o.e.ico)||{});
-      return `<button class="entree${o.i===sel?' actif':''}${pb?' faux':''}" data-sel="${o.i}">`+
-        `<b><span class="puce" style="background:${t}"></span>${ech(o.e.titre||'sans titre')}</b>`+
-        `<span>${ech(o.e.oeil||'—')} · ${o.e.genre==='mineur'?'mineur':'majeur'}`+
-        `${pb?' · '+pb+' à corriger':''}</span></button>`;}).join('')||
-    `<p class="vide" style="padding:8px">Rien ici.</p>`;
+  const vus=R.icones.map((ic,i)=>({ic:ic,i:i}))
+    .filter(x=>!q||((x.ic.nom||'')+' '+(x.ic.cle||'')).toLowerCase().indexOf(q)>=0);
+  $('#liste').innerHTML=(vus.length?`<div class="groupe">Vos icônes</div>`:'')+
+    vus.map(x=>{
+      const pb=controler(x.ic,x.i).filter(y=>y.dur).length;
+      return `<button class="entree${x.i===sel?' actif':''}" data-sel="${x.i}">`+
+        `<span class="jeton">${svgDe(x.ic,teinteDe(x.ic))}</span>`+
+        `<span class="txt">${ech(x.ic.nom||'sans nom')}`+
+        `<small>${(x.ic.formes||[]).length} forme${(x.ic.formes||[]).length>1?'s':''}`+
+        `${x.ic.source?' · SVG collé':''}${pb?' · à corriger':''}</small></span></button>`;
+    }).join('')||`<p class="vide" style="padding:8px">Rien ici.</p>`;
 }
 
 /* ═══════════════ les contrôles ═══════════════ */
-function nommes(effets){
-  return (effets||[]).filter(e=>e.nomme).map(e=>e.nomme);
-}
-const CONTEXTE=['ville','destination','contree','chien','garde','bien']
-  .concat(Object.keys(V.interrogations));
-function verifierTexte(txt,dispo,ou,out){
-  trous(txt).forEach(t=>{
-    const racine=t.split('.')[0];
-    if(dispo.indexOf(racine)<0&&CONTEXTE.indexOf(racine)<0)
-      out.push({dur:true,txt:`<b>{${ech(t)}}</b> dans ${ech(ou)} ne correspond à rien. `+
-        `Le joueur lira les accolades telles quelles.`});
-  });
-}
-function controler(e,idx){
+function controler(ic,idx){
   const out=[];
   const dur=t=>out.push({dur:true,txt:t});
   const doux=t=>out.push({dur:false,txt:t});
-  if(!e)return out;
-  if(!e.cle)dur('Il manque la <b>clé</b>.');
-  else if(!/^[a-z0-9-]+$/.test(e.cle))dur('La <b>clé</b> ne prend que des minuscules, des chiffres et des tirets.');
-  else if(R.evenements.some((o,i)=>i!==idx&&o.cle===e.cle))
-    dur(`La clé <b>${ech(e.cle)}</b> sert déjà à un autre événement.`);
-  if(!e.titre)dur('Il manque le <b>titre</b>.');
-  if(!e.oeil)doux('Pas de <b>ligne au-dessus</b> du titre — le jeu affichera « Sur la route ».');
-  if(!e.recit)dur('Il manque le <b>récit</b>.');
-  if(!e.ico||!e.ico.glyphe)doux('Pas de <b>pictogramme</b> : l\'événement s\'affichera sans image.');
-  else if(!glyphesTous()[e.ico.glyphe])dur(`Le dessin <b>${ech(e.ico.glyphe)}</b> n'existe pas.`);
-  if(e.ico&&e.ico.nature&&!REF.natures[e.ico.nature])
-    dur(`La teinte <b>${ech(e.ico.nature)}</b> n'existe pas.`);
-
-  verifierTexte(e.recit,[],'le récit',out);
-
-  const ch=e.choix||[];
-  if(ch.length<2)dur('Il faut <b>au moins deux choix</b>.');
-  if(ch.length>4)dur('Quatre choix au maximum : au-delà, la feuille déborde de l\'écran.');
-
-  ch.forEach((c,i)=>{
-    const nom=`le choix ${i+1}`;
-    if(!c.txt)dur(`Il manque le <b>libellé</b> du choix ${i+1}.`);
-    const f=forme(c);
-    const combien=['jet','pari','selon'].filter(k=>c[k]).length;
-    if(combien>1)dur(`Le choix ${i+1} mélange <b>deux façons de se résoudre</b>. Une seule.`);
-    /* la note annonce : elle peut citer n'importe quel résultat du choix */
-    verifierTexte(c.note,nomsChoix(c),`la note du choix ${i+1}`,out);
-    (c.bloque||[]).forEach(b=>{if(!b.sinon)
-      doux(`Une condition de blocage du choix ${i+1} n'a pas de <b>raison affichée</b> : `+
-        `le joueur verra un bouton gris sans savoir pourquoi.`);});
-
-    const issue=(o,quoi)=>{
-      if(!o){dur(`Le choix ${i+1} n'a pas d'issue « ${quoi} ».`);return;}
-      if(!o.texte)dur(`L'issue « ${quoi} » du choix ${i+1} n'a <b>rien à lire</b>.`);
-      const dispo=nommes(o.effets).concat(f==='direct'?nommes(c.effets):[]);
-      verifierTexte(o.texte,dispo,`l'issue « ${quoi} » de ${nom}`,out);
-      (o.effets||[]).forEach(x=>controlerEffet(x,i+1,out));
-    };
-    if(f==='direct'){
-      if(!c.texte)dur(`Le choix ${i+1} n'a <b>rien à lire</b> après coup.`);
-      verifierTexte(c.texte,nommes(c.effets),nom,out);
-      (c.effets||[]).forEach(x=>controlerEffet(x,i+1,out));
-    }else if(f==='jet'){
-      if(c.jet.paliers){
-        const p=c.jet.paliers;
-        if(!p.length)dur(`Le jet du choix ${i+1} n'a <b>aucun palier</b>.`);
-        const der=p[p.length-1];
-        if(der&&(der.min!==undefined||der.max!==undefined))
-          dur(`Le dernier palier du choix ${i+1} a des bornes : un total qui ne rentre nulle `+
-            `part <b>ne donnerait rien</b>. Le dernier doit être le repli.`);
-        p.forEach((x,j)=>{
-          if(!x.texte)dur(`Le palier ${j+1} du choix ${i+1} n'a rien à lire.`);
-          verifierTexte(x.texte,nommes(x.effets),`le palier ${j+1} de ${nom}`,out);
-          (x.effets||[]).forEach(y=>controlerEffet(y,i+1,out));
-          /* Le premier palier qui convient l'emporte : deux paliers qui se chevauchent
-             en partie forment une échelle normale. Seul est fautif celui qu'un palier
-             antérieur recouvre entièrement — il ne sortira jamais. */
-          if(j>0){
-            const a1=x.min===undefined?-99:evaluer(x.min,true);
-            const a2=x.max===undefined?99:evaluer(x.max,true);
-            const mort=p.slice(0,j).some(z=>
-              (z.min===undefined?-99:evaluer(z.min,true))<=a1&&
-              (z.max===undefined?99:evaluer(z.max,true))>=a2);
-            if(mort)doux(`Le palier ${j+1} du choix ${i+1} est <b>recouvert</b> par un palier `+
-              `au-dessus : il ne sortira jamais.`);
-          }
-        });
-      }else{
-        if(c.jet.seuil===undefined)dur(`Le jet du choix ${i+1} n'a pas de <b>seuil</b>.`);
-        issue(c.reussi,'réussi');issue(c.rate,'raté');
-      }
-      if(!c.de)doux(`Le choix ${i+1} lance un dé mais n'affiche <b>aucun mot</b> dessus.`);
-    }else if(f==='pari'){
-      if(c.pari.mise===undefined)dur(`Le pari du choix ${i+1} n'a pas de <b>mise</b>.`);
-      if(c.pari.chance===undefined)doux(`Le pari du choix ${i+1} n'annonce pas sa <b>chance</b> : `+
-        `elle vaudra une sur deux.`);
-      const bloque=(c.bloque||[]).some(b=>b.quoi==='or');
-      if(!bloque)doux(`Le pari du choix ${i+1} ne vérifie pas que la <b>bourse suit</b>. `+
-        `Ajoutez une condition de blocage sur l'or.`);
-      issue(c.gagne,'gagné');issue(c.perd,'perdu');
-    }else{
-      if(!c.selon||!c.selon.length)dur(`Le choix ${i+1} dit dépendre de l'état du convoi mais `+
-        `<b>ne regarde rien</b>.`);
-      issue(c.oui,'oui');issue(c.non,'non');
-    }
-  });
+  if(!ic)return out;
+  if(!ic.cle)dur('Il manque la <b>clé</b>.');
+  else if(!/^[a-z0-9-]+$/.test(ic.cle))
+    dur('La <b>clé</b> ne prend que des minuscules, des chiffres et des tirets.');
+  else if(R.icones.some((x,i)=>i!==idx&&x.cle===ic.cle))
+    dur(`La clé <b>${ech(ic.cle)}</b> sert déjà à une autre icône.`);
+  else if(REF.glyphes&&REF.glyphes[ic.cle])
+    dur(`La clé <b>${ech(ic.cle)}</b> est déjà celle d'un dessin du jeu : la vôtre `+
+      `le remplacerait partout.`);
+  if(!ic.nom)doux('Pas de <b>nom</b> : elle sera dure à retrouver dans les listes.');
+  const corps=corpsSvg(ic);
+  if(!corps.trim())dur('Elle est <b>vide</b> : rien ne s\'affichera.');
+  if(ic.source){
+    if(/<script|onload=|onerror=/i.test(ic.source))
+      dur('Le SVG collé contient du <b>script</b>. Retirez-le : une icône ne doit rien exécuter.');
+    if(/<svg/i.test(ic.source))
+      doux('Le SVG collé contient une balise <b>&lt;svg&gt;</b>. Ne gardez que ce qu\'il y a '+
+        'dedans — les &lt;path&gt;, &lt;circle&gt;, &lt;rect&gt;.');
+    if(!/currentColor/.test(ic.source))
+      doux('Aucun <b>currentColor</b> : la teinte choisie ailleurs n\'aura pas d\'effet.');
+  }else{
+    const f=ic.formes||[];
+    if(!f.length)dur('Aucune <b>forme</b>.');
+    /* ce qui sort du cadre ne se verra pas */
+    const dehors=f.filter(o=>{
+      const b=boite(o);
+      return b.x0<-.5||b.y0<-.5||b.x1>24.5||b.y1>24.5;
+    }).length;
+    if(dehors)doux(`${dehors} forme${dehors>1?'s dépassent':' dépasse'} du cadre de 24 : `+
+      `ce qui sort ne se verra pas.`);
+    if(f.length>10)doux('Plus de dix formes : à seize pixels, personne ne les distinguera.');
+  }
   return out;
 }
-function controlerEffet(e,n,out){
-  const d=V.effets[e.faire];
-  if(!d){out.push({dur:true,txt:`Le choix ${n} emploie un effet inconnu : <b>${ech(e.faire)}</b>.`});return;}
-  Object.entries(d.parametres||{}).forEach(([p,dd])=>{
-    if(dd.requis&&(e[p]===undefined||e[p]===''))
-      out.push({dur:true,txt:`« ${ech(d.nom)} » du choix ${n} : <b>${ech(dd.nom)}</b> est obligatoire.`});
-  });
-  if(e.bien&&e.bien!=='auHasard'&&!REF.biens[e.bien])
-    out.push({dur:true,txt:`La marchandise <b>${ech(e.bien)}</b> n'existe pas.`});
-  if(e.arme&&!REF.armes[e.arme])
-    out.push({dur:true,txt:`L'arme <b>${ech(e.arme)}</b> n'existe pas.`});
-  if(e.metier&&e.metier!=='auHasard'&&!REF.metiers[e.metier])
-    out.push({dur:true,txt:`Le métier <b>${ech(e.metier)}</b> n'existe pas.`});
-}
-function controlerLocalisation(e,out){
-  if(!MONDE)return;
-  const ok=(q,l)=>{const dispo=listeOu(q).map(x=>x[0]);
-    (l||[]).forEach(k=>{if(dispo.indexOf(k)<0)
-      out.push({dur:true,txt:`<b>${ech(k)}</b> n'existe pas dans le monde chargé.`});});};
-  const o=e.ou||{};
-  ok('lieux',o.lieux);ok('contrees',o.contrees);ok('rangs',o.rangs);
-  ok('traits',o.traits);ok('terrains',o.terrains);ok('profils',o.profils);
+/* La boîte d'une forme, pour la sélection et les contrôles. */
+function boite(o){
+  if(o.f==='trait')return {x0:Math.min(o.x,o.x2)-o.ep/2,y0:Math.min(o.y,o.y2)-o.ep/2,
+    x1:Math.max(o.x,o.x2)+o.ep/2,y1:Math.max(o.y,o.y2)+o.ep/2};
+  if(o.f==='rectangle')return {x0:o.x,y0:o.y,x1:o.x+o.l,y1:o.y+o.h};
+  if(o.f==='triangle')return {x0:o.x-o.l/2,y0:o.y-o.h/2,x1:o.x+o.l/2,y1:o.y+o.h/2};
+  const r=o.r||6;
+  return {x0:o.x-r,y0:o.y-r,x1:o.x+r,y1:o.y+r};
 }
 
 /* ═══════════════ les volets ═══════════════ */
-let joue=null;                    /* l'issue affichée dans l'aperçu, s'il y en a une */
 function rendreVolet(){
   const v=$('#volet');
-  if(onglet==='apercu')v.innerHTML=voletApercu();
-  else if(onglet==='controles')v.innerHTML=voletControles();
-  else if(onglet==='tirage')v.innerHTML=voletTirage();
-  else v.innerHTML=voletConvoi();
+  if(onglet==='planche')v.innerHTML=voletPlanche();
+  else if(onglet==='tailles')v.innerHTML=voletTailles();
+  else v.innerHTML=voletSource();
+  if(onglet==='planche')brancherPlanche();
 }
-function voletApercu(){
-  const e=EV();
-  if(!e)return `<p class="vide">Rien à montrer.</p>`;
-  const sac=contexte();
-  const nat=teinteDe(e.ico||{});
-  let h=`<div class="apercu"><div class="tete">`+
-    (e.ico&&e.ico.glyphe?`<div class="ico">${svgGlyphe(e.ico.glyphe,nat)}</div>`:'')+
-    `<div><p class="oeil">${ech(e.oeil||'Sur la route')}</p>`+
-    `<h3>${ech(e.titre||'Sans titre')}</h3></div></div>`+
-    `<p class="recit">${ech(boucher(e.recit,sac))||'<em>…</em>'}</p>`;
-  if(joue){
-    const j=joue.de;
-    if(j)h+=`<div class="de-bloc r-${joue.classe||''}"><div class="de">`+
-      `<svg viewBox="0 0 100 100"><polygon points="50,5 91,28.5 91,71.5 50,95 9,71.5 9,28.5" `+
-      `fill="#F0E7CE" stroke="#2B2116" stroke-width="3.5"/>`+
-      `<polygon points="50,25 73,64 27,64" fill="none" stroke="#C6B58C" stroke-width="2.5"/></svg>`+
-      `<div class="de-num">${j.de}</div></div><div class="de-detail">`+
-      `<span class="verdict">${ech(joue.verdict)}</span>`+
-      (j.titre?ech(j.titre)+' — ':'')+`dé <b>${j.de}</b>`+
-      (j.mods.length?' · '+j.mods.map(m=>ech(m[0])+' '+(m[1]>0?'+':'')+m[1]).join(' · '):'')+
-      ` = <b>${j.total}</b>`+(j.seuil?` contre <b>${j.seuil}</b>`:'')+`</div></div>`;
-    else if(joue.verdict)h+=`<div class="de-bloc"><div class="de-detail">`+
-      `<span class="verdict">${ech(joue.verdict)}</span>La condition a tranché.</div></div>`;
-    h+=`<div class="sortie">${ech(joue.texte)||'<em>rien à lire</em>'}</div>`+
-      `<button class="rejouer" data-act="rejouer">Revenir aux choix</button>`;
-  }else{
-    const ch=(e.choix||[]).filter(c=>conditionsVraies(c.si));
-    h+=ch.map((c,i)=>{
-      const bl=!conditionsVraies(c.bloque);
-      const raison=bl?((c.bloque||[]).find(b=>!conditionsVraies([b]))||{}).sinon:'';
-      const note=Object.assign({},sac,prevoir(c));
-      return `<button class="bouton${c.ton==='mauvais'?' mauvais':''}" data-act="jouer" `+
-        `data-i="${(e.choix||[]).indexOf(c)}"${bl?' disabled':''}>`+
-        `<strong>${ech(c.txt||'—')}`+(c.de?`<span class="marque">◈ ${ech(c.de)}</span>`:'')+`</strong>`+
-        (c.note||raison?`<span>${ech(bl&&raison?raison:boucher(c.note,note))}</span>`:'')+
-        `</button>`;}).join('');
-    if(!ch.length)h+=`<p class="vide">Aucun choix visible avec ce convoi d'essai.</p>`;
+function voletPlanche(){
+  const ic=IC();
+  if(!ic)return `<p class="vide">Rien à dessiner.</p>`;
+  const t=teinteDe(ic);
+  let g='';
+  for(let i=1;i<24;i++){
+    const f=(i%6===0)?' class="fort"':'';
+    g+=`<line${f} x1="${i}" y1="0" x2="${i}" y2="24"/>`+
+       `<line${f} x1="0" y1="${i}" x2="24" y2="${i}"/>`;
   }
-  h+=`</div>`;
-  const caches=(e.choix||[]).length-(e.choix||[]).filter(c=>conditionsVraies(c.si)).length;
-  if(caches)h+=`<p class="aide" style="margin-top:9px">${caches} choix masqué${caches>1?'s':''} `+
-    `par ses conditions, avec ce convoi. Changez le <b>Convoi</b> pour les voir.</p>`;
-  h+=`<p class="aide" style="margin-top:9px">Cliquez un choix : il se joue pour de bon, dé compris. `+
-    `Les accolades sont résolues contre le convoi d'essai.</p>`;
-  return h;
-}
-function voletControles(){
-  const e=EV();
-  if(!e)return `<p class="vide">Rien à contrôler.</p>`;
-  const l=controler(e,sel);
-  controlerLocalisation(e,l);
-  const durs=l.filter(x=>x.dur), doux=l.filter(x=>!x.dur);
-  let h=`<h4 class="section">Cet événement</h4>`;
-  h+=durs.length
-    ?`<div class="avert"><b>${durs.length}</b> chose${durs.length>1?'s':''} à corriger avant `+
-     `qu'il soit jouable.</div>`+durs.map(x=>`<div class="avert">${x.txt}</div>`).join('')
-    :`<div class="avert bien">Rien ne bloque : il est <b>jouable</b>.</div>`;
-  /* les remarques en or ne bloquent rien, mais valent d'être lues */
-  if(doux.length)h+=`<h4 class="section">À voir, sans urgence</h4>`+
-    doux.map(x=>`<div class="avert doux">${x.txt}</div>`).join('');
-
-  /* le recueil entier */
-  const mauvais=R.evenements.map((x,i)=>({x:x,i:i,n:controler(x,i).filter(y=>y.dur).length}))
-    .filter(o=>o.n);
-  h+=`<h4 class="section">Le recueil</h4>`;
-  h+=`<div class="mesures"><span>Événements</span><b>${R.evenements.length}</b>`+
-    `<span>À corriger</span><b class="${mauvais.length?'':''}">${mauvais.length}</b></div>`;
-  if(mauvais.length)h+=`<div class="avert" style="margin-top:7px">`+
-    mauvais.map(o=>`<a href="#" data-sel="${o.i}" style="color:var(--or)">${ech(o.x.titre||o.x.cle||'?')}</a>`)
-      .join(' · ')+`</div>`;
-
-  /* la couverture */
-  h+=`<h4 class="section">La couverture</h4>`;
-  if(!MONDE)h+=`<p class="vide">Chargez un <b>monde.json</b> pour savoir quels lieux ont des `+
-    `événements et lesquels n'en ont aucun.</p>`;
-  else{
-    const lieux=MONDE.lieux||[];
-    const compte={};
-    let universels=0;
-    R.evenements.forEach(x=>{
-      const o=x.ou||{};
-      const cible=(o.lieux||[]).length||(o.contrees||[]).length||(o.rangs||[]).length||
-        (o.traits||[]).length||(o.terrains||[]).length;
-      if(!cible){universels++;return;}
-      lieux.forEach(L=>{
-        if(o.lieux&&o.lieux.length&&o.lieux.indexOf(L.cle)<0)return;
-        if(o.contrees&&o.contrees.length&&o.contrees.indexOf(L.contree)<0)return;
-        if(o.rangs&&o.rangs.length&&o.rangs.indexOf(L.rang)<0)return;
-        if(o.traits&&o.traits.length&&!(L.traits||[]).some(t=>o.traits.indexOf(t)>=0))return;
-        compte[L.cle]=(compte[L.cle]||0)+1;
-      });
-    });
-    const nus=lieux.filter(L=>!compte[L.cle]);
-    h+=`<div class="mesures"><span>Partout</span><b>${universels}</b>`+
-      `<span>Lieux servis</span><b>${lieux.length-nus.length} / ${lieux.length}</b></div>`;
-    if(nus.length)h+=`<div class="avert doux" style="margin-top:7px">Aucun événement propre à : `+
-      nus.slice(0,14).map(L=>ech(L.nom)).join(', ')+(nus.length>14?`, et ${nus.length-14} autres`:'')+
-      `.</div>`;
-    const forts=Object.entries(compte).sort((a,b)=>b[1]-a[1]).slice(0,6);
-    if(forts.length)h+=`<table class="tableau" style="margin-top:8px"><tr><th>Lieu</th>`+
-      `<th class="n">événements</th></tr>`+forts.map(([k,n])=>{
-        const L=lieux.find(x=>x.cle===k)||{};
-        return `<tr><td>${ech(L.nom||k)}</td><td class="n">${n}</td></tr>`;}).join('')+`</table>`;
+  let cadre='';
+  const o=(ic.formes||[])[selForme];
+  if(o&&!ic.source){
+    const b=boite(o);
+    cadre=`<rect class="cadre" x="${n(b.x0)}" y="${n(b.y0)}" `+
+      `width="${n(b.x1-b.x0)}" height="${n(b.y1-b.y0)}"/>`+
+      `<circle class="poignee" data-poignee="1" cx="${n(b.x1)}" cy="${n(b.y1)}" r=".8"/>`;
   }
-  return h;
+  return `<div id="planche"><div id="toile">
+    <svg viewBox="0 0 24 24" style="color:${t};--velin:#E3D6B2">
+      <g class="grille-fond">${g}</g>
+      ${corpsSvg(ic)}
+      ${cadre}
+    </svg></div></div>
+    <p class="aide" style="padding:0 4px">Faites glisser la forme choisie sur la planche,
+      et tirez la <b>poignée dorée</b> pour la redimensionner. La grille marque les
+      unités ; les traits plus clairs, les quarts.</p>`;
 }
-function voletTirage(){
-  const e=EV();
-  if(!e||!(e.choix||[]).length)return `<p class="vide">Rien à tirer.</p>`;
-  const N=200;
-  let h=`<p class="aide">Chaque choix joué <b>${N} fois</b> contre le convoi d'essai. `+
-    `C'est là qu'on voit qu'une option est trop punitive — avant le joueur.</p>`;
-  (e.choix||[]).forEach((c,i)=>{
-    const f=forme(c);
-    const issues={}, ors=[], etp=[], larg=[], usu=[], deg=[];
-    for(let n=0;n<N;n++){
-      const r=resoudre(c);
-      const k=r.verdict||'—';
-      issues[k]=(issues[k]||0)+1;
-      ors.push(r.bilan.or-r.bilan.orPerdu);etp.push(r.bilan.etapes);larg.push(r.bilan.largue);
-      usu.push(r.bilan.usure);deg.push(r.bilan.degats);
-    }
-    const med=a=>{const b=a.slice().sort((x,y)=>x-y);return b[Math.floor(b.length/2)];};
-    const mini=a=>a.reduce((s,x)=>Math.min(s,x),1e9), maxi=a=>a.reduce((s,x)=>Math.max(s,x),-1e9);
-    h+=`<h4 class="section">Choix ${i+1} — ${ech(c.txt||'—')}</h4>`;
-    if(f!=='direct'){
-      const total=Object.values(issues).reduce((s,x)=>s+x,0);
-      h+=Object.entries(issues).sort((a,b)=>b[1]-a[1]).map(([k,n])=>{
-        const p=Math.round(n/total*100);
-        const t=/rat|perd|échec|Non|Catastroph/i.test(k)?'var(--minium)'
-          :(/Coup|Gagn|Réuss|Oui|Magot/i.test(k)?'var(--vert)':'var(--encre-pale)');
-        return `<div class="mesures"><span>${ech(k)}</span><b>${p} %</b></div>`+
-          `<div class="barre-part"><i style="width:${p}%;background:${t}"></i></div>`;}).join('');
-    }else h+=`<p class="aide">Issue certaine.</p>`;
-    h+=`<div class="mesures">`+
-      `<span>Or, en médiane</span><b>${(med(ors)>0?'+':'')}${fmt(med(ors))} po</b>`+
-      `<span>Or, du pire au meilleur</span><b>${fmt(mini(ors))} → ${fmt(maxi(ors))}</b>`+
-      (maxi(etp)?`<span>Étapes ajoutées</span><b>${dec(med(etp))}</b>`:'')+
-      (maxi(larg)?`<span>Cargaison larguée</span><b>${Math.round(med(larg)*100)} %</b>`:'')+
-      (maxi(usu)?`<span>Usure des chariots</span><b>${dec(med(usu))}</b>`:'')+
-      (maxi(deg)?`<span>Dégâts sur la troupe</span><b>${fmt(med(deg))} pv</b>`:'')+
-      `</div>`;
+function voletTailles(){
+  const ic=IC();
+  if(!ic)return `<p class="vide">Rien à montrer.</p>`;
+  const t=teinteDe(ic);
+  const t2=[[16,'dans une liste'],[24,'dans le journal'],[32,'sur une fiche'],
+    [48,'en tête d\'événement']];
+  return `<p class="aide">Une icône se juge à la taille où on la verra. À seize pixels,
+    un trait de moins d'un demi ne se voit plus.</p>
+    <div class="tailles" style="margin-top:12px">`+
+    t2.map(([s,q])=>`<figure><div>${svgDe(ic,t,s)}</div>`+
+      `<figcaption>${s} px<br>${ech(q)}</figcaption></figure>`).join('')+
+    `</div>
+    <h4 class="section">Sur les deux fonds du jeu</h4>
+    <div class="tailles">
+      <figure><div style="background:#1C1A17">${svgDe(ic,t,40)}</div>
+        <figcaption>l'écran sombre</figcaption></figure>
+      <figure><div style="background:#E3D6B2">${svgDe(ic,t,40)}</div>
+        <figcaption>le vélin</figcaption></figure>
+    </div>
+    <h4 class="section">Aux dix teintes nommées</h4>
+    <div class="tailles">`+
+    Object.entries(REF.natures||{}).map(([k,c])=>
+      `<figure><div>${svgDe(ic,c,26)}</div><figcaption>${ech(k)}</figcaption></figure>`
+    ).join('')+`</div>`;
+}
+function voletSource(){
+  const ic=IC();
+  if(!ic)return `<p class="vide">Rien à montrer.</p>`;
+  const c=corpsSvg(ic);
+  return `<p class="aide">Ce que l'atelier écrit. C'est exactement la forme des
+    quarante-neuf dessins du jeu : le contenu d'une balise <b>svg</b> de 24 sur 24,
+    en <b>currentColor</b>.</p>
+    <textarea rows="14" readonly style="margin-top:10px">${ech(c)}</textarea>
+    <div class="mesures" style="margin-top:10px">
+      <span>Formes</span><b>${(ic.formes||[]).length}</b>
+      <span>Poids</span><b>${c.length} caractères</b></div>
+    <p class="aide" style="margin-top:9px">Les dessins du jeu font entre 90 et 600
+      caractères. Au-delà, c'est probablement trop détaillé pour la taille où on
+      le verra.</p>`;
+}
+
+/* ── la planche : glisser et redimensionner ── */
+function brancherPlanche(){
+  const toile=$('#toile');
+  if(!toile)return;
+  const svg=toile.querySelector('svg');
+  let glisse=null;
+  const point=ev=>{
+    const r=toile.getBoundingClientRect();
+    return {x:(ev.clientX-r.left)/r.width*24,y:(ev.clientY-r.top)/r.height*24};
+  };
+  toile.addEventListener('pointerdown',ev=>{
+    const ic=IC(),o=(ic&&ic.formes||[])[selForme];
+    if(!o||ic.source)return;
+    ev.preventDefault();
+    toile.setPointerCapture(ev.pointerId);
+    const p=point(ev);
+    const surPoignee=!!ev.target.closest('[data-poignee]');
+    glisse={quoi:surPoignee?'taille':'place',p:p,depart:Object.assign({},o)};
   });
-  return h;
+  toile.addEventListener('pointermove',ev=>{
+    if(!glisse)return;
+    const ic=IC(),o=ic.formes[selForme];
+    const p=point(ev), dx=p.x-glisse.p.x, dy=p.y-glisse.p.y;
+    const d=glisse.depart;
+    /* un quart d'unité : assez fin pour placer, assez gros pour rester net */
+    const q=v=>Math.round(v*4)/4;
+    if(glisse.quoi==='place'){
+      o.x=q(d.x+dx);o.y=q(d.y+dy);
+      if(o.f==='trait'){o.x2=q(d.x2+dx);o.y2=q(d.y2+dy);}
+    }else{
+      if(o.f==='rectangle'){o.l=Math.max(.5,q(d.l+dx));o.h=Math.max(.5,q(d.h+dy));}
+      else if(o.f==='triangle'){o.l=Math.max(.5,q(d.l+dx*2));o.h=Math.max(.5,q(d.h+dy*2));}
+      else if(o.f==='trait'){o.x2=q(d.x2+dx);o.y2=q(d.y2+dy);}
+      else o.r=Math.max(.5,q(d.r+Math.max(dx,dy)));
+    }
+    rendrePlancheSeule();
+  });
+  const fin=()=>{if(glisse){glisse=null;tout();}};
+  toile.addEventListener('pointerup',fin);
+  toile.addEventListener('pointercancel',fin);
 }
-function voletConvoi(){
-  const l=[['etapes','Étapes parcourues',0,40],['or','Or en bourse',0,20000],
-    ['lieues','Lieues au compteur',0,900],['reputation','Réputation',0,100],
-    ['karma','Karma',0,100],['gardes','Gardes',0,6],['place','Place libre (kg)',0,3000],
-    ['charge','Cargaison (kg)',0,3000],['valeurSoute','Valeur de la cargaison',0,40000],
-    ['etatConvoi','Santé du convoi',0,100],['vigilance','Vigilance',0,100],
-    ['agilite','Agilité',0,100],['negoce','Négoce',0,100],['puissance','Force du marchand',0,3]];
-  return `<p class="aide">Le convoi contre lequel tout est mesuré : les montants annoncés, `+
-    `les chances de réussite, l'aperçu, le tirage à blanc. <b>Bougez-le</b> pour voir un `+
-    `événement au début et à la fin d'une partie.</p>`+
-    `<div style="display:flex;flex-direction:column;gap:7px;margin-top:10px">`+
-    l.map(([k,n,a,b])=>`<div class="champ"><label>${ech(n)}</label>`+
-      `<input type="number" min="${a}" max="${b}" data-essai="${k}" value="${ESSAI[k]}"></div>`).join('')+
-    `<label class="chip${ESSAI.chien?' actif':''}" style="align-self:flex-start">`+
-    `<input type="checkbox" data-essai="chien"${ESSAI.chien?' checked':''}>Un chien suit le convoi</label>`+
-    `</div>`+
-    `<div class="mesures" style="margin-top:12px">`+
-    `<span>Bonus de karma au dé</span><b>${bonusKarma()>0?'+':''}${bonusKarma()}</b>`+
-    `<span>Bonus d'état au dé</span><b>${bonusConvoi()>0?'+':''}${bonusConvoi()}</b>`+
-    `<span>Mise de jeu</span><b>${fmt(inter('mise'))} po</b>`+
-    `<span>Tribut d'un pillard</span><b>${fmt(inter('tribut'))} po</b>`+
-    `<span>Prix d'un garde</span><b>${fmt(inter('coutGarde'))} po</b></div>`+
-    `<button class="outil" style="margin-top:10px" data-act="essai-defaut">Remettre au milieu</button>`;
+/* Pendant un glissé on ne redessine que la planche : refaire toute la feuille
+   à chaque mouvement du doigt la rendrait poisseuse. */
+function rendrePlancheSeule(){
+  const toile=$('#toile');
+  if(!toile)return;
+  const ic=IC(),o=(ic.formes||[])[selForme];
+  const svg=toile.querySelector('svg');
+  const grille=svg.querySelector('.grille-fond').outerHTML;
+  let cadre='';
+  if(o){
+    const b=boite(o);
+    cadre=`<rect class="cadre" x="${n(b.x0)}" y="${n(b.y0)}" `+
+      `width="${n(b.x1-b.x0)}" height="${n(b.y1-b.y0)}"/>`+
+      `<circle class="poignee" data-poignee="1" cx="${n(b.x1)}" cy="${n(b.y1)}" r=".8"/>`;
+  }
+  svg.innerHTML=grille+corpsSvg(ic)+cadre;
 }
 
 /* ═══════════════ l'état du bas ═══════════════ */
 function rendreEtat(){
-  const durs=R.evenements.reduce((s,e,i)=>s+controler(e,i).filter(x=>x.dur).length,0);
+  const durs=R.icones.reduce((s,x,i)=>s+controler(x,i).filter(y=>y.dur).length,0);
+  const l=controler(IC(),sel);
   $('#etat').innerHTML=
-    `<span>Recueil : <b>${R.evenements.length}</b> événement${R.evenements.length>1?'s':''}</span>`+
-    `<span>Majeurs : <b>${R.evenements.filter(e=>e.genre!=='mineur').length}</b></span>`+
-    `<span>Monde : <b>${MONDE?(MONDE.lieux||[]).length+' lieux':'aucun'}</b></span>`+
-    `<span class="${durs?'rouge':''}">À corriger : <b>${durs}</b></span>`+
-    `<span style="margin-left:auto">Sauvegardé dans le navigateur — <b>exportez</b> régulièrement</span>`;
+    `<span>Vos icônes : <b>${R.icones.length}</b></span>`+
+    `<span>Dessins du jeu : <b>${Object.keys(REF.glyphes||{}).length}</b></span>`+
+    `<span${durs?' style="color:var(--minium)"':''}>À corriger : <b>${durs}</b></span>`+
+    (l.length?`<span>${l[0].txt.replace(/<[^>]+>/g,'')}</span>`:'')+
+    `<span style="margin-left:auto">Partagé avec les autres ateliers</span>`;
 }
 function tout(){rendreListe();rendreFeuille();rendreVolet();rendreEtat();sauver();}
-function maj(){rendreListe();rendreVolet();rendreEtat();sauver();}
 
 /* ═══════════════ actions ═══════════════ */
-function neuf(){
-  return {cle:'',titre:'',oeil:'Sur la route',genre:'majeur',
-    ico:{glyphe:'poteau',nature:'rencontre'},recit:'',
-    choix:[{txt:'',texte:''},{txt:'',texte:''}]};
+function neuve(){
+  return {cle:'',nom:'',nature:'trouvaille',
+    formes:[Object.assign({},FORMES.disque.neuf())]};
 }
-function ajouter(e){
-  R.evenements.push(e||neuf());
-  sel=R.evenements.length-1;joue=null;tout();
-}
-function changerForme(c,f){
-  delete c.jet;delete c.pari;delete c.selon;
-  delete c.reussi;delete c.rate;delete c.gagne;delete c.perd;delete c.oui;delete c.non;
-  if(f==='direct'){c.effets=c.effets||[];c.texte=c.texte||'';}
-  else{delete c.effets;delete c.texte;}
-  if(f==='jet'){c.jet={carac:{selon:'agilite',divise:20},seuil:15,titre:''};
-    c.reussi={effets:[],texte:''};c.rate={effets:[],texte:''};}
-  if(f==='pari'){c.pari={mise:{selon:'mise'},chance:.48,carac:0,nom:'hasard'};
-    c.gagne={texte:''};c.perd={texte:''};}
-  if(f==='selon'){c.selon=[{quoi:'or',min:{selon:'mise'}}];
-    c.oui={effets:[],texte:''};c.non={effets:[],texte:''};}
-}
-/* le convoi d'essai et le filtre ne sont pas des données de l'événement */
+function ajouter(ic){R.icones.push(ic||neuve());sel=R.icones.length-1;selForme=0;tout();}
+
 document.addEventListener('input',ev=>{
   const t=ev.target;
-  if(t.dataset.essai!==undefined){
-    ESSAI[t.dataset.essai]=t.type==='checkbox'?t.checked:(Number(t.value)||0);
-    joue=null;rendreFeuille();rendreVolet();sauver();return;
-  }
-  if(t.id==='filtre'){filtre=t.value;rendreListe();}
-});
-ecouterSaisie((t,ch,k)=>{
-  /* la case « bouton rouge » écrit un mot, pas un booléen */
-  if(k==='bool'&&/ton_mauvais$/.test(ch)){
-    ecrire(ch,undefined);
-    ecrire(ch.replace('.ton_mauvais','.ton'),t.checked?'mauvais':undefined);
-  }
-  if(/\.txt$/.test(ch)){
-    const b=t.closest('.choix-bloc');
-    if(b)$('.titre',b).textContent=t.value||'sans libellé';
-  }
-  joue=null;maj();
-});
-document.addEventListener('change',ev=>{
-  const t=ev.target;
-  if(t.dataset.t==='forme'){
-    ecrire(t.dataset.ch,neuveValeur(t.value));joue=null;tout();return;
-  }
-  if(t.dataset.act==='effet-ajout'){
-    if(!t.value)return;
-    const l=lire(t.dataset.ch)||[];
-    const d=V.effets[t.value], e={faire:t.value};
-    Object.entries(d.parametres||{}).forEach(([p,dd])=>{
-      if(dd.defaut!==undefined)e[p]=dd.defaut;
-      else if(dd.requis)e[p]=dd.type==='valeur'||dd.type==='nombre'||dd.type==='fraction'?0:'';
-    });
-    l.push(e);ecrire(t.dataset.ch,l);joue=null;tout();return;
-  }
-  if(/__forme$/.test(t.dataset.ch||'')){
-    const i=Number(t.dataset.ch.split('.')[1]);
-    changerForme(EV().choix[i],t.value);joue=null;tout();return;
-  }
-  if(/__gradue$/.test(t.dataset.ch||'')){
-    const i=Number(t.dataset.ch.split('.')[1]), j=EV().choix[i].jet, c=EV().choix[i];
-    if(t.value==='gradue'){
-      j.paliers=[{min:18,verdict:'Coup de maître',classe:'crit',effets:[],texte:''},
-                 {verdict:'Sans plus',classe:'rate',effets:[],texte:''}];
-      delete j.seuil;delete c.reussi;delete c.rate;
-    }else{
-      delete j.paliers;j.seuil=15;
-      c.reussi={effets:[],texte:''};c.rate={effets:[],texte:''};
-    }
-    joue=null;tout();return;
+  if(t.id==='filtre'){filtre=t.value;rendreListe();return;}
+  /* les curseurs de réglage agissent tout de suite, sans refaire la feuille */
+  if(t.dataset.reg!==undefined){
+    const o=(IC().formes||[])[selForme];
+    if(!o)return;
+    o[t.dataset.reg]=Number(t.value);
+    const v=t.parentNode.querySelector('.mot');
+    if(v)v.textContent=dec(Number(t.value));
+    rendrePlancheSeule();sauver();rendreListe();
   }
 });
+ecouterSaisie(()=>{tout();});
+ecouterTeintes(()=>tout());
 document.addEventListener('click',ev=>{
   const b=ev.target.closest('[data-act],[data-sel]');
   if(!b)return;
-  if(b.dataset.sel!==undefined){ev.preventDefault();sel=Number(b.dataset.sel);joue=null;tout();return;}
-  const a=b.dataset.act, e=EV();
-  if(a==='cle-auto'){ecrire('cle',slug(lire('titre')));tout();}
-  else if(a==='glyphe'){ecrire('ico.glyphe',b.dataset.g);tout();}
-  else if(a==='choix-ajout'){e.choix=e.choix||[];if(e.choix.length<4)e.choix.push({txt:'',texte:''});tout();}
-  else if(a==='choix-oter'){e.choix.splice(Number(b.dataset.i),1);tout();}
-  else if(a==='choix-haut'){bouger(e.choix,Number(b.dataset.i),-1);tout();}
-  else if(a==='choix-bas'){bouger(e.choix,Number(b.dataset.i),1);tout();}
-  else if(a==='effet-oter'){const l=lire(b.dataset.ch);l.splice(Number(b.dataset.i),1);tout();}
-  else if(a==='effet-haut'){bouger(lire(b.dataset.ch),Number(b.dataset.i),-1);tout();}
-  else if(a==='effet-bas'){bouger(lire(b.dataset.ch),Number(b.dataset.i),1);tout();}
-  else if(a==='cond-ajout'){const l=lire(b.dataset.ch)||[];l.push({quoi:'or',min:0});
-    ecrire(b.dataset.ch,l);tout();}
-  else if(a==='cond-oter'){const l=lire(b.dataset.ch);l.splice(Number(b.dataset.i),1);tout();}
-  else if(a==='palier-ajout'){
-    /* Les paliers descendent du meilleur au pire : le neuf se range juste sous le
-       dernier borné, avant le repli, avec une borne déjà cohérente. */
-    const l=lire(b.dataset.ch)||[];
-    const bornes=l.filter(x=>x.min!==undefined).map(x=>evaluer(x.min,true));
-    const min=bornes.length?Math.round(Math.min.apply(null,bornes)-5):12;
-    l.splice(Math.max(0,l.length-1),0,{min:min,verdict:'',classe:'reussi',effets:[],texte:''});
-    ecrire(b.dataset.ch,l);tout();}
-  else if(a==='palier-oter'){const l=lire(b.dataset.ch);l.splice(Number(b.dataset.i),1);tout();}
-  else if(a==='jouer'){joue=resoudre(e.choix[Number(b.dataset.i)]);rendreVolet();}
-  else if(a==='rejouer'){joue=null;rendreVolet();}
-  else if(a==='essai-defaut'){ESSAI={etapes:6,or:900,lieues:120,reputation:52,karma:50,gardes:2,
-    place:400,charge:620,valeurSoute:1400,etatConvoi:78,vigilance:58,agilite:62,negoce:60,
-    puissance:1,chien:false};joue=null;tout();}
+  if(b.dataset.sel!==undefined){sel=Number(b.dataset.sel);selForme=0;tout();return;}
+  const a=b.dataset.act, ic=IC();
+  const i=b.dataset.i!==undefined?Number(b.dataset.i):-1;
+  if(a==='cle-auto'){ecrire('cle',slug(lire('nom')));tout();}
+  else if(a==='ajouter'){
+    ic.formes=ic.formes||[];
+    ic.formes.push(FORMES[b.dataset.f].neuf());
+    selForme=ic.formes.length-1;tout();}
+  else if(a==='choisir'){selForme=i;tout();}
+  else if(a==='oter-forme'){ic.formes.splice(i,1);
+    selForme=Math.min(selForme,ic.formes.length-1);tout();}
+  else if(a==='copier-forme'){ic.formes.splice(i+1,0,JSON.parse(JSON.stringify(ic.formes[i])));
+    selForme=i+1;tout();}
+  else if(a==='monter'){bouger(ic.formes,i,-1);selForme=i-1;tout();}
+  else if(a==='descendre'){bouger(ic.formes,i,1);selForme=i+1;tout();}
+  else if(a==='centrer'){const o=ic.formes[selForme];
+    if(o){if(o.f==='rectangle'){o.x=12-o.l/2;o.y=12-o.h/2;}
+      else if(o.f==='trait'){const dx=o.x2-o.x,dy=o.y2-o.y;
+        o.x=12-dx/2;o.y=12-dy/2;o.x2=12+dx/2;o.y2=12+dy/2;}
+      else {o.x=12;o.y=12;}}
+    tout();}
+  else if(a==='miroir'){const o=ic.formes[selForme];
+    if(o){o.x=24-o.x;if(o.f==='trait')o.x2=24-o.x2;
+      if(o.f==='rectangle')o.x-=o.l;}
+    tout();}
+  else if(a==='coller'){ecrire('source',corpsSvg(ic));tout();}
+  else if(a==='source-oter'){ecrire('source',undefined);tout();}
 });
 $$('#onglets button').forEach(b=>b.addEventListener('click',()=>{
   onglet=b.dataset.onglet;
@@ -1965,66 +1352,54 @@ $$('#onglets button').forEach(b=>b.addEventListener('click',()=>{
   rendreVolet();
 }));
 
-/* ── barre ── */
+/* ── la barre ── */
 $('#b-nouveau').onclick=()=>ajouter();
 $('#b-dupliquer').onclick=()=>{
-  if(!EV())return;
-  const c=JSON.parse(JSON.stringify(EV()));
-  c.cle=(c.cle||'evenement')+'-bis';c.titre=(c.titre||'')+' (copie)';
+  if(!IC())return;
+  const c=JSON.parse(JSON.stringify(IC()));
+  c.cle=(c.cle||'icone')+'-bis';c.nom=(c.nom||'')+' (copie)';
   ajouter(c);
 };
 $('#b-supprimer').onclick=()=>{
-  if(!EV())return;
-  if(!confirm('Supprimer « '+(EV().titre||'sans titre')+' » ?'))return;
-  R.evenements.splice(sel,1);sel=Math.max(0,sel-1);joue=null;tout();
+  if(!IC())return;
+  if(!confirm('Supprimer « '+(IC().nom||'sans nom')+' » ?'))return;
+  R.icones.splice(sel,1);sel=Math.max(0,sel-1);selForme=0;tout();
 };
-$('#b-exemples').onclick=()=>{
-  const dejas=R.evenements.map(e=>e.cle);
-  let n=0;
-  (REF.exemples||[]).forEach(x=>{
-    if(dejas.indexOf(x.cle)>=0)return;
-    R.evenements.push(JSON.parse(JSON.stringify(x)));n++;
-  });
-  sel=R.evenements.length-1;joue=null;tout();
-  if(!n)alert('Les exemples sont déjà dans le recueil.');
+/* Reprendre un dessin du jeu : c'est la façon la plus rapide d'en faire un
+   qui lui ressemble — on part de sa source et on la modifie. */
+$('#b-partir').onclick=()=>{
+  const cles=Object.keys(REF.glyphes||{});
+  if(!cles.length)return;
+  const q=prompt('Quel dessin reprendre ?\n\n'+cles.join(', '),cles[0]);
+  if(!q||!REF.glyphes[q])return;
+  ajouter({cle:q+'-a-moi',nom:q+' (repris)',nature:'trouvaille',
+    source:REF.glyphes[q]});
 };
 let attente=null;
-const ouvrirFichier=accueillirFichiers(d=>avaler(d,attente));
-$('#b-ouvrir').onclick=()=>{attente='recueil';ouvrirFichier();};
-$('#b-monde').onclick=()=>{attente='monde';ouvrirFichier();};
-function avaler(d,quoi){
-  attente=null;
-  if(quoi==='monde'||(quoi!=='recueil'&&estMonde(d))){
-    mondeEst(d);joue=null;tout();return;
-  }
-  const l=Array.isArray(d)?d:(d.evenements||null);
-  if(!l){alert('Ni un recueil d\'événements, ni un monde.');return;}
-  if(R.evenements.length&&!confirm('Remplacer le recueil courant ('+R.evenements.length+
-    ' événements) ?'))return;
-  R={format:d.format||'caravane.evenements.v1',evenements:l};
-  sel=0;joue=null;tout();
-}
+const ouvrirFichier=accueillirFichiers(d=>{
+  const l=Array.isArray(d)?d:(d.icones||null);
+  if(!l){alert('Ce fichier n\'est pas un jeu d\'icônes.');return;}
+  if(R.icones.length&&!confirm('Remplacer les '+R.icones.length+' icônes en cours ?'))return;
+  R={format:d.format||'caravane.icones.v1',icones:l};
+  sel=0;selForme=0;tout();
+});
+$('#b-ouvrir').onclick=()=>ouvrirFichier();
 $('#b-exporter').onclick=()=>
-  telecharger('evenements.json',nettoyer(JSON.parse(JSON.stringify(R))));
+  telecharger('icones-a-moi.json',nettoyer(JSON.parse(JSON.stringify(publier()))));
 
-/* ── raccourcis ── */
 addEventListener('keydown',e=>{
   if(/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName))return;
   if(e.key==='n'&&!e.ctrlKey&&!e.metaKey){e.preventDefault();ajouter();}
-  if(e.key==='ArrowDown'&&sel<R.evenements.length-1){e.preventDefault();sel++;joue=null;tout();}
-  if(e.key==='ArrowUp'&&sel>0){e.preventDefault();sel--;joue=null;tout();}
+  if(e.key==='ArrowDown'&&sel<R.icones.length-1){e.preventDefault();sel++;selForme=0;tout();}
+  if(e.key==='ArrowUp'&&sel>0){e.preventDefault();sel--;selForme=0;tout();}
 });
 
-/* ── départ ── */
-if(!relire())R.evenements=[];
+relire();
 tout();
-/* le codex du hub ouvre un élément par son lien : #cle=… */
-ouvrirDemande(R.evenements,i=>{sel=i;tout();});
-/* une teinte se choisit d'un clic, ici comme dans les autres ateliers */
-ecouterTeintes(()=>tout());
-/* un autre atelier a écrit dans le dépôt : on se remet à jour */
-suivreDepot(()=>{relire();tout();});
-habillerMobile(['Le recueil','L\'événement','Aperçu']);
+ouvrirDemande(R.icones,i=>{sel=i;selForme=0;tout();
+  if(matchMedia('(max-width:860px)').matches)setTimeout(()=>montrerVue('feuille'),80);});
+suivreDepot(()=>{});
+habillerMobile(['Les icônes','L\'icône','La planche']);
 </script>
 </body>
 </html>

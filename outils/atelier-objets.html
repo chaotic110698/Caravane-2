@@ -298,17 +298,212 @@ function bouger(l,i,d){
   const x=l[i];l[i]=l[i+d];l[i+d]=x;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   LE DÉPÔT PARTAGÉ
+   ───────────────────────────────────────────────────────────────────────────
+   Les six ateliers étant servis depuis la même adresse, ils partagent le même
+   localStorage. On y tient **une seule réserve** : le monde, les personnages,
+   les objets, les missions, les événements, les icônes.
+
+   La distinction qui fait tout marcher :
+     — le **contenu** est commun. Un personnage écrit dans son atelier est
+       aussitôt là dans celui des missions, sans rien exporter ni recharger ;
+     — l'**état de travail** — quel élément est ouvert, le filtre, le convoi
+       d'essai — reste privé à chaque atelier, dans sa propre clé.
+
+   Les anciennes sauvegardes, une par atelier, sont reprises au premier
+   chargement : on ne perd pas ce qui était déjà écrit.                       */
+
+const DEPOT='caravane.depot.v1';
+const SECTIONS=['monde','personnages','objets','missions','evenements','icones'];
+/* d'où venait chaque section avant le dépôt, et sous quelle forme */
+const ANCIENNES={
+  personnages:['caravane.atelier-personnages.v1','repertoire'],
+  objets:['caravane.atelier-objets.v1','coffre'],
+  missions:['caravane.atelier-missions.v1','carnet'],
+  evenements:['caravane.atelier-evenements.v1','recueil'],
+  monde:['caravane.atelier-carte.v1',null]
+};
+let D=null;
+
+function chargerDepot(){
+  if(D)return D;
+  try{D=JSON.parse(localStorage.getItem(DEPOT)||'null');}catch(e){D=null;}
+  if(!D||typeof D!=='object')D={v:1};
+  /* reprise : ce qui dormait dans les clés d'avant rejoint la réserve */
+  let repris=[];
+  Object.keys(ANCIENNES).forEach(nom=>{
+    if(D[nom])return;
+    const [cle,champ]=ANCIENNES[nom];
+    let vieux=null;
+    try{vieux=JSON.parse(localStorage.getItem(cle)||'null');}catch(e){}
+    if(!vieux)return;
+    const v=champ?vieux[champ]:vieux;
+    if(v&&typeof v==='object'){D[nom]=v;repris.push(nom);}
+    /* le monde de l'atelier de carte y était aussi rangé sous « monde » */
+    if(!champ&&vieux.monde&&typeof vieux.monde==='object'){D[nom]=vieux.monde;repris.push(nom);}
+  });
+  if(repris.length){ecrireDepot();console.info('Dépôt : repris '+repris.join(', '));}
+  return D;
+}
+function ecrireDepot(){
+  try{localStorage.setItem(DEPOT,JSON.stringify(D));}
+  catch(e){/* quota, mode privé : on continue sans */}
+}
+/* Lire une section que l'on ne tient pas soi-même : c'est par là que l'atelier
+   de missions voit les personnages. */
+function depotLire(nom){
+  chargerDepot();
+  return D[nom]||null;
+}
+function depotEcrire(nom,valeur){
+  chargerDepot();
+  if(valeur===null||valeur===undefined)delete D[nom];
+  else D[nom]=valeur;
+  D.maj=D.maj||{};D.maj[nom]=Date.now();
+  ecrireDepot();
+}
+/* Ce que le dépôt contient, en un coup d'œil — le codex du hub s'en sert. */
+function depotResume(){
+  chargerDepot();
+  const n=(s,c)=>((D[s]&&D[s][c])||[]).length;
+  return {
+    monde:D.monde?((D.monde.lieux||[]).length):0,
+    personnages:n('personnages','personnages'),
+    objets:n('objets','objets'),
+    missions:n('missions','missions'),
+    evenements:n('evenements','evenements'),
+    icones:n('icones','icones')
+  };
+}
+
+/* ═══════════════ le codex ═══════════════
+   Le hub ne connaît la forme d'aucun atelier : il demande ici une liste plate,
+   toujours la même — une clé, un nom, une ligne de détail, un dessin, une
+   teinte — et un lien qui rouvre l'élément dans l'outil qui l'a fait.
+   Ajouter une catégorie, c'est ajouter une ligne à ce tableau. */
+const CATEGORIES=[
+  {nom:'monde',      titre:'Les lieux',       un:'lieu',       des:'lieux',
+   atelier:'atelier-carte.html',        champ:'lieux'},
+  {nom:'personnages',titre:'Les personnages', un:'personnage', des:'personnages',
+   atelier:'atelier-personnages.html',  champ:'personnages'},
+  {nom:'objets',     titre:'Les objets',      un:'objet',      des:'objets',
+   atelier:'atelier-objets.html',       champ:'objets'},
+  {nom:'missions',   titre:'Les missions',    un:'mission',    des:'missions',
+   atelier:'atelier-missions.html',     champ:'missions'},
+  {nom:'evenements', titre:'Les événements',  un:'événement',  des:'événements',
+   atelier:'atelier-evenements.html',   champ:'evenements'},
+  {nom:'icones',     titre:'Les icônes',      un:'icône',      des:'icônes',
+   atelier:'atelier-icones.html',       champ:'icones'}
+];
+/* Ce qu'on dit d'un élément en une ligne, sous son nom. Chaque catégorie a sa
+   phrase, parce qu'un lieu ne se résume pas comme une mission. */
+function detailCodex(section,x,depot){
+  const nomDe=(s,c,cle)=>{
+    const l=(depot[s]&&depot[s][c])||[];
+    const t=l.find(y=>y&&y.cle===cle);
+    return t?(t.nom||t.titre||cle):cle;
+  };
+  const bouts=[];
+  if(section==='monde'){
+    if(x.rang)bouts.push(x.rang);
+    if(x.contree)bouts.push('en '+nomDe('monde','contrees',x.contree));
+    if(x.carte)bouts.push('carte '+x.carte);
+  }else if(section==='personnages'){
+    if(x.titre)bouts.push(x.titre);
+    if(x.role)bouts.push(x.role);
+    if(x.lieu)bouts.push('à '+nomDe('monde','lieux',x.lieu));
+    const c=(x.couches||[]).length;
+    if(c)bouts.push(c+(c>1?' couches':' couche'));
+    if(!x.accord)bouts.push('accord à choisir');
+  }else if(section==='objets'){
+    if(x.genre)bouts.push(x.genre);
+    const p=(x.pouvoirs||[]).length;
+    if(p)bouts.push(p+(p>1?' pouvoirs':' pouvoir'));
+    const pr=x.provenance&&x.provenance.genre;
+    if(pr==='mission'&&x.provenance.mission)
+      bouts.push('de « '+nomDe('missions','missions',x.provenance.mission)+' »');
+    else if(pr)bouts.push(pr);
+  }else if(section==='missions'){
+    if(x.commanditaire)bouts.push('de '+nomDe('personnages','personnages',x.commanditaire));
+    else bouts.push('sans commanditaire');
+    const j=(x.jalons||[]).length;
+    bouts.push(j?j+(j>1?' jalons':' jalon'):'aucun jalon');
+    const d=x.offre&&x.offre.delai;
+    if(d)bouts.push(d+' étapes');
+  }else if(section==='evenements'){
+    if(x.oeil)bouts.push(x.oeil);
+    if(x.genre)bouts.push(x.genre);
+    const c=(x.choix||[]).length;
+    if(c)bouts.push(c+(c>1?' issues':' issue'));
+  }else if(section==='icones'){
+    if(x.source)bouts.push('SVG collé');
+    else{
+      const f=(x.formes||[]).length;
+      bouts.push(f?f+(f>1?' formes':' forme'):'vide');
+    }
+    if(x.nature)bouts.push(x.nature);
+  }
+  return bouts.join(' · ');
+}
+/* Un élément est « en chantier » quand il lui manque de quoi exister : pas de
+   clé, pas de nom. Le codex le montre sans le cacher — c'est normal en cours
+   de travail — mais il le dit. */
+function inacheveCodex(section,x){
+  if(!x.cle)return 'sans clé';
+  if(!(x.nom||x.titre))return 'sans nom';
+  if(section==='missions'&&!(x.jalons||[]).length)return 'sans jalon';
+  if(section==='personnages'&&!x.premiere)return 'sans description';
+  return '';
+}
+function teinteContree(depot,cle){
+  const c=((depot.monde&&depot.monde.contrees)||[]).find(x=>x&&x.cle===cle);
+  return (c&&c.teinte)||'#9C9484';
+}
+function depotCodex(){
+  chargerDepot();
+  return CATEGORIES.map(c=>{
+    const liste=(D[c.nom]&&D[c.nom][c.champ])||[];
+    return {
+      nom:c.nom,titre:c.titre,un:c.un,des:c.des,atelier:c.atelier,
+      entrees:liste.map(x=>({
+        cle:x.cle||'',
+        nom:x.nom||x.titre||'',
+        detail:detailCodex(c.nom,x,D),
+        manque:inacheveCodex(c.nom,x),
+        glyphe:c.nom==='icones'?x.cle
+              :c.nom==='monde'?'borne'
+              :(x.ico&&x.ico.glyphe)||'',
+        svg:c.nom==='icones'?(x.svg||''):'',
+        /* l'icône porte sa teinte en propre, un lieu prend celle de sa
+           contrée, et tout le reste la range dans son petit objet « ico » */
+        teinte:c.nom==='icones'?teinteDe(x)
+              :c.nom==='monde'?teinteContree(D,x.contree)
+              :teinteDe(x.ico||{}),
+        lien:x.cle?c.atelier+'#cle='+encodeURIComponent(x.cle):c.atelier
+      }))
+    };
+  });
+}
+
 /* ═══════════════ sauvegarde ═══════════════
    Une échéance dure : le report d'écriture ne peut pas glisser indéfiniment,
    et la page qui part écrit avant de partir. Sans les deux, une séance entière
    de travail peut ne jamais toucher le disque. */
-let CLE_SAUVE='caravane.atelier', PAQUET=()=>({});
+/* Sans clé, personne ne sauvegarde : le hub prend la même machinerie mais ne
+   tient aucun atelier, et n'a rien à écrire. */
+let CLE_SAUVE=null, PAQUET=()=>({});
+let SECTION=null, SECTION_LIRE=null;
 let tSauve=null, echeance=0;
 function sauvegardeEst(cle,paquet){CLE_SAUVE=cle;PAQUET=paquet;}
+/* L'atelier déclare la section du dépôt qu'il tient. */
+function sectionEst(nom,lire){SECTION=nom;SECTION_LIRE=lire;}
 function ecrireSauve(){
   clearTimeout(tSauve);tSauve=null;echeance=0;
+  if(SECTION&&SECTION_LIRE)depotEcrire(SECTION,SECTION_LIRE());
+  if(!CLE_SAUVE)return;
   try{localStorage.setItem(CLE_SAUVE,JSON.stringify(PAQUET()));}
-  catch(e){/* quota, mode privé : on continue sans */}
+  catch(e){}
 }
 function sauver(){
   const t=Date.now();
@@ -321,10 +516,23 @@ function relireSauve(){
 }
 addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')ecrireSauve();});
 addEventListener('pagehide',ecrireSauve);
+/* Un autre onglet a écrit : on relit, pour que la liste des personnages soit à
+   jour dans l'atelier de missions sans avoir à recharger la page. */
+function suivreDepot(quand){
+  addEventListener('storage',e=>{
+    if(e.key!==DEPOT)return;
+    D=null;chargerDepot();
+    if(quand)quand();
+  });
+}
 
-/* ═══════════════ le monde, quand il est chargé ═══════════════ */
+/* ═══════════════ le monde ═══════════════
+   Il vit dans le dépôt : l'atelier de carte l'y écrit, les cinq autres l'y
+   lisent sans que personne ait à charger un fichier. */
+function MONDE_(){return depotLire('monde');}
 let MONDE=null;
-function mondeEst(d){MONDE=d;}
+function mondeEst(d){MONDE=d;if(d)depotEcrire('monde',d);}
+function mondeDuDepot(){MONDE=depotLire('monde');return MONDE;}
 function listeMonde(quoi){
   if(!MONDE)return null;
   if(quoi==='lieux')return (MONDE.lieux||[]).map(l=>[l.cle,l.nom]);
@@ -349,6 +557,85 @@ const REPLI={
 const listeOu=q=>listeMonde(q)||REPLI[q]||[];
 const estMonde=d=>d&&(d.format==='caravane.carte.v1'||
   (d.lieux!==undefined&&d.contrees!==undefined));
+
+/* ═══════════════ les icônes ═══════════════
+   Deux réservoirs, comme partout : les quarante-neuf dessins d'origine, livrés
+   avec le jeu, et ceux que l'atelier d'icônes ajoute. Les seconds sont rangés
+   dans le dépôt et apparaissent partout sans que rien d'autre change.
+
+   La teinte se choisit librement. Les dix teintes nommées restent proposées
+   comme raccourcis — elles disent quelque chose (danger, halte, trouvaille) —
+   mais une couleur écrite à la main l'emporte. */
+function glyphesTous(){
+  const propres=depotLire('icones');
+  const dessines={};
+  ((propres&&propres.icones)||[]).forEach(i=>{if(i.cle&&i.svg)dessines[i.cle]=i.svg;});
+  return Object.assign({},(typeof REF!=='undefined'&&REF.glyphes)||{},dessines);
+}
+function nomsGlyphes(){
+  const propres=depotLire('icones');
+  const noms={};
+  ((propres&&propres.icones)||[]).forEach(i=>{if(i.cle)noms[i.cle]=i.nom||i.cle;});
+  return noms;
+}
+const estGlypheDessine=k=>Object.prototype.hasOwnProperty.call(nomsGlyphes(),k);
+function teinteDe(ico){
+  if(ico&&ico.teinte)return ico.teinte;
+  const t=(typeof REF!=='undefined'&&REF.natures)||{};
+  return t[(ico||{}).nature]||'#9C9484';
+}
+function svgGlypheDe(cle,teinte){
+  const g=glyphesTous()[cle];
+  if(!g)return '';
+  return `<svg viewBox="0 0 24 24" style="color:${teinte||'#9C9484'};--velin:#E3D6B2">`+
+    `${g}</svg>`;
+}
+/* Le champ de teinte : les dix nommées, plus une couleur libre. */
+function champTeinte(chNature,chTeinte){
+  const nature=lire(chNature)||'';
+  const libre=lire(chTeinte)||'';
+  const t=(typeof REF!=='undefined'&&REF.natures)||{};
+  const pastilles=Object.keys(t).map(k=>
+    `<button type="button" class="teinte${!libre&&k===nature?' actif':''}"
+      data-act="teinte-nommee" data-n="${ech(k)}" data-c="${ech(chNature)}"
+      data-l="${ech(chTeinte)}" title="${ech(k)}"
+      style="background:${t[k]}"></button>`).join('');
+  const courante=libre||t[nature]||'#9C9484';
+  return `<div class="teintes">${pastilles}
+    <label class="teinte-libre${libre?' actif':''}" title="Une couleur à vous">
+      <input type="color" value="${ech(courante)}" data-ch="${ech(chTeinte)}" data-t="txt">
+    </label>
+    ${libre?`<button type="button" class="outil petit" data-act="teinte-oter"
+      data-l="${ech(chTeinte)}">Revenir à la teinte nommée</button>`:''}
+  </div>`;
+}
+const CSS_TEINTES=`
+.teintes{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.teintes .teinte{width:26px;height:26px;border-radius:50%;border:2px solid transparent;
+  cursor:pointer;padding:0}
+.teintes .teinte.actif{border-color:var(--encre);box-shadow:0 0 0 2px var(--fond)}
+.teintes .teinte-libre{width:26px;height:26px;border-radius:50%;overflow:hidden;
+  border:2px dashed var(--bord);cursor:pointer;position:relative;flex:none}
+.teintes .teinte-libre.actif{border-style:solid;border-color:var(--encre)}
+.teintes .teinte-libre input{position:absolute;inset:-6px;width:150%;height:150%;
+  padding:0;border:none;cursor:pointer}
+.teintes .outil.petit{padding:3px 9px;font-size:11.5px;flex:none}`;
+
+/* ═══════════════ les liens profonds ═══════════════
+   Le codex du hub ouvre un élément directement dans son atelier :
+   atelier-personnages.html#cle=orlanne */
+function cleDemandee(){
+  const m=/[#&]cle=([^&]+)/.exec(location.hash||'');
+  return m?decodeURIComponent(m[1]):null;
+}
+function ouvrirDemande(liste,poser){
+  const c=cleDemandee();
+  if(!c)return false;
+  const i=(liste||[]).findIndex(x=>x&&x.cle===c);
+  if(i<0)return false;
+  poser(i);
+  return true;
+}
 
 /* ═══════════════ les champs engendrés ═══════════════ */
 function champ(label,corps,aide,large){
@@ -590,10 +877,23 @@ function suivreChoix(){
 /* À appeler une fois, à la fin de chaque atelier. */
 function habillerMobile(noms){
   const st=document.createElement('style');
-  st.textContent=CSS_MOBILE;
+  st.textContent=CSS_MOBILE+CSS_TEINTES;
   document.head.appendChild(st);
   installerMobile(noms);
   suivreChoix();
+}
+/* Les pastilles de teinte : choisir une teinte nommée efface la couleur libre,
+   et réciproquement. L'atelier fournit ce qu'il faut refaire ensuite. */
+function ecouterTeintes(apres){
+  document.addEventListener('click',e=>{
+    const b=e.target.closest('[data-act="teinte-nommee"],[data-act="teinte-oter"]');
+    if(!b)return;
+    if(b.dataset.act==='teinte-nommee'){
+      ecrire(b.dataset.c,b.dataset.n);
+      ecrire(b.dataset.l,undefined);
+    }else ecrire(b.dataset.l,undefined);
+    apres();
+  });
 }
 
 /* ═══════════════ la saisie, en délégation ═══════════════
@@ -649,16 +949,20 @@ let OU={couchesConnues:0,etapesPorte:4,montre:1,or:900,reputation:52,karma:50,et
 
 const OB=()=>R.objets[sel]||null;
 racineEst(OB);
+/* Le contenu va au dépôt partagé, l'état de travail reste privé ici. */
+sectionEst('objets',()=>R);
 sauvegardeEst('caravane.atelier-objets.v1',
   ()=>({coffre:R,ou:OU,sel:sel,monde:MONDE,gens:GENS}));
 function relire(){
+  /* le contenu : celui du dépôt, qu'un autre atelier a peut-être enrichi */
+  const c=depotLire('objets');
+  if(c&&Array.isArray(c.objets))R=c;
+  mondeDuDepot();
+  GENS=depotLire('personnages');
+  /* l'état de travail : le nôtre seulement */
   const d=relireSauve();
-  if(!d)return false;
-  if(d.coffre&&Array.isArray(d.coffre.objets))R=d.coffre;
+  if(!d)return !!c;
   if(d.ou)Object.assign(OU,d.ou);
-  if(d.monde)mondeEst(d.monde);
-  if(d.gens)GENS=d.gens;
-  sel=Math.max(0,Math.min(R.objets.length-1,d.sel|0));
   return true;
 }
 const listeGens=()=>GENS?(GENS.personnages||[]).map(p=>[p.cle,
@@ -800,12 +1104,14 @@ function rendreFeuille(){
       `</select></div></div></div>`;
 
   /* ── pictogramme ── */
-  const gl=lire('ico.glyphe'), nat=lire('ico.nature')||'trouvaille';
+  const gl=lire('ico.glyphe'), teinte=teinteDe(lire('ico')||{});
   h+=`<div class="bloc"><h2>Le pictogramme</h2><div class="corps">`+
-    champ('Teinte',choixListe('ico.nature',Object.keys(REF.natures).map(k=>[k,k]),'— aucune —'))+
-    champ('Dessin',`<div class="glyphes">`+Object.keys(REF.glyphes).map(k=>
+    champ('Teinte',champTeinte('ico.nature','ico.teinte'),
+      'Les dix teintes nommées disent quelque chose — danger, halte, trouvaille. '+
+      'La pastille en pointillés ouvre une couleur à vous, qui l\'emporte.',true)+
+    champ('Dessin',`<div class="glyphes">`+Object.keys(glyphesTous()).map(k=>
       `<button data-act="glyphe" data-g="${ech(k)}" class="${k===gl?'actif':''}" `+
-      `title="${ech(k)}">${svgGlyphe(k,REF.natures[nat]||'#9C9484')}</button>`).join('')+
+      `title="${ech(k)}">${svgGlyphe(k,teinte)}</button>`).join('')+
       `</div>`,'',true)+
     `</div></div>`;
 
@@ -894,10 +1200,7 @@ function reglage(ch,d,contexte){
   else corps=texte(ch);
   return champ(d.nom,corps,(d.aide||'')+(d.requis?' <b>Obligatoire.</b>':''));
 }
-function svgGlyphe(k,teinte){
-  return `<svg viewBox="0 0 24 24" style="color:${teinte};--velin:#E3D6B2">`+
-    `${REF.glyphes[k]||''}</svg>`;
-}
+function svgGlyphe(k,teinte){return svgGlypheDe(k,teinte);}
 
 /* ═══════════════ le coffre ═══════════════ */
 function rendreListe(){
@@ -913,7 +1216,7 @@ function rendreListe(){
     `<div class="groupe">${ech(nomGenre(k))}</div>`+
     parGenre[k].map(x=>{
       const pb=controler(x.o,x.i).filter(y=>y.dur).length;
-      const t=REF.natures[(x.o.ico||{}).nature]||'#5A554C';
+      const t=teinteDe((x.o.ico)||{});
       const np=(x.o.pouvoirs||[]).length;
       return `<button class="entree${x.i===sel?' actif':''}${pb?' faux':''}" data-sel="${x.i}">`+
         `<span class="jeton">${svgGlyphe((x.o.ico||{}).glyphe,t)}</span>`+
@@ -942,7 +1245,7 @@ function controler(o,idx){
   if(!o.premiere)dur('Il manque la <b>première description</b> — celle qu\'on doit pouvoir '+
     'relire à tout moment.');
   if(o.poids===undefined)doux('Pas de <b>poids</b> : il ne coûtera rien à transporter.');
-  if(o.ico&&o.ico.glyphe&&!REF.glyphes[o.ico.glyphe])
+  if(o.ico&&o.ico.glyphe&&!glyphesTous()[o.ico.glyphe])
     dur(`Le dessin <b>${ech(o.ico.glyphe)}</b> n'existe pas.`);
   if(!o.ico||!o.ico.glyphe)doux('Pas de <b>pictogramme</b> : la fiche s\'affichera sans image.');
 
@@ -1031,7 +1334,7 @@ function voletFiche(){
   const o=OB();
   if(!o)return `<p class="vide">Rien à montrer.</p>`;
   const sac=sacTexte(o);
-  const nat=REF.natures[(o.ico||{}).nature]||'#9C9484';
+  const nat=teinteDe(o.ico||{});
   const ouv=acquises(o);
   let h=`<div class="fiche"><div class="tete">`+
     ((o.ico&&o.ico.glyphe)?`<div class="ico">${svgGlyphe(o.ico.glyphe,nat)}</div>`:'')+
@@ -1310,7 +1613,8 @@ function avaler(d,quoi){
   if(quoi==='monde'||(!quoi&&estMonde(d))){mondeEst(d);tout();return;}
   if(quoi==='gens'||(!quoi&&d&&d.personnages)){
     if(!d||!d.personnages){alert('Ce fichier n\'est pas un répertoire de personnages.');return;}
-    GENS=d;tout();return;
+    /* un fichier chargé rejoint le dépôt : les autres ateliers le verront */
+    GENS=d;depotEcrire('personnages',d);tout();return;
   }
   const l=Array.isArray(d)?d:(d.objets||null);
   if(!l){alert('Ni un coffre d\'objets, ni un monde, ni un répertoire de personnages.');return;}
@@ -1331,6 +1635,12 @@ addEventListener('keydown',e=>{
 
 relire();
 tout();
+/* le codex du hub ouvre un élément par son lien : #cle=… */
+ouvrirDemande(R.objets,i=>{sel=i;tout();});
+/* une teinte se choisit d'un clic, ici comme dans les autres ateliers */
+ecouterTeintes(()=>tout());
+/* un autre atelier a écrit dans le dépôt : on se remet à jour */
+suivreDepot(()=>{relire();tout();});
 habillerMobile(['Le coffre','L\'objet','La fiche']);
 </script>
 </body>

@@ -7,20 +7,44 @@
 | [`atelier-personnages.html`](atelier-personnages.html) | écrire les gens : qui ils sont, et ce qu'on apprend d'eux à force |
 | [`atelier-objets.html`](atelier-objets.html) | écrire les objets uniques : ce qu'ils font, d'où ils viennent, ce qu'ils cachent |
 | [`atelier-missions.html`](atelier-missions.html) | écrire les missions : qui les donne, ce qu'il faut faire, ce qu'elles rapportent |
+| [`atelier-icones.html`](atelier-icones.html) | dessiner les icônes : six formes, une teinte, et le SVG qui en sort |
+| [`index.html`](index.html) | le hub et son codex : tout ce qui est écrit, avec de quoi le rouvrir |
 | [`TUTORIEL-EVENEMENTS.md`](TUTORIEL-EVENEMENTS.md) | ce que fait chaque effet, en français — engendré, jamais écrit à la main |
 | [`TUTORIEL-PERSONNAGES.md`](TUTORIEL-PERSONNAGES.md) | les rôles, ce qui fait mériter une couche de lore — engendré aussi |
 | [`TUTORIEL-OBJETS.md`](TUTORIEL-OBJETS.md) | les genres, les pouvoirs, les provenances — engendré aussi |
 | [`TUTORIEL-MISSIONS.md`](TUTORIEL-MISSIONS.md) | les jalons, les récompenses, le lien avec les gens — engendré aussi |
+| [`TUTORIEL-ICONES.md`](TUTORIEL-ICONES.md) | les six formes, les dix teintes, ce qui se voit à seize pixels — engendré aussi |
 | `commun.js` | la machinerie partagée, recopiée dans chaque atelier |
 | `construire.mjs` | refabrique les tutoriels, les catalogues et la machinerie embarqués |
+| `exporter-ateliers.mjs` | recopie les fichiers construits vers le dépôt `Caravane-Tool` |
 
-Les cinq ateliers s'ouvrent **d'un double-clic**. Aucune installation, aucun compte,
+Les six ateliers s'ouvrent **d'un double-clic**. Aucune installation, aucun compte,
 aucune dépendance, et **rien ne sort de votre machine** : tout reste dans le navigateur
 jusqu'à ce que vous exportiez.
 
 > Chaque atelier est un fichier unique et autonome, mais le code n'existe qu'en un
 > exemplaire : `construire.mjs` recopie `commun.js` et les catalogues dans chacun. C'est
 > pour ça qu'il faut le relancer après avoir touché à l'un ou à l'autre.
+
+## Le dépôt partagé
+
+Servis depuis la même adresse, les six ateliers partagent un même `localStorage`, et
+l'on y tient **une seule réserve** — le monde, les personnages, les objets, les
+missions, les événements, les icônes. La distinction qui fait tout marcher : le
+**contenu** est commun, et l'**état de travail** — quel élément est ouvert, le filtre,
+le convoi d'essai — reste privé à chaque atelier.
+
+Un personnage écrit dans son atelier est donc aussitôt proposé par celui des missions,
+sans qu'on exporte ni recharge quoi que ce soit. Les anciennes sauvegardes, une par
+atelier, sont reprises au premier chargement.
+
+Le hub porte le **codex** : tout le contenu du dépôt, rangé par catégorie, avec pour
+chaque élément un lien `atelier-X.html#cle=…` qui le rouvre là où il a été écrit.
+
+Côté code, tout passe par cinq fonctions de `commun.js` : `depotLire`, `depotEcrire`,
+`sectionEst` (l'atelier déclare la section qu'il tient), `suivreDepot` (un autre onglet
+a écrit) et `depotCodex` (la liste plate que le hub affiche). Ajouter une catégorie au
+codex, c'est ajouter une ligne au tableau `CATEGORIES`.
 
 ---
 

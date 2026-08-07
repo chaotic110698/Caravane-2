@@ -345,6 +345,126 @@ dis('## Ce que l\'atelier vérifie', '',
 writeFileSync(join(ICI, 'TUTORIEL-MISSIONS.md'),
   r.join('\n').replace(/\n{3,}/g, '\n\n') + '\n', 'utf8');
 
+/* ════════════════════ 1 quinquies. le tutoriel des icônes ════════════════════
+   Celui-ci n'a pas de vocabulaire à lui : ses formes vivent dans l'atelier, et
+   ses teintes dans data/icones.json. On relit donc les deux, pour qu'une forme
+   ajoutée à l'outil apparaisse ici sans qu'on y pense. */
+
+const ICO = litJson('data', 'icones.json');
+const pageIcones = (() => { try { return lit('outils', 'atelier-icones.html'); }
+                            catch (e) { return ''; } })();
+
+const formesDeclarees = [...pageIcones.matchAll(/^ {2}(\w+):\{nom:'([^']+)'/gm)]
+  .map(([, cle, nom]) => ({ cle, nom }));
+
+const reglagesDeclares = (() => {
+  const bloc = /const REGLAGES=\{([\s\S]*?)\n\};/.exec(pageIcones);
+  if (!bloc) return {};
+  const par = {};
+  let courant = null;
+  for (const m of bloc[1].matchAll(/(\w+):\[|\['(\w+)','([^']+)',(-?[\d.]+),(-?[\d.]+)/g)) {
+    if (m[1]) { courant = m[1]; par[courant] = []; }
+    else if (courant) par[courant].push({ cle: m[2], nom: m[3], min: m[4], max: m[5] });
+  }
+  return par;
+})();
+
+const t = [];
+const trace = (...x) => t.push(...x);
+/* 0.4 se dit « 0,4 » en français, et .4 ne se dit pas du tout */
+const chiffre = (v) => (Math.abs(Number(v)) < 1 && Number(v) !== 0
+  ? String(Number(v)).replace(/^(-?)\./, '$10.') : String(v)).replace('.', ',');
+
+trace('# Dessiner une icône — mode d\'emploi', '',
+  '> Cette page est **engendrée** depuis [`data/icones.json`](../data/icones.json) et',
+  '> depuis l\'atelier lui-même. Ne la corrigez pas à la main : corrigez la source et',
+  '> relancez `node outils/construire.mjs`.', '');
+
+trace('Le jeu dessine tout en **SVG**, dans un carré de 24 sur 24, et ne pose jamais de',
+  'couleur dans le dessin : il écrit `currentColor`, et c\'est la **teinte** qui décide de',
+  'la couleur au moment de l\'affichage. Une icône se réutilise donc telle quelle en rouge',
+  'de danger ou en vert de rencontre — vous ne la dessinez qu\'une fois.', '',
+  'L\'atelier est [`atelier-icones.html`](atelier-icones.html). Ce que vous y dessinez',
+  'rejoint le dépôt commun, et apparaît aussitôt dans les listes de dessins des autres',
+  'ateliers, à la suite des ' + Object.keys(ICO.glyphesEvenement).length + ' dessins livrés avec le jeu.', '');
+
+trace('## La planche', '',
+  'La planche est ce carré de 24 sur 24, agrandi. Les repères tous les 4 carreaux vous',
+  'aident à viser le centre, qui tombe sur 12, 12.', '',
+  '- **Ajouter** une forme la pose au milieu, et la sélectionne.',
+  '- **Glisser** une forme la déplace. Le pas est le quart de carreau : on ne peut pas',
+  '  poser une forme à un endroit qui ne se raconte pas.',
+  '- La **poignée d\'or**, en bas à droite de la forme choisie, la redimensionne.',
+  '- Les réglages fins — épaisseur, arrondi, nombre de branches — se font aux curseurs,',
+  '  sous la liste des formes.', '',
+  '> Une icône dépasse rarement du cadre sans que ce soit une erreur : l\'atelier vous',
+  '> prévient dès qu\'une forme sort des 24 carreaux, parce qu\'elle serait rognée en jeu.', '');
+
+trace('## Les formes', '',
+  `${formesDeclarees.length} formes, qui se superposent dans l'ordre où vous les empilez —`,
+  'la dernière de la liste est celle qui se dessine par-dessus.', '');
+trace('| forme | ce qu\'elle règle |', '|---|---|');
+formesDeclarees.forEach(({ cle, nom }) => {
+  const p = (reglagesDeclares[cle] || [])
+    .map((d) => `**${d.nom}** (${chiffre(d.min)} à ${chiffre(d.max)})`);
+  trace(`| ${nom} | ${p.join(', ') || '—'} |`);
+});
+trace('', 'Chaque forme se dit **pleine** ou **creuse**, sauf le trait et l\'arc, qui n\'ont',
+  'que leur épaisseur. Une forme creuse ne montre que son contour : c\'est ce qui donne',
+  'aux dessins du jeu leur air gravé.', '');
+
+trace('## La teinte', '',
+  `Les ${Object.keys(ICO.teintesEvenement).length} teintes du jeu portent un nom, parce qu'elles`,
+  'veulent dire quelque chose — un événement de danger est rouge partout, sans qu\'on ait à',
+  'le décider deux fois.', '');
+trace('| teinte | couleur | ce qu\'elle annonce |', '|---|---|---|');
+const ANNONCE = {
+  danger: 'un péril, une menace, du sang', meteo: 'le ciel, le vent, le froid',
+  tracas: 'un ennui matériel, une avarie', rencontre: 'quelqu\'un sur la route',
+  halte: 'un répit, un abri, de l\'eau', trouvaille: 'une aubaine, un gain',
+  ruines: 'de la pierre ancienne, l\'oubli', pari: 'le hasard, le jeu, le risque choisi',
+  flanerie: 'une lenteur, un détour sans enjeu', charite: 'un geste donné ou reçu'
+};
+Object.entries(ICO.teintesEvenement).forEach(([k, c]) =>
+  trace(`| \`${k}\` | \`${c}\` | ${ANNONCE[k] || ''} |`));
+trace('', 'Vous n\'y êtes pas tenu : le bouton **Couleur libre**, à côté de la liste, ouvre un',
+  'sélecteur et accepte n\'importe quelle couleur. Une teinte libre est retenue avec',
+  'l\'élément, et suit le même chemin qu\'une teinte nommée.', '',
+  'La règle de priorité est simple, et vaut dans tous les ateliers : **la teinte posée sur',
+  'l\'élément l\'emporte**, sinon on prend celle de la nature choisie, sinon l\'or du jeu.', '');
+
+trace('## Aux vraies tailles', '',
+  'Un dessin juste sur la planche peut être illisible à 16 pixels : deux traits qui se',
+  'frôlent deviennent une tache. Cet onglet montre l\'icône aux quatre tailles où le jeu',
+  's\'en sert — 16, 24, 32 et 48 — sur les deux fonds, le vélin clair et le bois sombre, et',
+  'dans chacune des teintes nommées.', '',
+  'C\'est le seul juge. Si le dessin ne tient pas à 16, épaississez plutôt que d\'ajouter.', '');
+
+trace('## La source', '',
+  'L\'onglet **La source** montre le SVG produit, tel qu\'il partira dans le jeu. Il est en',
+  'lecture seule : on ne corrige pas le dessin par son texte.', '',
+  'Le champ **SVG collé**, lui, est une porte de sortie. Si vous avez un dessin fait',
+  'ailleurs, collez-le : il remplace entièrement les formes de la planche. Deux conditions,',
+  'que l\'atelier vérifie —', '',
+  '- le dessin doit être écrit pour un cadre de 24 sur 24, sans balise `<svg>` autour ;',
+  '- il doit dire `currentColor` au moins une fois, sinon la teinte ne le touchera pas.', '',
+  'Le contenu d\'un `<script>` est refusé.', '');
+
+trace('## Ce que l\'atelier vérifie', '',
+  '- une clé unique, en minuscules sans accent, et un nom ;',
+  '- que la clé n\'écrase pas un des dessins livrés avec le jeu ;',
+  '- qu\'il y a au moins une forme, ou du SVG collé ;',
+  '- qu\'aucune forme ne sort du cadre ;',
+  '- que le SVG collé est du dessin, et qu\'il obéit à la teinte.', '');
+
+trace('## Où vos icônes servent', '',
+  'Rien à exporter à la main : le dépôt du hub suffit. Une icône dessinée ici apparaît',
+  'dans la liste des dessins de l\'atelier d\'événements, de personnages, d\'objets et de',
+  'missions, en dessous des dessins du jeu, et se choisit comme les autres.', '');
+
+writeFileSync(join(ICI, 'TUTORIEL-ICONES.md'),
+  t.join('\n').replace(/\n{3,}/g, '\n\n') + '\n', 'utf8');
+
 /* ════════════════════ 2. les exemples ════════════════════
    Découpés dans la spécification, pour qu'un exemple corrigé là-bas le soit dans
    l'outil sans qu'on ait à y penser. */
@@ -372,7 +492,7 @@ if (coupe >= 0) {
 const biens = litJson('data', 'biens.json');
 const armes = litJson('data', 'armes.json');
 const arch = litJson('data', 'archetypes.json');
-const icones = litJson('data', 'icones.json');
+const icones = ICO;
 const pnj = litJson('data', 'pnj.json');
 
 const noms = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, v.nom]));
@@ -405,7 +525,8 @@ const reference = {
 
 const commun = lit('outils', 'commun.js');
 const ATELIERS = ['atelier-evenements.html', 'atelier-personnages.html',
-                  'atelier-objets.html', 'atelier-missions.html'];
+                  'atelier-objets.html', 'atelier-missions.html',
+                  'atelier-icones.html'];
 
 const injecte = (html, id, contenu, quoi) => {
   const balise = new RegExp(`(<script id="${id}"[^>]*>)[\\s\\S]*?(</script>)`);
@@ -425,6 +546,19 @@ for (const nom of ATELIERS) {
   poses.push(nom);
 }
 
+/* Le hub reçoit la même machinerie, mais pas le vocabulaire : son codex ne
+   montre que des noms et des dessins, il n'a besoin d'aucun formulaire. */
+{
+  const page = join(ICI, 'index.html');
+  let html = readFileSync(page, 'utf8');
+  html = injecte(html, 'commun', commun, 'index.html');
+  html = injecte(html, 'reference',
+    JSON.stringify({ glyphes: reference.glyphes, natures: reference.natures }),
+    'index.html');
+  writeFileSync(page, html, 'utf8');
+  poses.push('index.html');
+}
+
 /* ════════════════════ 5. le compte rendu ════════════════════ */
 
 const compte = (o) => Object.keys(o).length;
@@ -433,6 +567,7 @@ console.log(
   'TUTORIEL-PERSONNAGES.md  %d rôles · %d interrogations de relation · %d trous\n' +
   'TUTORIEL-OBJETS.md       %d genres · %d pouvoirs · %d provenances\n' +
   'TUTORIEL-MISSIONS.md     %d jalons · %d récompenses · %d trous\n' +
+  'TUTORIEL-ICONES.md       %d formes · %d teintes nommées\n' +
   'référence                %d biens · %d armes · %d métiers · %d dessins · %d teintes\n' +
   'injecté dans             %s\n' +
   'poids embarqué           %s de catalogue, %s de machinerie',
@@ -441,6 +576,7 @@ console.log(
   compte(VP.roles), compte(VP.interrogations), compte(VP.trous),
   compte(VO.genres), compte(VO.pouvoirs), compte(VO.provenances),
   compte(VM.jalons), compte(VM.recompenses), compte(VM.trous),
+  formesDeclarees.length, compte(ICO.teintesEvenement),
   compte(reference.biens), compte(reference.armes), compte(reference.metiers),
   compte(reference.glyphes), compte(reference.natures),
   poses.join(', ') || '(aucun atelier trouvé)',
