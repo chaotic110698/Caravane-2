@@ -1,0 +1,154 @@
+{
+  "format": "caravane.vocabulaire-proprietes.v1",
+  "apropos": "Le catalogue de ce qu'une propriété peut être. Une propriété est un terrain vierge qu'on achète, et sur lequel on bâtit. Ce qu'elle apporte n'est pas de la puissance : c'est de la place ailleurs que dans le convoi. On y laisse ce dont on n'a pas besoin pour ce voyage-ci, et l'on repart plus court.",
+  "principe": "Chaque bâtiment se paie en or et en matériaux, et les matériaux doivent être dans la soute au moment de bâtir : ils sont déchargés sur place. C'est ce qui fait qu'un convoi part long quand on va construire, et court quand on va commercer. Les tarifs et les capacités se règlent terrain par terrain, dans l'atelier de carte, pour qu'on puisse équilibrer une contrée pauvre autrement qu'une contrée riche.",
+  "regle": "On ne possède qu'une propriété par contrée. Si l'on en achète une seconde dans la même contrée, on cède la première — et ce qu'elle contenait revient au convoi, s'il a la place. Le jeu le dit avant, jamais après.",
+  "champs": {
+    "cle": {
+      "nom": "La clé",
+      "explique": "Le nom technique du terrain, unique. Minuscules, chiffres et tirets.",
+      "requis": true,
+      "exemple": "le-clos-des-saules"
+    },
+    "nom": {
+      "nom": "Le nom",
+      "explique": "Ce qu'on lit en jeu. Un lieu-dit, pas une adresse.",
+      "requis": true,
+      "exemple": "Le Clos des Saules"
+    },
+    "lieu": {
+      "nom": "D'où l'on s'y rend",
+      "explique": "La clé du lieu depuis lequel on gère le terrain. On l'achète et l'on y bâtit quand on est dans cette ville — le terrain lui-même est un peu à l'écart, et n'est pas une étape du voyage.",
+      "requis": true,
+      "exemple": "le-gue"
+    },
+    "x": {
+      "nom": "Où il est sur la carte",
+      "explique": "Sa position, comme celle d'un lieu. Elle ne sert qu'à le voir ; le réseau des voies n'en tient pas compte.",
+      "requis": false
+    },
+    "prix": {
+      "nom": "Le tarif du terrain",
+      "explique": "Ce que coûte le terrain nu, avant d'y bâtir quoi que ce soit. Zéro pour un terrain donné — c'est ce qui permet d'en essayer un sans payer.",
+      "requis": false,
+      "defaut": 0
+    },
+    "description": {
+      "nom": "Ce qu'on voit en arrivant",
+      "explique": "Une phrase sur le terrain nu. Elle se lit à l'achat, et reste sur la fiche ensuite.",
+      "requis": false
+    },
+    "batiments": {
+      "nom": "Ce qu'on peut y bâtir",
+      "explique": "Les quatre bâtiments, chacun avec son or, ses matériaux et sa capacité. Un bâtiment absent de la liste ne peut pas être construit sur ce terrain-là.",
+      "requis": false
+    }
+  },
+  "batiments": {
+    "maison": {
+      "nom": "La maison",
+      "explique": "De quoi loger ce qu'on ne veut pas trimballer : le râtelier d'armes, et les gardes qu'on n'emmène pas. Un garde laissé à la maison ne suit plus le convoi et ne se bat plus — mais il attend, et l'on n'a pas à le réembaucher.",
+      "garde": [
+        "armes",
+        "gardes"
+      ],
+      "capacites": {
+        "armes": {
+          "nom": "Armes en râtelier",
+          "aide": "Combien d'armes le râtelier tient.",
+          "defaut": 12
+        },
+        "gardes": {
+          "nom": "Gardes logés",
+          "aide": "Combien de gardes peuvent y attendre.",
+          "defaut": 3
+        }
+      },
+      "exemple": {
+        "cout": {
+          "or": 420,
+          "materiaux": {
+            "bois": 60,
+            "pierre": 40
+          }
+        },
+        "armes": 14,
+        "gardes": 4
+      }
+    },
+    "grange": {
+      "nom": "La grange",
+      "explique": "De quoi remiser des chariots. Un chariot remisé sort du convoi : sa capacité ne compte plus, et le convoi va plus vite. C'est le bâtiment qui sert le plus souvent.",
+      "garde": [
+        "chariots"
+      ],
+      "capacites": {
+        "chariots": {
+          "nom": "Chariots remisés",
+          "aide": "Combien de chariots la grange tient.",
+          "defaut": 3
+        }
+      }
+    },
+    "cache": {
+      "nom": "La cache secrète",
+      "explique": "Un trou sous une dalle. L'or qu'on y laisse n'est plus dans la bourse : un péage abusif, un rançonnement, tout ce qui prend une part de ce que vous portez ne le voit pas. Ce qui se joue alors n'est plus la chance, mais la décision — combien j'emporte.",
+      "garde": [
+        "or"
+      ],
+      "capacites": {
+        "or": {
+          "nom": "Or caché",
+          "aide": "Combien de pièces la cache tient.",
+          "defaut": 5000
+        }
+      },
+      "exemple": {
+        "cout": {
+          "or": 260,
+          "materiaux": {
+            "pierre": 90
+          }
+        },
+        "or": 6000
+      }
+    },
+    "ecurie": {
+      "nom": "L'écurie",
+      "explique": "De quoi garder des chevaux qu'on n'attelle pas. Un cheval libre doit être mené, et le convoi n'en mène qu'un par chariot : au-delà, il faut une écurie. C'est là qu'on laisse le cheval de trait dont on n'a pas besoin ce mois-ci.",
+      "garde": [
+        "chevaux"
+      ],
+      "capacites": {
+        "chevaux": {
+          "nom": "Chevaux à l'écurie",
+          "aide": "Combien de chevaux l'écurie tient.",
+          "defaut": 4
+        }
+      }
+    }
+  },
+  "cout": {
+    "apropos": "Le coût d'un bâtiment vit sous « cout », et sa capacité à plat à côté. Sans cette séparation la cache aurait un « or » qui voudrait dire deux choses : ce qu'elle coûte, et ce qu'elle tient.",
+    "or": {
+      "nom": "L'or",
+      "explique": "Ce qu'on paie sur place, en pièces. La main-d'œuvre, et ce qu'on ne peut pas apporter.",
+      "requis": false,
+      "defaut": 0
+    },
+    "materiaux": {
+      "nom": "Les matériaux",
+      "explique": "Ce qu'il faut avoir en soute au moment de bâtir. Ils sont déchargés sur place. Toutes les marchandises du jeu conviennent, mais quatre y sont faites pour : le bois, la pierre, les peaux et la verrerie.",
+      "requis": false,
+      "exemple": {
+        "bois": 80,
+        "pierre": 40
+      }
+    }
+  },
+  "conseils": [
+    "Un terrain à zéro pièce, avec des bâtiments à zéro, sert à éprouver les quatre fonctions sans jouer trois heures. C'est ce que fait celui du jeu d'exemple.",
+    "Une contrée pauvre mérite un terrain bon marché mais des matériaux difficiles à trouver sur place : c'est ce qui fait faire le voyage.",
+    "La grange est ce qu'on bâtit en premier, presque toujours. Chiffrez-la en conséquence."
+  ]
+}

@@ -169,6 +169,23 @@ kbd{font-family:ui-monospace,monospace;font-size:11px;background:var(--fond-clai
   .bouton{padding:10px}
   .trait,.ligne-contree{padding:8px 9px;font-size:13.5px}
 }
+
+/* — l'encart d'un terrain — */
+.bati{border:1px solid var(--bord);border-radius:var(--r);margin-bottom:7px;
+  background:var(--fond)}
+.bati.eteint{opacity:.55}
+.bati>header{padding:6px 9px;border-bottom:1px solid var(--bord);background:#2A261F;
+  border-radius:2px 2px 0 0}
+.bati.eteint>header{border-bottom:none;border-radius:2px}
+.bati>header .coche{display:flex;align-items:center;gap:7px;font-size:12.5px;cursor:pointer}
+.bati>header input{width:auto;margin:0}
+.bati>.corps{padding:8px 9px;display:flex;flex-direction:column;gap:6px}
+.mats{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.mat{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--encre-pale)}
+.mat span{flex:1;min-width:0}
+.mat input{width:62px;flex:none}
+h4.section{font-size:11px;font-variant:small-caps;letter-spacing:.09em;
+  color:var(--or);margin:12px 0 6px}
 </style>
 </head>
 <body>
@@ -178,6 +195,7 @@ kbd{font-family:ui-monospace,monospace;font-size:11px;background:var(--fond-clai
   <button class="outil actif" data-outil="select">Sélection <kbd>V</kbd></button>
   <button class="outil" data-outil="lieu">Lieu <kbd>L</kbd></button>
   <button class="outil" data-outil="voie">Voie <kbd>R</kbd></button>
+  <button class="outil" data-outil="propriete">Propriété <kbd>P</kbd></button>
   <button class="outil" data-outil="frontiere">Frontière <kbd>F</kbd></button>
   <button class="outil" data-outil="etalon">Étalon <kbd>E</kbd></button>
   <div class="sep"></div>
@@ -198,6 +216,7 @@ kbd{font-family:ui-monospace,monospace;font-size:11px;background:var(--fond-clai
         <g id="c-voies"></g>
         <g id="c-etalon"></g>
         <g id="c-provisoire"></g>
+        <g id="c-proprietes"></g>
         <g id="c-lieux"></g>
       </g>
     </svg>
@@ -342,7 +361,11 @@ function modeleVide(){
     etalon:null,                    /* {a:{x,y},b:{x,y},distance,unite} */
     contrees:[],                    /* {cle,nom,gentile,teinte,frontiere:[{x,y}]} */
     lieux:[],                       /* {cle,nom,contree,rang,x,y,etiq:{dx,dy,ancre}} */
-    voies:[]                        /* {cle,de,vers,terrain} */
+    voies:[],                       /* {cle,de,vers,terrain} */
+    /* Les propriétés se posent sur la carte, mais ne sont pas des étapes : le
+       réseau des voies les ignore. Chacune se rattache au lieu depuis lequel
+       on la gère. */
+    proprietes:[]                   /* {cle,nom,lieu,x,y,prix,batiments} */
   };
 }
 let M=modeleVide();
@@ -470,6 +493,19 @@ function dessiner(){
       +poignee(M.etalon.a,'etalon-a')+poignee(M.etalon.b,'etalon-b')
     : '';
 
+  /* ── propriétés ── */
+  const cp=$('#c-proprietes');
+  if(cp)cp.innerHTML=(M.proprietes||[]).map(t=>{
+    const sel=choix&&choix.genre==='propriete'&&choix.cle===t.cle;
+    const l=lieuDe(t.lieu);
+    const teinte=l?teinteContree(l.contree):'#9A7343';
+    return `<g class="marqueur" data-x="${t.x}" data-y="${t.y}"
+      transform="translate(${t.x} ${t.y})" data-propriete="${echappe(t.cle)}">
+      <path class="pastille" d="M0 -9L9 0h-3v8h-12v-8h-3z" fill="${teinte}"
+        stroke="${sel?'#C9A227':'#1C1A17'}" stroke-width="${sel?2.2:1.2}"/>
+      <text class="etiq" y="20" text-anchor="middle">${echappe(t.nom)}</text>
+    </g>`;}).join('');
+
   /* ── lieux ── */
   $('#c-lieux').innerHTML=M.lieux.map(l=>{
     const R=RANGS[l.rang]||RANGS.ville;
@@ -585,6 +621,13 @@ function rendreSelection(){
   const p=$('#selection');
   if(!choix){p.innerHTML='<p class="rien">Rien de sélectionné.</p>';return;}
 
+  if(choix.genre==='propriete'){
+    const t=proprieteDe(choix.cle);
+    if(!t){choix=null;return rendreSelection();}
+    p.innerHTML=encartPropriete(t);
+    return;
+  }
+
   if(choix.genre==='lieu'){
     const l=lieuDe(choix.cle);
     if(!l){choix=null;return rendreSelection();}
@@ -681,6 +724,58 @@ function voisines(l){
     const autre=lieuDe(v.de===l.cle?v.vers:v.de);
     return [v,autre||{nom:'?'},profilsDe(v)];
   });
+}
+
+/* L'encart de réglage d'un terrain : son tarif, puis pour chaque bâtiment ce
+   qu'il coûte en or, en matériaux, et ce qu'il tient. C'est là qu'on équilibre
+   — une contrée pauvre n'a pas les mêmes chiffres qu'une riche. */
+function encartPropriete(t){
+  const l=lieuDe(t.lieu);
+  return `
+    <div class="champ"><label>Nom</label>
+      <input id="p-nom" value="${echappe(t.nom)}"></div>
+    <div class="champ"><label>Clé</label>
+      <input id="p-cle" value="${echappe(t.cle)}" spellcheck="false"></div>
+    <div class="champ"><label>D'où l'on s'y rend</label>
+      <select id="p-lieu">${M.lieux.map(x=>
+        `<option value="${echappe(x.cle)}"${x.cle===t.lieu?' selected':''}>${echappe(x.nom)}</option>`
+      ).join('')}</select></div>
+    <p class="aide">On l'achète et l'on y bâtit quand on est dans cette ville.
+      ${l?`Elle est ${echappe((M.contrees.find(c=>c.cle===l.contree)||{}).nom||'sans contrée')} —
+      et l'on ne possède <b>qu'une propriété par contrée</b>.`:''}</p>
+    <div class="champ"><label>Tarif du terrain</label>
+      <input type="number" min="0" step="10" id="p-prix" value="${t.prix||0}"></div>
+    <p class="aide">Zéro pour un terrain donné : c'est ce qui permet d'en essayer
+      un sans payer.</p>
+    <div class="champ large"><label>Ce qu'on voit en arrivant</label>
+      <textarea id="p-desc" rows="3">${echappe(t.description||'')}</textarea></div>
+
+    <h4 class="section">Ce qu'on peut y bâtir</h4>
+    ${BATIMENTS_CARTE.map(b=>encartBatiment(t,b)).join('')}
+  `;
+}
+function encartBatiment(t,b){
+  const d=(t.batiments||{})[b.cle];
+  const actif=!!d;
+  const c=(d&&d.cout)||{};
+  const mat=c.materiaux||{};
+  return `<div class="bati${actif?'':' eteint'}">
+    <header><label class="coche"><input type="checkbox" data-bati="${b.cle}"
+      ${actif?'checked':''}> <b>${echappe(b.nom)}</b></label></header>
+    ${actif?`<div class="corps">
+      <div class="champ"><label>Or</label>
+        <input type="number" min="0" step="10" data-bcout="${b.cle}"
+          value="${Math.round(c.or||0)}"></div>
+      ${b.cap.map(([k,nom])=>`<div class="champ"><label>${nom}</label>
+        <input type="number" min="0" step="1" data-bcap="${b.cle}" data-k="${k}"
+          value="${Math.round(d[k]||0)}"></div>`).join('')}
+      <div class="champ large"><label>Matériaux à apporter</label>
+        <div class="mats">${MATERIAUX_CARTE.map(([g,nom])=>`
+          <label class="mat"><span>${echappe(nom)}</span>
+            <input type="number" min="0" step="5" data-bmat="${b.cle}" data-g="${g}"
+              value="${Math.round(mat[g]||0)}"></label>`).join('')}</div></div>
+    </div>`:''}
+  </div>`;
 }
 
 function rendreEchelle(){
@@ -877,6 +972,100 @@ function ajouterVoie(a,b){
   choix={genre:'voie',cle:v.cle};
   dessiner();
 }
+/* ── les propriétés ──
+   On la pose où l'on clique, et on la rattache au lieu le plus proche : c'est
+   presque toujours celui qu'on voulait, et l'on peut en changer ensuite. */
+function lieuLePlusProche(pos){
+  let meilleur=null,d2=Infinity;
+  M.lieux.forEach(l=>{
+    const d=(l.x-pos.x)*(l.x-pos.x)+(l.y-pos.y)*(l.y-pos.y);
+    if(d<d2){d2=d;meilleur=l;}
+  });
+  return meilleur;
+}
+/* Les marchandises dont on bâtit. Ce sont celles de la catégorie « materiaux »
+   de data/biens.json, plus le fer. Le fichier accepte n'importe quelle
+   marchandise ; ce sont simplement celles qu'on propose ici. */
+const MATERIAUX_CARTE=[['bois','Bois'],['pierre','Pierre'],['peaux','Peaux'],
+  ['verre','Verrerie'],['fer','Fer']];
+const BATIMENTS_CARTE=[
+  {cle:'maison',nom:'La maison',cap:[['armes','Armes',12],['gardes','Gardes',3]]},
+  {cle:'grange',nom:'La grange',cap:[['chariots','Chariots',3]]},
+  {cle:'cache', nom:'La cache secrète',cap:[['or','Or caché',5000]]},
+  {cle:'ecurie',nom:'L\'écurie',cap:[['chevaux','Chevaux',4]]}
+];
+function ajouterPropriete(pos){
+  if(!M.lieux.length)return message('Posez d\'abord un lieu : une propriété s\'y rattache.');
+  memo();
+  const l=lieuLePlusProche(pos);
+  const n=(M.proprietes||[]).length+1;
+  const nom='Terrain '+n;
+  const t={cle:cleDepuis(nom,(M.proprietes||[]).map(x=>x.cle)),nom:nom,
+    lieu:l.cle,x:Math.round(pos.x),y:Math.round(pos.y),prix:0,batiments:{}};
+  BATIMENTS_CARTE.forEach(b=>{
+    t.batiments[b.cle]={cout:{or:0,materiaux:{}}};
+    b.cap.forEach(([k,,d])=>{t.batiments[b.cle][k]=d;});
+  });
+  M.proprietes=M.proprietes||[];
+  M.proprietes.push(t);
+  choix={genre:'propriete',cle:t.cle};
+  dessiner();
+  const c=$('#p-nom');if(c){c.focus();c.select();}
+}
+const proprieteDe=cle=>(M.proprietes||[]).find(t=>t.cle===cle);
+
+/* La saisie de l'encart. Tout passe par un seul écouteur : les champs portent
+   ce qu'ils règlent, et l'on ne réécrit la carte que quand il le faut. */
+function brancherEncart(){
+  const p=$('#selection');
+  p.addEventListener('input',ev=>{
+    const t=proprieteDe(choix&&choix.cle);
+    if(!t)return;
+    const e=ev.target;
+    if(e.id==='p-nom'){t.nom=e.value;dessiner();return;}
+    if(e.id==='p-prix'){t.prix=Math.max(0,Math.round(Number(e.value)||0));sauverAuto();return;}
+    if(e.id==='p-desc'){t.description=e.value;sauverAuto();return;}
+    if(e.dataset.bcout!==undefined){
+      const b=t.batiments[e.dataset.bcout];
+      if(b){b.cout=b.cout||{};b.cout.or=Math.max(0,Math.round(Number(e.value)||0));}
+      sauverAuto();return;
+    }
+    if(e.dataset.bcap!==undefined){
+      const b=t.batiments[e.dataset.bcap];
+      if(b)b[e.dataset.k]=Math.max(0,Math.round(Number(e.value)||0));
+      sauverAuto();return;
+    }
+    if(e.dataset.bmat!==undefined){
+      const b=t.batiments[e.dataset.bmat];
+      if(!b)return;
+      b.cout=b.cout||{};b.cout.materiaux=b.cout.materiaux||{};
+      const n=Math.max(0,Math.round(Number(e.value)||0));
+      if(n)b.cout.materiaux[e.dataset.g]=n;
+      else delete b.cout.materiaux[e.dataset.g];
+      sauverAuto();return;
+    }
+  });
+  p.addEventListener('change',ev=>{
+    const t=proprieteDe(choix&&choix.cle);
+    if(!t)return;
+    const e=ev.target;
+    if(e.id==='p-lieu'){t.lieu=e.value;dessiner();return;}
+    if(e.id==='p-cle'){
+      const neuf=cleDepuis(e.value,(M.proprietes||[]).filter(x=>x!==t).map(x=>x.cle));
+      t.cle=neuf;choix={genre:'propriete',cle:neuf};dessiner();return;
+    }
+    if(e.dataset.bati!==undefined){
+      /* décocher retire le bâtiment : on ne pourra pas le construire ici */
+      const b=BATIMENTS_CARTE.find(x=>x.cle===e.dataset.bati);
+      if(e.checked){
+        t.batiments[b.cle]={cout:{or:0,materiaux:{}}};
+        b.cap.forEach(([k,,d])=>{t.batiments[b.cle][k]=d;});
+      }else delete t.batiments[b.cle];
+      rendreSelection();sauverAuto();
+    }
+  });
+}
+
 function supprimerSelection(){
   if(!choix)return;
   memo();
@@ -885,6 +1074,8 @@ function supprimerSelection(){
     M.lieux=M.lieux.filter(l=>l.cle!==choix.cle);
   }else if(choix.genre==='voie'){
     M.voies=M.voies.filter(v=>v.cle!==choix.cle);
+  }else if(choix.genre==='propriete'){
+    M.proprietes=(M.proprietes||[]).filter(t=>t.cle!==choix.cle);
   }else if(choix.genre==='contree'){
     contreeCourante=choix.cle;supprimerContree();return;
   }
@@ -982,8 +1173,10 @@ $('#toile').addEventListener('pointerdown',ev=>{
      les événements suivants vers #toile, si bien qu'au relâchement ev.target
      n'est plus le marqueur mais le conteneur. */
   const surLieu=ev.target.closest('[data-lieu]');
+  const surProp=ev.target.closest('[data-propriete]');
   glisse={genre:'outil',x:ev.clientX,y:ev.clientY,
-          lieu:surLieu?surLieu.dataset.lieu:null};
+          lieu:surLieu?surLieu.dataset.lieu:null,
+          propriete:surProp?surProp.dataset.propriete:null};
 });
 
 $('#toile').addEventListener('pointermove',ev=>{
@@ -1033,10 +1226,17 @@ function finPointeur(ev){
   const g=glisse;glisse=null;
   if(etaitPince||!g)return;
 
+  /* sélectionner une propriété au clic, quel que soit l'outil de tracé */
+  if(!aBouge&&g.propriete){
+    choix={genre:'propriete',cle:g.propriete};
+    dessiner();return;
+  }
+
   /* un clic net (sans glissé) déclenche l'outil */
   if(!aBouge&&g.genre==='outil'){
     const pos=versCarte(ev);
     if(outil==='lieu')ajouterLieu(pos);
+    else if(outil==='propriete')ajouterPropriete(pos);
     else if(outil==='voie'){
       if(!g.lieu){message('Cliquez sur un lieu.');return;}
       if(!voieDepuis){voieDepuis=g.lieu;
@@ -1153,7 +1353,13 @@ function ecrire(){
   try{
     const d=JSON.parse(localStorage.getItem(DEPOT_CLE)||'null')||{v:1};
     d.monde=mondePublie();
-    d.maj=d.maj||{};d.maj.monde=Date.now();
+    /* Les propriétés ont leur propre fichier de jeu : elles vivent à part du
+       monde, même si c'est sur la carte qu'on les pose. */
+    if((M.proprietes||[]).length)
+      d.proprietes={format:'caravane.proprietes.v1',
+        proprietes:JSON.parse(JSON.stringify(M.proprietes))};
+    else delete d.proprietes;
+    d.maj=d.maj||{};d.maj.monde=Date.now();d.maj.proprietes=Date.now();
     localStorage.setItem(DEPOT_CLE,JSON.stringify(d));
   }catch(e){}
 }
@@ -1189,7 +1395,11 @@ function reprendre(){
   }catch(e){}
   try{
     const d=JSON.parse(localStorage.getItem(DEPOT_CLE)||'null');
-    if(d&&poser(d.monde))return true;
+    if(d&&poser(d.monde)){
+      if(d.proprietes&&Array.isArray(d.proprietes.proprietes))
+        M.proprietes=d.proprietes.proprietes;
+      return true;
+    }
   }catch(e){}
   return false;
 }
@@ -1324,6 +1534,7 @@ if(M.carte.largeur){
   $('#fond').setAttribute('width',M.carte.largeur);
   $('#fond').setAttribute('height',M.carte.hauteur);
 }
+brancherEncart();
 choisirOutil('select');
 cadrer();
 dessiner();

@@ -596,7 +596,8 @@ function depotResume(){
     evenements:n('evenements','evenements'),
     dialogues:n('dialogues','dialogues'),
     icones:n('icones','icones'),
-    roles:n('roles','roles')
+    roles:n('roles','roles'),
+    proprietes:n('proprietes','proprietes')
   };
 }
 
@@ -623,7 +624,10 @@ const CATEGORIES=[
   {nom:'dialogues',  titre:'Les dialogues',   un:'dialogue',   des:'dialogues',
    atelier:'atelier-dialogues.html',    champ:'dialogues'},
   {nom:'icones',     titre:'Les icônes',      un:'icône',      des:'icônes',
-   atelier:'atelier-icones.html',       champ:'icones'}
+   atelier:'atelier-icones.html',       champ:'icones'},
+  /* on les pose sur la carte : c'est là qu'on les rouvre */
+  {nom:'proprietes', titre:'Les propriétés',  un:'propriété',  des:'propriétés',
+   atelier:'atelier-carte.html',        champ:'proprietes'}
 ];
 /* Ce qu'on dit d'un élément en une ligne, sous son nom. Chaque catégorie a sa
    phrase, parce qu'un lieu ne se résume pas comme une mission. */
@@ -638,6 +642,12 @@ function detailCodex(section,x,depot){
     if(x.rang)bouts.push(x.rang);
     if(x.contree)bouts.push('en '+nomDe('monde','contrees',x.contree));
     if(x.carte)bouts.push('carte '+x.carte);
+  }else if(section==='proprietes'){
+    if(x.lieu)bouts.push('près de '+((((depot.monde||{}).lieux)||[])
+      .find(l=>l&&l.cle===x.lieu)||{}).nom||x.lieu);
+    bouts.push(x.prix?x.prix+' po':'donné');
+    const b=Object.keys(x.batiments||{}).length;
+    bouts.push(b?b+(b>1?' bâtiments possibles':' bâtiment possible'):'rien à bâtir');
   }else if(section==='roles'){
     if(x.feminin)bouts.push('au féminin : '+x.feminin);
     else bouts.push('le même au féminin');
@@ -719,6 +729,7 @@ function depotCodex(){
         glyphe:c.nom==='icones'?x.cle
               :c.nom==='monde'?'borne'
               :c.nom==='roles'?'ermite'
+              :c.nom==='proprietes'?'tente'
               :c.nom==='dialogues'?'bulle'
               :(x.ico&&x.ico.glyphe)||'',
         svg:c.nom==='icones'?(x.svg||''):'',
@@ -727,6 +738,7 @@ function depotCodex(){
         teinte:c.nom==='icones'?teinteDe(x)
               :c.nom==='monde'?teinteContree(D,x.contree)
               :c.nom==='roles'?'#9C9484'
+              :c.nom==='proprietes'?'#9A7343'
               :c.nom==='dialogues'?'#6E9B6A'
               :teinteDe(x.ico||{}),
         /* un rôle se rouvre par « #role= », pour ne pas se confondre avec le
@@ -1025,7 +1037,8 @@ const FICHIERS_JEU={
   missions:'missions-ecrites.json',
   evenements:'evenements.json',
   dialogues:'dialogues.json',
-  icones:'icones.json'
+  icones:'icones.json',
+  proprietes:'proprietes.json'
 };
 /* Les petites clés d'état privé : quel élément est ouvert, le filtre, l'onglet.
    La carte n'y est pas — son état privé, c'est le monde entier, et le monde est

@@ -126,6 +126,18 @@ n'atteint, une mission absente du carnet, une couche de lore qui n'existe pas, u
 de texte inconnu, et signalent une condition sans raison — elle serait *cachée* plutôt
 que grisée, et le joueur ne saurait jamais qu'elle existait.
 
+## Les propriétés se posent sur la carte
+
+L'outil **Propriété** de l'atelier de carte pose un terrain là où l'on clique, et le
+rattache au lieu le plus proche — c'est de cette ville qu'on le gérera en jeu. L'encart
+de droite règle tout ce qui sert à équilibrer : le tarif du terrain nu, puis pour chacun
+des quatre bâtiments son or, ses matériaux à apporter et sa capacité. Décocher un
+bâtiment le rend impossible sur ce terrain-là.
+
+Les propriétés vivent dans leur propre section du dépôt, `proprietes`, à part du monde :
+elles ont leur fichier de jeu, `proprietes.json`, même si c'est sur la carte qu'on les
+pose. Le réseau des voies les ignore — un terrain n'est pas une étape.
+
 ## Les deux sortes de sauvegarde
 
 Elles ne servent pas à la même chose, et les confondre coûte du travail.

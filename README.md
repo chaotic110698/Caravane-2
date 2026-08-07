@@ -45,9 +45,31 @@ au sort.
 | `missions-ecrites.json` | des missions données par quelqu'un, qui ne surviennent qu'une fois |
 | `evenements.json` | vos propres événements de route |
 | `dialogues.json` | des conversations écrites d'avance, avec choix et conséquences |
+| `proprietes.json` | des terrains à acheter, et ce qu'on peut y bâtir |
 
-Les cinq premiers s'écrivent dans les [ateliers](outils/) ; les dialogues encore à la
-main, en suivant [`outils/TUTORIEL-DIALOGUES.md`](outils/TUTORIEL-DIALOGUES.md).
+Tous s'écrivent dans les [ateliers](outils/) — les propriétés se posent sur la carte,
+avec l'outil **Propriété**, et leurs tarifs se règlent dans l'encart de droite.
+
+## Les propriétés
+
+Un terrain vierge qu'on achète, et sur lequel on bâtit quatre choses : une **maison**
+(armes et gardes), une **grange** (chariots), une **cache secrète** (or) et une
+**écurie** (chevaux). Ce qu'une propriété apporte n'est pas de la puissance, c'est de
+la place ailleurs que dans le convoi — on y laisse ce dont on n'a pas besoin pour ce
+voyage-ci, et l'on repart plus court.
+
+Trois règles font tout le sel :
+
+- les **matériaux doivent être en soute** au moment de bâtir, et sont déchargés sur
+  place. Le convoi de départ ne porte que 96 kg : construire demande d'abord de quoi
+  transporter ;
+- l'or de la **cache** n'est pas dans la bourse, donc rien de ce qui en prend une part
+  ne le trouve. Ce qui se joue n'est plus la chance, mais combien l'on emporte ;
+- **une seule propriété par contrée**. En acheter une seconde cède la première, et ce
+  qu'elle gardait revient au convoi — le jeu le dit avant.
+
+Les **chevaux** sont devenus une possession à part : on les attelle, on les dételle,
+et le convoi n'en mène qu'un libre par chariot. Au-delà, il faut une écurie.
 
 **Pour tout essayer sans rien écrire :** *Paramètres › Le jeu d'exemple › Charger
 l'exemple*. Cinq lieux, quatre personnages, leurs conversations, deux missions et un

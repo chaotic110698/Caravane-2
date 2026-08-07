@@ -678,6 +678,7 @@ details.regles li{margin-bottom:6px}
     <button class="menu-item" data-onglet="boutique"></button>
     <button class="menu-item" data-onglet="contrats"></button>
     <button class="menu-item" data-onglet="gens"></button>
+    <button class="menu-item" data-onglet="terrains"></button>
     <button class="menu-item" data-onglet="carnet"></button>
     <button class="menu-item" data-onglet="convoi"></button>
     <button class="menu-item" data-onglet="troupe"></button>
@@ -822,6 +823,7 @@ details.regles li{margin-bottom:6px}
       <div class="panneau" id="panneau-boutique"></div>
       <div class="panneau" id="panneau-contrats"></div>
       <div class="panneau" id="panneau-gens"></div>
+      <div class="panneau" id="panneau-terrains"></div>
       <div class="panneau" id="panneau-carnet"></div>
       <div class="panneau" id="panneau-parametres"></div>
       <div class="panneau" id="panneau-sauvegarde"></div>
@@ -1195,7 +1197,7 @@ function etatPiece(c,q){const o=c[q];return o?o.etat:0;}
 function etatChariot(c){
   return ORGANES.reduce((s,q)=>s+etatPiece(c,q),0)/ORGANES.length;
 }
-function immobilise(c){return etatPiece(c,'essieu')<=0||etatPiece(c,'cheval')<=0;}
+function immobilise(c){return etatPiece(c,'essieu')<=0||!c.cheval||etatPiece(c,'cheval')<=0;}
 function pieceDispo(n){
   if(!n.exclusif)return true;
   return !!(S.ville.capitale&&CONTREES[S.ville.contree].cle===n.exclusif);
@@ -1249,7 +1251,9 @@ function nouvellePartie(cle){
      gens:{},objets:{},objetsDepuis:{},mecrites:{},chronique:[],
      /* les conversations : combien de fois chacune a été menée, et ce que
         le monde retient de ce qu'on s'est dit */
-     dits:{},souvenirs:{}};
+     dits:{},souvenirs:{},
+     /* les chevaux qu'on possède sans les avoir attelés, et les terrains */
+     chevaux:[],terrains:{}};
   S.chariots[1].essieu.etat=88;S.chariots[1].caisse.etat=92;
   CLES_MYTHIQUES.forEach(c=>S.mythes[c]='etal');
   S.marchand.arme=({hache:'hache-legere',epee:'epee-legere',arc:'arc-leger',
@@ -1457,8 +1461,49 @@ function capChariot(c){
 }
 /* Ce qu'un cheval emmène sans peiner. Au-delà, il ne refuse pas : il ralentit. */
 function tractionChariot(c){
+  /* dételé, il ne tire rien : sans ce garde-fou, piece() retombe sur le
+     premier niveau et l'on croirait qu'un chariot roule tout seul */
+  if(!c.cheval)return 0;
   const chv=piece(c,'cheval');
   return Math.round(chv.traction*(.62+.38*etatPiece(c,'cheval')/100));
+}
+/* ── les chevaux qu'on possède sans les avoir attelés ──
+   Un cheval est une bête, pas une pièce détachée : il vit hors du chariot, on
+   l'attelle et on le dételle. Mais il faut le mener, et le convoi n'a qu'une
+   main par chariot : au-delà, il faut une écurie où le laisser. */
+const NOMS_CHEVAUX=['Bruine','Cendre','Foulque','Grison','Marotte','Nivôse',
+  'Pommelée','Ronce','Sarcelle','Tourbe','Vesce','Alise'];
+function nomDeCheval(){
+  const pris=(S.chevaux||[]).map(c=>c.nom);
+  for(let i=0;i<40;i++){const n=pick(NOMS_CHEVAUX);if(pris.indexOf(n)<0)return n;}
+  return pick(NOMS_CHEVAUX)+' II';
+}
+function nouveauCheval(cle,etat){
+  return {cle:cle||'roussin',etat:etat===undefined?100:etat,nom:nomDeCheval()};
+}
+/* combien de chevaux libres le convoi peut mener : un par chariot */
+function chevauxMenables(){return S.chariots.length;}
+function placeAuxChevaux(){return chevauxMenables()-(S.chevaux||[]).length;}
+/* Dételer : la bête rejoint la longe, et le chariot ne roule plus. */
+function detacher(i){
+  const c=S.chariots[i];
+  if(!c||!c.cheval)return null;
+  if(placeAuxChevaux()<=0)return null;
+  const b={cle:c.cheval.cle,etat:c.cheval.etat,nom:c.cheval.nom||nomDeCheval()};
+  c.cheval=null;
+  S.chevaux.push(b);
+  return b;
+}
+/* Atteler : l'ancien, s'il y en a un, rejoint la longe. */
+function atteler(iCheval,iChariot){
+  const b=(S.chevaux||[])[iCheval], c=S.chariots[iChariot];
+  if(!b||!c)return false;
+  const avant=c.cheval;
+  c.cheval={cle:b.cle,etat:b.etat,nom:b.nom};
+  S.chevaux.splice(iCheval,1);
+  if(avant)S.chevaux.push({cle:avant.cle,etat:avant.etat,
+    nom:avant.nom||nomDeCheval()});
+  return true;
 }
 function surcharge(c){return Math.max(0,chargeChariot(c)-tractionChariot(c));}
 /* une dizaine entamée au-dessus de la traction = une journée de plus */
@@ -1555,6 +1600,8 @@ const MENU=[
  {cle:'contrats', nom:'Missions',  sous:'commandes en cours',  ico:()=>svgIco(GLYPHES_EV.sceau,'#4A7BC8')},
  {cle:'gens',     nom:'Les gens',  sous:'qui se tient ici',    ico:()=>svgIco(GLYPHE_PARLER,'#6E9B6A'),
   si:()=>personnagesIci().length>0},
+ {cle:'terrains', nom:'Propriétés', sous:'terrains et bâtiments',ico:()=>svgIco(GLYPHE_TOIT,'#9A7343'),
+  si:()=>!!PROPRIETES&&(proprietesIci().length>0||Object.keys(S.terrains||{}).length>0)},
  {cle:'carnet',   nom:'Carnet',    sous:'gens, objets, histoires',ico:()=>svgIco(GLYPHE_REGISTRE,'#A084C0'),
   si:()=>!!(PERSONNAGES||OBJETS||MISSIONS_ECRITES.length)},
  {cle:'convoi',   nom:'Convoi',    sous:'chariots et soute',   ico:()=>icoChariot('bache')},
@@ -1562,6 +1609,10 @@ const MENU=[
  {cle:'parametres',nom:'Paramètres',sous:'partie et record',   ico:()=>svgIco(GLYPHE_CLEF,'#9A9488')},
  {cle:'sauvegarde',nom:'Sauvegarde',sous:'emporter la partie', ico:()=>svgIco(GLYPHE_REGISTRE,'#9A7343')}
 ];
+const GLYPHE_TOIT=`<path d="M12 2.6L1.8 10.4h2.6v10.8h15.2V10.4h2.6z" fill="currentColor"/>
+  <rect x="9.4" y="14.2" width="5.2" height="7" fill="var(--velin)"/>
+  <rect x="5.6" y="12" width="3.2" height="3.2" fill="var(--velin)" opacity=".7"/>
+  <rect x="15.2" y="12" width="3.2" height="3.2" fill="var(--velin)" opacity=".7"/>`;
 const GLYPHE_PARLER=`<path d="M2.4 5.4h13.2a2 2 0 0 1 2 2v6.4a2 2 0 0 1-2 2H8.2l-4.4 3.4v-3.4
     a2 2 0 0 1-1.4-1.9V7.4a2 2 0 0 1 2-2z" fill="currentColor"/>
   <path d="M8.6 4.2h11.4a2 2 0 0 1 2 2v5.6" fill="none" stroke="currentColor"
@@ -1619,6 +1670,7 @@ function montrerOnglet(nom){
     $('#tete-panneau-sous').textContent=m.sous;
   }
   if(nom==='gens')rendreGens();
+  if(nom==='terrains')rendreTerrains();
   if(nom==='carnet')panneauCarnet();
   if(S)S.onglet=nom;
   fermerMenu();
@@ -1727,6 +1779,7 @@ function rendreMarche(){
   rendreVignette();
   panneauMarche();panneauConvoi();panneauTroupe();panneauBoutique();panneauContrats();
   panneauCarnet();panneauParametres();panneauSauvegarde();majRegistres();
+  if(PROPRIETES)rendreTerrains();
   if(!S.fini)sauverAuto();
 }
 /* ═══════════════ pictogrammes ═══════════════
@@ -2011,7 +2064,7 @@ function panneauMarche(){
         <div class="prix">${fmt(pr.a)}<small>vend ${fmt(pr.v)} · le kg</small></div>
         <div class="duo">
           <button class="pastille vendre" data-vendre="${g}" ${vendable(g)?'':'disabled'}>vendre</button>
-          <button class="pastille acheter" data-acheter="${g}" ${peutAcheter?'':'disabled'}>acheter</button>
+          <button class="pastille acheter" data-t-acheter="${g}" ${peutAcheter?'':'disabled'}>acheter</button>
         </div></div>`;
     }).join('');
   });
@@ -2534,6 +2587,7 @@ function paquet(){
     mythes:S.mythes,karma:S.karma,chien:S.chien,contrats:S.contrats,
     gens:S.gens,objets:S.objets,objetsDepuis:S.objetsDepuis,mecrites:S.mecrites,
     chronique:S.chronique,dits:S.dits,souvenirs:S.souvenirs,
+    chevaux:S.chevaux,terrains:S.terrains,
     contratsHonores:S.contratsHonores,contratsRates:S.contratsRates,
     rumeur:S.rumeur,ref:S.ref,prix:S.prix,dest:S.dest,
     villes:S.villes.map(v=>({n:v.nom,t:TOUS_TYPES.indexOf(v.type),s:v.stat,m:v.mem,
@@ -2562,6 +2616,7 @@ function ouvrirPaquet(d){
      gens:d.gens||{},objets:d.objets||{},objetsDepuis:d.objetsDepuis||{},
      mecrites:d.mecrites||{},chronique:d.chronique||[],
      dits:d.dits||{},souvenirs:d.souvenirs||{},
+     chevaux:d.chevaux||[],terrains:d.terrains||{},
      contrats:d.contrats||[],contratsHonores:d.contratsHonores||0,contratsRates:d.contratsRates||0,
      villes:villes,ville:villes[d.ville]||villes[0],prix:d.prix,
      routes:d.routes?d.routes.map(r=>Object.assign({},r,{dest:villes[r.dest]||villes[0]})):null,
@@ -4484,6 +4539,63 @@ document.addEventListener('click',e=>{
   }
   if(t.dataset.accepter){accepterOffre(+t.dataset.accepter);return;}
   if(t.dataset.mission){accepterMission(t.dataset.mission);return;}
+  /* ── les propriétés ── */
+  if(t.dataset.tAcheter){
+    if(acheterTerrain(t.dataset.tAcheter))rendreMarche();
+    rendreTerrains();return;
+  }
+  if(t.dataset.tBatir){
+    if(batir(t.dataset.tBatir,t.dataset.b)){toast(NOM_BATIMENT[t.dataset.b]+' est bâtie.');
+      rendreMarche();}
+    rendreTerrains();return;
+  }
+  if(t.dataset.tRangArme){
+    const c=t.dataset.tRangArme;
+    const sel=$(`[data-choix-arme="${c}"]`);
+    if(sel&&rangerArmeLa(c,sel.value))rendreMarche();
+    rendreTerrains();return;
+  }
+  if(t.dataset.tReprArme){reprendreArmeLa(t.dataset.tReprArme,t.dataset.a);
+    rendreMarche();rendreTerrains();return;}
+  if(t.dataset.tLoger){
+    const c=t.dataset.tLoger;
+    const sel=$(`[data-choix-garde="${c}"]`);
+    if(sel&&logerGarde(c,Number(sel.value)))rendreMarche();
+    rendreTerrains();return;
+  }
+  if(t.dataset.tReprGarde){reprendreGarde(t.dataset.tReprGarde,Number(t.dataset.i));
+    rendreMarche();rendreTerrains();return;}
+  if(t.dataset.tRemiser){
+    const c=t.dataset.tRemiser;
+    const sel=$(`[data-choix-chariot="${c}"]`);
+    if(sel&&remiser(c,Number(sel.value)))rendreMarche();
+    rendreTerrains();return;
+  }
+  if(t.dataset.tReprChariot){reprendreChariot(t.dataset.tReprChariot,Number(t.dataset.i));
+    rendreMarche();rendreTerrains();return;}
+  if(t.dataset.tCacher){
+    const c=t.dataset.tCacher;
+    const ch=$(`[data-somme="${c}"]`);
+    const n=cacher(c,ch?Number(ch.value):0);
+    if(n)toast(`${fmt(n)} po sous la dalle.`);
+    rendreMarche();rendreTerrains();return;
+  }
+  if(t.dataset.tReprOr){
+    const c=t.dataset.tReprOr;
+    const ch=$(`[data-somme="${c}"]`);
+    const n=reprendreOr(c,ch&&Number(ch.value)?Number(ch.value):etatTerrain(c).or);
+    if(n)toast(`${fmt(n)} po repris.`);
+    rendreMarche();rendreTerrains();return;
+  }
+  if(t.dataset.tAuPre){
+    const c=t.dataset.tAuPre;
+    const sel=$(`[data-choix-cheval="${c}"]`);
+    if(sel&&mettreAuPre(c,Number(sel.value)))rendreMarche();
+    rendreTerrains();return;
+  }
+  if(t.dataset.tReprCheval){reprendreCheval(t.dataset.tReprCheval,Number(t.dataset.i));
+    rendreMarche();rendreTerrains();return;}
+
   if(t.dataset.dlg){ouvrirDialogue(t.dataset.dlg);return;}
   if(t.dataset.rep!==undefined){repondre(Number(t.dataset.rep));return;}
   if(t.dataset.parler){
@@ -4673,7 +4785,7 @@ const FICHIERS_DONNEES=['biens','raretes','contrees','archetypes','armes',
    relais sans que rien d'autre change. C'est ce qui permet de les écrire à son
    rythme, un par un.  */
 const FICHIERS_AUTEUR=['monde','evenements','personnages','objets','missions-ecrites',
-                       'dialogues'];
+                       'dialogues','proprietes'];
 
 /* ═══════════════════════════════════════════════════════════════════════════
    LE MONDE D'AUTEUR
@@ -4896,6 +5008,7 @@ let PERSONNAGES=null;        /* clé → personnage */
 let ROLES={};                /* clé de rôle → {nom, feminin} — voyage avec eux */
 let OBJETS=null;             /* clé → objet unique */
 let MISSIONS_ECRITES=[];     /* data/missions-ecrites.json → missions */
+let PROPRIETES=null;         /* data/proprietes.json → clé → terrain */
 let DIALOGUES=[];            /* data/dialogues.json → dialogues */
 let DIALOGUES_DE={};         /* clé de personnage → ses dialogues, du plus prioritaire */
 let TYPES_PAR_CLE=null, TYPES_CAP_PAR_CLE=null;
@@ -4907,6 +5020,11 @@ function assignerAuteur(d){
   if(MONDE)batirTopologie();
   EVENEMENTS_DONNEES=(d.evenements&&d.evenements.evenements)||[];
   MISSIONS_ECRITES=(d['missions-ecrites']&&d['missions-ecrites'].missions)||[];
+  PROPRIETES=null;
+  if(d.proprietes&&d.proprietes.proprietes){
+    PROPRIETES={};
+    d.proprietes.proprietes.forEach(t=>{if(t.cle)PROPRIETES[t.cle]=t;});
+  }
   DIALOGUES=(d.dialogues&&d.dialogues.dialogues)||[];
   DIALOGUES_DE={};
   DIALOGUES.forEach(x=>{
@@ -5658,6 +5776,432 @@ function rendreGens(){
       ${offerts.length?'':`<button class="bouton petit creux" data-parler="${p.cle}"
         style="width:100%;margin-top:8px">${e.r?'Lui redire un mot':'Aller lui parler'}</button>`}
     </div>`;}).join('');
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LES PROPRIÉTÉS
+   ───────────────────────────────────────────────────────────────────────────
+   Un terrain qu'on achète et sur lequel on bâtit. Ce qu'une propriété apporte
+   n'est pas de la puissance : c'est de la place ailleurs que dans le convoi.
+   On y laisse ce dont on n'a pas besoin pour ce voyage-ci, et l'on repart plus
+   court — ce qui est tout l'intérêt quand une mission demande de la vitesse
+   plutôt que du volume.
+
+   Quatre bâtiments, chacun avec son or, ses matériaux et sa capacité, réglés
+   terrain par terrain dans l'atelier de carte. Les matériaux doivent être
+   **dans la soute** au moment de bâtir : ils sont déchargés sur place. C'est
+   ce qui fait qu'un convoi part long quand on va construire.
+
+   Une seule propriété par contrée. En acheter une seconde dans la même contrée
+   cède la première, et ce qu'elle gardait revient au convoi — on le dit avant.
+
+   Ce que la partie retient, dans S :
+     S.terrains[cle] = { bati:{maison,grange,cache,ecurie}, armes:{}, gardes:[],
+                         chariots:[], or:0, chevaux:[] }                      */
+
+const BATIMENTS=['maison','grange','cache','ecurie'];
+const NOM_BATIMENT={maison:'la maison',grange:'la grange',
+                    cache:'la cache secrète',ecurie:'l\'écurie'};
+
+const terrainDe=cle=>PROPRIETES&&PROPRIETES[cle];
+const etatTerrain=cle=>(S.terrains[cle]=S.terrains[cle]||
+  {bati:{},armes:{},gardes:[],chariots:[],or:0,chevaux:[]});
+const possede=cle=>!!S.terrains[cle];
+const aBati=(cle,b)=>!!(S.terrains[cle]&&S.terrains[cle].bati[b]);
+
+/* La contrée d'un terrain, prise sur le lieu d'où l'on s'y rend. */
+function contreeDuTerrain(t){
+  if(!t||!t.lieu||!PAR_CLE||PAR_CLE[t.lieu]===undefined)return null;
+  const v=S.villes[PAR_CLE[t.lieu]];
+  return v?v.contree:null;
+}
+/* Ce qu'on possède déjà dans cette contrée — au plus un. */
+function terrainDeLaContree(ci){
+  if(!PROPRIETES)return null;
+  const k=Object.keys(S.terrains).find(c=>PROPRIETES[c]
+    &&contreeDuTerrain(PROPRIETES[c])===ci);
+  return k||null;
+}
+const proprietesIci=()=>!PROPRIETES||!S.ville?[]
+  :Object.values(PROPRIETES).filter(t=>t.lieu===S.ville.cleLieu);
+
+/* ── ce que coûte un bâtiment, et ce qui manque ── */
+/* Le coût vit sous « cout », la capacité à plat. Sans cette séparation, la
+   cache aurait un « or » qui voudrait dire deux choses : ce qu'elle coûte et
+   ce qu'elle tient. */
+function coutBatiment(t,b){
+  const d=((t.batiments||{})[b])||null;
+  if(!d)return null;
+  const c=d.cout||{};
+  return {or:Math.max(0,Math.round(c.or||0)),materiaux:c.materiaux||{}};
+}
+function manquePour(t,b){
+  const c=coutBatiment(t,b);
+  if(!c)return ['ce terrain ne le permet pas'];
+  const m=[];
+  if(S.or<c.or)m.push(`${fmt(c.or-S.or)} po`);
+  Object.entries(c.materiaux).forEach(([g,n])=>{
+    const q=Math.max(0,Math.round(n)-stock(g));
+    if(q>0)m.push(`${fmt(q)} kg de ${(G[g]||{nom:g}).nom.toLowerCase()}`);
+  });
+  return m;
+}
+function batir(cle,b){
+  const t=terrainDe(cle);
+  if(!t||!possede(cle)||aBati(cle,b))return false;
+  const c=coutBatiment(t,b);
+  if(!c||manquePour(t,b).length)return false;
+  S.or-=c.or;
+  Object.entries(c.materiaux).forEach(([g,n])=>retirer(g,Math.round(n)));
+  etatTerrain(cle).bati[b]=true;
+  chronique(`${NOM_BATIMENT[b][0].toUpperCase()+NOM_BATIMENT[b].slice(1)} `+
+    `est bâtie au ${t.nom}.`,'bon');
+  return true;
+}
+
+/* ── acheter, céder ── */
+function acheterTerrain(cle){
+  const t=terrainDe(cle);
+  if(!t||possede(cle))return false;
+  const prix=Math.max(0,Math.round(t.prix||0));
+  if(S.or<prix)return false;
+  const ci=contreeDuTerrain(t);
+  const avant=ci!==null?terrainDeLaContree(ci):null;
+  if(avant)ceder(avant);
+  S.or-=prix;
+  etatTerrain(cle);
+  chronique(`Vous voilà propriétaire du ${t.nom}.`,'bon');
+  return true;
+}
+/* Céder rend ce qui était gardé, dans la limite de ce que le convoi peut
+   reprendre. Ce qui ne rentre pas est perdu, et l'on prévient avant. */
+function ceder(cle){
+  const e=S.terrains[cle], t=terrainDe(cle);
+  if(!e)return;
+  S.or+=e.or||0;
+  Object.entries(e.armes||{}).forEach(([a,n])=>{for(let i=0;i<n;i++)rangerArme(a);});
+  (e.gardes||[]).forEach(g=>S.gardes.push(g));
+  (e.chariots||[]).forEach(c=>S.chariots.push(c));
+  (e.chevaux||[]).forEach(c=>S.chevaux.push(c));
+  delete S.terrains[cle];
+  chronique(`Vous cédez ${t?t.nom:'un terrain'} : ce qu'il gardait revient au convoi.`,
+    'mauvais');
+}
+/* Ce qu'on perdrait à céder : rien, sauf la place qui manque. */
+function ceQueCederRend(cle){
+  const e=S.terrains[cle];
+  if(!e)return [];
+  const l=[];
+  if(e.or)l.push(`${fmt(e.or)} po`);
+  const na=Object.values(e.armes||{}).reduce((s,n)=>s+n,0);
+  if(na)l.push(`${na} arme${na>1?'s':''}`);
+  if((e.gardes||[]).length)l.push(`${e.gardes.length} garde${e.gardes.length>1?'s':''}`);
+  if((e.chariots||[]).length)l.push(`${e.chariots.length} chariot${e.chariots.length>1?'s':''}`);
+  if((e.chevaux||[]).length)l.push(`${e.chevaux.length} cheval${e.chevaux.length>1?'aux':''}`);
+  return l;
+}
+
+/* ── ranger et reprendre ──
+   Chaque bâtiment garde une sorte de chose, et sa capacité vient du terrain. */
+function capacite(cle,b,quoi){
+  const t=terrainDe(cle);
+  const d=t&&(t.batiments||{})[b];
+  if(!d)return 0;
+  const v=d[quoi];
+  return v===undefined?0:Math.max(0,Math.round(v));
+}
+function resteMaison(cle,quoi){
+  const e=etatTerrain(cle);
+  const pris=quoi==='armes'
+    ?Object.values(e.armes).reduce((s,n)=>s+n,0)
+    :e.gardes.length;
+  return capacite(cle,'maison',quoi)-pris;
+}
+const resteGrange=cle=>capacite(cle,'grange','chariots')-etatTerrain(cle).chariots.length;
+const resteCache=cle=>capacite(cle,'cache','or')-etatTerrain(cle).or;
+const resteEcurie=cle=>capacite(cle,'ecurie','chevaux')-etatTerrain(cle).chevaux.length;
+
+function rangerArmeLa(cle,a){
+  if(!aBati(cle,'maison')||resteMaison(cle,'armes')<=0)return false;
+  if(!(S.armes[a]>0))return false;
+  S.armes[a]--;if(!S.armes[a])delete S.armes[a];
+  const e=etatTerrain(cle);
+  e.armes[a]=(e.armes[a]||0)+1;
+  return true;
+}
+function reprendreArmeLa(cle,a){
+  const e=etatTerrain(cle);
+  if(!(e.armes[a]>0))return false;
+  e.armes[a]--;if(!e.armes[a])delete e.armes[a];
+  rangerArme(a);
+  return true;
+}
+function logerGarde(cle,i){
+  if(!aBati(cle,'maison')||resteMaison(cle,'gardes')<=0)return false;
+  const g=S.gardes[i];
+  if(!g)return false;
+  S.gardes.splice(i,1);
+  etatTerrain(cle).gardes.push(g);
+  return true;
+}
+function reprendreGarde(cle,i){
+  const e=etatTerrain(cle);
+  const g=e.gardes[i];
+  if(!g)return false;
+  e.gardes.splice(i,1);
+  S.gardes.push(g);
+  return true;
+}
+/* Remiser un chariot le sort du convoi : sa capacité ne compte plus, et l'on
+   va plus vite. On refuse s'il porte encore quelque chose — on ne remise pas
+   une cargaison par mégarde. */
+function chargeDe(c){return Object.values(c.cargo||{}).reduce((s,n)=>s+n,0);}
+function remiser(cle,i){
+  if(!aBati(cle,'grange')||resteGrange(cle)<=0)return false;
+  const c=S.chariots[i];
+  if(!c||S.chariots.length<=1||chargeDe(c)>0)return false;
+  S.chariots.splice(i,1);
+  etatTerrain(cle).chariots.push(c);
+  return true;
+}
+function reprendreChariot(cle,i){
+  const e=etatTerrain(cle);
+  const c=e.chariots[i];
+  if(!c)return false;
+  e.chariots.splice(i,1);
+  S.chariots.push(c);
+  return true;
+}
+function cacher(cle,combien){
+  if(!aBati(cle,'cache'))return 0;
+  const n=Math.max(0,Math.min(Math.round(combien),S.or,resteCache(cle)));
+  if(!n)return 0;
+  S.or-=n;etatTerrain(cle).or+=n;
+  return n;
+}
+function reprendreOr(cle,combien){
+  const e=etatTerrain(cle);
+  const n=Math.max(0,Math.min(Math.round(combien),e.or));
+  if(!n)return 0;
+  e.or-=n;S.or+=n;
+  return n;
+}
+function mettreAuPre(cle,i){
+  if(!aBati(cle,'ecurie')||resteEcurie(cle)<=0)return false;
+  const b=(S.chevaux||[])[i];
+  if(!b)return false;
+  S.chevaux.splice(i,1);
+  etatTerrain(cle).chevaux.push(b);
+  return true;
+}
+function reprendreCheval(cle,i){
+  const e=etatTerrain(cle);
+  const b=e.chevaux[i];
+  if(!b||placeAuxChevaux()<=0)return false;
+  e.chevaux.splice(i,1);
+  S.chevaux.push(b);
+  return true;
+}
+
+/* ── le panneau des propriétés ── */
+function ligneCout(t,b){
+  const c=coutBatiment(t,b);
+  if(!c)return '';
+  const l=[];
+  if(c.or)l.push(`${fmt(c.or)} po`);
+  Object.entries(c.materiaux).forEach(([g,n])=>
+    l.push(`${fmt(n)} kg de ${(G[g]||{nom:g}).nom.toLowerCase()}`));
+  return l.join(' · ')||'rien du tout';
+}
+function ditCapacite(t,b){
+  const d=(t.batiments||{})[b]||{};
+  const l=[];
+  if(b==='maison'){
+    if(d.armes)l.push(`${d.armes} armes`);
+    if(d.gardes)l.push(`${d.gardes} garde${d.gardes>1?'s':''}`);
+  }
+  if(b==='grange'&&d.chariots)l.push(`${d.chariots} chariot${d.chariots>1?'s':''}`);
+  if(b==='cache'&&d.or)l.push(`${fmt(d.or)} po`);
+  if(b==='ecurie'&&d.chevaux)l.push(`${d.chevaux} cheval${d.chevaux>1?'aux':''}`);
+  return l.join(' · ');
+}
+function rendreTerrains(){
+  const pan=$('#panneau-terrains');
+  if(!pan)return;
+  let h='';
+  const ici=proprietesIci();
+
+  /* — ce qu'on possède, où que ce soit — */
+  const miens=Object.keys(S.terrains||{}).filter(c=>terrainDe(c));
+  if(miens.length){
+    h+=`<p class="oeil" style="padding:2px 2px 8px">Ce que vous possédez</p>`;
+    h+=miens.map(cle=>carteTerrain(cle,ici.some(t=>t.cle===cle))).join('');
+  }
+
+  /* — ce qui est à vendre ici — */
+  const aVendre=ici.filter(t=>!possede(t.cle));
+  if(aVendre.length){
+    h+=`<p class="oeil" style="padding:14px 2px 8px">À vendre ici</p>`;
+    h+=aVendre.map(t=>{
+      const prix=Math.max(0,Math.round(t.prix||0));
+      const ci=contreeDuTerrain(t);
+      const deja=ci!==null?terrainDeLaContree(ci):null;
+      const rend=deja?ceQueCederRend(deja):[];
+      return `<div class="carte">
+        <div class="rangee"><h3>${t.nom}</h3>
+          <span class="oeil chiffre">${prix?fmt(prix)+' po':'donné'}</span></div>
+        ${t.description?`<p>${texteEv(t.description,{})}</p>`:''}
+        <p class="info">Un terrain nu. Ce qu'on y bâtit se paie en or et en
+          matériaux qu'il faut avoir en soute.</p>
+        ${deja?`<p class="info" style="color:var(--minium)">Vous possédez déjà
+          <b>${terrainDe(deja).nom}</b> dans cette contrée. L'acheter vous le fera
+          céder${rend.length?` — ${rend.join(', ')} reviendront au convoi`:''}.</p>`:''}
+        <button class="bouton petit${S.or<prix?' creux':''}" data-t-acheter="${t.cle}"
+          style="width:100%;margin-top:10px"${S.or<prix?' disabled':''}>
+          ${S.or<prix?`Il vous manque ${fmt(prix-S.or)} po`
+            :deja?'Céder l\'autre et acheter':'Acheter le terrain'}</button>
+      </div>`;
+    }).join('');
+  }
+
+  if(!h)h=`<div class="carte"><h3>Aucun terrain</h3><p>Rien à vendre ici, et vous
+    ne possédez rien. Les terrains se posent sur la carte, dans l'atelier.</p></div>`;
+  pan.innerHTML=h;
+}
+
+function carteTerrain(cle,surPlace){
+  const t=terrainDe(cle), e=etatTerrain(cle);
+  const ou=t.lieu&&PAR_CLE&&PAR_CLE[t.lieu]!==undefined
+    ?(S.villes[PAR_CLE[t.lieu]]||{}).nom||'':'';
+  let h=`<div class="carte">
+    <div class="rangee"><h3>${t.nom}</h3>
+      <span class="oeil">${ou}${surPlace?'':' · loin d\'ici'}</span></div>`;
+
+  const batis=BATIMENTS.filter(b=>e.bati[b]);
+  const aBatir=BATIMENTS.filter(b=>(t.batiments||{})[b]&&!e.bati[b]);
+
+  if(!batis.length)h+=`<p>Un terrain nu. Rien n'y est encore bâti.</p>`;
+
+  /* — ce qui est bâti, et ce qu'on y range — */
+  if(e.bati.maison)h+=blocMaison(cle,surPlace);
+  if(e.bati.grange)h+=blocGrange(cle,surPlace);
+  if(e.bati.cache)h+=blocCache(cle,surPlace);
+  if(e.bati.ecurie)h+=blocEcurie(cle,surPlace);
+
+  /* — ce qu'on peut encore bâtir — */
+  if(aBatir.length){
+    h+=`<p class="oeil" style="padding:11px 0 5px">À bâtir</p>`;
+    h+=aBatir.map(b=>{
+      const manque=surPlace?manquePour(t,b):['il faut y être'];
+      return `<div class="rangee" style="align-items:flex-start;gap:9px;margin-top:7px">
+        <div style="flex:1;min-width:0">
+          <b>${NOM_BATIMENT[b][0].toUpperCase()+NOM_BATIMENT[b].slice(1)}</b>
+          <p class="info">${ligneCout(t,b)} — tient ${ditCapacite(t,b)||'rien'}</p>
+          ${manque.length?`<p class="info" style="color:var(--minium)">Il manque
+            ${manque.join(', ')}.</p>`:''}
+        </div>
+        <button class="bouton petit${manque.length?' creux':''}" data-t-batir="${cle}"
+          data-b="${b}"${manque.length?' disabled':''}>Bâtir</button>
+      </div>`;
+    }).join('');
+  }
+  return h+`</div>`;
+}
+
+function blocMaison(cle,surPlace){
+  const e=etatTerrain(cle);
+  const nb=Object.entries(e.armes).filter(([,n])=>n>0);
+  let h=`<p class="oeil" style="padding:11px 0 5px">La maison —
+    ${resteMaison(cle,'armes')} place${resteMaison(cle,'armes')>1?'s':''} au râtelier,
+    ${resteMaison(cle,'gardes')} lit${resteMaison(cle,'gardes')>1?'s':''}</p>`;
+  h+=nb.length
+    ?nb.map(([a,n])=>`<div class="rangee" style="margin-top:5px">
+       <span style="flex:1">${(ARMES[a]||{nom:a}).nom}${n>1?' ×'+n:''}</span>
+       ${surPlace?`<button class="bouton petit creux" data-t-repr-arme="${cle}"
+         data-a="${a}">Reprendre</button>`:''}</div>`).join('')
+    :`<p class="info">Le râtelier est vide.</p>`;
+  h+=e.gardes.length
+    ?e.gardes.map((g,i)=>`<div class="rangee" style="margin-top:5px">
+       <span style="flex:1">${g.nom} — ${(METIERS[g.metier]||{nom:''}).nom}</span>
+       ${surPlace?`<button class="bouton petit creux" data-t-repr-garde="${cle}"
+         data-i="${i}">Reprendre</button>`:''}</div>`).join('')
+    :`<p class="info">Personne n'y loge.</p>`;
+  if(surPlace){
+    const armesLa=enReserve();
+    if(armesLa.length&&resteMaison(cle,'armes')>0)
+      h+=`<div class="rangee" style="margin-top:8px"><select data-choix-arme="${cle}"
+        style="flex:1">${armesLa.map(a=>`<option value="${a}">${ARMES[a].nom}
+        (${S.armes[a]})</option>`).join('')}</select>
+        <button class="bouton petit" data-t-rang-arme="${cle}">Y ranger</button></div>`;
+    if(S.gardes.length&&resteMaison(cle,'gardes')>0)
+      h+=`<div class="rangee" style="margin-top:6px"><select data-choix-garde="${cle}"
+        style="flex:1">${S.gardes.map((g,i)=>`<option value="${i}">${g.nom}</option>`).join('')}
+        </select><button class="bouton petit" data-t-loger="${cle}">L'y laisser</button></div>`;
+  }
+  return h;
+}
+function blocGrange(cle,surPlace){
+  const e=etatTerrain(cle);
+  let h=`<p class="oeil" style="padding:11px 0 5px">La grange —
+    ${resteGrange(cle)} place${resteGrange(cle)>1?'s':''}</p>`;
+  h+=e.chariots.length
+    ?e.chariots.map((c,i)=>`<div class="rangee" style="margin-top:5px">
+       <span style="flex:1">${c.nom} — ${(CHARIOTS[c.type]||{nom:''}).nom}</span>
+       ${surPlace?`<button class="bouton petit creux" data-t-repr-chariot="${cle}"
+         data-i="${i}">Reprendre</button>`:''}</div>`).join('')
+    :`<p class="info">La grange est vide.</p>`;
+  if(surPlace&&resteGrange(cle)>0){
+    const vides=S.chariots.map((c,i)=>({c:c,i:i})).filter(x=>chargeDe(x.c)===0);
+    h+=S.chariots.length<=1
+      ?`<p class="info">Vous ne pouvez pas remiser votre dernier chariot.</p>`
+      :vides.length
+        ?`<div class="rangee" style="margin-top:8px"><select data-choix-chariot="${cle}"
+          style="flex:1">${vides.map(x=>`<option value="${x.i}">${x.c.nom}</option>`).join('')}
+          </select><button class="bouton petit" data-t-remiser="${cle}">L'y remiser</button></div>`
+        :`<p class="info">Videz un chariot avant de le remiser.</p>`;
+  }
+  return h;
+}
+function blocCache(cle,surPlace){
+  const e=etatTerrain(cle);
+  let h=`<p class="oeil" style="padding:11px 0 5px">La cache secrète</p>
+    <p><b class="chiffre">${fmt(e.or)}</b> po dessous la dalle, ${fmt(resteCache(cle))}
+      de place encore.</p>
+    <p class="info">Cet or n'est pas dans votre bourse : rien de ce qui prend une
+      part de ce que vous portez ne le trouvera.</p>`;
+  if(surPlace)h+=`<div class="rangee" style="margin-top:8px">
+    <input type="number" min="0" step="10" value="0" data-somme="${cle}"
+      style="flex:1;padding:7px 9px;background:var(--velin);border:1px solid var(--filet);
+      border-radius:var(--r);color:var(--encre);font-family:inherit">
+    <button class="bouton petit" data-t-cacher="${cle}">Cacher</button>
+    <button class="bouton petit creux" data-t-repr-or="${cle}">Reprendre</button></div>`;
+  return h;
+}
+function blocEcurie(cle,surPlace){
+  const e=etatTerrain(cle);
+  let h=`<p class="oeil" style="padding:11px 0 5px">L'écurie —
+    ${resteEcurie(cle)} stalle${resteEcurie(cle)>1?'s':''}</p>`;
+  h+=e.chevaux.length
+    ?e.chevaux.map((b,i)=>`<div class="rangee" style="margin-top:5px">
+       <span style="flex:1">${b.nom} — ${nomCheval(b.cle)}
+         <span class="oeil">${Math.round(b.etat)} %</span></span>
+       ${surPlace?`<button class="bouton petit creux" data-t-repr-cheval="${cle}"
+         data-i="${i}"${placeAuxChevaux()<=0?' disabled':''}>Reprendre</button>`:''}
+       </div>`).join('')
+    :`<p class="info">L'écurie est vide.</p>`;
+  if(surPlace&&resteEcurie(cle)>0&&(S.chevaux||[]).length)
+    h+=`<div class="rangee" style="margin-top:8px"><select data-choix-cheval="${cle}"
+      style="flex:1">${S.chevaux.map((b,i)=>`<option value="${i}">${b.nom} —
+      ${nomCheval(b.cle)}</option>`).join('')}</select>
+      <button class="bouton petit" data-t-au-pre="${cle}">L'y laisser</button></div>`;
+  if(surPlace&&placeAuxChevaux()<=0&&e.chevaux.length)
+    h+=`<p class="info">Le convoi ne peut mener qu'un cheval libre par chariot.</p>`;
+  return h;
+}
+function nomCheval(cle){
+  const l=niveauxDe('cheval');
+  const n=l.find(x=>x.cle===cle);
+  return n?n.nom:cle;
 }
 
 /* ── les missions écrites ── */
