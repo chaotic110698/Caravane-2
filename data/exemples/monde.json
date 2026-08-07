@@ -1,32 +1,461 @@
 {
-  "format": "caravane.carte.v1",
-  "apropos": "Un petit monde d'essai : cinq lieux sur deux contrées, de quoi éprouver les dialogues sans attendre la vraie carte. Il se charge depuis Paramètres › Le jeu d'exemple, et ne touche pas à data/.",
+  "format": "caravane.carte.v2",
+  "apropos": "Un petit monde d’essai : cinq lieux sur deux contrées, plus l’intérieur de Vaulmier sur sa propre carte, où l’on n’entre qu’en payant la douane. De quoi éprouver les dialogues et les passages sans attendre la vraie carte. Il se charge depuis Paramètres › Le jeu d’exemple, et ne touche pas à data/.",
   "cartes": [
-    { "cle": "val", "nom": "Le Val d'Ambre", "largeur": 1000, "hauteur": 700, "kmParJour": 32 }
+    {
+      "cle": "val",
+      "nom": "Le Val d'Ambre",
+      "largeur": 1000,
+      "hauteur": 700,
+      "kmParJour": 32,
+      "etalon": {
+        "a": {
+          "x": 120,
+          "y": 620
+        },
+        "b": {
+          "x": 520,
+          "y": 620
+        },
+        "distance": 60,
+        "unite": "lieues"
+      }
+    },
+    {
+      "cle": "vaulmier-ville",
+      "nom": "Vaulmier intra-muros",
+      "fichier": "",
+      "largeur": 900,
+      "hauteur": 600,
+      "etalon": {
+        "a": {
+          "x": 120,
+          "y": 540
+        },
+        "b": {
+          "x": 420,
+          "y": 540
+        },
+        "distance": 3,
+        "unite": "lieues"
+      },
+      "kmParJour": 9
+    }
   ],
-  "mesures": { "kmParLieue": 4.4, "kmParJour": 32 },
+  "mesures": {
+    "kmParLieue": 4.4,
+    "kmParJour": 32
+  },
   "contrees": [
-    { "cle": "humain", "nom": "Le Val d'Ambre", "gentile": "valois", "teinte": "#C9A227", "carte": "val" },
-    { "cle": "nain", "nom": "Les Contreforts", "gentile": "contrefortain", "teinte": "#A3B2BB", "carte": "val" }
+    {
+      "cle": "humain",
+      "nom": "Le Val d'Ambre",
+      "gentile": "valois",
+      "teinte": "#C9A227",
+      "carte": "val"
+    },
+    {
+      "cle": "nain",
+      "nom": "Les Contreforts",
+      "gentile": "contrefortain",
+      "teinte": "#A3B2BB",
+      "carte": "val"
+    },
+    {
+      "cle": "vaulmier-cite",
+      "nom": "Vaulmier",
+      "gentile": "vaulmiérois",
+      "teinte": "#B07A4C",
+      "carte": "vaulmier-ville"
+    }
   ],
   "lieux": [
-    { "cle": "vaulmier", "nom": "Vaulmier", "contree": "humain", "carte": "val",
-      "rang": "capitale", "traits": ["halle", "port"], "x": 220, "y": 340 },
-    { "cle": "le-gue", "nom": "Le Gué", "contree": "humain", "carte": "val",
-      "rang": "village", "traits": ["bac"], "x": 430, "y": 250 },
-    { "cle": "sainte-ambre", "nom": "Sainte-Ambre", "contree": "humain", "carte": "val",
-      "rang": "ville", "traits": ["temple"], "x": 400, "y": 470 },
-    { "cle": "porte-haute", "nom": "La Porte Haute", "contree": "nain", "carte": "val",
-      "rang": "poste", "traits": ["douane"], "x": 640, "y": 330 },
-    { "cle": "fondgris", "nom": "Fondgris", "contree": "nain", "carte": "val",
-      "rang": "capitale", "traits": ["mine", "forge"], "x": 830, "y": 300 }
+    {
+      "cle": "vaulmier",
+      "nom": "Vaulmier",
+      "contree": "humain",
+      "carte": "val",
+      "rang": "capitale",
+      "traits": [
+        "halle",
+        "port"
+      ],
+      "x": 220,
+      "y": 340
+    },
+    {
+      "cle": "le-gue",
+      "nom": "Le Gué",
+      "contree": "humain",
+      "carte": "val",
+      "rang": "village",
+      "traits": [
+        "bac"
+      ],
+      "x": 430,
+      "y": 250
+    },
+    {
+      "cle": "sainte-ambre",
+      "nom": "Sainte-Ambre",
+      "contree": "humain",
+      "carte": "val",
+      "rang": "ville",
+      "traits": [
+        "temple"
+      ],
+      "x": 400,
+      "y": 470
+    },
+    {
+      "cle": "porte-haute",
+      "nom": "La Porte Haute",
+      "contree": "nain",
+      "carte": "val",
+      "rang": "poste",
+      "traits": [
+        "douane"
+      ],
+      "x": 640,
+      "y": 330
+    },
+    {
+      "cle": "fondgris",
+      "nom": "Fondgris",
+      "contree": "nain",
+      "carte": "val",
+      "rang": "capitale",
+      "traits": [
+        "mine",
+        "forge"
+      ],
+      "x": 830,
+      "y": 300
+    },
+    {
+      "cle": "vaulmier-porte",
+      "nom": "La Porte de l’Aube",
+      "contree": "vaulmier-cite",
+      "carte": "vaulmier-ville",
+      "rang": "poste",
+      "traits": [],
+      "x": 150,
+      "y": 300,
+      "etiq": {
+        "pos": "dessus"
+      }
+    },
+    {
+      "cle": "vaulmier-halles",
+      "nom": "Les Halles",
+      "contree": "vaulmier-cite",
+      "carte": "vaulmier-ville",
+      "rang": "ville",
+      "traits": [],
+      "x": 400,
+      "y": 240,
+      "etiq": {
+        "pos": "dessus"
+      }
+    },
+    {
+      "cle": "vaulmier-selliers",
+      "nom": "La Rue des Selliers",
+      "contree": "vaulmier-cite",
+      "carte": "vaulmier-ville",
+      "rang": "village",
+      "traits": [],
+      "x": 430,
+      "y": 470,
+      "etiq": {
+        "pos": "dessus"
+      }
+    },
+    {
+      "cle": "vaulmier-haut",
+      "nom": "Le Quartier Haut",
+      "contree": "vaulmier-cite",
+      "carte": "vaulmier-ville",
+      "rang": "capitale",
+      "traits": [],
+      "x": 720,
+      "y": 290,
+      "etiq": {
+        "pos": "dessus"
+      }
+    }
   ],
   "voies": [
-    { "de": "vaulmier", "vers": "le-gue", "terrain": "plaine", "lieues": 11 },
-    { "de": "vaulmier", "vers": "sainte-ambre", "terrain": "plaine", "lieues": 13 },
-    { "de": "le-gue", "vers": "sainte-ambre", "terrain": "foret", "lieues": 9 },
-    { "de": "le-gue", "vers": "porte-haute", "terrain": "colline", "lieues": 14 },
-    { "de": "sainte-ambre", "vers": "porte-haute", "terrain": "colline", "lieues": 16 },
-    { "de": "porte-haute", "vers": "fondgris", "terrain": "montagne", "lieues": 12 }
+    {
+      "de": "vaulmier",
+      "vers": "le-gue",
+      "terrain": "plaine",
+      "lieues": 11
+    },
+    {
+      "de": "vaulmier",
+      "vers": "sainte-ambre",
+      "terrain": "plaine",
+      "lieues": 13
+    },
+    {
+      "de": "le-gue",
+      "vers": "sainte-ambre",
+      "terrain": "foret",
+      "lieues": 9
+    },
+    {
+      "de": "le-gue",
+      "vers": "porte-haute",
+      "terrain": "colline",
+      "lieues": 14
+    },
+    {
+      "de": "sainte-ambre",
+      "vers": "porte-haute",
+      "terrain": "colline",
+      "lieues": 16
+    },
+    {
+      "de": "porte-haute",
+      "vers": "fondgris",
+      "terrain": "montagne",
+      "lieues": 12
+    },
+    {
+      "cle": "vaulmier-porte--vaulmier-halles",
+      "de": "vaulmier-porte",
+      "vers": "vaulmier-halles",
+      "terrain": "plaine",
+      "lieues": 2,
+      "calcul": [
+        {
+          "cle": "securise",
+          "nom": "securise",
+          "detour": 1.3,
+          "risque": 0.5,
+          "rudesse": 0.72,
+          "lieues": 3,
+          "km": 13,
+          "etapes": 2
+        },
+        {
+          "cle": "normal",
+          "nom": "normal",
+          "detour": 1,
+          "risque": 1,
+          "rudesse": 1,
+          "lieues": 2,
+          "km": 9,
+          "etapes": 1
+        },
+        {
+          "cle": "dangereux",
+          "nom": "dangereux",
+          "detour": 0.78,
+          "risque": 1.6,
+          "rudesse": 1.35,
+          "lieues": 2,
+          "km": 9,
+          "etapes": 1
+        }
+      ]
+    },
+    {
+      "cle": "vaulmier-porte--vaulmier-selliers",
+      "de": "vaulmier-porte",
+      "vers": "vaulmier-selliers",
+      "terrain": "plaine",
+      "lieues": 2,
+      "calcul": [
+        {
+          "cle": "securise",
+          "nom": "securise",
+          "detour": 1.3,
+          "risque": 0.5,
+          "rudesse": 0.72,
+          "lieues": 3,
+          "km": 13,
+          "etapes": 2
+        },
+        {
+          "cle": "normal",
+          "nom": "normal",
+          "detour": 1,
+          "risque": 1,
+          "rudesse": 1,
+          "lieues": 2,
+          "km": 9,
+          "etapes": 1
+        },
+        {
+          "cle": "dangereux",
+          "nom": "dangereux",
+          "detour": 0.78,
+          "risque": 1.6,
+          "rudesse": 1.35,
+          "lieues": 2,
+          "km": 9,
+          "etapes": 1
+        }
+      ]
+    },
+    {
+      "cle": "vaulmier-halles--vaulmier-selliers",
+      "de": "vaulmier-halles",
+      "vers": "vaulmier-selliers",
+      "terrain": "plaine",
+      "lieues": 2,
+      "calcul": [
+        {
+          "cle": "securise",
+          "nom": "securise",
+          "detour": 1.3,
+          "risque": 0.5,
+          "rudesse": 0.72,
+          "lieues": 3,
+          "km": 13,
+          "etapes": 2
+        },
+        {
+          "cle": "normal",
+          "nom": "normal",
+          "detour": 1,
+          "risque": 1,
+          "rudesse": 1,
+          "lieues": 2,
+          "km": 9,
+          "etapes": 1
+        },
+        {
+          "cle": "dangereux",
+          "nom": "dangereux",
+          "detour": 0.78,
+          "risque": 1.6,
+          "rudesse": 1.35,
+          "lieues": 2,
+          "km": 9,
+          "etapes": 1
+        }
+      ]
+    },
+    {
+      "cle": "vaulmier-halles--vaulmier-haut",
+      "de": "vaulmier-halles",
+      "vers": "vaulmier-haut",
+      "terrain": "plaine",
+      "lieues": 3,
+      "calcul": [
+        {
+          "cle": "securise",
+          "nom": "securise",
+          "detour": 1.3,
+          "risque": 0.5,
+          "rudesse": 0.72,
+          "lieues": 4,
+          "km": 18,
+          "etapes": 2
+        },
+        {
+          "cle": "normal",
+          "nom": "normal",
+          "detour": 1,
+          "risque": 1,
+          "rudesse": 1,
+          "lieues": 3,
+          "km": 13,
+          "etapes": 2
+        },
+        {
+          "cle": "dangereux",
+          "nom": "dangereux",
+          "detour": 0.78,
+          "risque": 1.6,
+          "rudesse": 1.35,
+          "lieues": 2,
+          "km": 9,
+          "etapes": 1
+        }
+      ]
+    },
+    {
+      "cle": "vaulmier-selliers--vaulmier-haut",
+      "de": "vaulmier-selliers",
+      "vers": "vaulmier-haut",
+      "terrain": "plaine",
+      "lieues": 3,
+      "calcul": [
+        {
+          "cle": "securise",
+          "nom": "securise",
+          "detour": 1.3,
+          "risque": 0.5,
+          "rudesse": 0.72,
+          "lieues": 4,
+          "km": 18,
+          "etapes": 2
+        },
+        {
+          "cle": "normal",
+          "nom": "normal",
+          "detour": 1,
+          "risque": 1,
+          "rudesse": 1,
+          "lieues": 3,
+          "km": 13,
+          "etapes": 2
+        },
+        {
+          "cle": "dangereux",
+          "nom": "dangereux",
+          "detour": 0.78,
+          "risque": 1.6,
+          "rudesse": 1.35,
+          "lieues": 2,
+          "km": 9,
+          "etapes": 1
+        }
+      ]
+    },
+    {
+      "cle": "vaulmier--vaulmier-porte",
+      "de": "vaulmier",
+      "vers": "vaulmier-porte",
+      "terrain": "plaine",
+      "lieues": 1,
+      "passage": true,
+      "calcul": [
+        {
+          "cle": "securise",
+          "nom": "securise",
+          "detour": 1.3,
+          "risque": 0.5,
+          "rudesse": 0.72,
+          "lieues": 1,
+          "km": 4,
+          "etapes": 1
+        },
+        {
+          "cle": "normal",
+          "nom": "normal",
+          "detour": 1,
+          "risque": 1,
+          "rudesse": 1,
+          "lieues": 1,
+          "km": 4,
+          "etapes": 1
+        },
+        {
+          "cle": "dangereux",
+          "nom": "dangereux",
+          "detour": 0.78,
+          "risque": 1.6,
+          "rudesse": 1.35,
+          "lieues": 1,
+          "km": 4,
+          "etapes": 1
+        }
+      ]
+    }
   ]
 }

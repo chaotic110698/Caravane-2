@@ -1234,7 +1234,7 @@ const REPLI={
   lieux:[],contrees:[],cartes:[]
 };
 const listeOu=q=>listeMonde(q)||REPLI[q]||[];
-const estMonde=d=>d&&(d.format==='caravane.carte.v1'||
+const estMonde=d=>d&&(/^caravane\.carte\.v\d+$/.test(d.format||'')||
   (d.lieux!==undefined&&d.contrees!==undefined));
 
 /* ═══════════════ les icônes ═══════════════

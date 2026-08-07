@@ -41,6 +41,23 @@ option{background:var(--fond-clair)}
 .sep{width:1px;align-self:stretch;background:var(--bord);margin:0 3px}
 .pousse{margin-left:auto}
 
+/* ── les onglets de cartes ── */
+#onglets{flex:none;display:flex;align-items:stretch;gap:4px;padding:5px 10px 0;
+  background:var(--fond-clair);border-bottom:1px solid var(--bord);
+  overflow-x:auto;scrollbar-width:thin}
+.onglet{display:flex;align-items:center;gap:7px;padding:6px 12px;font-size:13px;
+  white-space:nowrap;border:1px solid var(--bord);border-bottom:none;
+  border-radius:var(--r) var(--r) 0 0;background:var(--fond);color:var(--encre-pale);
+  position:relative;top:1px}
+.onglet:hover{color:var(--encre)}
+.onglet.actif{background:var(--fond-clair);color:var(--encre);border-color:var(--or);
+  border-bottom:1px solid var(--fond-clair);font-weight:600}
+.onglet .compte{font-size:11px;color:var(--encre-pale);font-variant-numeric:tabular-nums}
+.onglet.actif .compte{color:var(--or)}
+/* la carte où le passage en cours attend son second bout */
+.onglet.vise{border-color:var(--minium);border-style:dashed}
+#onglets .ajout{color:var(--or);padding:6px 11px}
+
 /* ── scène ── */
 #scene{flex:1;min-height:0;display:flex}
 #toile{flex:1;min-width:0;position:relative;background:
@@ -79,6 +96,13 @@ option{background:var(--fond-clair)}
   stroke:#1C1A17;stroke-width:3.5;stroke-linejoin:round;pointer-events:none}
 .marqueur.choisi .pastille{stroke:var(--minium);stroke-width:3}
 .marqueur.choisi .nom{fill:var(--minium)}
+/* un bout de passage : l'anneau, et vers quelle carte il mène */
+.anneau-passage{fill:none;stroke:var(--or);stroke-width:2;stroke-dasharray:4 3;
+  vector-effect:non-scaling-stroke;pointer-events:none}
+.marqueur.attend .anneau-passage{stroke:var(--minium);stroke-dasharray:none}
+.marqueur .vers{fill:var(--or);font-size:10.5px;font-weight:600;paint-order:stroke;
+  stroke:#1C1A17;stroke-width:3;stroke-linejoin:round;pointer-events:none}
+.marqueur.attend .vers{fill:var(--minium)}
 .poignee{fill:var(--or);stroke:#1C1A17;stroke-width:1.5;cursor:move}
 .provisoire{stroke:var(--or);stroke-width:2;stroke-dasharray:5 4;fill:none;
   vector-effect:non-scaling-stroke;pointer-events:none}
@@ -195,6 +219,7 @@ h4.section{font-size:11px;font-variant:small-caps;letter-spacing:.09em;
   <button class="outil actif" data-outil="select">Sélection <kbd>V</kbd></button>
   <button class="outil" data-outil="lieu">Lieu <kbd>L</kbd></button>
   <button class="outil" data-outil="voie">Voie <kbd>R</kbd></button>
+  <button class="outil" data-outil="passage">Passage <kbd>A</kbd></button>
   <button class="outil" data-outil="propriete">Propriété <kbd>P</kbd></button>
   <button class="outil" data-outil="frontiere">Frontière <kbd>F</kbd></button>
   <button class="outil" data-outil="etalon">Étalon <kbd>E</kbd></button>
@@ -206,6 +231,8 @@ h4.section{font-size:11px;font-variant:small-caps;letter-spacing:.09em;
   <button class="outil pousse" id="btn-image">Image de fond…</button>
   <a class="outil" id="lien-hub" href="index.html" title="Revenir aux ateliers">◂ Ateliers</a>
 </div>
+
+<div id="onglets" role="tablist" aria-label="Les cartes"></div>
 
 <div id="scene">
   <div id="toile">
@@ -241,7 +268,7 @@ h4.section{font-size:11px;font-variant:small-caps;letter-spacing:.09em;
     </div>
 
     <div class="bloc">
-      <h2>Échelle</h2>
+      <h2>Cette carte</h2>
       <div id="echelle"></div>
     </div>
 
@@ -278,6 +305,14 @@ h4.section{font-size:11px;font-variant:small-caps;letter-spacing:.09em;
         <p style="margin-top:6px"><b>Lieu</b> — cliquez pour poser. <b>Voie</b> — cliquez un lieu
         puis un autre. <b>Frontière</b> — cliquez les sommets, <kbd>Entrée</kbd> pour fermer.
         <b>Étalon</b> — cliquez deux points, puis saisissez la distance réelle.</p>
+        <p style="margin-top:6px"><b>Plusieurs cartes</b> — <b>+ Carte</b> en ouvre une autre :
+        le monde d'un côté, l'intérieur d'une cité de l'autre, chacune avec son fond, son
+        étalon et son allure. <kbd>Tab</kbd> passe de l'une à l'autre.</p>
+        <p style="margin-top:6px"><b>Passage</b> — c'est la porte entre deux cartes. Cliquez le
+        lieu de départ, changez d'onglet, cliquez celui d'en face. En jeu, on n'y passe qu'en
+        payant la <b>douane</b>, et payer fait apparaître la carte d'en face : le jeu n'affiche
+        jamais que celle où l'on se trouve. Donnez le rang <b>poste frontière</b> aux deux bouts
+        pour qu'ils se dessinent en portes.</p>
         <p style="margin-top:6px">Le déplacement marche quel que soit l'outil et quoi qu'il y
         ait sous le curseur — même par-dessus une ville, rien ne bouge d'autre que la vue.</p>
         <p style="margin-top:6px"><kbd>Suppr</kbd> efface la sélection. <kbd>Échap</kbd> annule
@@ -349,33 +384,53 @@ const PROFILS=[
 
 const KM_PAR_LIEUE=4.82;      /* la mesure du jeu */
 const KM_PAR_JOUR=15;         /* l'allure du convoi de départ, pour l'estimation */
+const LIEUES_PASSAGE=3;       /* la longueur d'un passage tant qu'on n'en dit rien */
 const TEINTES_CONTREE=['#C9A227','#6E9B6A','#4A7BC8','#C24A32','#A084C0','#5CA79E',
   '#C6A24C','#B07A4C','#7C8AA0','#9A7343'];
 
 /* ═══════════════ le modèle ═══════════════ */
 
+/* ── plusieurs cartes ──
+   Une carte, c'est un fond, une échelle et une allure de marche. Le monde en
+   est une ; l'intérieur d'une cité en est une autre, à sa propre échelle, où
+   une lieue de ruelles coûte plus de temps qu'une lieue de piste.
+
+   Tout ce qu'on pose appartient à une carte : les lieux, les contrées, les
+   propriétés. Les voies, elles, joignent deux lieux — et quand ces deux lieux
+   ne sont pas sur la même carte, la voie devient un **passage** : c'est la
+   porte, et le jeu y demande la douane. C'est le seul moyen d'entrer dans la
+   cité, et payer la douane fait apparaître sa carte, parce que le jeu
+   n'affiche jamais que celle où l'on se trouve. */
+function carteVide(cle,nom){
+  return {cle:cle,nom:nom,fichier:'',largeur:0,hauteur:0,
+    etalon:null,                    /* {a:{x,y},b:{x,y},distance,unite} */
+    kmParJour:KM_PAR_JOUR};         /* l'allure du convoi sur cette carte-là */
+}
 function modeleVide(){
   return {
-    format:'caravane.carte.v1',
-    carte:{fichier:'',largeur:0,hauteur:0},
-    etalon:null,                    /* {a:{x,y},b:{x,y},distance,unite} */
-    contrees:[],                    /* {cle,nom,gentile,teinte,frontiere:[{x,y}]} */
-    lieux:[],                       /* {cle,nom,contree,rang,x,y,etiq:{dx,dy,ancre}} */
-    voies:[],                       /* {cle,de,vers,terrain} */
+    format:'caravane.carte.v2',
+    cartes:[carteVide('monde','Le monde')],
+    contrees:[],                    /* {cle,nom,gentile,teinte,carte,frontiere:[{x,y}]} */
+    lieux:[],                       /* {cle,nom,contree,carte,rang,x,y,etiq:{pos}} */
+    voies:[],                       /* {cle,de,vers,terrain,lieues?} */
     /* Les propriétés se posent sur la carte, mais ne sont pas des étapes : le
        réseau des voies les ignore. Chacune se rattache au lieu depuis lequel
        on la gère. */
-    proprietes:[]                   /* {cle,nom,lieu,x,y,prix,batiments} */
+    proprietes:[]                   /* {cle,nom,lieu,carte,x,y,prix,batiments} */
   };
 }
 let M=modeleVide();
 let choix=null;                     /* {genre:'lieu'|'voie'|'contree', cle} */
 let contreeCourante=null;
+let carteCourante='monde';
 let outil='select';
 let rangDefaut='ville', terrainDefaut='plaine';
 
 /* tracés en cours */
 let voieDepuis=null, frontiereEnCours=null, etalonEnCours=null;
+/* Un passage se pose en deux temps, sur deux cartes : le premier bout attend
+   qu'on change d'onglet. C'est pour cela qu'il vit ici et pas dans l'outil. */
+let passageDepuis=null;
 
 /* ═══════════════ utilitaires ═══════════════ */
 
@@ -396,32 +451,67 @@ const lieuDe=cle=>M.lieux.find(l=>l.cle===cle);
 const contreeDe=cle=>M.contrees.find(c=>c.cle===cle);
 function teinteContree(cle){const c=contreeDe(cle);return c?c.teinte:'#9C9484';}
 
-/* ── conversion pixels → lieues, une fois l'étalon posé ── */
-function lieuesParPixel(){
-  if(!M.etalon)return null;
-  const px=hypot(M.etalon.a,M.etalon.b);
+/* ── les cartes ── */
+const carteDe=cle=>M.cartes.find(c=>c.cle===cle);
+const carteActive=()=>carteDe(carteCourante)||M.cartes[0];
+const nomCarte=cle=>{const c=carteDe(cle);return c?c.nom:cle;};
+/* la carte d'un lieu, tolérante aux fichiers d'avant les cartes multiples */
+const carteDuLieu=cle=>{const l=lieuDe(cle);return (l&&l.carte)||M.cartes[0].cle;};
+const surCarte=x=>(x.carte||M.cartes[0].cle)===carteCourante;
+const lieuxIci=()=>M.lieux.filter(surCarte);
+const contreesIci=()=>M.contrees.filter(surCarte);
+/* Une voie dont les deux bouts ne sont pas sur la même carte est un passage :
+   le jeu y demande la douane, et c'est par là qu'on entre. */
+const estPassage=v=>{
+  const a=lieuDe(v.de),b=lieuDe(v.vers);
+  return !!(a&&b&&(a.carte||'')!==(b.carte||''));
+};
+const voiesIci=()=>M.voies.filter(v=>{
+  const a=lieuDe(v.de),b=lieuDe(v.vers);
+  return a&&b&&surCarte(a)&&surCarte(b);
+});
+const passagesDe=cle=>M.voies.filter(v=>estPassage(v)&&(v.de===cle||v.vers===cle));
+const boutOppose=(v,cle)=>v.de===cle?v.vers:v.de;
+
+/* ── conversion pixels → lieues, une fois l'étalon posé ──
+   Chaque carte a le sien : la cité se mesure en pas, le monde en journées. */
+function lieuesParPixel(cle){
+  const c=carteDe(cle===undefined?carteCourante:cle);
+  if(!c||!c.etalon)return null;
+  const px=hypot(c.etalon.a,c.etalon.b);
   if(px<1)return null;
-  const l=M.etalon.unite==='km'?M.etalon.distance/KM_PAR_LIEUE:M.etalon.distance;
+  const l=c.etalon.unite==='km'?c.etalon.distance/KM_PAR_LIEUE:c.etalon.distance;
   return l/px;
 }
 function volDoiseau(v){                       /* en pixels */
   const a=lieuDe(v.de),b=lieuDe(v.vers);
   return (a&&b)?hypot(a,b):0;
 }
-/* les trois profils d'une voie, terrain compris — mêmes formules que le jeu */
+/* les trois profils d'une voie, terrain compris — mêmes formules que le jeu.
+   Un passage n'a pas de longueur mesurable : ses deux bouts sont sur deux
+   images sans rapport. Sa distance est donc **déclarée**, pas calculée. */
 function profilsDe(v){
   const t=TERRAINS[v.terrain]||TERRAINS.plaine;
-  const lpp=lieuesParPixel(), px=volDoiseau(v);
+  const passage=estPassage(v);
+  const a=lieuDe(v.de);
+  const lpp=passage?null:lieuesParPixel(a&&a.carte), px=volDoiseau(v);
   return PROFILS.map(p=>{
     const detour=p.detour*t.detour;
-    const lieues=lpp?Math.max(1,Math.round(px*lpp*detour)):null;
+    const lieues=passage?Math.max(1,Math.round(v.lieues||LIEUES_PASSAGE))
+      :(lpp?Math.max(1,Math.round(px*lpp*detour)):null);
     const km=lieues===null?null:Math.round(lieues*KM_PAR_LIEUE);
+    /* Les étapes se comptent à l'allure de la carte d'arrivée, comme dans le
+       jeu : c'est ce qui fait qu'une lieue de ruelles coûte plus qu'une lieue
+       de piste. Un trajet d'une seule voie ne descend pas sous deux étapes. */
+    const b=lieuDe(v.vers);
+    const kmj=((b&&carteDe(b.carte))||{}).kmParJour||KM_PAR_JOUR;
     return {cle:p.cle,nom:p.nom,detour:arrondi(detour,3),
       risque:arrondi(p.risque*t.risque,3),rudesse:arrondi(p.rudesse*t.rudesse,3),
       lieues:lieues,km:km,
-      etapes:km===null?null:Math.min(24,Math.max(2,Math.ceil(km/KM_PAR_JOUR)))};
+      etapes:km===null?null:Math.min(24,Math.max(2,Math.ceil(km/kmj)))};
   });
 }
+const enLieues=n=>n+' lieue'+(Math.abs(n)>1?'s':'');
 
 /* ═══════════════ vue : déplacement et zoom ═══════════════ */
 
@@ -443,11 +533,12 @@ function versCarte(ev){
 }
 function cadrer(){
   const r=svg.getBoundingClientRect();
-  let x0=0,y0=0,x1=M.carte.largeur||1000,y1=M.carte.hauteur||700;
-  if(!M.carte.largeur&&M.lieux.length){
+  const C=carteActive(),ici=lieuxIci();
+  let x0=0,y0=0,x1=C.largeur||1000,y1=C.hauteur||700;
+  if(!C.largeur&&ici.length){
     x0=y0=1e9;x1=y1=-1e9;
-    M.lieux.forEach(l=>{x0=Math.min(x0,l.x);y0=Math.min(y0,l.y);
-                        x1=Math.max(x1,l.x);y1=Math.max(y1,l.y);});
+    ici.forEach(l=>{x0=Math.min(x0,l.x);y0=Math.min(y0,l.y);
+                    x1=Math.max(x1,l.x);y1=Math.max(y1,l.y);});
     const m=Math.max(80,(x1-x0)*.12);x0-=m;y0-=m;x1+=m;y1+=m;
   }
   const k=Math.min(r.width/Math.max(1,x1-x0),r.height/Math.max(1,y1-y0))*.94;
@@ -469,16 +560,18 @@ function zoomVers(cx,cy,facteur){
 /* ═══════════════ rendu ═══════════════ */
 
 function dessiner(){
+  /* Tout ce qui se dessine appartient à la carte ouverte : les autres attendent
+     leur onglet. C'est aussi ce que fait le jeu, qui n'affiche jamais que la
+     carte où l'on se trouve. */
   /* ── régions ── */
-  $('#c-regions').innerHTML=M.contrees.filter(c=>c.frontiere&&c.frontiere.length>2).map(c=>
+  $('#c-regions').innerHTML=contreesIci().filter(c=>c.frontiere&&c.frontiere.length>2).map(c=>
     `<polygon class="region${choix&&choix.genre==='contree'&&choix.cle===c.cle?' choisi':''}"
        data-contree="${echappe(c.cle)}" fill="${c.teinte}" stroke="${c.teinte}"
        points="${c.frontiere.map(p=>p.x+','+p.y).join(' ')}"/>`).join('');
 
   /* ── voies ── */
-  $('#c-voies').innerHTML=M.voies.map(v=>{
+  $('#c-voies').innerHTML=voiesIci().map(v=>{
     const a=lieuDe(v.de),b=lieuDe(v.vers);
-    if(!a||!b)return '';
     const sel=choix&&choix.genre==='voie'&&choix.cle===v.cle;
     return `<line class="voie-clic" data-voie="${echappe(v.cle)}"
         x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"/>
@@ -487,15 +580,16 @@ function dessiner(){
   }).join('');
 
   /* ── étalon ── */
-  $('#c-etalon').innerHTML=M.etalon
-    ? `<line class="etalon-trait" x1="${M.etalon.a.x}" y1="${M.etalon.a.y}"
-         x2="${M.etalon.b.x}" y2="${M.etalon.b.y}"/>`
-      +poignee(M.etalon.a,'etalon-a')+poignee(M.etalon.b,'etalon-b')
+  const E=carteActive().etalon;
+  $('#c-etalon').innerHTML=E
+    ? `<line class="etalon-trait" x1="${E.a.x}" y1="${E.a.y}"
+         x2="${E.b.x}" y2="${E.b.y}"/>`
+      +poignee(E.a,'etalon-a')+poignee(E.b,'etalon-b')
     : '';
 
   /* ── propriétés ── */
   const cp=$('#c-proprietes');
-  if(cp)cp.innerHTML=(M.proprietes||[]).map(t=>{
+  if(cp)cp.innerHTML=(M.proprietes||[]).filter(surCarte).map(t=>{
     const sel=choix&&choix.genre==='propriete'&&choix.cle===t.cle;
     const l=lieuDe(t.lieu);
     const teinte=l?teinteContree(l.contree):'#9A7343';
@@ -507,7 +601,7 @@ function dessiner(){
     </g>`;}).join('');
 
   /* ── lieux ── */
-  $('#c-lieux').innerHTML=M.lieux.map(l=>{
+  $('#c-lieux').innerHTML=lieuxIci().map(l=>{
     const R=RANGS[l.rang]||RANGS.ville;
     const sel=choix&&choix.genre==='lieu'&&choix.cle===l.cle;
     const e=l.etiq||{pos:'dessus'};
@@ -523,12 +617,25 @@ function dessiner(){
         <circle r="5.6" fill="${TRAITS[t].teinte}" stroke="#1C1A17" stroke-width="1.3"/>
         ${TRAITS[t].glyphe}
       </g>`).join('');
+    /* Un passage ne se trace pas : ses deux bouts sont sur deux images sans
+       rapport. On le dit donc sur le lieu — un anneau, et le nom de la carte
+       où il mène. */
+    const pas=passagesDe(l.cle);
+    const attend=passageDepuis===l.cle;
+    let passage='';
+    if(pas.length||attend){
+      const y=(e.pos==='dessous')?-(R.r+12):(R.r+18);
+      const dit=attend&&!pas.length?'premier bout du passage…'
+        :'↦ '+pas.map(v=>nomCarte(carteDuLieu(boutOppose(v,l.cle)))).join(' · ');
+      passage=`<circle class="anneau-passage" r="${R.r+4.5}"/>
+        <text class="vers" x="0" y="${y}" style="text-anchor:middle">${echappe(dit)}</text>`;
+    }
     const E=posEtiquette(e.pos,R.r);
-    return `<g class="marqueur${sel?' choisi':''}" data-lieu="${echappe(l.cle)}"
+    return `<g class="marqueur${sel?' choisi':''}${attend?' attend':''}" data-lieu="${echappe(l.cle)}"
         data-x="${l.x}" data-y="${l.y}">
         <circle r="${R.r+15}" fill="transparent"/>   <!-- de quoi viser au doigt -->
         <circle class="halo" r="${R.r+7}"/>
-        ${forme}${noyau}${badges}
+        ${forme}${noyau}${passage}${badges}
         <text class="nom" x="${E.x}" y="${E.y}"
           style="text-anchor:${E.ancre}">${echappe(l.nom)}</text>
       </g>`;
@@ -560,14 +667,15 @@ function majDepot(){
   const d=$('#depot');
   d.classList.remove('cache','bandeau');
   if(imageChargee){d.classList.add('cache');return;}
-  if(M.lieux.length||M.contrees.length>1){
+  const C=carteActive();
+  if(lieuxIci().length||contreesIci().length>1){
     d.classList.add('bandeau');
-    d.innerHTML=`<b>Image de fond absente${M.carte.fichier?' :':''}</b>
-      <span>${M.carte.fichier?echappe(M.carte.fichier)+' — redéposez-la pour retrouver le décor.'
+    d.innerHTML=`<b>Image de fond absente${C.fichier?' :':''}</b>
+      <span>${C.fichier?echappe(C.fichier)+' — redéposez-la pour retrouver le décor.'
         :'déposez-en une quand vous voulez.'}</span>`;
     return;
   }
-  d.innerHTML=`<b>Déposez ici l'image de votre carte</b>
+  d.innerHTML=`<b>Déposez ici l'image de « ${echappe(C.nom)} »</b>
     <span>PNG, JPEG ou WebP — elle reste sur votre machine, rien n'est envoyé nulle part.</span>
     <span><em>Ou commencez sans image</em> : les outils fonctionnent sur fond vide.</span>`;
 }
@@ -597,24 +705,41 @@ function dessinerProvisoire(pos){
 /* ═══════════════ panneau ═══════════════ */
 
 function rendrePanneau(){
+  rendreOnglets();
   rendreContrees();
   rendreSelection();
   rendreEchelle();
   rendreTerrains();
   rendreControles();
-  $('#etat-compte').innerHTML=`<b>${M.contrees.length}</b> contrées · `+
-    `<b>${M.lieux.length}</b> lieux · <b>${M.voies.length}</b> voies`;
+  const np=M.voies.filter(estPassage).length;
+  $('#etat-compte').innerHTML=`<b>${M.cartes.length}</b> carte${M.cartes.length>1?'s':''} · `+
+    `<b>${M.contrees.length}</b> contrées · <b>${M.lieux.length}</b> lieux · `+
+    `<b>${M.voies.length-np}</b> voies · <b>${np}</b> passage${np>1?'s':''}`;
+}
+
+function rendreOnglets(){
+  const ou=passageDepuis?carteDuLieu(passageDepuis):null;
+  $('#onglets').innerHTML=M.cartes.map(c=>{
+    const n=M.lieux.filter(l=>(l.carte||M.cartes[0].cle)===c.cle).length;
+    /* quand un passage attend son second bout, les autres cartes se signalent :
+       c'est là qu'il faut aller cliquer */
+    const vise=!!passageDepuis&&ou!==c.cle;
+    return `<button class="onglet${c.cle===carteCourante?' actif':''}${vise?' vise':''}"
+      role="tab" aria-selected="${c.cle===carteCourante}" data-carte="${echappe(c.cle)}"
+      >${echappe(c.nom)} <span class="compte">${n}</span></button>`;
+  }).join('')+`<button class="onglet ajout" id="btn-carte" title="Ajouter une carte">+ Carte</button>`;
 }
 
 function rendreContrees(){
-  $('#liste-contrees').innerHTML=M.contrees.length
-    ? M.contrees.map(c=>`<div class="ligne-contree${c.cle===contreeCourante?' actif':''}"
+  const ici=contreesIci();
+  $('#liste-contrees').innerHTML=ici.length
+    ? ici.map(c=>`<div class="ligne-contree${c.cle===contreeCourante?' actif':''}"
         data-choisir-contree="${echappe(c.cle)}">
         <span class="pion" style="background:${c.teinte}"></span>
         <span>${echappe(c.nom)}</span>
         <span class="compte">${M.lieux.filter(l=>l.contree===c.cle).length} lieux</span>
       </div>`).join('')
-    : '<p class="rien">Aucune contrée. Commencez par en ajouter une.</p>';
+    : '<p class="rien">Aucune contrée sur cette carte. Commencez par en ajouter une.</p>';
 }
 
 function rendreSelection(){
@@ -675,25 +800,57 @@ function rendreSelection(){
     const v=M.voies.find(x=>x.cle===choix.cle);
     if(!v){choix=null;return rendreSelection();}
     const a=lieuDe(v.de),b=lieuDe(v.vers),pr=profilsDe(v);
-    const lpp=lieuesParPixel();
-    p.innerHTML=`
-      <p style="font-size:13px;margin-bottom:9px"><b>${echappe(a?a.nom:'?')}</b> ↔
-        <b>${echappe(b?b.nom:'?')}</b></p>
-      <div class="champ"><label>Terrain</label>
+    const passage=estPassage(v);
+    const lpp=lieuesParPixel(a&&a.carte);
+    /* Un passage se lit depuis le bout qu'on regarde : « d'ici, on va là-bas ». */
+    const dedans=(a&&surCarte(a))?a:b, dehors=(dedans===a)?b:a;
+    p.innerHTML=(passage
+      ? `<p style="font-size:13px;margin-bottom:4px"><b style="color:var(--or)">Passage</b> —
+           <b>${echappe(dedans?dedans.nom:'?')}</b> ↦ <b>${echappe(dehors?dehors.nom:'?')}</b>
+           <span style="color:var(--encre-pale)">sur ${echappe(nomCarte(dehors&&dehors.carte))}</span></p>
+         <p class="aide" style="margin-bottom:9px">Le jeu y demandera la <b>douane</b> : c'est
+           l'unique façon d'aller d'une carte à l'autre, et payer fait apparaître celle d'en
+           face — le jeu n'affiche jamais que la carte où l'on se trouve.</p>
+         <div class="champ"><label>Longueur</label>
+           <input type="number" id="s-lieues" min="1" step="1"
+             value="${Math.max(1,Math.round(v.lieues||LIEUES_PASSAGE))}"></div>
+         <p class="aide" style="margin:-2px 0 9px">En lieues, <b>déclarées</b> : les deux bouts
+           sont sur deux images sans rapport, aucune distance ne peut s'en déduire.</p>
+         <button class="bouton" style="margin-bottom:9px" id="s-autre-bout"
+           >Aller à l'autre bout ▸</button>`
+      : `<p style="font-size:13px;margin-bottom:9px"><b>${echappe(a?a.nom:'?')}</b> ↔
+           <b>${echappe(b?b.nom:'?')}</b></p>`)
+    +`<div class="champ"><label>Terrain</label>
         <select id="s-terrain">${CLES_TERRAINS.map(k=>
           `<option value="${k}"${k===v.terrain?' selected':''}>${TERRAINS[k].nom}</option>`).join('')}</select></div>
       <div class="mesures" style="margin-top:9px">
-        <span class="titre">À vol d'oiseau</span>
+        ${passage?'':`<span class="titre">À vol d'oiseau</span>
         <span>${Math.round(volDoiseau(v))} px</span>
-        <b>${lpp?Math.round(volDoiseau(v)*lpp)+' lieues':'étalon manquant'}</b>
-        <span class="titre">Les trois chemins</span>
-        ${pr.map(x=>`<span>${x.nom} <span style="color:var(--encre-pale)">×${x.detour}</span></span>
-          <b>${x.lieues===null?'—':x.lieues+' lieues · '+x.etapes+' ét.'}</b>`).join('')}
+        <b>${lpp?enLieues(Math.round(volDoiseau(v)*lpp)):'étalon manquant'}</b>`}
+        <span class="titre">${passage?'Ce que coûte le passage':'Les trois chemins'}</span>
+        ${(passage?pr.slice(1,2):pr).map(x=>
+          `<span>${passage?'la route de douane':x.nom+' <span style="color:var(--encre-pale)">×'+x.detour+'</span>'}</span>
+          <b>${x.lieues===null?'—':enLieues(x.lieues)+' · '+x.etapes+' ét.'}</b>`).join('')}
         <span class="titre">Effets du terrain</span>
         <span>rudesse</span><b>×${arrondi(TERRAINS[v.terrain].rudesse,2)}</b>
         <span>risque</span><b>×${arrondi(TERRAINS[v.terrain].risque,2)}</b>
       </div>
-      <button class="bouton danger" style="margin-top:9px" id="s-suppr">Supprimer cette voie</button>`;
+      <button class="bouton danger" style="margin-top:9px" id="s-suppr">Supprimer ${
+        passage?'ce passage':'cette voie'}</button>`;
+    /* on note la longueur en tapant, mais on ne réécrit le panneau qu'au
+       relâchement du champ : le refaire à chaque frappe perdrait le curseur */
+    if($('#s-lieues')){
+      $('#s-lieues').oninput=e=>{
+        v.lieues=Math.max(1,Math.round(Number(e.target.value)||1));sauverAuto();};
+      $('#s-lieues').onchange=()=>rendreSelection();
+    }
+    if($('#s-autre-bout'))$('#s-autre-bout').onclick=()=>{
+      if(!dehors)return;
+      allerCarte(dehors.carte);
+      choix={genre:'lieu',cle:dehors.cle};
+      centrerSur(dehors);
+      dessiner();
+    };
     $('#s-terrain').onchange=e=>{memo();v.terrain=e.target.value;terrainDefaut=v.terrain;dessiner();};
     $('#s-suppr').onclick=()=>supprimerSelection();
     return;
@@ -779,27 +936,47 @@ function encartBatiment(t,b){
 }
 
 function rendreEchelle(){
-  const lpp=lieuesParPixel();
-  $('#echelle').innerHTML=M.etalon
+  const C=carteActive(),lpp=lieuesParPixel(),E=C.etalon;
+  const seule=M.cartes.length<2;
+  $('#echelle').innerHTML=
+    `<div class="champ"><label>Nom</label>
+       <input id="c-nom" value="${echappe(C.nom)}"></div>
+     <div class="champ"><label>Clé</label>
+       <input id="c-cle" value="${echappe(C.cle)}" spellcheck="false"></div>
+     <div class="champ"><label>Allure</label>
+       <input type="number" id="c-kmj" min="1" step="1" value="${C.kmParJour||KM_PAR_JOUR}"></div>
+     <p class="aide" style="margin:-2px 0 9px">Kilomètres par jour du convoi de départ
+       <b>sur cette carte</b>. Baissez-le pour une cité : une lieue de ruelles se paie plus
+       cher qu'une lieue de piste, et le jeu compte les étapes carte par carte.</p>`
+    +(E
     ? `<div class="champ"><label>Distance</label>
-         <input type="number" id="e-dist" min="1" step="1" value="${M.etalon.distance}"></div>
+         <input type="number" id="e-dist" min="1" step="1" value="${E.distance}"></div>
        <div class="champ"><label>Unité</label>
          <select id="e-unite">
-           <option value="lieues"${M.etalon.unite==='lieues'?' selected':''}>lieues</option>
-           <option value="km"${M.etalon.unite==='km'?' selected':''}>kilomètres</option>
+           <option value="lieues"${E.unite==='lieues'?' selected':''}>lieues</option>
+           <option value="km"${E.unite==='km'?' selected':''}>kilomètres</option>
          </select></div>
        <div class="mesures" style="margin-top:9px">
-         <span>trait de référence</span><b>${Math.round(hypot(M.etalon.a,M.etalon.b))} px</b>
+         <span>trait de référence</span><b>${Math.round(hypot(E.a,E.b))} px</b>
          <span>1 lieue vaut</span><b>${lpp?arrondi(1/lpp,1)+' px':'—'}</b>
          <span>1 lieue vaut</span><b>${KM_PAR_LIEUE} km</b>
-         <span>convoi de départ</span><b>${KM_PAR_JOUR} km/jour</b>
+         <span>image de fond</span><b>${C.largeur?C.largeur+' × '+C.hauteur:'—'}</b>
        </div>
        <button class="bouton" style="margin-top:9px" id="e-refaire">Reposer l'étalon</button>`
-    : `<p class="rien">Aucun étalon. Sans lui, aucune distance ne peut être calculée.</p>
-       <button class="bouton fort" style="margin-top:8px" id="e-poser">Poser l'étalon</button>`;
+    : `<p class="rien">Aucun étalon sur cette carte. Sans lui, aucune distance ne peut être
+         calculée ici — chaque carte a le sien.</p>
+       <button class="bouton fort" style="margin-top:8px" id="e-poser">Poser l'étalon</button>`)
+    +`<button class="bouton danger" style="margin-top:6px" id="c-suppr"${seule?' disabled':''}
+        >Supprimer cette carte</button>`
+    +(seule?`<p class="aide" style="margin-top:6px">On ne supprime pas la seule carte.</p>`:'');
+  if($('#c-nom'))$('#c-nom').oninput=e=>{C.nom=e.target.value;rendreOnglets();sauverAuto();};
+  if($('#c-cle'))$('#c-cle').onchange=e=>renommerCarte(C,e.target.value);
+  if($('#c-kmj'))$('#c-kmj').oninput=e=>{
+    C.kmParJour=Math.max(1,Math.round(Number(e.target.value)||KM_PAR_JOUR));sauverAuto();};
+  if($('#c-suppr'))$('#c-suppr').onclick=supprimerCarte;
   if($('#e-dist'))$('#e-dist').oninput=e=>{
-    M.etalon.distance=Math.max(1,+e.target.value||1);dessiner();};
-  if($('#e-unite'))$('#e-unite').onchange=e=>{M.etalon.unite=e.target.value;dessiner();};
+    C.etalon.distance=Math.max(1,+e.target.value||1);dessiner();};
+  if($('#e-unite'))$('#e-unite').onchange=e=>{C.etalon.unite=e.target.value;dessiner();};
   if($('#e-refaire'))$('#e-refaire').onclick=()=>choisirOutil('etalon');
   if($('#e-poser'))$('#e-poser').onclick=()=>choisirOutil('etalon');
 }
@@ -822,8 +999,38 @@ function rendreTerrains(){
 function rendreControles(){
   const aa=[];
   if(!M.contrees.length)aa.push(['Aucune contrée n\'est définie.','']);
-  if(!M.etalon)aa.push(['Pas d\'étalon : les distances sont inconnues.','']);
-  if(!M.carte.largeur)aa.push(['Pas d\'image de fond.','doux']);
+  M.cartes.forEach(C=>{
+    const q=M.cartes.length>1?` sur <b>${echappe(C.nom)}</b>`:'';
+    if(!C.etalon)aa.push([`Pas d'étalon${q} : les distances y sont inconnues.`,'']);
+    if(!C.largeur)aa.push([`Pas d'image de fond${q}.`,'doux']);
+  });
+  /* Une carte sans passage est une île : le jeu n'affiche que celle où l'on
+     est, et rien ne mène à celle-là. */
+  if(M.cartes.length>1)M.cartes.forEach(C=>{
+    const dessus=M.lieux.filter(l=>(l.carte||M.cartes[0].cle)===C.cle);
+    if(!dessus.length)return aa.push([`La carte <b>${echappe(C.nom)}</b> n'a aucun lieu.`,'doux']);
+    if(!dessus.some(l=>passagesDe(l.cle).length))
+      aa.push([`Aucun passage ne mène à <b>${echappe(C.nom)}</b> : on ne pourra jamais y entrer.
+        Posez-en un avec l'outil Passage.`,'']);
+  });
+  /* Le jeu dessine les postes en portes. Un passage dont aucun bout n'est un
+     poste s'affiche donc des deux côtés comme une cité ordinaire, et rien ne
+     dit au joueur qu'il y a une porte. Un seul bout suffit — on entre souvent
+     dans une cité par la cité elle-même, et la porte est de l'autre côté. */
+  M.voies.filter(estPassage).forEach(v=>{
+    const x=lieuDe(v.de),y=lieuDe(v.vers);
+    if(x&&y&&x.rang!=='poste'&&y.rang!=='poste')
+      aa.push([`Le passage <b>${echappe(x.nom)}</b> ↦ <b>${echappe(y.nom)}</b> n'a aucun poste
+        frontière à ses bouts : le jeu le dessinera comme une cité ordinaire des deux côtés.`,'doux']);
+  });
+
+  /* le jeu commence dans la première contrée : si elle n'est pas sur la
+     première carte, on démarre à l'intérieur de la cité */
+  if(M.cartes.length>1&&M.contrees.length&&
+     (M.contrees[0].carte||M.cartes[0].cle)!==M.cartes[0].cle)
+    aa.push([`La partie commence dans <b>${echappe(M.contrees[0].nom)}</b>, qui est sur
+      <b>${echappe(nomCarte(M.contrees[0].carte))}</b> — on démarrerait donc là-bas.
+      Mettez en premier une contrée de <b>${echappe(M.cartes[0].nom)}</b>.`,'']);
 
   M.contrees.forEach(c=>{
     const n=M.lieux.filter(l=>l.contree===c.cle);
@@ -843,10 +1050,11 @@ function rendreControles(){
   if(seuls.length)aa.push([`${seuls.length} lieu(x) sans aucune voie : `+
     seuls.slice(0,4).map(l=>echappe(l.nom)).join(', ')+(seuls.length>4?'…':''),'']);
 
-  /* traversées : une voie entre deux postes de contrées différentes */
+  /* traversées : une voie entre deux postes de contrées différentes. Les
+     passages ont leur propre contrôle plus haut. */
   const trav=M.voies.filter(v=>{
     const a=lieuDe(v.de),b=lieuDe(v.vers);
-    return a&&b&&a.contree!==b.contree;
+    return a&&b&&a.contree!==b.contree&&!estPassage(v);
   });
   trav.forEach(v=>{
     const x=lieuDe(v.de),y=lieuDe(v.vers);
@@ -855,11 +1063,12 @@ function rendreControles(){
         sans passer par deux postes.`,'']);
   });
 
-  /* voies qui passent sur un lieu tiers */
-  M.voies.forEach(v=>{
+  /* voies qui passent sur un lieu tiers — sur la carte ouverte, la seule où
+     l'on puisse en juger à l'œil */
+  voiesIci().forEach(v=>{
     const p=lieuDe(v.de),q=lieuDe(v.vers);
     if(!p||!q)return;
-    M.lieux.forEach(l=>{
+    lieuxIci().forEach(l=>{
       if(l.cle===v.de||l.cle===v.vers)return;
       const vx=q.x-p.x,vy=q.y-p.y,L=vx*vx+vy*vy;
       if(!L)return;
@@ -926,11 +1135,73 @@ function refaire(){
   choix=null;dessiner();
 }
 
+/* ── les cartes ── */
+function allerCarte(cle){
+  if(!carteDe(cle)||cle===carteCourante)return;
+  carteCourante=cle;
+  const c=contreesIci();
+  contreeCourante=c.length?c[0].cle:null;
+  /* la sélection appartenait à l'autre carte : on la lâche, sauf si l'on suit
+     un passage — c'est justement le lieu qu'on veut voir arriver */
+  if(choix&&choix.genre==='lieu'){
+    const l=lieuDe(choix.cle);
+    if(!l||!surCarte(l))choix=null;
+  }else if(choix)choix=null;
+  if(frontiereEnCours)frontiereEnCours={cle:contreeCourante,points:[]};
+  etalonEnCours=null;voieDepuis=null;
+  poserFond();
+  cadrer();dessiner();
+}
+function ajouterCarte(){
+  memo();
+  const n=M.cartes.length+1;
+  const nom='Carte '+n;
+  const c=carteVide(cleDepuis(nom,M.cartes.map(x=>x.cle)),nom);
+  M.cartes.push(c);
+  carteCourante=c.cle;contreeCourante=null;choix=null;
+  poserFond();cadrer();dessiner();
+  const ch=$('#c-nom');if(ch){ch.focus();ch.select();}
+  message('Carte ajoutée. Donnez-lui un fond, un étalon, puis reliez-la par un passage.');
+}
+function renommerCarte(C,valeur){
+  const neuf=cleDepuis(valeur,M.cartes.filter(x=>x!==C).map(x=>x.cle));
+  if(neuf===C.cle)return rendreEchelle();
+  memo();
+  const vieux=C.cle;
+  C.cle=neuf;
+  M.lieux.forEach(l=>{if(l.carte===vieux)l.carte=neuf;});
+  M.contrees.forEach(c=>{if(c.carte===vieux)c.carte=neuf;});
+  (M.proprietes||[]).forEach(t=>{if(t.carte===vieux)t.carte=neuf;});
+  if(carteCourante===vieux)carteCourante=neuf;
+  deplacerFond(vieux,neuf);
+  dessiner();
+}
+function supprimerCarte(){
+  if(M.cartes.length<2)return;
+  const C=carteActive();
+  const n=M.lieux.filter(surCarte).length;
+  if(!confirm(`Supprimer la carte « ${C.nom} » ?`+
+    (n?`\n${n} lieu(x), leurs voies et leurs passages seront effacés.`:'')))return;
+  memo();
+  const cles=M.lieux.filter(surCarte).map(l=>l.cle);
+  M.lieux=M.lieux.filter(l=>!surCarte(l));
+  M.contrees=M.contrees.filter(c=>!surCarte(c));
+  M.proprietes=(M.proprietes||[]).filter(t=>!surCarte(t));
+  M.voies=M.voies.filter(v=>cles.indexOf(v.de)<0&&cles.indexOf(v.vers)<0);
+  M.cartes=M.cartes.filter(x=>x!==C);
+  oublierFond(C.cle);
+  carteCourante=M.cartes[0].cle;
+  const c=contreesIci();contreeCourante=c.length?c[0].cle:null;
+  choix=null;passageDepuis=null;
+  poserFond();cadrer();dessiner();
+}
+
 function ajouterContree(){
   memo();
   const n=M.contrees.length+1;
   const c={cle:cleDepuis('contree-'+n,M.contrees.map(x=>x.cle)),
-    nom:'Contrée '+n,gentile:'',teinte:TEINTES_CONTREE[(n-1)%TEINTES_CONTREE.length],frontiere:[]};
+    nom:'Contrée '+n,gentile:'',teinte:TEINTES_CONTREE[(n-1)%TEINTES_CONTREE.length],
+    carte:carteCourante,frontiere:[]};
   M.contrees.push(c);
   contreeCourante=c.cle;
   choix={genre:'contree',cle:c.cle};
@@ -950,12 +1221,15 @@ function supprimerContree(){
   choix=null;dessiner();
 }
 function ajouterLieu(pos){
-  if(!M.contrees.length){message('Ajoutez d\'abord une contrée.');return;}
+  const ici=contreesIci();
+  if(!ici.length){message('Ajoutez d\'abord une contrée sur cette carte.');return;}
   memo();
   const n=M.lieux.length+1;
   const nom=(RANGS[rangDefaut].nom)+' '+n;
   const l={cle:cleDepuis(nom,M.lieux.map(x=>x.cle)),nom:nom,
-    contree:contreeCourante||M.contrees[0].cle,rang:rangDefaut,
+    contree:(contreeDe(contreeCourante)&&surCarte(contreeDe(contreeCourante))
+      ?contreeCourante:ici[0].cle),
+    carte:carteCourante,rang:rangDefaut,
     x:Math.round(pos.x),y:Math.round(pos.y),traits:[],etiq:{pos:'dessus'}};
   M.lieux.push(l);
   choix={genre:'lieu',cle:l.cle};
@@ -972,16 +1246,58 @@ function ajouterVoie(a,b){
   choix={genre:'voie',cle:v.cle};
   dessiner();
 }
+/* ── le passage ──
+   Deux clics sur deux cartes. Le premier retient le bout, le second le relie —
+   et refuse si l'on est resté sur la même carte, où c'est l'outil Voie qui
+   sert. Le jeu reconnaît un passage tout seul : une voie dont les bouts sont
+   sur deux cartes se franchit à la douane, et rien d'autre ne s'y franchit. */
+function commencerPassage(cle){
+  passageDepuis=cle;
+  const l=lieuDe(cle);
+  const autres=M.cartes.filter(c=>c.cle!==carteCourante);
+  message(autres.length
+    ? `Départ du passage : ${l.nom}. Allez sur ${autres.map(c=>'« '+c.nom+' »').join(' ou ')} `+
+      `et cliquez le lieu d'en face.`
+    : `Départ du passage : ${l.nom}. Il n'y a qu'une carte — ajoutez-en une (+ Carte).`);
+  dessiner();
+}
+function acheverPassage(cle){
+  const a=lieuDe(passageDepuis),b=lieuDe(cle);
+  if(!a||!b){passageDepuis=null;return dessiner();}
+  if(a.cle===b.cle){passageDepuis=null;message('Passage abandonné.');return dessiner();}
+  if((a.carte||'')===(b.carte||'')){
+    message('Les deux bouts sont sur la même carte : c\'est une voie ordinaire, pas un passage.');
+    return;
+  }
+  if(M.voies.some(v=>(v.de===a.cle&&v.vers===b.cle)||(v.de===b.cle&&v.vers===a.cle))){
+    passageDepuis=null;message('Ces deux lieux sont déjà reliés.');return dessiner();}
+  memo();
+  const v={cle:cleDepuis(a.cle+'--'+b.cle,M.voies.map(x=>x.cle)),
+    de:a.cle,vers:b.cle,terrain:terrainDefaut,lieues:LIEUES_PASSAGE};
+  M.voies.push(v);
+  passageDepuis=null;
+  choix={genre:'voie',cle:v.cle};
+  dessiner();
+  message(`Passage ouvert : ${a.nom} ↔ ${b.nom}. Réglez sa longueur dans la sélection.`);
+}
 /* ── les propriétés ──
    On la pose où l'on clique, et on la rattache au lieu le plus proche : c'est
    presque toujours celui qu'on voulait, et l'on peut en changer ensuite. */
 function lieuLePlusProche(pos){
   let meilleur=null,d2=Infinity;
-  M.lieux.forEach(l=>{
+  lieuxIci().forEach(l=>{
     const d=(l.x-pos.x)*(l.x-pos.x)+(l.y-pos.y)*(l.y-pos.y);
     if(d<d2){d2=d;meilleur=l;}
   });
   return meilleur;
+}
+/* amener un lieu au centre de la toile — après un changement de carte, il
+   serait sinon hors de l'écran */
+function centrerSur(l){
+  const r=svg.getBoundingClientRect();
+  V.tx=r.width/2-l.x*V.k;
+  V.ty=r.height/2-l.y*V.k;
+  appliquerVue();
 }
 /* Les marchandises dont on bâtit. Ce sont celles de la catégorie « materiaux »
    de data/biens.json, plus le fer. Le fichier accepte n'importe quelle
@@ -995,13 +1311,14 @@ const BATIMENTS_CARTE=[
   {cle:'ecurie',nom:'L\'écurie',cap:[['chevaux','Chevaux',4]]}
 ];
 function ajouterPropriete(pos){
-  if(!M.lieux.length)return message('Posez d\'abord un lieu : une propriété s\'y rattache.');
+  if(!lieuxIci().length)
+    return message('Posez d\'abord un lieu sur cette carte : une propriété s\'y rattache.');
   memo();
   const l=lieuLePlusProche(pos);
   const n=(M.proprietes||[]).length+1;
   const nom='Terrain '+n;
   const t={cle:cleDepuis(nom,(M.proprietes||[]).map(x=>x.cle)),nom:nom,
-    lieu:l.cle,x:Math.round(pos.x),y:Math.round(pos.y),prix:0,batiments:{}};
+    lieu:l.cle,carte:carteCourante,x:Math.round(pos.x),y:Math.round(pos.y),prix:0,batiments:{}};
   BATIMENTS_CARTE.forEach(b=>{
     t.batiments[b.cle]={cout:{or:0,materiaux:{}}};
     b.cap.forEach(([k,,d])=>{t.batiments[b.cle][k]=d;});
@@ -1089,15 +1406,22 @@ function message(t){
 
 /* ═══════════════ outils ═══════════════ */
 
-const CURSEURS={select:'default',lieu:'crosshair',voie:'crosshair',
+const CURSEURS={select:'default',lieu:'crosshair',voie:'crosshair',passage:'crosshair',
   frontiere:'crosshair',etalon:'crosshair'};
 function choisirOutil(o){
+  const avant=outil;
   outil=o;
   voieDepuis=null;frontiereEnCours=null;etalonEnCours=null;
+  /* Quitter l'outil Passage abandonne le bout en attente : sinon il traînerait
+     invisiblement d'une carte à l'autre. Changer d'onglet, en revanche, le
+     garde — c'est tout l'intérêt. */
+  if(o!=='passage'&&passageDepuis){passageDepuis=null;dessiner();}
   if(o==='frontiere'){
     if(!contreeCourante){message('Choisissez d\'abord une contrée.');outil='select';}
     else frontiereEnCours={cle:contreeCourante,points:[]};
   }
+  if(o==='passage'&&avant!=='passage'&&M.cartes.length<2)
+    message('Une seule carte pour l\'instant : ajoutez-en une avec « + Carte ».');
   document.querySelectorAll('.outil[data-outil]').forEach(b=>
     b.classList.toggle('actif',b.dataset.outil===outil));
   dessinerProvisoire(null);
@@ -1211,9 +1535,10 @@ $('#toile').addEventListener('pointermove',ev=>{
     if(l){l.x=Math.round(pos.x+glisse.dx);l.y=Math.round(pos.y+glisse.dy);
       if(!glisse.memo){memo();glisse.memo=1;}
       dessiner();}
-  }else if(glisse.genre==='poignee'&&M.etalon){
+  }else if(glisse.genre==='poignee'&&carteActive().etalon){
     if(!glisse.memo){memo();glisse.memo=1;}
-    const p=glisse.id==='etalon-a'?M.etalon.a:M.etalon.b;
+    const E=carteActive().etalon;
+    const p=glisse.id==='etalon-a'?E.a:E.b;
     p.x=Math.round(pos.x);p.y=Math.round(pos.y);
     dessiner();
   }
@@ -1245,6 +1570,11 @@ function finPointeur(ev){
       else{ajouterVoie(voieDepuis,g.lieu);voieDepuis=null;}
       dessinerProvisoire(pos);
     }
+    else if(outil==='passage'){
+      if(!g.lieu){message('Cliquez sur un lieu — c\'est la porte, d\'un côté puis de l\'autre.');return;}
+      if(!passageDepuis)commencerPassage(g.lieu);
+      else acheverPassage(g.lieu);
+    }
     else if(outil==='frontiere'){
       if(!frontiereEnCours)frontiereEnCours={cle:contreeCourante,points:[]};
       frontiereEnCours.points.push({x:Math.round(pos.x),y:Math.round(pos.y)});
@@ -1255,8 +1585,9 @@ function finPointeur(ev){
         message('Second point de l\'étalon.');}
       else{
         memo();
-        M.etalon={a:etalonEnCours,b:{x:Math.round(pos.x),y:Math.round(pos.y)},
-          distance:M.etalon?M.etalon.distance:100,unite:M.etalon?M.etalon.unite:'lieues'};
+        const C=carteActive();
+        C.etalon={a:etalonEnCours,b:{x:Math.round(pos.x),y:Math.round(pos.y)},
+          distance:C.etalon?C.etalon.distance:100,unite:C.etalon?C.etalon.unite:'lieues'};
         etalonEnCours=null;choisirOutil('select');dessiner();
         const c=$('#e-dist');if(c){c.focus();c.select();}
         message('Étalon posé — saisissez la distance réelle.');
@@ -1295,13 +1626,23 @@ document.addEventListener('keydown',ev=>{
   if(t==='v')choisirOutil('select');
   else if(t==='l')choisirOutil('lieu');
   else if(t==='r')choisirOutil('voie');
+  else if(t==='a')choisirOutil('passage');
+  else if(t==='p')choisirOutil('propriete');
   else if(t==='f')choisirOutil('frontiere');
   else if(t==='e')choisirOutil('etalon');
   else if(t==='0'){cadrer();}
+  /* Tab passe d'une carte à l'autre — le geste qu'on répète quand on pose un
+     passage, et le seul moment où l'on veut naviguer au clavier. */
+  else if(ev.key==='Tab'&&M.cartes.length>1){
+    ev.preventDefault();
+    const i=M.cartes.findIndex(c=>c.cle===carteCourante);
+    allerCarte(M.cartes[(i+(ev.shiftKey?M.cartes.length-1:1))%M.cartes.length].cle);
+  }
   else if(ev.key==='Enter'&&outil==='frontiere')terminerFrontiere();
   else if(ev.key==='Escape'){
     if(frontiereEnCours&&frontiereEnCours.points.length)frontiereEnCours.points.pop();
     voieDepuis=null;etalonEnCours=null;
+    if(passageDepuis){passageDepuis=null;message('Passage abandonné.');dessiner();}
     dessinerProvisoire(null);
   }
   else if(ev.key==='Delete'||ev.key==='Backspace'){ev.preventDefault();supprimerSelection();}
@@ -1309,20 +1650,40 @@ document.addEventListener('keydown',ev=>{
 
 /* ═══════════════ image de fond ═══════════════ */
 
-function chargerImage(fichier){
+/* Chaque carte a son fond. On garde les images chargées ici, par clé de carte,
+   pour que changer d'onglet ne coûte pas une relecture d'IndexedDB. */
+const fonds={};              /* cle de carte → URL d'objet */
+function poserFond(){
+  const C=carteActive(),u=fonds[C.cle];
+  const f=$('#fond');
+  if(u){
+    f.setAttribute('href',u);
+    f.setAttribute('width',C.largeur||0);
+    f.setAttribute('height',C.hauteur||0);
+    imageChargee=true;
+  }else{
+    f.removeAttribute('href');
+    imageChargee=false;
+  }
+}
+function chargerImage(fichier,cle){
+  cle=cle||carteCourante;
   const url=URL.createObjectURL(fichier);
   const im=new Image();
   im.onload=()=>{
-    memo();
-    reechelonner(im.naturalWidth,im.naturalHeight);
-    M.carte={fichier:fichier.name,largeur:im.naturalWidth,hauteur:im.naturalHeight};
-    $('#fond').setAttribute('href',url);
-    $('#fond').setAttribute('width',im.naturalWidth);
-    $('#fond').setAttribute('height',im.naturalHeight);
-    imageChargee=true;
-    garderImage(fichier);
-    cadrer();dessiner();
-    message(`${fichier.name} — ${im.naturalWidth} × ${im.naturalHeight} px`);
+    const C=carteDe(cle);
+    if(!C)return;
+    const nouveau=!C.largeur;
+    if(!nouveau)memo();
+    reechelonner(C,im.naturalWidth,im.naturalHeight);
+    C.fichier=fichier.name;C.largeur=im.naturalWidth;C.hauteur=im.naturalHeight;
+    if(fonds[cle])URL.revokeObjectURL(fonds[cle]);
+    fonds[cle]=url;
+    garderImage(cle,fichier);
+    if(cle===carteCourante){poserFond();cadrer();dessiner();}
+    else{sauverAuto();rendreOnglets();}
+    message(`${fichier.name} — ${im.naturalWidth} × ${im.naturalHeight} px `+
+      `sur « ${C.nom} »`);
   };
   im.onerror=()=>message('Image illisible.');
   im.src=url;
@@ -1386,7 +1747,9 @@ function reprendre(){
   const poser=d=>{
     if(!d||!d.format)return false;
     M=normaliser(d);
-    contreeCourante=M.contrees.length?M.contrees[0].cle:null;
+    carteCourante=M.cartes[0].cle;
+    const c=contreesIci();
+    contreeCourante=c.length?c[0].cle:(M.contrees[0]&&M.contrees[0].cle)||null;
     return true;
   };
   try{
@@ -1414,64 +1777,141 @@ function ouvrirBdd(){
     r.onerror=()=>res(null);
   });
 }
-async function garderImage(f){
+/* une image par carte. La toute première s'appelait « fond » sans plus : on
+   continue de la lire sous ce nom pour la carte d'origine, sans quoi le décor
+   d'un travail commencé avant les cartes multiples disparaîtrait. */
+const cleFond=cle=>'fond:'+cle;
+async function garderImage(cle,f){
   await ouvrirBdd();
   if(!bdd)return;
-  try{bdd.transaction('fichiers','readwrite').objectStore('fichiers').put(f,'fond');}catch(e){}
+  try{bdd.transaction('fichiers','readwrite').objectStore('fichiers').put(f,cleFond(cle));}catch(e){}
+}
+function lireFichier(k){
+  return new Promise(res=>{
+    if(!bdd)return res(null);
+    try{
+      const r=bdd.transaction('fichiers').objectStore('fichiers').get(k);
+      r.onsuccess=()=>res(r.result||null);
+      r.onerror=()=>res(null);
+    }catch(e){res(null);}
+  });
+}
+async function deplacerFond(vieux,neuf){
+  await ouvrirBdd();
+  const f=await lireFichier(cleFond(vieux));
+  if(f)await garderImage(neuf,f);
+  oublierFond(vieux);
+  if(fonds[vieux]){fonds[neuf]=fonds[vieux];delete fonds[vieux];}
+}
+async function oublierFond(cle){
+  await ouvrirBdd();
+  if(!bdd)return;
+  try{bdd.transaction('fichiers','readwrite').objectStore('fichiers').delete(cleFond(cle));}catch(e){}
+  if(fonds[cle]){URL.revokeObjectURL(fonds[cle]);delete fonds[cle];}
 }
 async function reprendreImage(){
   await ouvrirBdd();
   if(!bdd)return;
-  try{
-    const r=bdd.transaction('fichiers').objectStore('fichiers').get('fond');
-    r.onsuccess=()=>{if(r.result)chargerImage(r.result);};
-  }catch(e){}
+  for(const C of M.cartes){
+    let f=await lireFichier(cleFond(C.cle));
+    if(!f&&C===M.cartes[0])f=await lireFichier('fond');   /* l'ancien nom */
+    if(f)chargerImage(f,C.cle);
+  }
 }
 
 /* ═══════════════ import / export ═══════════════ */
 
+/* Le v1 n'avait qu'une carte, sans clé : on en fait la première du v2, et tout
+   ce qu'il contenait lui appartient. Un fichier d'avant se rouvre donc tel
+   quel, et se réexporte en v2 sans qu'on ait rien à refaire. */
 function normaliser(d){
   const m=modeleVide();
-  m.carte=Object.assign(m.carte,d.carte||{});
-  m.etalon=d.etalon||null;
+  if(Array.isArray(d.cartes)&&d.cartes.length){
+    m.cartes=d.cartes.map((c,i)=>({
+      cle:c.cle||('carte-'+(i+1)),nom:c.nom||('Carte '+(i+1)),
+      fichier:c.fichier||'',largeur:+c.largeur||0,hauteur:+c.hauteur||0,
+      etalon:c.etalon||null,
+      kmParJour:Math.max(1,Math.round(+c.kmParJour||KM_PAR_JOUR))}));
+  }else{
+    const c=d.carte||{};
+    m.cartes=[{cle:'monde',nom:c.nom||'Le monde',fichier:c.fichier||'',
+      largeur:+c.largeur||0,hauteur:+c.hauteur||0,etalon:d.etalon||null,
+      kmParJour:Math.max(1,Math.round((d.mesures&&d.mesures.kmParJour)||KM_PAR_JOUR))}];
+  }
+  const premiere=m.cartes[0].cle;
+  const connue=k=>m.cartes.some(c=>c.cle===k)?k:premiere;
   m.contrees=(d.contrees||[]).map((c,i)=>({
     cle:c.cle||('contree-'+(i+1)),nom:c.nom||('Contrée '+(i+1)),gentile:c.gentile||'',
     teinte:c.teinte||TEINTES_CONTREE[i%TEINTES_CONTREE.length],
+    carte:connue(c.carte),
     frontiere:Array.isArray(c.frontiere)?c.frontiere:[]}));
-  m.lieux=(d.lieux||[]).map((l,i)=>({
-    cle:l.cle||('lieu-'+(i+1)),nom:l.nom||('Lieu '+(i+1)),
-    contree:l.contree||(m.contrees[0]&&m.contrees[0].cle)||'',
-    rang:RANGS[l.rang]?l.rang:'ville',
-    traits:Array.isArray(l.traits)?l.traits.filter(t=>TRAITS[t]):[],
-    x:+l.x||0,y:+l.y||0,
-    etiq:{pos:(l.etiq&&l.etiq.pos)||((l.etiq&&l.etiq.dy>0)?'dessous':'dessus')}}));
+  m.lieux=(d.lieux||[]).map((l,i)=>{
+    const ct=m.contrees.find(c=>c.cle===l.contree);
+    return {
+      cle:l.cle||('lieu-'+(i+1)),nom:l.nom||('Lieu '+(i+1)),
+      contree:l.contree||(m.contrees[0]&&m.contrees[0].cle)||'',
+      /* faute de carte déclarée, celle de sa contrée : c'est la seule qui ait
+         un sens, et c'est ce que fait aussi le moteur */
+      carte:connue(l.carte||(ct&&ct.carte)),
+      rang:RANGS[l.rang]?l.rang:'ville',
+      traits:Array.isArray(l.traits)?l.traits.filter(t=>TRAITS[t]):[],
+      x:+l.x||0,y:+l.y||0,
+      etiq:{pos:(l.etiq&&l.etiq.pos)||((l.etiq&&l.etiq.dy>0)?'dessous':'dessus')}};
+  });
   const cles=m.lieux.map(l=>l.cle);
   m.voies=(d.voies||[]).filter(v=>cles.indexOf(v.de)>=0&&cles.indexOf(v.vers)>=0)
-    .map((v,i)=>({cle:v.cle||('voie-'+(i+1)),de:v.de,vers:v.vers,
-      terrain:TERRAINS[v.terrain]?v.terrain:'plaine'}));
+    .map((v,i)=>{
+      const w={cle:v.cle||('voie-'+(i+1)),de:v.de,vers:v.vers,
+        terrain:TERRAINS[v.terrain]?v.terrain:'plaine'};
+      /* la longueur déclarée n'a de sens que pour un passage ; on la garde
+         telle quelle, y compris venue d'un calcul déjà publié */
+      const a=m.lieux.find(l=>l.cle===v.de),b=m.lieux.find(l=>l.cle===v.vers);
+      if(a&&b&&a.carte!==b.carte){
+        const c=(v.calcul||[]).find(x=>x.cle==='normal')||{};
+        w.lieues=Math.max(1,Math.round(v.lieues||c.lieues||LIEUES_PASSAGE));
+      }
+      return w;
+    });
+  m.proprietes=(d.proprietes||[]).map(t=>{
+    const l=m.lieux.find(x=>x.cle===t.lieu);
+    return Object.assign({},t,{carte:connue(t.carte||(l&&l.carte))});
+  });
   return m;
 }
-/* changer d'image : les repères sont en pixels, on les rééchelonne */
-function reechelonner(ax,ay){
-  if(!M.carte.largeur||!M.carte.hauteur)return;
-  const fx=ax/M.carte.largeur, fy=ay/M.carte.hauteur;
+/* changer d'image : les repères sont en pixels, on les rééchelonne — ceux de
+   cette carte-là seulement, les autres gardent les leurs */
+function reechelonner(C,ax,ay){
+  if(!C.largeur||!C.hauteur)return;
+  const fx=ax/C.largeur, fy=ay/C.hauteur;
   if(Math.abs(fx-1)<.001&&Math.abs(fy-1)<.001)return;
-  M.lieux.forEach(l=>{l.x=Math.round(l.x*fx);l.y=Math.round(l.y*fy);});
-  M.contrees.forEach(c=>(c.frontiere||[]).forEach(p=>{
+  const dessus=x=>(x.carte||M.cartes[0].cle)===C.cle;
+  M.lieux.filter(dessus).forEach(l=>{l.x=Math.round(l.x*fx);l.y=Math.round(l.y*fy);});
+  (M.proprietes||[]).filter(dessus).forEach(t=>{
+    t.x=Math.round(t.x*fx);t.y=Math.round(t.y*fy);});
+  M.contrees.filter(dessus).forEach(c=>(c.frontiere||[]).forEach(p=>{
     p.x=Math.round(p.x*fx);p.y=Math.round(p.y*fy);}));
-  if(M.etalon){[M.etalon.a,M.etalon.b].forEach(p=>{
+  if(C.etalon){[C.etalon.a,C.etalon.b].forEach(p=>{
     p.x=Math.round(p.x*fx);p.y=Math.round(p.y*fy);});}
   message(`Repères rééchelonnés (×${arrondi(fx,3)}) pour la nouvelle image.`);
 }
 /* Le monde tel que les autres ateliers et le jeu le liront : le modèle de
-   travail plus les tables de référence et les distances déjà calculées. */
+   travail plus les tables de référence et les distances déjà calculées.
+   Chaque carte emporte son échelle et son allure — le moteur compte les étapes
+   carte par carte, et c'est ce qui fait qu'une lieue de ruelles coûte plus
+   qu'une lieue de piste. */
 function mondePublie(){
   return Object.assign({},M,{
     genere:new Date().toISOString(),
     rangs:RANGS,traits:TRAITS,terrains:TERRAINS,profils:PROFILS,
-    mesures:{kmParLieue:KM_PAR_LIEUE,kmParJour:KM_PAR_JOUR,
-      lieuesParPixel:lieuesParPixel()?arrondi(lieuesParPixel(),6):null},
-    voies:M.voies.map(v=>Object.assign({},v,{calcul:profilsDe(v)}))
+    cartes:M.cartes.map(c=>{
+      const lpp=lieuesParPixel(c.cle);
+      return Object.assign({},c,{lieuesParPixel:lpp?arrondi(lpp,6):null});
+    }),
+    mesures:{kmParLieue:KM_PAR_LIEUE,kmParJour:M.cartes[0].kmParJour||KM_PAR_JOUR,
+      lieuesParPixel:lieuesParPixel(M.cartes[0].cle)
+        ?arrondi(lieuesParPixel(M.cartes[0].cle),6):null},
+    voies:M.voies.map(v=>Object.assign({},v,{
+      passage:estPassage(v)||undefined,calcul:profilsDe(v)}))
   });
 }
 function exporter(){
@@ -1488,9 +1928,13 @@ function lireJson(f){
     try{
       memo();
       M=normaliser(JSON.parse(String(l.result)));
-      contreeCourante=M.contrees.length?M.contrees[0].cle:null;
-      choix=null;cadrer();dessiner();
-      message('Carte importée : '+M.lieux.length+' lieux.');
+      carteCourante=M.cartes[0].cle;
+      const c=contreesIci();
+      contreeCourante=c.length?c[0].cle:null;
+      choix=null;passageDepuis=null;
+      poserFond();cadrer();dessiner();
+      message(`Carte importée : ${M.lieux.length} lieux sur `+
+        `${M.cartes.length} carte${M.cartes.length>1?'s':''}.`);
     }catch(e){message('Fichier illisible : '+e.message);}
   };
   l.readAsText(f);
@@ -1501,7 +1945,11 @@ $('#fichier-json').onchange=e=>{if(e.target.files[0])lireJson(e.target.files[0])
   e.target.value='';};
 $('#btn-vider').onclick=()=>{
   if(!confirm('Tout effacer et repartir d\'une carte vide ?'))return;
-  memo();M=modeleVide();contreeCourante=null;choix=null;dessiner();
+  memo();
+  M.cartes.forEach(c=>oublierFond(c.cle));
+  M=modeleVide();
+  carteCourante=M.cartes[0].cle;contreeCourante=null;choix=null;passageDepuis=null;
+  poserFond();cadrer();dessiner();
 };
 
 /* ═══════════════ branchements ═══════════════ */
@@ -1520,6 +1968,11 @@ $('#panneau').addEventListener('click',e=>{
   choix={genre:'contree',cle:contreeCourante};
   dessiner();
 });
+$('#onglets').addEventListener('click',e=>{
+  if(e.target.closest('#btn-carte'))return ajouterCarte();
+  const t=e.target.closest('[data-carte]');
+  if(t)allerCarte(t.dataset.carte);
+});
 window.addEventListener('resize',appliquerVue);
 
 /* ═══════════════ départ ═══════════════ */
@@ -1527,13 +1980,10 @@ window.addEventListener('resize',appliquerVue);
 if(!reprendre()){
   /* une contrée pour commencer, sinon le premier clic ne mène nulle part */
   M.contrees.push({cle:'contree-1',nom:'Contrée 1',gentile:'',
-    teinte:TEINTES_CONTREE[0],frontiere:[]});
+    teinte:TEINTES_CONTREE[0],carte:M.cartes[0].cle,frontiere:[]});
   contreeCourante='contree-1';
 }
-if(M.carte.largeur){
-  $('#fond').setAttribute('width',M.carte.largeur);
-  $('#fond').setAttribute('height',M.carte.hauteur);
-}
+carteCourante=M.cartes[0].cle;
 brancherEncart();
 choisirOutil('select');
 cadrer();
@@ -1548,11 +1998,10 @@ reprendreImage();
   const cle=decodeURIComponent(m[1]);
   const l=M.lieux.find(x=>x.cle===cle);
   if(!l)return;
+  /* le lieu peut être sur une autre carte que celle qui s'ouvre : on y va */
+  if((l.carte||M.cartes[0].cle)!==carteCourante)allerCarte(l.carte);
   choix={genre:'lieu',cle:cle};
-  const r=svg.getBoundingClientRect();
-  V.tx=r.width/2-l.x*V.k;
-  V.ty=r.height/2-l.y*V.k;
-  appliquerVue();
+  centrerSur(l);
   dessiner();
 })();
 

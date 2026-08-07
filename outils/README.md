@@ -353,9 +353,17 @@ recalculer.
 
 ## Plusieurs cartes qui communiquent
 
-L'atelier n'exporte pour l'instant qu'une seule carte, et le moteur la lit très bien.
-Mais **il en accepte autant qu'on veut** : c'est le format `v2`, prêt pour le jour où vous
-aurez une cité à cartographier à part.
+L'atelier travaille sur **autant de cartes qu'on veut** : le monde d'un côté, l'intérieur
+d'une cité de l'autre, chacune avec son fond, son étalon et son allure. Les onglets sous
+la barre d'outils passent de l'une à l'autre (<kbd>Tab</kbd> aussi), **+ Carte** en ajoute
+une, et l'outil **Passage** les relie. C'est le format `v2`, et c'est ce que l'atelier
+exporte désormais.
+
+**Poser un passage** — choisissez l'outil Passage, cliquez le lieu de départ, changez
+d'onglet (les autres cartes se signalent en pointillé), cliquez le lieu d'en face. Un
+passage n'a pas de longueur mesurable — ses deux bouts sont sur deux images sans rapport —
+alors on la **déclare**, en lieues, dans le panneau de sélection. Donnez le rang **poste
+frontière** à au moins un des deux bouts : c'est ainsi que le jeu le dessine en porte.
 
 ```json
 {
@@ -397,8 +405,9 @@ Et le `kmParJour` fait son office : dans le monde d'essai, **neuf lieues de ruel
 coûtent huit étapes là où douze lieues de piste en coûtent quatre**. Traverser la cité
 entière revient donc aussi cher qu'aller d'une contrée à l'autre — ce qui était voulu.
 
-Rien ne vous oblige à vous en servir : `v1` reste lu tel quel, et vous pourrez passer à
-plusieurs cartes le jour où votre première sera prête.
+Rien ne vous oblige à vous en servir : un fichier `v1` — une seule carte, sans clé — se
+rouvre tel quel. L'atelier en fait sa première carte, lui donne son image, son étalon et
+son allure, et le réexporte en `v2` sans que vous ayez rien à refaire.
 
 ## Ce que le moteur en fait
 

@@ -1051,6 +1051,9 @@ const pick=a=>a[Math.floor(Math.random()*a.length)];
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const fmt=n=>Math.round(n).toLocaleString('fr-FR');
 const fmtCourt=n=>n>=10000?(n/1000).toFixed(1).replace('.',',')+'k':fmt(n);
+/* « 1 lieue », « 3 lieues » : les courtes distances existent depuis qu'une
+   cité tient sur sa propre carte, et un « 1 lieues » se voit. */
+const dit=(n,mot)=>fmt(n)+' '+mot+(Math.abs(Math.round(n))>1?'s':'');
 const CLE='caravane.record.v1';
 
 /* ═══════════════ données ═══════════════
@@ -2066,7 +2069,12 @@ function genererOffres(){
   const v=S.ville,ici=indexVille(v);
   v.offres=[];
   if(v.frontiere)return;                       /* on ne commande rien à la douane */
-  const voisins=lieuxDe(v.contree).filter(k=>k!==ici&&!estFrontiere(k));
+  /* On ne commande que sur sa propre carte. Sans cela, un marchand du monde
+     pourrait faire livrer dans une ruelle d'une cité où l'on n'est jamais
+     entré : le contrat nommerait un lieu que le joueur n'a aucun moyen de
+     connaître, et l'écheance ne tiendrait pas compte de la douane. */
+  const voisins=lieuxDe(v.contree)
+    .filter(k=>k!==ici&&!estFrontiere(k)&&(!MONDE||carteDeLieu(k)===carteDeLieu(ici)));
   if(!voisins.length)return;
   const combien=v.capitale?ri(2,3):ri(1,2);
   for(let n=0;n<combien;n++){
@@ -3209,7 +3217,8 @@ function carteFrontiere(){
   return `<div class="carte passage">
     <div class="rangee"><h3>${une?'Franchir la frontière':'Les passages'}</h3>
       <span class="oeil chiffre">${une
-        ?`${lieuesEntre(i,sorties[0].vers)} lieues · ${etapesEntre(i,sorties[0].vers)} étapes`
+        ?`${dit(lieuesEntre(i,sorties[0].vers),'lieue')} · `+
+         `${dit(etapesEntre(i,sorties[0].vers),'étape')}`
         :`${sorties.length} sorties`}</span></div>
     <p>${une?`Au-delà de la herse : <b>${ou(sorties[0].vers)}</b>.`
            :'Plusieurs routes partent d\'ici.'} Le droit de passage se
@@ -5501,8 +5510,13 @@ function estFranchissement(i,j){
 /* Ce qui s'annonce au bord de la carte : ce vers quoi mènent ses sorties. On ne
    nomme que ce qui n'est pas déjà dessiné — une contrée présente sur la carte
    n'est pas une sortie, même si une voie franchissable y mène. */
-function avecArticle(nom){
-  return /^(le |la |les |l')/i.test(nom)?nom.toLowerCase():'les '+nom.toLowerCase();
+/* « les Contreforts », « le Val d'Ambre » : une contrée est une étendue, elle
+   prend l'article. Une carte porte un nom propre — « Vaulmier intra-muros » —
+   et « les Vaulmier intra-muros » ne veut rien dire. On ne lui en ajoute donc
+   pas, et on lui garde ses majuscules. */
+function avecArticle(nom,propre){
+  if(/^(le |la |les |l')/i.test(nom))return nom.toLowerCase();
+  return propre?nom:'les '+nom.toLowerCase();
 }
 function motSortie(i){
   if(!MONDE)return CONTREES[contreeDe(i)].vers;
@@ -5515,11 +5529,12 @@ function motSortie(i){
     if(!dehors&&contreesIci[contreeDe(t.vers)])return;
     const autre=dehors?(CARTES[carteDeLieu(t.vers)]||{}).nom
                       :CONTREES[contreeDe(t.vers)].nom;
-    if(autre&&noms.indexOf(autre)<0)noms.push(autre);
+    if(autre&&!noms.some(x=>x.nom===autre))noms.push({nom:autre,carte:dehors});
   }));
   if(!noms.length)return '';
-  if(noms.length===1)return avecArticle(noms[0]);
-  if(noms.length===2)return noms.map(avecArticle).join(' et ');
+  const dit=x=>avecArticle(x.nom,x.carte);
+  if(noms.length===1)return dit(noms[0]);
+  if(noms.length===2)return noms.map(dit).join(' et ');
   return noms.length+' autres terres';
 }
 
