@@ -40,8 +40,40 @@ Un personnage écrit dans son atelier est donc aussitôt proposé par celui des 
 sans qu'on exporte ni recharge quoi que ce soit. Les anciennes sauvegardes, une par
 atelier, sont reprises au premier chargement.
 
-Le hub porte le **codex** : tout le contenu du dépôt, rangé par catégorie, avec pour
-chaque élément un lien `atelier-X.html#cle=…` qui le rouvre là où il a été écrit.
+Le hub porte deux vues du même dépôt. Le **codex** range tout par catégorie, avec pour
+chaque élément un lien `atelier-X.html#cle=…` qui le rouvre là où il a été écrit. La
+**charpente** montre ce qui ouvre quoi.
+
+## La charpente
+
+Les missions et les conversations forment déjà un réseau sans qu'on ait rien ajouté au
+format. `depotCharpente()` le relit et en tire un arbre : ce qui n'attend rien est en
+haut, et l'on descend vers ce que cela ouvre.
+
+Les arêtes viennent d'ici, et de nulle part ailleurs :
+
+| ce qui relie | d'où ça se lit |
+|---|---|
+| une conversation **confie** une mission | un effet `mission` dans une réplique ou une réponse |
+| une mission **accomplie** ouvre une conversation | `si: missionEtat` valant `faite`, `ratee` ou `cours` |
+| un **souvenir** relie deux conversations | l'une le pose par un effet `souvenir`, l'autre l'attend dans son `si` |
+| **porter un objet** ouvre une conversation | `si: objetPorte`, remonté jusqu'à la mission qui donne l'objet |
+| une **couche déliée** en ouvre une | `si: coucheOuverte`, remonté à ce qui la délie |
+| une conversation **après** une autre | `si: dialogueVu` |
+
+`si: missionEtat` valant `offerte` ne crée **pas** d'arête : cette conversation vient
+*avant* la mission, elle ne l'attend pas. C'est dit sur la ligne.
+
+Les objets, les lieux et les couches ne sont pas des nœuds — ils restent en mention.
+Un objet sert quand même de fil, et son nom s'écrit sur l'arête.
+
+Ce n'est pas un arbre au sens strict : deux chemins peuvent converger, et rien
+n'interdit une boucle. On le rend lisible en ne développant chaque nœud qu'une fois ;
+ailleurs il paraît en renvoi. Les boucles sont dites plutôt que suivies.
+
+Les trous que la charpente signale : une mission que personne ne peut donner, un
+souvenir attendu que rien ne pose, un personnage sans lieu qui porte pourtant des
+conversations, une clé qui pointe dans le vide, et un cycle fermé.
 
 Côté code, tout passe par cinq fonctions de `commun.js` : `depotLire`, `depotEcrire`,
 `sectionEst` (l'atelier déclare la section qu'il tient), `suivreDepot` (un autre onglet

@@ -84,7 +84,7 @@ ol.ordre li b{color:var(--encre)}
 .liens a:active{border-color:var(--or);color:var(--or)}
 
 /* ── le codex ── */
-#codex{display:grid;gap:11px}
+#codex:not([hidden]){display:grid;gap:11px}
 .cat{background:var(--fond-clair);border:1px solid var(--bord);border-radius:var(--r);
   overflow:hidden}
 .cat>summary{display:flex;align-items:center;gap:10px;padding:13px 15px;cursor:pointer;
@@ -118,6 +118,61 @@ ol.ordre li b{color:var(--encre)}
   font-family:inherit}
 #codex-cherche::placeholder{color:var(--encre-pale)}
 #codex-rien{font-size:13.5px;color:var(--encre-pale);padding:2px}
+
+/* ── les deux vues : le codex et la charpente ── */
+#deux-vues{display:flex;gap:0;margin-bottom:12px;border:1px solid var(--bord);
+  border-radius:var(--r);overflow:hidden}
+#deux-vues button{flex:1;padding:10px 8px;font:inherit;font-size:14px;
+  background:var(--fond-clair);color:var(--encre-pale);border:none;cursor:pointer;
+  border-right:1px solid var(--bord)}
+#deux-vues button:last-child{border-right:none}
+#deux-vues button.actif{background:var(--fond);color:var(--or);font-weight:600}
+
+#charpente:not([hidden]){display:grid;gap:11px}
+.tronc{background:var(--fond-clair);border:1px solid var(--bord);
+  border-radius:var(--r);padding:11px 12px}
+.branche{position:relative;padding-left:15px}
+.branche>.branche{margin-top:7px}
+/* le rail qui relie un nœud à ses enfants */
+.branche::before{content:'';position:absolute;left:4px;top:0;bottom:9px;
+  width:1px;background:var(--bord)}
+.branche.terminale::before{bottom:auto;height:15px}
+.lien-dit{font-size:11px;font-variant:small-caps;letter-spacing:.08em;
+  color:var(--encre-pale);padding:2px 0 3px 2px;display:block}
+.lien-dit b{color:var(--or);font-variant:normal;letter-spacing:0;font-weight:600}
+.oeud{display:flex;align-items:flex-start;gap:9px;padding:8px 9px;
+  background:var(--fond);border:1px solid var(--bord);border-radius:var(--r);
+  border-left:3px solid var(--teinte,var(--or))}
+.oeud.repris{border-style:dashed;opacity:.7}
+.oeud.boucle{border-left-color:var(--minium)}
+.oeud .jeton{width:22px;height:22px;flex:none;color:var(--teinte,var(--or));
+  margin-top:1px}
+.oeud .jeton svg{width:100%;height:100%;display:block}
+.oeud .txt{flex:1;min-width:0}
+.oeud .txt b{display:block;font-size:14px;font-weight:600;line-height:1.3}
+.oeud .qui{display:block;font-size:12px;color:var(--encre-pale);margin-top:1px}
+.oeud .qui i{font-style:normal;color:var(--teinte,var(--or))}
+.oeud .genre{font-size:10.5px;font-variant:small-caps;letter-spacing:.08em;
+  color:var(--encre-pale)}
+.oeud .mentions{display:block;font-size:11.5px;color:var(--encre-pale);
+  margin-top:4px;line-height:1.45}
+.oeud .ouvrir{flex:none;font-size:12px;padding:5px 11px;border:1px solid var(--bord);
+  border-radius:20px;color:var(--encre);text-decoration:none;background:var(--fond-clair)}
+.oeud .ouvrir:active{border-color:var(--or);color:var(--or)}
+.oeud .renvoi{font-size:11.5px;color:var(--encre-pale);font-style:italic;flex:none}
+#charpente .mesures{display:grid;grid-template-columns:1fr auto;gap:2px 10px;
+  font-size:13px;color:var(--encre-pale)}
+#charpente .mesures b{text-align:right;color:var(--encre)}
+.trous{background:var(--fond-clair);border:1px solid var(--bord);
+  border-left:3px solid var(--minium);border-radius:var(--r);padding:12px 13px}
+.trous h3{font-family:var(--display);font-size:16px;margin-bottom:7px}
+.trous ul{list-style:none;display:grid;gap:6px}
+.trous li{font-size:13.5px;line-height:1.5;color:var(--encre-pale);
+  padding-left:15px;position:relative}
+.trous li::before{content:'·';position:absolute;left:4px}
+.trous li.dur{color:var(--encre)}
+.trous li.dur::before{content:'!';color:var(--minium);font-weight:700}
+.trous b{color:var(--encre)}
 
 /* ── les sauvegardes ── */
 #sauvegardes{display:grid;gap:11px}
@@ -276,11 +331,16 @@ footer a{color:var(--or);text-decoration:none}
 
   </div>
 
-  <h2 class="section">Le codex</h2>
+  <h2 class="section">Ce que vous avez écrit</h2>
+  <div id="deux-vues">
+    <button data-vue="codex" class="actif">Le codex</button>
+    <button data-vue="charpente">La charpente</button>
+  </div>
   <div id="codex">
     <p class="bloc" id="codex-vide">Rien encore. Ce que vous créerez dans les
        ateliers viendra se ranger ici, par catégorie.</p>
   </div>
+  <div id="charpente" hidden></div>
 
   <h2 class="section">Sauvegarder</h2>
   <div id="sauvegardes"></div>
@@ -676,6 +736,267 @@ function depotCodex(){
       }))
     };
   });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LA CHARPENTE
+   ───────────────────────────────────────────────────────────────────────────
+   Ce qui ouvre quoi. Les missions et les conversations forment déjà un réseau
+   sans qu'on ait rien ajouté au format : une conversation confie une mission,
+   une mission accomplie ouvre une autre conversation, un souvenir posé ici
+   déverrouille une réponse là-bas. On le relit, on en tire les racines — ce
+   qui n'attend rien — et l'on descend.
+
+   Ce n'est pas un arbre au sens strict : deux chemins peuvent mener au même
+   endroit, et rien n'empêche une boucle. On en fait un arbre lisible en ne
+   développant chaque nœud qu'une fois ; ailleurs il paraît en renvoi. Les
+   boucles sont dites plutôt que suivies.
+
+   Les objets, les lieux et les couches de lore ne sont pas des nœuds : ils
+   restent en mention sur la ligne. Un objet sert quand même de fil — porter
+   celui qu'une mission donne ouvre une conversation, et l'arête existe, avec
+   l'objet écrit dessus.                                                     */
+
+/* Quelle mission finit par donner cet objet. */
+function missionDeLObjet(depot,cle){
+  const o=((depot.objets&&depot.objets.objets)||[]).find(x=>x&&x.cle===cle);
+  if(o&&o.provenance&&o.provenance.genre==='mission'&&o.provenance.mission)
+    return o.provenance.mission;
+  const m=((depot.missions&&depot.missions.missions)||[]).find(x=>
+    (((x.reussite||{}).recompenses)||[]).some(r=>r.donne==='objet'&&r.objet===cle));
+  return m?m.cle:null;
+}
+/* Qui délie telle couche de tel personnage — une conversation, une mission,
+   ou un objet qui vient d'une mission. Rendu sous forme de nœud d'origine. */
+function ouvreurDeCouche(depot,qui,couche){
+  const dlg=((depot.dialogues&&depot.dialogues.dialogues)||[]).find(d=>
+    Object.values(d.repliques||{}).some(r=>
+      [].concat(r.effets||[],...((r.reponses||[]).map(c=>c.effets||[])))
+        .some(e=>e.faire==='ouvrirCouche'&&(e.personnage||d.personnage)===qui
+                 &&String(e.couche)===String(couche))));
+  if(dlg)return {genre:'dialogue',cle:dlg.cle};
+  const m=((depot.missions&&depot.missions.missions)||[]).find(x=>
+    (((x.reussite||{}).recompenses)||[]).some(r=>r.donne==='ouvreCouche'
+      &&r.personnage===qui&&String(r.couche)===String(couche)));
+  if(m)return {genre:'mission',cle:m.cle};
+  const o=((depot.objets&&depot.objets.objets)||[]).find(x=>
+    (x.pouvoirs||[]).some(p=>p.faire==='ouvreCouche'&&p.personnage===qui
+      &&String(p.couche)===String(couche)));
+  if(o){
+    const mm=missionDeLObjet(depot,o.cle);
+    if(mm)return {genre:'mission',cle:mm,par:o.nom||o.cle};
+  }
+  return null;
+}
+/* Tous les effets d'une conversation, répliques et réponses confondues. */
+function effetsDuDialogue(d){
+  const out=[];
+  Object.values((d&&d.repliques)||{}).forEach(r=>{
+    (r.effets||[]).forEach(e=>out.push(e));
+    (r.reponses||[]).forEach(c=>(c.effets||[]).forEach(e=>out.push(e)));
+  });
+  return out;
+}
+/* Ce qu'un état de mission veut dire pour l'ordre des choses. « offerte » ne
+   déverrouille rien : c'est la conversation qui vient AVANT la mission. */
+const APRES_MISSION={faite:'une fois accomplie',ratee:'une fois échouée',
+                     cours:'pendant qu\'elle court'};
+
+function depotCharpente(){
+  chargerDepot();
+  const missions=((D.missions&&D.missions.missions)||[]).filter(m=>m&&m.cle);
+  const dialogues=((D.dialogues&&D.dialogues.dialogues)||[]).filter(d=>d&&d.cle);
+  const gens=((D.personnages&&D.personnages.personnages)||[]);
+  const parGens={};gens.forEach(p=>{if(p.cle)parGens[p.cle]=p;});
+  const nomObjet=c=>{
+    const o=((D.objets&&D.objets.objets)||[]).find(x=>x&&x.cle===c);
+    return (o&&o.nom)||c;
+  };
+  const nomLieu=c=>{
+    const l=((D.monde&&D.monde.lieux)||[]).find(x=>x&&x.cle===c);
+    return (l&&l.nom)||c;
+  };
+
+  const id=(g,c)=>g+':'+c;
+  const noeuds={};                      /* id → le nœud */
+  const sortantes={};                   /* id → [{vers, relation}] */
+  const entrantes={};                   /* id → nombre d'arêtes reçues */
+  const soucis=[];
+  const dur=t=>soucis.push({dur:true,txt:t});
+  const doux=t=>soucis.push({dur:false,txt:t});
+
+  const poser=(genre,x)=>{
+    const qui=genre==='dialogue'?x.personnage:x.commanditaire;
+    const p=parGens[qui];
+    noeuds[id(genre,x.cle)]={
+      genre:genre,cle:x.cle,
+      nom:(genre==='dialogue'?x.titre:x.titre)||x.cle,
+      qui:p?{cle:p.cle,nom:appellationCourte(p),
+             glyphe:(p.ico&&p.ico.glyphe)||'ermite',teinte:teinteDe(p.ico||{}),
+             lieu:p.lieu?nomLieu(p.lieu):''}
+           :(qui?{cle:qui,nom:qui,glyphe:'ermite',teinte:'#9C9484',lieu:'',
+                  inconnu:true}:null),
+      mentions:[],
+      lien:(genre==='dialogue'?'atelier-dialogues.html':'atelier-missions.html')+
+        '#cle='+encodeURIComponent(x.cle)
+    };
+    sortantes[id(genre,x.cle)]=[];
+    entrantes[id(genre,x.cle)]=0;
+  };
+  missions.forEach(m=>poser('mission',m));
+  dialogues.forEach(d=>poser('dialogue',d));
+
+  const relier=(de,vers,relation)=>{
+    if(!noeuds[de]||!noeuds[vers]||de===vers)return;
+    if(sortantes[de].some(a=>a.vers===vers&&a.relation===relation))return;
+    sortantes[de].push({vers:vers,relation:relation});
+    entrantes[vers]++;
+  };
+
+  /* ── ce que les conversations font ── */
+  dialogues.forEach(d=>{
+    const moi=id('dialogue',d.cle);
+    const n=noeuds[moi];
+    /* elle confie une mission */
+    effetsDuDialogue(d).forEach(e=>{
+      if(e.faire==='mission'&&e.mission){
+        if(!noeuds[id('mission',e.mission)])
+          dur(`« ${d.titre||d.cle} » confie <b>${ech(e.mission)}</b>, qui n'est pas au carnet.`);
+        else relier(moi,id('mission',e.mission),'confie');
+      }
+      if(e.faire==='ouvrirCouche')n.mentions.push('délie une couche de lore');
+      if(e.faire==='souvenir'&&e.vaut!==false)n.mentions.push('retient « '+e.nom+' »');
+    });
+    /* ce qu'elle attend pour paraître */
+    (d.si||[]).forEach(c=>{
+      if(c.quoi==='missionEtat'&&c.mission){
+        if(!noeuds[id('mission',c.mission)]){
+          dur(`« ${d.titre||d.cle} » attend la mission <b>${ech(c.mission)}</b>, `+
+            `qui n'est pas au carnet.`);
+        }else if(APRES_MISSION[c.vaut]){
+          relier(id('mission',c.mission),moi,APRES_MISSION[c.vaut]);
+        }else{
+          /* « offerte » : elle vient AVANT la mission, elle ne l'attend pas.
+             On le dit sur la ligne plutôt que d'inventer une arête à l'envers. */
+          const m=missions.find(x=>x.cle===c.mission);
+          n.mentions.push('tant que « '+((m&&m.titre)||c.mission)+' » n\'est pas prise');
+        }
+      }
+      if(c.quoi==='dialogueVu'&&c.dialogue)relier(id('dialogue',c.dialogue),moi,'après');
+      if(c.quoi==='souvenir'&&c.nom){
+        const src=dialogues.find(x=>x.cle!==d.cle&&effetsDuDialogue(x)
+          .some(e=>e.faire==='souvenir'&&e.nom===c.nom&&e.vaut!==false));
+        if(src)relier(id('dialogue',src.cle),moi,'se souvenant de « '+c.nom+' »');
+        else doux(`« ${d.titre||d.cle} » attend le souvenir <b>${ech(c.nom)}</b>, `+
+          `qu'aucune conversation ne pose.`);
+      }
+      if(c.quoi==='objetPorte'&&c.objet){
+        const mm=missionDeLObjet(D,c.objet);
+        if(mm&&noeuds[id('mission',mm)])
+          relier(id('mission',mm),moi,'en portant « '+nomObjet(c.objet)+' »');
+        else n.mentions.push('en portant « '+nomObjet(c.objet)+' »');
+      }
+      if(c.quoi==='coucheOuverte'&&c.couche){
+        const o=ouvreurDeCouche(D,c.personnage||d.personnage,c.couche);
+        if(o&&noeuds[id(o.genre,o.cle)])
+          relier(id(o.genre,o.cle),moi,'une fois la langue déliée');
+        else n.mentions.push('après en avoir appris plus');
+      }
+      if(c.quoi==='rencontres'&&c.personnage&&c.personnage!==d.personnage){
+        const p=parGens[c.personnage];
+        n.mentions.push('après avoir vu '+(p?appellationCourte(p):c.personnage));
+      }
+    });
+    if(!d.personnage)dur(`« ${d.titre||d.cle} » n'est attachée à personne.`);
+    else if(gens.length&&!parGens[d.personnage])
+      dur(`« ${d.titre||d.cle} » parle à <b>${ech(d.personnage)}</b>, qui n'existe pas.`);
+    else if(parGens[d.personnage]&&!parGens[d.personnage].lieu)
+      doux(`${appellationCourte(parGens[d.personnage])} n'a pas de lieu : on ne `+
+        `croisera jamais « ${d.titre||d.cle} ».`);
+  });
+
+  /* ── ce que les missions font ── */
+  missions.forEach(m=>{
+    const moi=id('mission',m.cle);
+    const n=noeuds[moi];
+    (m.jalons||[]).forEach(j=>{
+      if(j.faire==='rencontrer'&&j.personnage){
+        const p=parGens[j.personnage];
+        n.mentions.push('rencontrer '+(p?appellationCourte(p):j.personnage));
+      }
+      if(j.faire==='atteindre'&&j.lieu)n.mentions.push('atteindre '+nomLieu(j.lieu));
+      if(j.faire==='livrer'&&j.lieu)n.mentions.push('livrer à '+nomLieu(j.lieu));
+    });
+    (((m.reussite||{}).recompenses)||[]).forEach(r=>{
+      if(r.donne==='objet'&&r.objet)n.mentions.push('donne « '+nomObjet(r.objet)+' »');
+      if(r.donne==='ouvreCouche')n.mentions.push('délie une couche de lore');
+    });
+    ((m.offre||{}).si||[]).forEach(c=>{
+      if(c.quoi==='missionEtat'&&c.mission&&noeuds[id('mission',c.mission)]
+         &&APRES_MISSION[c.vaut])
+        relier(id('mission',c.mission),moi,APRES_MISSION[c.vaut]);
+    });
+    /* qui la propose : un commanditaire l'offre en ville, une conversation la
+       confie. Sans l'un ni l'autre, elle n'existe que dans le fichier. */
+    const confiee=Object.keys(sortantes).some(k=>
+      sortantes[k].some(a=>a.vers===moi&&a.relation==='confie'));
+    if(!m.commanditaire&&!m.lieu&&!confiee)
+      dur(`<b>${ech(m.titre||m.cle)}</b> n'a ni commanditaire, ni lieu, et aucune `+
+        `conversation ne la confie : personne ne peut la donner.`);
+    else if(m.commanditaire&&gens.length&&!parGens[m.commanditaire])
+      dur(`<b>${ech(m.titre||m.cle)}</b> est donnée par <b>${ech(m.commanditaire)}</b>, `+
+        `qui n'existe pas.`);
+    if(!(m.jalons||[]).length)
+      doux(`<b>${ech(m.titre||m.cle)}</b> n'a aucun jalon : rien à accomplir.`);
+  });
+
+  /* ── les racines, puis la descente ── */
+  const cles=Object.keys(noeuds);
+  const racines=cles.filter(k=>!entrantes[k]);
+  const vus={};
+  const enChemin={};
+  const boucles=[];
+
+  function descendre(k,relation){
+    const n=noeuds[k];
+    const base={genre:n.genre,cle:n.cle,nom:n.nom,qui:n.qui,lien:n.lien,
+                mentions:n.mentions.slice(),relation:relation||''};
+    if(enChemin[k]){
+      boucles.push(n.nom);
+      return Object.assign(base,{boucle:true,enfants:[]});
+    }
+    if(vus[k])return Object.assign(base,{repris:true,enfants:[]});
+    vus[k]=true;enChemin[k]=true;
+    base.enfants=sortantes[k].map(a=>descendre(a.vers,a.relation));
+    delete enChemin[k];
+    return base;
+  }
+  const arbres=racines.map(k=>descendre(k));
+  /* Ce qui n'est atteint par rien et n'a aucune racine : une boucle fermée. On
+     regarde « vu » au fur et à mesure — une liste figée d'avance rendrait un
+     tronc solitaire pour chaque nœud de la boucle, dont un simple renvoi. */
+  cles.forEach(k=>{
+    if(vus[k])return;
+    arbres.push(descendre(k,'boucle refermée'));
+    doux(`<b>${ech(noeuds[k].nom)}</b> n'est atteignable par aucun chemin : `+
+      `elle ne s'ouvre que si elle est déjà ouverte.`);
+  });
+  boucles.forEach(b=>doux(`La suite tourne en rond en repassant par `+
+    `<b>${ech(b)}</b>. Le joueur n'en sortira pas.`));
+
+  /* les solitaires : ni ouvertes par rien, ni n'ouvrant rien */
+  const seuls=cles.filter(k=>!entrantes[k]&&!sortantes[k].length).length;
+
+  return {arbres:arbres,soucis:soucis,
+    compte:{missions:missions.length,dialogues:dialogues.length,
+            racines:racines.length,seuls:seuls,
+            liens:cles.reduce((s,k)=>s+sortantes[k].length,0)}};
+}
+/* Le nom qu'on écrit sur un nœud : le titre est déjà long. */
+function appellationCourte(p){
+  if(!p)return '';
+  const t=(p.titre||'').trim(), n=p.nom||p.cle||'';
+  return t?t+' '+n:n;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1524,6 +1845,88 @@ document.getElementById('fichier-sauve').addEventListener('change',ev=>{
   l.readAsText(f);
 });
 
+/* ═══════════════ la charpente ═══════════════
+   Ce qui ouvre quoi, en arbre indenté. Le calcul est dans depotCharpente() :
+   ici on ne fait que le mettre en page. */
+let vue='codex';
+
+function rendreCharpente(){
+  const boite=$c('#charpente');
+  const c=depotCharpente();
+  if(!c.compte.missions&&!c.compte.dialogues){
+    boite.innerHTML=`<p class="bloc">Rien à charpenter. Écrivez des <b>missions</b>
+      et des <b>conversations</b> : dès qu'une conversation confie une mission, ou
+      qu'une mission accomplie en ouvre une autre, l'enchaînement paraîtra ici.</p>`;
+    return;
+  }
+  let h=`<div class="bloc"><div class="mesures">
+    <span>Missions d'histoire</span><b>${c.compte.missions}</b>
+    <span>Conversations</span><b>${c.compte.dialogues}</b>
+    <span>Enchaînements</span><b>${c.compte.liens}</b>
+    <span>Départs</span><b>${c.compte.racines}</b>
+    </div>
+    <p class="aide" style="font-size:12.5px;color:var(--encre-pale);margin-top:9px">
+      Ce qui n'attend rien est en haut ; on descend vers ce que cela ouvre. Un
+      élément déjà vu plus haut n'est pas redéveloppé — il paraît en renvoi.</p>
+    </div>`;
+
+  if(c.soucis.length){
+    const durs=c.soucis.filter(x=>x.dur), doux=c.soucis.filter(x=>!x.dur);
+    h+=`<div class="trous"><h3>Les trous de la charpente</h3><ul>`+
+      durs.map(x=>`<li class="dur">${x.txt}</li>`).join('')+
+      doux.map(x=>`<li>${x.txt}</li>`).join('')+`</ul></div>`;
+  }
+
+  h+=c.arbres.map(a=>`<div class="tronc">${brancher(a,true)}</div>`).join('');
+  boite.innerHTML=h;
+}
+
+function brancher(n,racine){
+  const teinte=(n.qui&&n.qui.teinte)||(n.genre==='mission'?'#4A7BC8':'#6E9B6A');
+  const dessin=n.qui?svgGlypheDe(n.qui.glyphe,'currentColor'):'';
+  const genre=n.genre==='mission'?'mission':'conversation';
+  let h='';
+  if(!racine&&n.relation)
+    h+=`<span class="lien-dit">↳ <b>${ech(n.relation)}</b></span>`;
+  h+=`<div class="oeud${n.repris?' repris':''}${n.boucle?' boucle':''}"
+        style="--teinte:${ech(teinte)}">
+    <span class="jeton">${dessin||rond()}</span>
+    <span class="txt">
+      <b>${ech(n.nom)}</b>
+      <span class="qui"><span class="genre">${genre}</span>`+
+      (n.qui?` · <i>${ech(n.qui.nom)}</i>`+
+        (n.qui.inconnu?' <b style="color:var(--minium)">(inconnu)</b>'
+          :n.qui.lieu?' à '+ech(n.qui.lieu):'')
+       :n.genre==='mission'?' · sans commanditaire':'')+
+      `</span>`+
+      (n.mentions.length&&!n.repris
+        ?`<span class="mentions">${n.mentions.map(ech).join(' · ')}</span>`:'')+
+    `</span>`+
+    (n.repris?`<span class="renvoi">↩ plus haut</span>`
+      :n.boucle?`<span class="renvoi" style="color:var(--minium)">↺ boucle</span>`
+      :`<a class="ouvrir" href="${ech(n.lien)}">Ouvrir</a>`)+
+  `</div>`;
+  if(n.enfants&&n.enfants.length)
+    h+=n.enfants.map((e,i)=>`<div class="branche${
+      i===n.enfants.length-1&&!(e.enfants||[]).length?' terminale':''
+    }">${brancher(e)}</div>`).join('');
+  return h;
+}
+
+/* on ne calcule que la vue qu'on regarde : l'autre attend son tour */
+function montrerVue(quoi){
+  vue=quoi;
+  $c('#codex').hidden=(quoi!=='codex');
+  $c('#charpente').hidden=(quoi!=='charpente');
+  document.querySelectorAll('#deux-vues button').forEach(b=>
+    b.classList.toggle('actif',b.dataset.vue===quoi));
+  if(quoi==='charpente')rendreCharpente(); else rendreCodex();
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('#deux-vues [data-vue]');
+  if(b)montrerVue(b.dataset.vue);
+});
+
 /* la recherche : on ne refait que le codex, et l'on rend le focus au champ */
 document.addEventListener('input',e=>{
   if(e.target.id!=='codex-cherche')return;
@@ -1534,7 +1937,10 @@ document.addEventListener('input',e=>{
   if(c){c.focus();c.setSelectionRange(p,p);}
 });
 /* un atelier ouvert dans un autre onglet vient d'écrire : tout suit */
-const rendreTout=()=>{rendreCodex();rendreSauvegardes();};
+const rendreTout=()=>{
+  if(vue==='charpente')rendreCharpente(); else rendreCodex();
+  rendreSauvegardes();
+};
 suivreDepot(rendreTout);
 addEventListener('pageshow',rendreTout);
 rendreTout();

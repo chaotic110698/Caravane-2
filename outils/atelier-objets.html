@@ -533,6 +533,267 @@ function depotCodex(){
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   LA CHARPENTE
+   ───────────────────────────────────────────────────────────────────────────
+   Ce qui ouvre quoi. Les missions et les conversations forment déjà un réseau
+   sans qu'on ait rien ajouté au format : une conversation confie une mission,
+   une mission accomplie ouvre une autre conversation, un souvenir posé ici
+   déverrouille une réponse là-bas. On le relit, on en tire les racines — ce
+   qui n'attend rien — et l'on descend.
+
+   Ce n'est pas un arbre au sens strict : deux chemins peuvent mener au même
+   endroit, et rien n'empêche une boucle. On en fait un arbre lisible en ne
+   développant chaque nœud qu'une fois ; ailleurs il paraît en renvoi. Les
+   boucles sont dites plutôt que suivies.
+
+   Les objets, les lieux et les couches de lore ne sont pas des nœuds : ils
+   restent en mention sur la ligne. Un objet sert quand même de fil — porter
+   celui qu'une mission donne ouvre une conversation, et l'arête existe, avec
+   l'objet écrit dessus.                                                     */
+
+/* Quelle mission finit par donner cet objet. */
+function missionDeLObjet(depot,cle){
+  const o=((depot.objets&&depot.objets.objets)||[]).find(x=>x&&x.cle===cle);
+  if(o&&o.provenance&&o.provenance.genre==='mission'&&o.provenance.mission)
+    return o.provenance.mission;
+  const m=((depot.missions&&depot.missions.missions)||[]).find(x=>
+    (((x.reussite||{}).recompenses)||[]).some(r=>r.donne==='objet'&&r.objet===cle));
+  return m?m.cle:null;
+}
+/* Qui délie telle couche de tel personnage — une conversation, une mission,
+   ou un objet qui vient d'une mission. Rendu sous forme de nœud d'origine. */
+function ouvreurDeCouche(depot,qui,couche){
+  const dlg=((depot.dialogues&&depot.dialogues.dialogues)||[]).find(d=>
+    Object.values(d.repliques||{}).some(r=>
+      [].concat(r.effets||[],...((r.reponses||[]).map(c=>c.effets||[])))
+        .some(e=>e.faire==='ouvrirCouche'&&(e.personnage||d.personnage)===qui
+                 &&String(e.couche)===String(couche))));
+  if(dlg)return {genre:'dialogue',cle:dlg.cle};
+  const m=((depot.missions&&depot.missions.missions)||[]).find(x=>
+    (((x.reussite||{}).recompenses)||[]).some(r=>r.donne==='ouvreCouche'
+      &&r.personnage===qui&&String(r.couche)===String(couche)));
+  if(m)return {genre:'mission',cle:m.cle};
+  const o=((depot.objets&&depot.objets.objets)||[]).find(x=>
+    (x.pouvoirs||[]).some(p=>p.faire==='ouvreCouche'&&p.personnage===qui
+      &&String(p.couche)===String(couche)));
+  if(o){
+    const mm=missionDeLObjet(depot,o.cle);
+    if(mm)return {genre:'mission',cle:mm,par:o.nom||o.cle};
+  }
+  return null;
+}
+/* Tous les effets d'une conversation, répliques et réponses confondues. */
+function effetsDuDialogue(d){
+  const out=[];
+  Object.values((d&&d.repliques)||{}).forEach(r=>{
+    (r.effets||[]).forEach(e=>out.push(e));
+    (r.reponses||[]).forEach(c=>(c.effets||[]).forEach(e=>out.push(e)));
+  });
+  return out;
+}
+/* Ce qu'un état de mission veut dire pour l'ordre des choses. « offerte » ne
+   déverrouille rien : c'est la conversation qui vient AVANT la mission. */
+const APRES_MISSION={faite:'une fois accomplie',ratee:'une fois échouée',
+                     cours:'pendant qu\'elle court'};
+
+function depotCharpente(){
+  chargerDepot();
+  const missions=((D.missions&&D.missions.missions)||[]).filter(m=>m&&m.cle);
+  const dialogues=((D.dialogues&&D.dialogues.dialogues)||[]).filter(d=>d&&d.cle);
+  const gens=((D.personnages&&D.personnages.personnages)||[]);
+  const parGens={};gens.forEach(p=>{if(p.cle)parGens[p.cle]=p;});
+  const nomObjet=c=>{
+    const o=((D.objets&&D.objets.objets)||[]).find(x=>x&&x.cle===c);
+    return (o&&o.nom)||c;
+  };
+  const nomLieu=c=>{
+    const l=((D.monde&&D.monde.lieux)||[]).find(x=>x&&x.cle===c);
+    return (l&&l.nom)||c;
+  };
+
+  const id=(g,c)=>g+':'+c;
+  const noeuds={};                      /* id → le nœud */
+  const sortantes={};                   /* id → [{vers, relation}] */
+  const entrantes={};                   /* id → nombre d'arêtes reçues */
+  const soucis=[];
+  const dur=t=>soucis.push({dur:true,txt:t});
+  const doux=t=>soucis.push({dur:false,txt:t});
+
+  const poser=(genre,x)=>{
+    const qui=genre==='dialogue'?x.personnage:x.commanditaire;
+    const p=parGens[qui];
+    noeuds[id(genre,x.cle)]={
+      genre:genre,cle:x.cle,
+      nom:(genre==='dialogue'?x.titre:x.titre)||x.cle,
+      qui:p?{cle:p.cle,nom:appellationCourte(p),
+             glyphe:(p.ico&&p.ico.glyphe)||'ermite',teinte:teinteDe(p.ico||{}),
+             lieu:p.lieu?nomLieu(p.lieu):''}
+           :(qui?{cle:qui,nom:qui,glyphe:'ermite',teinte:'#9C9484',lieu:'',
+                  inconnu:true}:null),
+      mentions:[],
+      lien:(genre==='dialogue'?'atelier-dialogues.html':'atelier-missions.html')+
+        '#cle='+encodeURIComponent(x.cle)
+    };
+    sortantes[id(genre,x.cle)]=[];
+    entrantes[id(genre,x.cle)]=0;
+  };
+  missions.forEach(m=>poser('mission',m));
+  dialogues.forEach(d=>poser('dialogue',d));
+
+  const relier=(de,vers,relation)=>{
+    if(!noeuds[de]||!noeuds[vers]||de===vers)return;
+    if(sortantes[de].some(a=>a.vers===vers&&a.relation===relation))return;
+    sortantes[de].push({vers:vers,relation:relation});
+    entrantes[vers]++;
+  };
+
+  /* ── ce que les conversations font ── */
+  dialogues.forEach(d=>{
+    const moi=id('dialogue',d.cle);
+    const n=noeuds[moi];
+    /* elle confie une mission */
+    effetsDuDialogue(d).forEach(e=>{
+      if(e.faire==='mission'&&e.mission){
+        if(!noeuds[id('mission',e.mission)])
+          dur(`« ${d.titre||d.cle} » confie <b>${ech(e.mission)}</b>, qui n'est pas au carnet.`);
+        else relier(moi,id('mission',e.mission),'confie');
+      }
+      if(e.faire==='ouvrirCouche')n.mentions.push('délie une couche de lore');
+      if(e.faire==='souvenir'&&e.vaut!==false)n.mentions.push('retient « '+e.nom+' »');
+    });
+    /* ce qu'elle attend pour paraître */
+    (d.si||[]).forEach(c=>{
+      if(c.quoi==='missionEtat'&&c.mission){
+        if(!noeuds[id('mission',c.mission)]){
+          dur(`« ${d.titre||d.cle} » attend la mission <b>${ech(c.mission)}</b>, `+
+            `qui n'est pas au carnet.`);
+        }else if(APRES_MISSION[c.vaut]){
+          relier(id('mission',c.mission),moi,APRES_MISSION[c.vaut]);
+        }else{
+          /* « offerte » : elle vient AVANT la mission, elle ne l'attend pas.
+             On le dit sur la ligne plutôt que d'inventer une arête à l'envers. */
+          const m=missions.find(x=>x.cle===c.mission);
+          n.mentions.push('tant que « '+((m&&m.titre)||c.mission)+' » n\'est pas prise');
+        }
+      }
+      if(c.quoi==='dialogueVu'&&c.dialogue)relier(id('dialogue',c.dialogue),moi,'après');
+      if(c.quoi==='souvenir'&&c.nom){
+        const src=dialogues.find(x=>x.cle!==d.cle&&effetsDuDialogue(x)
+          .some(e=>e.faire==='souvenir'&&e.nom===c.nom&&e.vaut!==false));
+        if(src)relier(id('dialogue',src.cle),moi,'se souvenant de « '+c.nom+' »');
+        else doux(`« ${d.titre||d.cle} » attend le souvenir <b>${ech(c.nom)}</b>, `+
+          `qu'aucune conversation ne pose.`);
+      }
+      if(c.quoi==='objetPorte'&&c.objet){
+        const mm=missionDeLObjet(D,c.objet);
+        if(mm&&noeuds[id('mission',mm)])
+          relier(id('mission',mm),moi,'en portant « '+nomObjet(c.objet)+' »');
+        else n.mentions.push('en portant « '+nomObjet(c.objet)+' »');
+      }
+      if(c.quoi==='coucheOuverte'&&c.couche){
+        const o=ouvreurDeCouche(D,c.personnage||d.personnage,c.couche);
+        if(o&&noeuds[id(o.genre,o.cle)])
+          relier(id(o.genre,o.cle),moi,'une fois la langue déliée');
+        else n.mentions.push('après en avoir appris plus');
+      }
+      if(c.quoi==='rencontres'&&c.personnage&&c.personnage!==d.personnage){
+        const p=parGens[c.personnage];
+        n.mentions.push('après avoir vu '+(p?appellationCourte(p):c.personnage));
+      }
+    });
+    if(!d.personnage)dur(`« ${d.titre||d.cle} » n'est attachée à personne.`);
+    else if(gens.length&&!parGens[d.personnage])
+      dur(`« ${d.titre||d.cle} » parle à <b>${ech(d.personnage)}</b>, qui n'existe pas.`);
+    else if(parGens[d.personnage]&&!parGens[d.personnage].lieu)
+      doux(`${appellationCourte(parGens[d.personnage])} n'a pas de lieu : on ne `+
+        `croisera jamais « ${d.titre||d.cle} ».`);
+  });
+
+  /* ── ce que les missions font ── */
+  missions.forEach(m=>{
+    const moi=id('mission',m.cle);
+    const n=noeuds[moi];
+    (m.jalons||[]).forEach(j=>{
+      if(j.faire==='rencontrer'&&j.personnage){
+        const p=parGens[j.personnage];
+        n.mentions.push('rencontrer '+(p?appellationCourte(p):j.personnage));
+      }
+      if(j.faire==='atteindre'&&j.lieu)n.mentions.push('atteindre '+nomLieu(j.lieu));
+      if(j.faire==='livrer'&&j.lieu)n.mentions.push('livrer à '+nomLieu(j.lieu));
+    });
+    (((m.reussite||{}).recompenses)||[]).forEach(r=>{
+      if(r.donne==='objet'&&r.objet)n.mentions.push('donne « '+nomObjet(r.objet)+' »');
+      if(r.donne==='ouvreCouche')n.mentions.push('délie une couche de lore');
+    });
+    ((m.offre||{}).si||[]).forEach(c=>{
+      if(c.quoi==='missionEtat'&&c.mission&&noeuds[id('mission',c.mission)]
+         &&APRES_MISSION[c.vaut])
+        relier(id('mission',c.mission),moi,APRES_MISSION[c.vaut]);
+    });
+    /* qui la propose : un commanditaire l'offre en ville, une conversation la
+       confie. Sans l'un ni l'autre, elle n'existe que dans le fichier. */
+    const confiee=Object.keys(sortantes).some(k=>
+      sortantes[k].some(a=>a.vers===moi&&a.relation==='confie'));
+    if(!m.commanditaire&&!m.lieu&&!confiee)
+      dur(`<b>${ech(m.titre||m.cle)}</b> n'a ni commanditaire, ni lieu, et aucune `+
+        `conversation ne la confie : personne ne peut la donner.`);
+    else if(m.commanditaire&&gens.length&&!parGens[m.commanditaire])
+      dur(`<b>${ech(m.titre||m.cle)}</b> est donnée par <b>${ech(m.commanditaire)}</b>, `+
+        `qui n'existe pas.`);
+    if(!(m.jalons||[]).length)
+      doux(`<b>${ech(m.titre||m.cle)}</b> n'a aucun jalon : rien à accomplir.`);
+  });
+
+  /* ── les racines, puis la descente ── */
+  const cles=Object.keys(noeuds);
+  const racines=cles.filter(k=>!entrantes[k]);
+  const vus={};
+  const enChemin={};
+  const boucles=[];
+
+  function descendre(k,relation){
+    const n=noeuds[k];
+    const base={genre:n.genre,cle:n.cle,nom:n.nom,qui:n.qui,lien:n.lien,
+                mentions:n.mentions.slice(),relation:relation||''};
+    if(enChemin[k]){
+      boucles.push(n.nom);
+      return Object.assign(base,{boucle:true,enfants:[]});
+    }
+    if(vus[k])return Object.assign(base,{repris:true,enfants:[]});
+    vus[k]=true;enChemin[k]=true;
+    base.enfants=sortantes[k].map(a=>descendre(a.vers,a.relation));
+    delete enChemin[k];
+    return base;
+  }
+  const arbres=racines.map(k=>descendre(k));
+  /* Ce qui n'est atteint par rien et n'a aucune racine : une boucle fermée. On
+     regarde « vu » au fur et à mesure — une liste figée d'avance rendrait un
+     tronc solitaire pour chaque nœud de la boucle, dont un simple renvoi. */
+  cles.forEach(k=>{
+    if(vus[k])return;
+    arbres.push(descendre(k,'boucle refermée'));
+    doux(`<b>${ech(noeuds[k].nom)}</b> n'est atteignable par aucun chemin : `+
+      `elle ne s'ouvre que si elle est déjà ouverte.`);
+  });
+  boucles.forEach(b=>doux(`La suite tourne en rond en repassant par `+
+    `<b>${ech(b)}</b>. Le joueur n'en sortira pas.`));
+
+  /* les solitaires : ni ouvertes par rien, ni n'ouvrant rien */
+  const seuls=cles.filter(k=>!entrantes[k]&&!sortantes[k].length).length;
+
+  return {arbres:arbres,soucis:soucis,
+    compte:{missions:missions.length,dialogues:dialogues.length,
+            racines:racines.length,seuls:seuls,
+            liens:cles.reduce((s,k)=>s+sortantes[k].length,0)}};
+}
+/* Le nom qu'on écrit sur un nœud : le titre est déjà long. */
+function appellationCourte(p){
+  if(!p)return '';
+  const t=(p.titre||'').trim(), n=p.nom||p.cle||'';
+  return t?t+' '+n:n;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    LES DEUX SORTES DE SAUVEGARDE
    ───────────────────────────────────────────────────────────────────────────
    Elles ne servent pas à la même chose, et les confondre coûte du travail.
