@@ -442,7 +442,7 @@ function bouger(l,i,d){
    chargement : on ne perd pas ce qui était déjà écrit.                       */
 
 const DEPOT='caravane.depot.v1';
-const SECTIONS=['monde','personnages','objets','missions','evenements','icones'];
+const SECTIONS=['monde','personnages','roles','objets','missions','evenements','icones'];
 /* d'où venait chaque section avant le dépôt, et sous quelle forme */
 const ANCIENNES={
   personnages:['caravane.atelier-personnages.v1','repertoire'],
@@ -500,7 +500,8 @@ function depotResume(){
     objets:n('objets','objets'),
     missions:n('missions','missions'),
     evenements:n('evenements','evenements'),
-    icones:n('icones','icones')
+    icones:n('icones','icones'),
+    roles:n('roles','roles')
   };
 }
 
@@ -514,6 +515,10 @@ const CATEGORIES=[
    atelier:'atelier-carte.html',        champ:'lieux'},
   {nom:'personnages',titre:'Les personnages', un:'personnage', des:'personnages',
    atelier:'atelier-personnages.html',  champ:'personnages'},
+  /* Les rôles n'ont pas de fichier à eux : ils voyagent dans personnages.json,
+     puisque c'est là qu'on s'en sert. Mais ils se listent et se rouvrent. */
+  {nom:'roles',      titre:'Les rôles',       un:'rôle',       des:'rôles',
+   atelier:'atelier-personnages.html',  champ:'roles',  lien:'role'},
   {nom:'objets',     titre:'Les objets',      un:'objet',      des:'objets',
    atelier:'atelier-objets.html',       champ:'objets'},
   {nom:'missions',   titre:'Les missions',    un:'mission',    des:'missions',
@@ -536,9 +541,15 @@ function detailCodex(section,x,depot){
     if(x.rang)bouts.push(x.rang);
     if(x.contree)bouts.push('en '+nomDe('monde','contrees',x.contree));
     if(x.carte)bouts.push('carte '+x.carte);
+  }else if(section==='roles'){
+    if(x.feminin)bouts.push('au féminin : '+x.feminin);
+    else bouts.push('le même au féminin');
+    const n=((depot.personnages&&depot.personnages.personnages)||[])
+      .filter(p=>p&&p.role===x.cle).length;
+    bouts.push(n?n+(n>1?' personnages':' personnage'):'personne encore');
   }else if(section==='personnages'){
     if(x.titre)bouts.push(x.titre);
-    if(x.role)bouts.push(x.role);
+    if(x.role)bouts.push(nomRole(x.role,x.accord)||x.role);
     if(x.lieu)bouts.push('à '+nomDe('monde','lieux',x.lieu));
     const c=(x.couches||[]).length;
     if(c)bouts.push(c+(c>1?' couches':' couche'));
@@ -581,6 +592,7 @@ function inacheveCodex(section,x){
   if(!(x.nom||x.titre))return 'sans nom';
   if(section==='missions'&&!(x.jalons||[]).length)return 'sans jalon';
   if(section==='personnages'&&!x.premiere)return 'sans description';
+  if(section==='roles'&&!x.explique)return 'sans explication';
   return '';
 }
 function teinteContree(depot,cle){
@@ -600,14 +612,19 @@ function depotCodex(){
         manque:inacheveCodex(c.nom,x),
         glyphe:c.nom==='icones'?x.cle
               :c.nom==='monde'?'borne'
+              :c.nom==='roles'?'ermite'
               :(x.ico&&x.ico.glyphe)||'',
         svg:c.nom==='icones'?(x.svg||''):'',
         /* l'icône porte sa teinte en propre, un lieu prend celle de sa
            contrée, et tout le reste la range dans son petit objet « ico » */
         teinte:c.nom==='icones'?teinteDe(x)
               :c.nom==='monde'?teinteContree(D,x.contree)
+              :c.nom==='roles'?'#9C9484'
               :teinteDe(x.ico||{}),
-        lien:x.cle?c.atelier+'#cle='+encodeURIComponent(x.cle):c.atelier
+        /* un rôle se rouvre par « #role= », pour ne pas se confondre avec le
+           personnage qui porterait la même clé */
+        lien:x.cle?c.atelier+'#'+(c.lien||'cle')+'='+encodeURIComponent(x.cle)
+                  :c.atelier
       }))
     };
   });
@@ -744,12 +761,24 @@ function reprendreSauvegarde(d,mode){
   return pris;
 }
 /* Un fichier du jeu, tel que data/ l'attend. */
+function contenuDuJeu(section,brut){
+  const c=nettoyer(JSON.parse(JSON.stringify(brut)));
+  /* Les personnages emportent les rôles dont ils se servent. Sans cela le jeu
+     n'aurait aucun moyen d'écrire {role} : les rôles que vous ajoutez ne sont
+     nulle part ailleurs, et un second fichier pour si peu serait une occasion
+     de plus de l'oublier. */
+  if(section==='personnages'){
+    const r=rolesEmployes(c.personnages);
+    if(Object.keys(r).length)c.roles=r;
+  }
+  return c;
+}
 function fichierDuJeu(section){
   chargerDepot();
   const c=CATEGORIES.find(x=>x.nom===section);
-  if(!c||!D[section])return null;
+  if(!c||!D[section]||!FICHIERS_JEU[section])return null;
   return {nom:FICHIERS_JEU[section],
-          contenu:nettoyer(JSON.parse(JSON.stringify(D[section]))),
+          contenu:contenuDuJeu(section,D[section]),
           combien:((D[section][c.champ])||[]).length};
 }
 
@@ -846,6 +875,50 @@ function nomsGlyphes(){
   return noms;
 }
 const estGlypheDessine=k=>Object.prototype.hasOwnProperty.call(nomsGlyphes(),k);
+
+/* ═══════════════ les rôles ═══════════════
+   Même principe que les dessins : quinze rôles arrivent avec le jeu, et l'on en
+   ajoute autant qu'on veut. Les vôtres vivent dans le dépôt, se choisissent
+   comme les autres, et voyagent avec la sauvegarde.
+
+   Un rôle porte son **féminin** quand le mot change — échevin, échevine. Le
+   texte s'écrit une fois, avec {role}, et s'accorde sur le personnage. Beaucoup
+   de rôles n'en ont pas besoin : guide, ermite, aubergiste sont les mêmes des
+   deux côtés, et le champ reste vide. */
+function rolesTous(){
+  const miens=depotLire('roles');
+  const propres={};
+  ((miens&&miens.roles)||[]).forEach(r=>{
+    if(!r||!r.cle)return;
+    propres[r.cle]={nom:r.nom||r.cle,feminin:r.feminin||'',explique:r.explique||'',
+                    mien:true};
+  });
+  const livres=(typeof REF!=='undefined'&&REF.vocabulairePersonnages
+    &&REF.vocabulairePersonnages.roles)||{};
+  return Object.assign({},livres,propres);
+}
+const estRoleMien=k=>{
+  const r=rolesTous()[k];
+  return !!(r&&r.mien);
+};
+/* Le rôle en toutes lettres, accordé. C'est ce que {role} donne dans un texte. */
+function nomRole(cle,accord){
+  const r=rolesTous()[cle];
+  if(!r)return '';
+  return (accord==='f'&&r.feminin)?r.feminin:r.nom;
+}
+/* Ce qui part avec les personnages : seulement les rôles dont ils se servent,
+   pour que le jeu sache écrire {role} sans qu'on lui porte un second fichier. */
+function rolesEmployes(personnages){
+  const tous=rolesTous(), pris={};
+  (personnages||[]).forEach(p=>{
+    const r=p&&p.role&&tous[p.role];
+    if(!r)return;
+    pris[p.role]={nom:r.nom};
+    if(r.feminin)pris[p.role].feminin=r.feminin;
+  });
+  return pris;
+}
 function teinteDe(ico){
   if(ico&&ico.teinte)return ico.teinte;
   const t=(typeof REF!=='undefined'&&REF.natures)||{};
@@ -1274,7 +1347,8 @@ let dit='';                /* ce qu'on vient de faire, montré un instant */
 function rendreSauvegardes(){
   const r=depotResume();
   const rien=!Object.keys(r).some(k=>r[k]);
-  const prets=CATEGORIES.filter(c=>r[c.nom]);
+  /* les rôles n'ont pas de fichier à eux : ils voyagent dans personnages.json */
+  const prets=CATEGORIES.filter(c=>r[c.nom]&&FICHIERS_JEU[c.nom]);
 
   let h=`<div class="bloc or">
     <h3>La sauvegarde d'atelier</h3>

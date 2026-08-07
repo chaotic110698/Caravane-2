@@ -17,25 +17,79 @@ dessous, sans jamais rien recouvrir.
 
 ## Les rôles
 
-15 rôles, et la liste est ouverte : il en manque un, il est ajouté.
+15 rôles arrivent avec le jeu, et **la liste est ouverte** :
+le bouton **+ Nouveau rôle**, sous la liste déroulante, en ajoute autant que vous
+voulez, sans quitter la fiche. Le rôle est attribué au personnage en cours dès
+qu'il est créé — c'est pour lui qu'on l'a fait.
 
-| rôle | ce que ça vous donne |
-|---|---|
-| **Échevin** | Il tient un registre, une charge, un sceau. Il donne des autorisations et des ennuis. |
-| **Marchand** | Il achète, il vend, il sait qui a besoin de quoi. Le commanditaire le plus naturel. |
-| **Forgeron** | Il fait et répare les armes et les essieux. Il connaît le métal, donc les mines. |
-| **Aubergiste** | Tout passe par sa salle. C'est par lui qu'on apprend les choses avant les autres. |
-| **Capitaine de garde** | Il tient la porte et les hommes. Il décide qui entre et qui attend. |
-| **Clerc** | Il écrit, il archive, il se souvient. Le lore ancien passe par lui. |
-| **Contrebandier** | Il connaît les chemins que personne ne relève, et le prix du silence. |
-| **Guide** | Il a fait la route cent fois. Il sait où l'eau est bonne et où l'on ne campe pas. |
-| **Ermite** | Il vit à l'écart et sait ce que la ville a oublié. Rarement bavard d'emblée. |
-| **Artisan** | Verrier, tisserand, enlumineur : celui qui fait ce que la caravane transporte. |
-| **Prieur** | Il tient un temple, une règle, une mémoire. Le lore religieux est chez lui. |
-| **Noble** | Il a des terres, une dette d'honneur et le bras long. On ne lui refuse pas facilement. |
-| **Mineur** | Il descend. Il sait ce qu'il y a en dessous, et ce qu'on n'en remonte pas. |
-| **Batelier** | Il tient un bac, une barque, un quai. Indispensable aux ports. |
-| **Veneur** | Il chasse et suit les traces. Il voit passer ce que les routes ne montrent pas. |
+| rôle | ce que ça vous donne | au féminin |
+|---|---|---|
+| **Échevin** | Il tient un registre, une charge, un sceau. Il donne des autorisations et des ennuis. | Échevine |
+| **Marchand** | Il achète, il vend, il sait qui a besoin de quoi. Le commanditaire le plus naturel. | Marchande |
+| **Forgeron** | Il fait et répare les armes et les essieux. Il connaît le métal, donc les mines. | Forgeronne |
+| **Aubergiste** | Tout passe par sa salle. C'est par lui qu'on apprend les choses avant les autres. | *le même* |
+| **Capitaine de garde** | Il tient la porte et les hommes. Il décide qui entre et qui attend. | *le même* |
+| **Clerc** | Il écrit, il archive, il se souvient. Le lore ancien passe par lui. | *le même* |
+| **Contrebandier** | Il connaît les chemins que personne ne relève, et le prix du silence. | Contrebandière |
+| **Guide** | Il a fait la route cent fois. Il sait où l'eau est bonne et où l'on ne campe pas. | *le même* |
+| **Ermite** | Il vit à l'écart et sait ce que la ville a oublié. Rarement bavard d'emblée. | *le même* |
+| **Artisan** | Verrier, tisserand, enlumineur : celui qui fait ce que la caravane transporte. | Artisane |
+| **Prieur** | Il tient un temple, une règle, une mémoire. Le lore religieux est chez lui. | Prieure |
+| **Noble** | Il a des terres, une dette d'honneur et le bras long. On ne lui refuse pas facilement. | *le même* |
+| **Mineur** | Il descend. Il sait ce qu'il y a en dessous, et ce qu'on n'en remonte pas. | Mineuse |
+| **Batelier** | Il tient un bac, une barque, un quai. Indispensable aux ports. | Batelière |
+| **Veneur** | Il chasse et suit les traces. Il voit passer ce que les routes ne montrent pas. | Veneuse |
+
+### Ce qu'un rôle demande
+
+Trois champs, dont un seul est obligatoire.
+
+| champ | ce qu'on y met | obligatoire |
+|---|---|---|
+| **Nom** | `Maître de poste` — tel qu'on le lira. **Accents, espaces et majuscules sont les bienvenus.** | oui |
+| **Au féminin** | `Maîtresse de poste`. **À laisser vide si le mot ne change pas.** | non |
+| **Ce qu'il fait** | une phrase, pour vous y retrouver dans six mois. | non |
+
+La **clé** ne se tape jamais : elle se fabrique toute seule à partir du nom, en
+minuscules, sans accent, les espaces devenus des tirets — *Maître de poste* donne
+`maitre-de-poste`. C'est elle que les fichiers portent, et c'est pour ça qu'elle
+reste simple. Deux conséquences :
+
+- deux noms qui donnent la même clé ne peuvent pas coexister, et l'atelier vous le
+  dit **avant** d'ajouter, en nommant celui qui occupe la place ;
+- renommer un rôle change sa clé, et les personnages qui le portaient **suivent**
+  tout seuls. Rien à recoller.
+
+### Le féminin est déclaré, jamais deviné
+
+Écrivez **{role}** dans un texte : il sort accordé sur l'**accord** du personnage.
+Le texte s'écrit une fois et sert aux deux.
+
+> Le convoi trouve **{le} {role}** devant la porte close.
+
+Aucune règle ne devine le féminin d'un mot français : *échevin* fait *échevine*,
+mais *guide* ne prend pas de e et *veneur* fait *veneuse*. Le rôle porte donc le sien,
+écrit à la main — et les rôles épicènes laissent le champ vide, ce qui est le cas
+d'*aubergiste*, *capitaine de garde*, *clerc*, *guide*, *ermite*, *noble*.
+
+Si un personnage est **féminin** et que son rôle n'a pas de féminin déclaré alors que
+sa terminaison en appellerait un, l'atelier vous le signale en or. Ce n'est pas une
+faute : c'est peut-être voulu.
+
+> **Attention à l'élision.** `{le} {role}` donne « le échevin ». Devant une voyelle,
+> écrivez l'article vous-même : `L'{role} ne dit rien.`
+
+### Où ils vivent
+
+Les rôles que vous ajoutez sont rangés à part des personnages, parce qu'un rôle
+survit au personnage qui l'a fait naître. On les retrouve dans le **codex** du hub,
+sous *Les rôles*, avec le nombre de personnages qui les portent, et un bouton pour
+les rouvrir.
+
+Ils n'ont **pas de fichier à eux** : ils voyagent dans `personnages.json`, sous une
+clé `roles`, et l'atelier n'y met que ceux dont vos personnages se servent. C'est ce
+qui permet au jeu d'écrire `{role}` sans qu'on lui porte un second fichier — et une
+occasion de moins de l'oublier.
 
 ## Ce qui fait mériter une couche
 

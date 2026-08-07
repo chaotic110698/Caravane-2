@@ -46,6 +46,26 @@ Côté code, tout passe par cinq fonctions de `commun.js` : `depotLire`, `depotE
 a écrit) et `depotCodex` (la liste plate que le hub affiche). Ajouter une catégorie au
 codex, c'est ajouter une ligne au tableau `CATEGORIES`.
 
+## Les rôles sont une liste ouverte
+
+Quinze rôles arrivent avec le jeu, dans `data/vocabulaire-personnages.json`. On en
+ajoute autant qu'on veut depuis la fiche d'un personnage, sans quitter l'atelier : les
+vôtres tiennent leur propre section du dépôt, `roles`, parce qu'un rôle survit au
+personnage qui l'a fait naître.
+
+Un rôle porte un **nom**, un **féminin** et une phrase d'**explication**. Le féminin est
+déclaré, jamais deviné : *échevin* fait *échevine*, mais *guide* ne prend pas de e — un
+champ vide veut dire « le même des deux côtés ». C'est ce qui permet d'écrire `{role}`
+une fois dans un texte et de le voir s'accorder sur l'accord du personnage.
+
+La clé se fabrique depuis le nom (`slug()` : minuscules, sans accent, tirets). Renommer
+un rôle change sa clé, et les personnages qui le portaient suivent.
+
+Les rôles n'ont **pas de fichier à eux** : `contenuDuJeu('personnages', …)` glisse dans
+`personnages.json` une carte `roles` limitée à ceux dont les personnages se servent. Le
+jeu la lit dans `ROLES` et s'en sert pour `{role}` — auparavant `sacGens()` renvoyait
+`role:''`, et le trou sortait vide.
+
 ## Les deux sortes de sauvegarde
 
 Elles ne servent pas à la même chose, et les confondre coûte du travail.

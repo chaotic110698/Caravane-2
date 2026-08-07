@@ -1,30 +1,87 @@
 {
   "format": "caravane.vocabulaire-personnages.v1",
   "apropos": "Le catalogue de ce qu'un personnage peut être et de ce qui fait mériter son lore. L'atelier de personnages en tire ses formulaires, comme l'atelier d'événements tire les siens de vocabulaire-evenements.json. Les deux se complètent : les conditions d'une couche peuvent aussi bien interroger la relation (ci-dessous) que l'état du convoi (l'autre catalogue).",
-
   "roles": {
-    "echevin": { "nom": "Échevin", "explique": "Il tient un registre, une charge, un sceau. Il donne des autorisations et des ennuis." },
-    "marchand": { "nom": "Marchand", "explique": "Il achète, il vend, il sait qui a besoin de quoi. Le commanditaire le plus naturel." },
-    "forgeron": { "nom": "Forgeron", "explique": "Il fait et répare les armes et les essieux. Il connaît le métal, donc les mines." },
-    "aubergiste": { "nom": "Aubergiste", "explique": "Tout passe par sa salle. C'est par lui qu'on apprend les choses avant les autres." },
-    "capitaine": { "nom": "Capitaine de garde", "explique": "Il tient la porte et les hommes. Il décide qui entre et qui attend." },
-    "clerc": { "nom": "Clerc", "explique": "Il écrit, il archive, il se souvient. Le lore ancien passe par lui." },
-    "contrebandier": { "nom": "Contrebandier", "explique": "Il connaît les chemins que personne ne relève, et le prix du silence." },
-    "guide": { "nom": "Guide", "explique": "Il a fait la route cent fois. Il sait où l'eau est bonne et où l'on ne campe pas." },
-    "ermite": { "nom": "Ermite", "explique": "Il vit à l'écart et sait ce que la ville a oublié. Rarement bavard d'emblée." },
-    "artisan": { "nom": "Artisan", "explique": "Verrier, tisserand, enlumineur : celui qui fait ce que la caravane transporte." },
-    "prieur": { "nom": "Prieur", "explique": "Il tient un temple, une règle, une mémoire. Le lore religieux est chez lui." },
-    "noble": { "nom": "Noble", "explique": "Il a des terres, une dette d'honneur et le bras long. On ne lui refuse pas facilement." },
-    "mineur": { "nom": "Mineur", "explique": "Il descend. Il sait ce qu'il y a en dessous, et ce qu'on n'en remonte pas." },
-    "batelier": { "nom": "Batelier", "explique": "Il tient un bac, une barque, un quai. Indispensable aux ports." },
-    "veneur": { "nom": "Veneur", "explique": "Il chasse et suit les traces. Il voit passer ce que les routes ne montrent pas." }
+    "echevin": {
+      "nom": "Échevin",
+      "explique": "Il tient un registre, une charge, un sceau. Il donne des autorisations et des ennuis.",
+      "feminin": "Échevine"
+    },
+    "marchand": {
+      "nom": "Marchand",
+      "explique": "Il achète, il vend, il sait qui a besoin de quoi. Le commanditaire le plus naturel.",
+      "feminin": "Marchande"
+    },
+    "forgeron": {
+      "nom": "Forgeron",
+      "explique": "Il fait et répare les armes et les essieux. Il connaît le métal, donc les mines.",
+      "feminin": "Forgeronne"
+    },
+    "aubergiste": {
+      "nom": "Aubergiste",
+      "explique": "Tout passe par sa salle. C'est par lui qu'on apprend les choses avant les autres."
+    },
+    "capitaine": {
+      "nom": "Capitaine de garde",
+      "explique": "Il tient la porte et les hommes. Il décide qui entre et qui attend."
+    },
+    "clerc": {
+      "nom": "Clerc",
+      "explique": "Il écrit, il archive, il se souvient. Le lore ancien passe par lui."
+    },
+    "contrebandier": {
+      "nom": "Contrebandier",
+      "explique": "Il connaît les chemins que personne ne relève, et le prix du silence.",
+      "feminin": "Contrebandière"
+    },
+    "guide": {
+      "nom": "Guide",
+      "explique": "Il a fait la route cent fois. Il sait où l'eau est bonne et où l'on ne campe pas."
+    },
+    "ermite": {
+      "nom": "Ermite",
+      "explique": "Il vit à l'écart et sait ce que la ville a oublié. Rarement bavard d'emblée."
+    },
+    "artisan": {
+      "nom": "Artisan",
+      "explique": "Verrier, tisserand, enlumineur : celui qui fait ce que la caravane transporte.",
+      "feminin": "Artisane"
+    },
+    "prieur": {
+      "nom": "Prieur",
+      "explique": "Il tient un temple, une règle, une mémoire. Le lore religieux est chez lui.",
+      "feminin": "Prieure"
+    },
+    "noble": {
+      "nom": "Noble",
+      "explique": "Il a des terres, une dette d'honneur et le bras long. On ne lui refuse pas facilement."
+    },
+    "mineur": {
+      "nom": "Mineur",
+      "explique": "Il descend. Il sait ce qu'il y a en dessous, et ce qu'on n'en remonte pas.",
+      "feminin": "Mineuse"
+    },
+    "batelier": {
+      "nom": "Batelier",
+      "explique": "Il tient un bac, une barque, un quai. Indispensable aux ports.",
+      "feminin": "Batelière"
+    },
+    "veneur": {
+      "nom": "Veneur",
+      "explique": "Il chasse et suit les traces. Il voit passer ce que les routes ne montrent pas.",
+      "feminin": "Veneuse"
+    }
   },
-
   "accords": {
-    "f": { "nom": "Féminin", "explique": "Les textes s'accordent au féminin : « elle est arrivée »." },
-    "m": { "nom": "Masculin", "explique": "Les textes s'accordent au masculin : « il est arrivé »." }
+    "f": {
+      "nom": "Féminin",
+      "explique": "Les textes s'accordent au féminin : « elle est arrivée »."
+    },
+    "m": {
+      "nom": "Masculin",
+      "explique": "Les textes s'accordent au masculin : « il est arrivé »."
+    }
   },
-
   "interrogations": {
     "rencontres": {
       "nom": "Combien de fois on l'a croisé",
@@ -42,16 +99,42 @@
       "explique": "Pour enchaîner : la troisième révélation n'a de sens qu'après les deux premières."
     }
   },
-
   "trous": {
-    "nom": { "explique": "Son nom seul.", "exemple": "Orlanne" },
-    "titre": { "explique": "Son titre, s'il en a un.", "exemple": "Dame" },
-    "appellation": { "explique": "Titre et nom ensemble, avec l'élision qui convient.", "exemple": "Dame Orlanne" },
-    "role": { "explique": "Ce qu'il fait, en toutes lettres.", "exemple": "échevine" },
-    "lieu": { "explique": "Le lieu où on le trouve.", "exemple": "Aurelium" },
-    "contree": { "explique": "La contrée de ce lieu.", "exemple": "les Terres humaines" },
-    "il": { "explique": "Le pronom accordé.", "exemple": "elle" },
-    "le": { "explique": "L'article défini accordé.", "exemple": "la" },
-    "e": { "explique": "La marque d'accord à coller à un participe.", "exemple": "arrivé{e} donne « arrivée »" }
+    "nom": {
+      "explique": "Son nom seul.",
+      "exemple": "Orlanne"
+    },
+    "titre": {
+      "explique": "Son titre, s'il en a un.",
+      "exemple": "Dame"
+    },
+    "appellation": {
+      "explique": "Titre et nom ensemble, avec l'élision qui convient.",
+      "exemple": "Dame Orlanne"
+    },
+    "role": {
+      "explique": "Ce qu'il fait, en toutes lettres.",
+      "exemple": "échevine"
+    },
+    "lieu": {
+      "explique": "Le lieu où on le trouve.",
+      "exemple": "Aurelium"
+    },
+    "contree": {
+      "explique": "La contrée de ce lieu.",
+      "exemple": "les Terres humaines"
+    },
+    "il": {
+      "explique": "Le pronom accordé.",
+      "exemple": "elle"
+    },
+    "le": {
+      "explique": "L'article défini accordé.",
+      "exemple": "la"
+    },
+    "e": {
+      "explique": "La marque d'accord à coller à un participe.",
+      "exemple": "arrivé{e} donne « arrivée »"
+    }
   }
 }

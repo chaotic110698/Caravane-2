@@ -4807,6 +4807,7 @@ function creerMondeEcrit(){
 /* ═══════════════ les contenus d'auteur ═══════════════ */
 let EVENEMENTS_DONNEES=[];   /* data/evenements.json → evenements */
 let PERSONNAGES=null;        /* clé → personnage */
+let ROLES={};                /* clé de rôle → {nom, feminin} — voyage avec eux */
 let OBJETS=null;             /* clé → objet unique */
 let MISSIONS_ECRITES=[];     /* data/missions-ecrites.json → missions */
 let TYPES_PAR_CLE=null, TYPES_CAP_PAR_CLE=null;
@@ -4818,10 +4819,13 @@ function assignerAuteur(d){
   if(MONDE)batirTopologie();
   EVENEMENTS_DONNEES=(d.evenements&&d.evenements.evenements)||[];
   MISSIONS_ECRITES=(d['missions-ecrites']&&d['missions-ecrites'].missions)||[];
-  PERSONNAGES=null;
+  PERSONNAGES=null;ROLES={};
   if(d.personnages&&d.personnages.personnages){
     PERSONNAGES={};
     d.personnages.personnages.forEach(p=>{PERSONNAGES[p.cle]=p;});
+    /* Les rôles voyagent dans le même fichier : l'atelier n'y met que ceux dont
+       les personnages se servent, et c'est ce qui remplit {role}. */
+    ROLES=d.personnages.roles||{};
   }
   OBJETS=null;
   if(d.objets&&d.objets.objets){
@@ -5198,12 +5202,23 @@ function appellationDe(p){
   if(/ de$/.test(t))return commenceParVoyelle(n)?t.slice(0,-3)+' d\''+n:t+' '+n;
   return t+' '+n;
 }
+/* Le rôle en toutes lettres, accordé. Le féminin est déclaré, jamais deviné :
+   « échevine » se dit, mais « guide » ne prend pas de e. */
+function nomRoleDe(p){
+  const r=ROLES[p&&p.role];
+  if(!r)return '';
+  return ((p.accord==='f'&&r.feminin)?r.feminin:r.nom||'').toLowerCase();
+}
 /* Les trous d'un texte de lore : l'accord vient du personnage, pas du texte. */
 function sacGens(p){
   const f=p.accord==='f';
+  const l=p.lieu&&PAR_CLE&&PAR_CLE[p.lieu]!==undefined
+    ?(S.villes[PAR_CLE[p.lieu]]||{}):{};
   return {nom:p.nom||'',titre:p.titre||'',appellation:appellationDe(p),
-    role:'',lieu:p.lieu?(S.villes[PAR_CLE?PAR_CLE[p.lieu]:0]||{}).nom||'':'',
-    contree:'',il:f?'elle':'il',le:f?'la':'le',e:f?'e':''};
+    role:nomRoleDe(p),lieu:l.nom||'',
+    contree:(l.contree!==undefined&&CONTREES&&CONTREES[l.contree])
+      ?CONTREES[l.contree].nom:'',
+    il:f?'elle':'il',le:f?'la':'le',e:f?'e':''};
 }
 function sacObjet(o){
   const f=o.accord==='f';

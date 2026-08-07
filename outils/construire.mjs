@@ -151,10 +151,60 @@ ecrit('# Écrire un personnage — mode d\'emploi', '',
   'dessous, sans jamais rien recouvrir.', '');
 
 ecrit('## Les rôles', '',
-  `${Object.keys(VP.roles).length} rôles, et la liste est ouverte : il en manque un, il est ajouté.`, '',
-  '| rôle | ce que ça vous donne |', '|---|---|');
-Object.entries(VP.roles).forEach(([k, d]) => ecrit(`| **${d.nom}** | ${d.explique} |`));
+  `${Object.keys(VP.roles).length} rôles arrivent avec le jeu, et **la liste est ouverte** :`,
+  'le bouton **+ Nouveau rôle**, sous la liste déroulante, en ajoute autant que vous',
+  'voulez, sans quitter la fiche. Le rôle est attribué au personnage en cours dès',
+  'qu\'il est créé — c\'est pour lui qu\'on l\'a fait.', '',
+  '| rôle | ce que ça vous donne | au féminin |', '|---|---|---|');
+Object.entries(VP.roles).forEach(([k, d]) =>
+  ecrit(`| **${d.nom}** | ${d.explique} | ${d.feminin || '*le même*'} |`));
 ecrit('');
+
+ecrit('### Ce qu\'un rôle demande', '',
+  'Trois champs, dont un seul est obligatoire.', '',
+  '| champ | ce qu\'on y met | obligatoire |', '|---|---|---|',
+  '| **Nom** | `Maître de poste` — tel qu\'on le lira. ' +
+    '**Accents, espaces et majuscules sont les bienvenus.** | oui |',
+  '| **Au féminin** | `Maîtresse de poste`. **À laisser vide si le mot ne change pas.** | non |',
+  '| **Ce qu\'il fait** | une phrase, pour vous y retrouver dans six mois. | non |', '',
+  'La **clé** ne se tape jamais : elle se fabrique toute seule à partir du nom, en',
+  'minuscules, sans accent, les espaces devenus des tirets — *Maître de poste* donne',
+  '`maitre-de-poste`. C\'est elle que les fichiers portent, et c\'est pour ça qu\'elle',
+  'reste simple. Deux conséquences :', '',
+  '- deux noms qui donnent la même clé ne peuvent pas coexister, et l\'atelier vous le',
+  '  dit **avant** d\'ajouter, en nommant celui qui occupe la place ;',
+  '- renommer un rôle change sa clé, et les personnages qui le portaient **suivent**',
+  '  tout seuls. Rien à recoller.', '');
+
+ecrit('### Le féminin est déclaré, jamais deviné', '',
+  'Écrivez **{role}** dans un texte : il sort accordé sur l\'**accord** du personnage.',
+  'Le texte s\'écrit une fois et sert aux deux.', '',
+  '> Le convoi trouve **{le} {role}** devant la porte close.', '',
+  'Aucune règle ne devine le féminin d\'un mot français : *échevin* fait *échevine*,',
+  'mais *guide* ne prend pas de e et *veneur* fait *veneuse*. Le rôle porte donc le sien,',
+  'écrit à la main — et les rôles épicènes laissent le champ vide, ce qui est le cas',
+  /* « de aubergiste » ne se dit pas, et ce paragraphe parle justement d'élision */
+  (() => {
+    const e = Object.entries(VP.roles).filter(([, d]) => !d.feminin)
+      .map(([, d]) => `*${d.nom.toLowerCase()}*`);
+    const premier = e[0].replace(/^\*/, '');
+    return (/^[aeiouyéèêh]/.test(premier) ? "d'" : 'de ') + e.join(', ') + '.';
+  })(), '',
+  'Si un personnage est **féminin** et que son rôle n\'a pas de féminin déclaré alors que',
+  'sa terminaison en appellerait un, l\'atelier vous le signale en or. Ce n\'est pas une',
+  'faute : c\'est peut-être voulu.', '',
+  '> **Attention à l\'élision.** `{le} {role}` donne « le échevin ». Devant une voyelle,',
+  '> écrivez l\'article vous-même : `L\'{role} ne dit rien.`', '');
+
+ecrit('### Où ils vivent', '',
+  'Les rôles que vous ajoutez sont rangés à part des personnages, parce qu\'un rôle',
+  'survit au personnage qui l\'a fait naître. On les retrouve dans le **codex** du hub,',
+  'sous *Les rôles*, avec le nombre de personnages qui les portent, et un bouton pour',
+  'les rouvrir.', '',
+  'Ils n\'ont **pas de fichier à eux** : ils voyagent dans `personnages.json`, sous une',
+  'clé `roles`, et l\'atelier n\'y met que ceux dont vos personnages se servent. C\'est ce',
+  'qui permet au jeu d\'écrire `{role}` sans qu\'on lui porte un second fichier — et une',
+  'occasion de moins de l\'oublier.', '');
 
 ecrit('## Ce qui fait mériter une couche', '',
   'Une couche s\'ouvre quand **toutes** ses conditions sont vraies. Trois d\'entre elles',
