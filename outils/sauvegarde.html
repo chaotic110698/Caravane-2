@@ -1,3 +1,117 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Sauvegarde et fichiers du jeu — Caravane</title>
+<meta name="description" content="Emporter son travail d'un appareil à l'autre, et livrer les fichiers au dossier data/ du jeu.">
+<meta name="theme-color" content="#1C1A17">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icone.png">
+<style>
+:root{
+  --fond:#1C1A17; --fond-clair:#26231F; --bord:#3A352E;
+  --encre:#E8E1D4; --encre-pale:#9C9484;
+  --or:#C9A227; --minium:#C24A32; --vert:#6E9B6A; --azur:#4A7BC8; --mauve:#A084C0;
+  --r:4px;
+  --display:'Iowan Old Style','Hoefler Text','Palatino Linotype',Palatino,Georgia,serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;
+  background:var(--fond);color:var(--encre);-webkit-tap-highlight-color:transparent;
+  padding:0 0 calc(28px + env(safe-area-inset-bottom,0px));
+  background-image:radial-gradient(900px 420px at 50% -180px,#2A251C 0%,transparent 70%)}
+.large{max-width:760px;margin:0 auto;padding:0 16px}
+
+/* ── le fil, en haut de chaque page dédiée ── */
+.fil{display:flex;align-items:center;gap:9px;padding:14px 0 0}
+.fil a{font-size:13.5px;color:var(--encre-pale);text-decoration:none;
+  border:1px solid var(--bord);border-radius:20px;padding:6px 13px;background:var(--fond-clair)}
+.fil a:hover{color:var(--or);border-color:var(--or)}
+header{padding:22px 0 22px}
+header h1{font-family:var(--display);font-size:31px;font-weight:600;line-height:1.15}
+header h1 b{color:var(--or);font-weight:600}
+header p{color:var(--encre-pale);font-size:14.5px;margin-top:9px;line-height:1.55}
+h2.section{font-size:12px;font-variant:small-caps;letter-spacing:.13em;color:var(--or);
+  margin:28px 0 12px;padding-left:2px}
+
+.bloc{background:var(--fond-clair);border:1px solid var(--bord);border-radius:var(--r);
+  padding:15px 16px;font-size:14.5px;line-height:1.6;color:var(--encre-pale)}
+.bloc h3{font-family:var(--display);font-size:17px;color:var(--encre);font-weight:600;
+  margin-bottom:7px}
+.bloc b{color:var(--encre)}
+.bloc p+p{margin-top:9px}
+.bloc.or{border-left:3px solid var(--or)}
+.bloc.vert{border-left:3px solid var(--vert)}
+
+#sauvegardes{display:grid;gap:11px}
+.boutons{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+button.gros{font:inherit;font-size:14px;padding:11px 16px;border-radius:var(--r);
+  border:1px solid var(--bord);background:var(--fond);color:var(--encre);cursor:pointer;
+  text-align:left}
+button.gros:hover{border-color:var(--or)}
+button.gros.fort{background:var(--or);border-color:var(--or);color:#1C1A17;font-weight:600}
+button.gros[disabled]{opacity:.45;cursor:default}
+.fichiers{display:grid;gap:7px;margin-top:12px}
+.fichier{display:flex;align-items:center;gap:11px;padding:10px 12px;background:var(--fond);
+  border:1px solid var(--bord);border-radius:var(--r);width:100%;font:inherit;font-size:14px;
+  color:var(--encre);cursor:pointer;text-align:left}
+.fichier:hover{border-color:var(--or)}
+.fichier code{font-size:13px;color:var(--or);font-family:ui-monospace,Menlo,monospace}
+.fichier .combien{margin-left:auto;font-size:12.5px;color:var(--encre-pale);
+  font-variant-numeric:tabular-nums;flex:none}
+.fichier .fleche{flex:none;color:var(--encre-pale)}
+#reprise{margin-top:12px;padding:13px 14px;background:var(--fond);border:1px solid var(--or);
+  border-radius:var(--r);font-size:14px;line-height:1.55}
+#reprise ul{list-style:none;margin:8px 0 0;display:grid;gap:3px}
+#reprise li{font-size:13.5px;color:var(--encre-pale)}
+#reprise li b{color:var(--encre)}
+#reprise.rate{border-color:var(--minium)}
+.dit{margin-top:10px;font-size:13.5px;color:var(--vert)}
+.aide{font-size:13px;color:var(--encre-pale);line-height:1.55}
+
+footer{margin-top:34px;padding-top:20px;border-top:1px solid var(--bord);
+  font-size:12.5px;color:var(--encre-pale);text-align:center;line-height:1.7}
+footer a{color:var(--or);text-decoration:none}
+@media (min-width:620px){header h1{font-size:37px}}
+</style>
+</head>
+<body>
+
+<div class="large">
+  <nav class="fil"><a href="index.html">◂ Le hub</a><a href="tutoriels.html">Les modes d'emploi</a></nav>
+  <header>
+    <h1>Sauvegarde et <b>fichiers du jeu</b></h1>
+    <p>Deux besoins, deux boutons : emporter son travail d'un appareil à l'autre,
+       et livrer un fichier au dossier <b>data/</b> du jeu. Le premier fichier ne se
+       dépose pas dans le jeu ; les seconds ne se relisent pas dans les ateliers.</p>
+  </header>
+
+  <main>
+    <div id="sauvegardes"></div>
+    <input type="file" id="fichier-sauve" accept=".json,application/json" hidden>
+
+    <h2 class="section">Ce qui ne voyage pas</h2>
+    <div class="bloc">
+      <p>Votre travail est déjà sauvegardé tout seul dans ce navigateur, dans un dépôt
+         que les huit pages partagent, et il survit à la fermeture de l'onglet.
+         <b>Sauvegardez quand même</b> : un navigateur qu'on nettoie emporte sa mémoire,
+         et un téléphone ne lit pas le dépôt d'un ordinateur.</p>
+      <p>L'<b>image de fond</b> des cartes reste sur la machine où vous l'avez déposée —
+         trop lourde pour un JSON. Redéposez-la sur l'autre appareil : les lieux
+         retomberont dessus, ils sont en pixels de cette image.</p>
+    </div>
+  </main>
+
+  <footer>
+    Caravane — le jeu et son moteur vivent dans
+    <a href="https://github.com/chaotic110698/Caravane-2">Caravane-2</a>.
+  </footer>
+</div>
+
+<!-- la machinerie partagée, posée par outils/construire.mjs -->
+<script id="commun">
 /* La machinerie partagée des ateliers de Caravane.
 
    Ce fichier n'est jamais chargé par une page : outils/construire.mjs le recopie
@@ -1592,3 +1706,133 @@ if(typeof document!=='undefined'){
     document.addEventListener('DOMContentLoaded',installerBandeau);
   else installerBandeau();
 }
+
+</script>
+<script id="reference" type="application/json">
+{"glyphes":{"lames":"<path d=\"M4.6 2.6l2.2-1.5 8 11.6-2.2 1.5z\" fill=\"currentColor\"/><path d=\"M19.4 2.6l-2.2-1.5-8 11.6 2.2 1.5z\" fill=\"currentColor\"/>\n   <rect x=\"8.4\" y=\"14\" width=\"7.2\" height=\"2.4\" rx=\"1.2\" fill=\"currentColor\"/><rect x=\"10.4\" y=\"16.4\" width=\"3.2\" height=\"5.4\" rx=\"1\" fill=\"currentColor\"/>","traits":"<path d=\"M2 3.6l7.2 7.2M2 3.6v4.8M2 3.6h4.8\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.1\" stroke-linecap=\"round\"/>\n   <path d=\"M22 3.6l-7.2 7.2M22 3.6v4.8M22 3.6h-4.8\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.1\" stroke-linecap=\"round\"/>\n   <circle cx=\"12\" cy=\"15\" r=\"3.2\" fill=\"currentColor\"/><path d=\"M12 18.2V22\" stroke=\"currentColor\" stroke-width=\"2.2\"/>","vent":"<path d=\"M2.6 8h11.4a2.8 2.8 0 1 0-2.8-2.8\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\"/>\n   <path d=\"M2.6 13h14a2.8 2.8 0 1 1-2.8 2.8\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\"/>\n   <path d=\"M4.4 18h8a2.4 2.4 0 1 0-2.4-2.4\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\"/>","bat":"<rect x=\"3.6\" y=\"7\" width=\"16.8\" height=\"8\" rx=\"2.2\" fill=\"currentColor\"/>\n   <path d=\"M6.4 15v6M10 15v6M14 15v6M17.6 15v6\" stroke=\"currentColor\" stroke-width=\"2.1\" stroke-linecap=\"round\"/>\n   <path d=\"M8.4 7V4.2h7.2V7\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"/>","pont":"<path d=\"M1.6 9.6h7.4l2.2 3.4M22.4 9.6H15l-2.2 3.4\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\"/>\n   <path d=\"M4.6 9.6V21M19.4 9.6V21\" stroke=\"currentColor\" stroke-width=\"2.2\"/><path d=\"M1.6 21h20.8\" stroke=\"currentColor\" stroke-width=\"2.2\"/>","bulle":"<path d=\"M2.6 3.4h18.8v11.8H9.4l-5.2 4.2v-4.2H2.6z\" fill=\"currentColor\"/>\n   <circle cx=\"8.4\" cy=\"9.3\" r=\"1.5\" fill=\"var(--velin)\"/><circle cx=\"12\" cy=\"9.3\" r=\"1.5\" fill=\"var(--velin)\"/>\n   <circle cx=\"15.6\" cy=\"9.3\" r=\"1.5\" fill=\"var(--velin)\"/>","barriere":"<rect x=\"1.8\" y=\"3.6\" width=\"3.4\" height=\"16.8\" rx=\"1\" fill=\"currentColor\"/><rect x=\"18.8\" y=\"3.6\" width=\"3.4\" height=\"16.8\" rx=\"1\" fill=\"currentColor\"/>\n   <rect x=\"5.2\" y=\"8.6\" width=\"13.6\" height=\"3.2\" rx=\"1.4\" fill=\"currentColor\"/><circle cx=\"12\" cy=\"16.4\" r=\"2.2\" fill=\"currentColor\"/>","roue_fendue":"<circle cx=\"12\" cy=\"12\" r=\"9\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\"/>\n   <path d=\"M12 3v18M3 12h18\" stroke=\"currentColor\" stroke-width=\"1.5\"/>\n   <path d=\"M17.4 5.6l-3.6 5.2 3 1.6-3.8 5.4\" fill=\"none\" stroke=\"var(--velin)\" stroke-width=\"2.4\"/>","caravanserail":"<path d=\"M1.8 21V9.2h20.4V21z\" fill=\"currentColor\"/><path d=\"M1.8 9.2L12 2.6l10.2 6.6z\" fill=\"currentColor\"/>\n   <path d=\"M8.2 21v-6.6a3.8 3.8 0 0 1 7.6 0V21z\" fill=\"var(--velin)\"/>","heaume":"<path d=\"M4 13.4a8 8 0 0 1 16 0V20h-4.2v-4.2H8.2V20H4z\" fill=\"currentColor\"/><rect x=\"9.8\" y=\"7.6\" width=\"4.4\" height=\"5.4\" fill=\"var(--velin)\"/>","soleil":"<circle cx=\"12\" cy=\"12\" r=\"5\" fill=\"currentColor\"/>\n   <path d=\"M12 1.4v3.2M12 19.4v3.2M1.4 12h3.2M19.4 12h3.2M4.4 4.4l2.3 2.3M17.3 17.3l2.3 2.3M19.6 4.4l-2.3 2.3M6.7 17.3l-2.3 2.3\"\n     stroke=\"currentColor\" stroke-width=\"2.1\" stroke-linecap=\"round\"/>","chariot_verse":"<path d=\"M2.8 15.4h18.4l-2.6 6H5.4z\" fill=\"currentColor\"/>\n   <path d=\"M2.8 15.4h18.4\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\"/>\n   <circle cx=\"7.6\" cy=\"10.4\" r=\"3.2\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.1\"/>\n   <circle cx=\"16.4\" cy=\"10.4\" r=\"3.2\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.1\"/>\n   <path d=\"M7.6 7.2v6.4M4.4 10.4h6.4M16.4 7.2v6.4M13.2 10.4h6.4\" stroke=\"currentColor\" stroke-width=\"1.2\"/>","fauve":"<path d=\"M4 9l2.2-5.4 3.2 3.2h5.2l3.2-3.2L20 9v6a6.2 6.2 0 0 1-6.2 6.2h-3.6A6.2 6.2 0 0 1 4 15z\" fill=\"currentColor\"/>\n   <path d=\"M9 12.2l1.6 1.6-1.6 1.6zM15 12.2l-1.6 1.6 1.6 1.6z\" fill=\"var(--velin)\"/>\n   <path d=\"M9.6 18h4.8\" stroke=\"var(--velin)\" stroke-width=\"1.6\" stroke-linecap=\"round\"/>","sceau":"<circle cx=\"12\" cy=\"8.6\" r=\"5.8\" fill=\"currentColor\"/><path d=\"M7.8 13.4L6 22l6-3 6 3-1.8-8.6z\" fill=\"currentColor\"/>\n   <path d=\"M9.6 8.6h4.8M12 6.2v4.8\" stroke=\"var(--velin)\" stroke-width=\"1.6\"/>","poteau":"<rect x=\"10.9\" y=\"3.4\" width=\"2.4\" height=\"18.2\" rx=\"1\" fill=\"currentColor\"/>\n   <path d=\"M10.9 5.4H2.6l2.6 2.6-2.6 2.6h8.3z\" fill=\"currentColor\"/><path d=\"M13.3 12.6h8.1l-2.6 2.6 2.6 2.6h-8.1z\" fill=\"currentColor\"/>","tente":"<path d=\"M12 2.6L1.8 21h20.4z\" fill=\"currentColor\"/><path d=\"M12 21v-8.6L8.2 21zM12 21v-8.6L15.8 21z\" fill=\"var(--velin)\"/>","roue_sable":"<circle cx=\"12\" cy=\"10\" r=\"6.8\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\"/>\n   <path d=\"M12 3.2v13.6M5.2 10h13.6M7.2 5.2l9.6 9.6M16.8 5.2l-9.6 9.6\" stroke=\"currentColor\" stroke-width=\"1.4\"/>\n   <path d=\"M1.4 16.6c4.4 2 6.6 2.4 10.6 2.4s6.2-.4 10.6-2.4V22H1.4z\" fill=\"currentColor\"/>","lien":"<path d=\"M2 12h7.4M14.6 12H22\" stroke=\"currentColor\" stroke-width=\"3.2\" stroke-linecap=\"round\"/>\n   <path d=\"M9.4 8.4l2 3.6-2 3.6M14.6 8.4l-2 3.6 2 3.6\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.1\" stroke-linecap=\"round\"/>","mule":"<path d=\"M4.6 9.4h11.2l3-4.2 1.6 5.2v5.2H4.6z\" fill=\"currentColor\"/>\n   <rect x=\"5.8\" y=\"15.2\" width=\"2.4\" height=\"6.2\" rx=\"1\" fill=\"currentColor\"/><rect x=\"15.4\" y=\"15.2\" width=\"2.4\" height=\"6.2\" rx=\"1\" fill=\"currentColor\"/>\n   <circle cx=\"18.6\" cy=\"7.4\" r=\"1.1\" fill=\"var(--velin)\"/>","nuee":"<circle cx=\"5.6\" cy=\"6.6\" r=\"1.7\" fill=\"currentColor\"/><circle cx=\"11.6\" cy=\"4.4\" r=\"1.7\" fill=\"currentColor\"/><circle cx=\"17.4\" cy=\"7.6\" r=\"1.7\" fill=\"currentColor\"/>\n   <circle cx=\"8.6\" cy=\"11.6\" r=\"1.7\" fill=\"currentColor\"/><circle cx=\"15\" cy=\"13.4\" r=\"1.7\" fill=\"currentColor\"/><circle cx=\"6.4\" cy=\"17\" r=\"1.7\" fill=\"currentColor\"/>\n   <circle cx=\"12.6\" cy=\"19\" r=\"1.7\" fill=\"currentColor\"/><circle cx=\"18.6\" cy=\"16.4\" r=\"1.7\" fill=\"currentColor\"/>","outre":"<path d=\"M8 3.4h8l.8 3.4c2 2 2 9.4-4.8 9.4S5.2 8.8 7.2 6.8z\" fill=\"currentColor\"/>\n   <path d=\"M12 18.4c-.6 1-1.4 1.8-1.4 2.6a1.4 1.4 0 0 0 2.8 0c0-.8-.8-1.6-1.4-2.6z\" fill=\"currentColor\"/>","goutte":"<path d=\"M12 2c4 6.2 6.2 8.4 6.2 12.2A6.2 6.2 0 0 1 5.8 14.2C5.8 10.4 8 8.2 12 2z\" fill=\"currentColor\"/>","mortier":"<path d=\"M3.6 11.4h16.8a8.4 8.4 0 0 1-8.4 8.4 8.4 8.4 0 0 1-8.4-8.4z\" fill=\"currentColor\"/>\n   <rect x=\"14.6\" y=\"2.4\" width=\"2.6\" height=\"9.6\" rx=\"1.3\" transform=\"rotate(18 15.9 7.2)\" fill=\"currentColor\"/>\n   <path d=\"M2.6 20.8h18.8\" stroke=\"currentColor\" stroke-width=\"2\"/>","ermite":"<circle cx=\"12\" cy=\"6\" r=\"3.4\" fill=\"currentColor\"/><path d=\"M4.8 21.4c0-5.2 3.2-8.4 7.2-8.4s7.2 3.2 7.2 8.4z\" fill=\"currentColor\"/>\n   <path d=\"M12 9.4v4.6\" stroke=\"var(--velin)\" stroke-width=\"1.6\"/>","chevre":"<ellipse cx=\"10.4\" cy=\"13.4\" rx=\"6.8\" ry=\"4.8\" fill=\"currentColor\"/><circle cx=\"17.6\" cy=\"9.4\" r=\"3.2\" fill=\"currentColor\"/>\n   <path d=\"M19.4 7l2.4-2.2M16.4 6.6l-1-2.6\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\"/>\n   <path d=\"M6 18.2v3.2M9.6 18.2v3.2M13.4 18.2v3.2\" stroke=\"currentColor\" stroke-width=\"2.1\" stroke-linecap=\"round\"/>","vol":"<path d=\"M1.8 12.4c4-5 7 .8 10.2-2.2s6-3 10 1c-4 1-6 4-10.2 4s-6-3.8-10-2.8z\" fill=\"currentColor\"/>","enfant":"<circle cx=\"12\" cy=\"5.2\" r=\"3.1\" fill=\"currentColor\"/>\n   <path d=\"M12 8.6v7.4M12 10.6l-3.6 2.8M12 10.6l3.6 2.8M12 16l-2.8 5.4M12 16l2.8 5.4\"\n     stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" fill=\"none\"/>","pelerin":"<circle cx=\"9.4\" cy=\"5.4\" r=\"3.2\" fill=\"currentColor\"/><path d=\"M9.4 9c-3 0-4.2 3-4.2 6.2V21.4h8.4V15.2C13.6 12 12.4 9 9.4 9z\" fill=\"currentColor\"/>\n   <path d=\"M18.4 2v20\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\"/>","charrette":"<path d=\"M2.6 15h12.8V9.4H2.6z\" fill=\"currentColor\"/><circle cx=\"6.4\" cy=\"18.8\" r=\"2.6\" fill=\"currentColor\"/>\n   <circle cx=\"18.6\" cy=\"16.6\" r=\"3.6\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\"/>\n   <path d=\"M18.6 13v7.2M15 16.6h7.2\" stroke=\"currentColor\" stroke-width=\"1.5\"/>","puits":"<path d=\"M4.6 11h14.8v10.4H4.6z\" fill=\"currentColor\"/><path d=\"M3.4 11L12 5.6l8.6 5.4\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.1\"/>\n   <rect x=\"9.8\" y=\"14\" width=\"4.4\" height=\"4.4\" fill=\"var(--velin)\"/><path d=\"M12 5.6V2.4\" stroke=\"currentColor\" stroke-width=\"2.1\"/>","bouclier":"<path d=\"M12 2l9 3.2v6.6c0 5.2-4.2 8.4-9 10.2-4.8-1.8-9-5-9-10.2V5.2z\" fill=\"currentColor\"/>\n   <path d=\"M8.4 8.4l7.2 7.2M15.6 8.4l-7.2 7.2\" stroke=\"var(--velin)\" stroke-width=\"2.1\"/>","coffre":"<path d=\"M2.6 10h18.8v11.4H2.6z\" fill=\"currentColor\"/><path d=\"M2.6 10a9.4 5.4 0 0 1 18.8 0z\" fill=\"currentColor\"/>\n   <rect x=\"10.2\" y=\"8.6\" width=\"3.6\" height=\"5.6\" rx=\"1\" fill=\"var(--velin)\"/>","cairn":"<ellipse cx=\"12\" cy=\"19.8\" rx=\"7.2\" ry=\"2.4\" fill=\"currentColor\"/><ellipse cx=\"12\" cy=\"15.4\" rx=\"5.6\" ry=\"2.2\" fill=\"currentColor\"/>\n   <ellipse cx=\"12\" cy=\"11.4\" rx=\"4.2\" ry=\"2\" fill=\"currentColor\"/><ellipse cx=\"12\" cy=\"7.8\" rx=\"2.8\" ry=\"1.8\" fill=\"currentColor\"/>","amphore":"<path d=\"M9 2.6h6v2.2l-1 2.2c2.2 1.1 3.2 3.2 3.2 6.2v3.6H6.8v-3.6c0-3 1-5.1 3.2-6.2l-1-2.2z\" fill=\"currentColor\"/>\n   <path d=\"M1.4 17.2h21.2v4.4H1.4z\" fill=\"currentColor\" opacity=\".55\"/>","sacoche":"<path d=\"M4.8 7.6h14.4l1.2 13.8H3.6z\" fill=\"currentColor\"/>\n   <path d=\"M8.4 7.6V5.6a3.6 3.6 0 0 1 7.2 0v2\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.1\"/>\n   <rect x=\"9.6\" y=\"12\" width=\"4.8\" height=\"4.4\" fill=\"var(--velin)\"/>","mur":"<path d=\"M2.6 2.6h18.8v18.8H2.6z\" fill=\"currentColor\"/>\n   <path d=\"M2.6 7.8h18.8M2.6 12.6h18.8M2.6 17.4h18.8M8 2.6v5.2M14.4 7.8v4.8M8 12.6v4.8M14.4 17.4v4\" stroke=\"var(--velin)\" stroke-width=\"1.4\"/>\n   <path d=\"M9 21.4v-6.8a3 3 0 0 1 6 0v6.8z\" fill=\"var(--velin)\"/>","tour":"<path d=\"M6 21.4V5h2.8V2.4h2.2V5h2.2V2.4h2.2V5H18v6.2l-4 4v6.2z\" fill=\"currentColor\"/>","temple":"<path d=\"M1.8 8L12 2l10.2 6z\" fill=\"currentColor\"/><rect x=\"3.8\" y=\"9\" width=\"2.8\" height=\"9\" fill=\"currentColor\"/>\n   <rect x=\"10.6\" y=\"9\" width=\"2.8\" height=\"9\" fill=\"currentColor\"/><rect x=\"17.4\" y=\"9\" width=\"2.8\" height=\"9\" fill=\"currentColor\"/>\n   <rect x=\"1.8\" y=\"18.4\" width=\"20.4\" height=\"3\" fill=\"currentColor\"/>","escaliers":"<path d=\"M1.8 21.4V17h4.2v-4.2h4.2V8.6h4.2V4.4h7.8v17z\" fill=\"currentColor\"/>","colosse":"<path d=\"M5.8 21.4V13.4a6.2 6.2 0 0 1 12.4 0v8z\" fill=\"currentColor\"/>\n   <circle cx=\"9.4\" cy=\"14.2\" r=\"1.4\" fill=\"var(--velin)\"/><circle cx=\"14.6\" cy=\"14.2\" r=\"1.4\" fill=\"var(--velin)\"/>\n   <path d=\"M7.8 9.2l1.2-4.4 3 2.2 3-2.2 1.2 4.4z\" fill=\"currentColor\"/><path d=\"M3.6 21.4h16.8\" stroke=\"currentColor\" stroke-width=\"2.1\"/>","des":"<rect x=\"2.2\" y=\"9\" width=\"10.4\" height=\"10.4\" rx=\"2.2\" fill=\"currentColor\"/><rect x=\"12.4\" y=\"3.6\" width=\"9.4\" height=\"9.4\" rx=\"2.2\" fill=\"currentColor\"/>\n   <circle cx=\"5.4\" cy=\"12\" r=\"1.15\" fill=\"var(--velin)\"/><circle cx=\"9.4\" cy=\"16.4\" r=\"1.15\" fill=\"var(--velin)\"/>\n   <circle cx=\"7.4\" cy=\"14.2\" r=\"1.15\" fill=\"var(--velin)\"/><circle cx=\"17.1\" cy=\"8.3\" r=\"1.15\" fill=\"var(--velin)\"/>","lutte":"<circle cx=\"6.8\" cy=\"5.6\" r=\"3\" fill=\"currentColor\"/><circle cx=\"17.2\" cy=\"5.6\" r=\"3\" fill=\"currentColor\"/>\n   <path d=\"M6.8 8.8c-2.2 0-3.2 2.2-3.2 5.2v7.4h6.6v-7.4M17.2 8.8c2.2 0 3.2 2.2 3.2 5.2v7.4h-6.6v-7.4\" fill=\"currentColor\"/>\n   <path d=\"M8.6 13.4h6.8\" stroke=\"currentColor\" stroke-width=\"2.6\" stroke-linecap=\"round\"/>","cible":"<circle cx=\"11\" cy=\"13\" r=\"8.6\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\"/>\n   <circle cx=\"11\" cy=\"13\" r=\"4.8\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\"/>\n   <circle cx=\"11\" cy=\"13\" r=\"1.7\" fill=\"currentColor\"/><path d=\"M11 13l9.4-9.4M17.6 2.6h3.4v3.4\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\"/>","course":"<circle cx=\"15.4\" cy=\"14.6\" r=\"5.4\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\"/>\n   <circle cx=\"15.4\" cy=\"14.6\" r=\"1.5\" fill=\"currentColor\"/>\n   <path d=\"M2.2 7.6h8.6M2 11.8h6.6M3.6 16h4.2\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\"/>","enigme":"<path d=\"M7.8 8a4.2 4.2 0 1 1 5.4 4c-1.1.4-1.6 1.3-1.6 2.4v1.2\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.7\" stroke-linecap=\"round\"/>\n   <circle cx=\"11.6\" cy=\"19.4\" r=\"1.9\" fill=\"currentColor\"/>","oiseau":"<ellipse cx=\"10.4\" cy=\"13\" rx=\"6\" ry=\"4.6\" fill=\"currentColor\"/><circle cx=\"16.6\" cy=\"9.4\" r=\"3\" fill=\"currentColor\"/>\n   <path d=\"M19.2 8l3.2-1.4-2.8-1.5z\" fill=\"currentColor\"/><circle cx=\"17.4\" cy=\"8.8\" r=\".85\" fill=\"var(--velin)\"/>\n   <path d=\"M5.6 15.4L2 19.4M7.6 16.6L4.6 21\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\"/>","etoile":"<path d=\"M17 2.6l1.5 3.9 3.9 1.5-3.9 1.5L17 13.4l-1.5-3.9L11.6 8l3.9-1.5z\" fill=\"currentColor\"/>\n   <path d=\"M11.4 12.4L3.4 20.4M9.4 7.6L5.2 10.8M14.6 16.4l-3.2 4.4\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\"/>","borne":"<path d=\"M7.8 21.4V7.2a4.2 4.2 0 0 1 8.4 0v14.2z\" fill=\"currentColor\"/>\n   <path d=\"M9.8 10.4h4.4M9.8 13.4h4.4M9.8 16.4h3.2\" stroke=\"var(--velin)\" stroke-width=\"1.5\"/>\n   <path d=\"M4.6 21.4h14.8\" stroke=\"currentColor\" stroke-width=\"2.1\"/>","notes":"<path d=\"M8.8 18V4.8l10.4-2.2V15\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\"/>\n   <circle cx=\"6.2\" cy=\"18.4\" r=\"2.9\" fill=\"currentColor\"/><circle cx=\"16.6\" cy=\"16.2\" r=\"2.9\" fill=\"currentColor\"/>"},"natures":{"danger":"#B84636","meteo":"#7C8AA0","tracas":"#9A7343","rencontre":"#6E9B6A","halte":"#5CA79E","trouvaille":"#C6A24C","ruines":"#9A9488","pari":"#A084C0","flanerie":"#7FA8C4","charite":"#C08A6A"}}
+</script>
+
+<script>
+/* La page de sauvegarde. Tout le travail est dans commun.js — sauvegardeComplete(),
+   lireSauvegarde(), reprendreSauvegarde(), fichierDuJeu() : ici on ne fait que
+   mettre les deux besoins en boutons. */
+let reprise=null;          /* la sauvegarde lue, en attente d'un choix */
+let dit='';                /* ce qu'on vient de faire, montré un instant */
+
+function rendreSauvegardes(){
+  chargerDepot();
+  const r=depotResume();
+  const rien=!Object.keys(r).some(k=>r[k]);
+  /* les rôles n'ont pas de fichier à eux : ils voyagent dans personnages.json */
+  const prets=CATEGORIES.filter(c=>r[c.nom]&&FICHIERS_JEU[c.nom]);
+
+  let h=`<div class="bloc or">
+    <h3>La sauvegarde d'atelier</h3>
+    <p>Un seul fichier qui emporte <b>tout</b> — le monde, les gens, les objets,
+       les missions, les événements, les icônes, et jusqu'à l'élément que vous
+       aviez ouvert dans chaque outil. C'est ce fichier qui passe de l'ordinateur
+       au téléphone. Il ne se dépose pas dans le jeu.</p>
+    <div class="boutons">
+      <button class="gros fort" id="b-tout-sauver"${rien?' disabled':''}>
+        ↓ Tout sauvegarder</button>
+      <button class="gros" id="b-reprendre">↑ Reprendre une sauvegarde…</button>
+    </div>`;
+  if(rien)h+=`<p class="dit" style="color:var(--encre-pale)">Rien à sauvegarder
+    pour l'instant.</p>`;
+  if(reprise)h+=blocReprise();
+  else if(dit)h+=`<p class="dit">✓ ${ech(dit)}</p>`;
+  h+=`</div>`;
+
+  h+=`<div class="bloc">
+    <h3>Les fichiers du jeu</h3>
+    <p>Une section à la fois, sous le nom exact que le dossier <b>data/</b> du
+       jeu attend. Ils sont tous facultatifs et indépendants : posez-en un, le jeu
+       s'en sert ; n'en posez aucun, il tourne comme avant.</p>`;
+  h+=prets.length
+    ?`<div class="fichiers">`+prets.map(c=>
+      `<button class="fichier" data-jeu="${ech(c.nom)}">
+        <code>${ech(FICHIERS_JEU[c.nom])}</code>
+        <span class="combien">${r[c.nom]} ${ech(r[c.nom]>1?c.des:c.un)}</span>
+        <span class="fleche">↓</span></button>`).join('')+`</div>`
+    :`<p class="dit" style="color:var(--encre-pale)">Rien encore à livrer au jeu.</p>`;
+  h+=`<p class="aide" style="margin-top:12px">
+    Le fichier des missions s'appelle <b>missions-ecrites.json</b> et non
+    <i>missions.json</i> : ce nom-là est déjà pris dans <b>data/</b> par ce qui
+    habille les contrats tirés au sort, et l'écraser les ferait disparaître.</p>
+  </div>`;
+
+  $('#sauvegardes').innerHTML=h;
+}
+
+function blocReprise(){
+  if(reprise.erreur)
+    return `<div id="reprise" class="rate">${ech(reprise.erreur)}
+      <div class="boutons"><button class="gros" data-act="annuler">Fermer</button></div>
+    </div>`;
+  const quand=reprise.faite?new Date(reprise.faite).toLocaleString('fr-FR',
+    {dateStyle:'long',timeStyle:'short'}):'sans date';
+  return `<div id="reprise">
+    <b>Sauvegarde du ${ech(quand)}</b>
+    ${reprise.dedans.length
+      ?`<ul>`+reprise.dedans.map(d=>`<li><b>${ech(d.mot)}</b> — ${ech(d.titre.toLowerCase())}</li>`).join('')+`</ul>`
+      :`<ul><li>Elle est vide.</li></ul>`}
+    <div class="boutons">
+      <button class="gros fort" data-act="fusionner">Fusionner avec ce que j'ai</button>
+      <button class="gros" data-act="remplacer">Tout remplacer</button>
+      <button class="gros" data-act="annuler">Annuler</button>
+    </div>
+    <p class="aide" style="margin-top:10px">
+      <b>Fusionner</b> garde tout : à clé égale, la sauvegarde l'emporte, et ce
+      qu'elle ne connaît pas reste. <b>Remplacer</b> jette ce que ce navigateur
+      contient.</p>
+  </div>`;
+}
+
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button');
+  if(!b||b.closest('#bandeau'))return;      /* le tiroir a ses propres boutons */
+
+  if(b.id==='b-tout-sauver'){
+    telecharger(nomDeSauvegarde(),sauvegardeComplete());
+    dit='Sauvegarde téléchargée.';reprise=null;rendreSauvegardes();return;
+  }
+  if(b.id==='b-reprendre'){$('#fichier-sauve').click();return;}
+  if(b.dataset.jeu){
+    const f=fichierDuJeu(b.dataset.jeu);
+    if(!f)return;
+    telecharger(f.nom,f.contenu);
+    dit=f.nom+' téléchargé.';reprise=null;rendreSauvegardes();return;
+  }
+  const act=b.dataset.act;
+  if(act==='annuler'){reprise=null;dit='';rendreSauvegardes();return;}
+  if(act==='fusionner'||act==='remplacer'){
+    if(!reprise||!reprise.sauvegarde)return;
+    const pris=reprendreSauvegarde(reprise.sauvegarde,act);
+    reprise=null;
+    dit=pris.length
+      ?(act==='fusionner'?'Fusionné : ':'Repris : ')+pris.join(', ')+'.'
+      :'Cette sauvegarde ne contenait rien.';
+    rendreSauvegardes();
+    if(typeof rendreBandeau==='function')rendreBandeau();
+  }
+});
+
+$('#fichier-sauve').addEventListener('change',ev=>{
+  const f=ev.target.files&&ev.target.files[0];
+  ev.target.value='';                     /* pour qu'un même fichier repasse */
+  if(!f)return;
+  const l=new FileReader();
+  l.onload=()=>{reprise=lireSauvegarde(String(l.result));dit='';rendreSauvegardes();};
+  l.onerror=()=>{reprise={erreur:'Ce fichier n\'a pas pu être lu.'};rendreSauvegardes();};
+  l.readAsText(f);
+});
+
+suivreDepot(rendreSauvegardes);
+addEventListener('pageshow',rendreSauvegardes);
+rendreSauvegardes();
+
+if('serviceWorker' in navigator)
+  addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+</script>
+</body>
+</html>

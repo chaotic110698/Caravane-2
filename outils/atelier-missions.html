@@ -1494,6 +1494,364 @@ function ecouterSaisie(apres){
   });
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   LE BANDEAU
+   ───────────────────────────────────────────────────────────────────────────
+   Un tiroir sur le bord droit, présent dans les huit pages. Il porte deux
+   choses, et ce sont les deux qu'on veut sous la main où qu'on travaille :
+
+     — **ce qu'on a écrit**, le codex et la charpente, pour vérifier une clé,
+       relire un nom, voir ce qui manque, sans quitter l'atelier ouvert ;
+     — **les autres outils**, pour passer de l'un à l'autre en un clic.
+
+   Il s'installe tout seul : aucune page n'a de balise à prévoir. Son style
+   voyage avec lui et vit sous #bandeau, faute de quoi ses .entree et ses .txt
+   marcheraient sur celles des ateliers, qui portent les mêmes noms.
+
+   Le codex et la charpente se calculent ailleurs — depotCodex(), 
+   depotCharpente(). Ici on ne fait que les mettre en page.               */
+
+const OUTILS_TOUS=[
+ {f:'index.html',              nom:'Le hub',        t:'#C9A227'},
+ {f:'atelier-carte.html',      nom:'Carte',         t:'#C9A227'},
+ {f:'atelier-personnages.html',nom:'Personnages',   t:'#6E9B6A'},
+ {f:'atelier-objets.html',     nom:'Objets',        t:'#C6A24C'},
+ {f:'atelier-missions.html',   nom:'Missions',      t:'#4A7BC8'},
+ {f:'atelier-evenements.html', nom:'Événements',    t:'#C24A32'},
+ {f:'atelier-dialogues.html',  nom:'Dialogues',     t:'#6E9B6A'},
+ {f:'atelier-icones.html',     nom:'Icônes',        t:'#A084C0'},
+ {f:'sauvegarde.html',         nom:'Sauvegarde',    t:'#9C9484'},
+ {f:'tutoriels.html',          nom:'Modes d\'emploi',t:'#9C9484'}
+];
+const pageIci=()=>(location.pathname.split('/').pop()||'index.html');
+
+const STYLE_BANDEAU=`
+#bandeau-poignee{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:60;
+  display:flex;flex-direction:column;align-items:center;gap:7px;padding:15px 7px;
+  background:var(--fond-clair);border:1px solid var(--bord);border-right:none;
+  border-radius:var(--r) 0 0 var(--r);color:var(--encre-pale);cursor:pointer;
+  font:inherit;font-size:12px;letter-spacing:.1em;writing-mode:vertical-rl;
+  text-orientation:mixed;font-variant:small-caps}
+#bandeau-poignee:hover{color:var(--or);border-color:var(--or)}
+#bandeau-poignee .compte{writing-mode:horizontal-tb;font-size:11px;color:var(--or);
+  font-variant-numeric:tabular-nums;letter-spacing:0}
+#bandeau-voile{position:fixed;inset:0;z-index:61;background:#0009;opacity:0;
+  pointer-events:none;transition:opacity .18s}
+#bandeau-voile.ouvert{opacity:1;pointer-events:auto}
+#bandeau{position:fixed;top:0;right:0;bottom:0;width:min(400px,100vw);z-index:62;
+  background:var(--fond);border-left:1px solid var(--bord);
+  transform:translateX(101%);transition:transform .2s ease-out;
+  display:flex;flex-direction:column;
+  font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--encre)}
+#bandeau.ouvert{transform:none;box-shadow:-14px 0 34px #0007}
+#bandeau *{box-sizing:border-box}
+#bandeau .tete{flex:none;display:flex;align-items:center;gap:10px;padding:11px 13px;
+  border-bottom:1px solid var(--bord);background:var(--fond-clair)}
+#bandeau .tete h2{flex:1;font-family:var(--display,serif);font-size:17px;font-weight:600}
+#bandeau .fermer{padding:6px 11px;border:1px solid var(--bord);border-radius:var(--r);
+  background:var(--fond);color:var(--encre);font:inherit;font-size:13px;cursor:pointer}
+#bandeau .fermer:hover{border-color:var(--or);color:var(--or)}
+#bd-outils{flex:none;display:flex;flex-wrap:wrap;gap:5px;padding:9px 13px;
+  border-bottom:1px solid var(--bord);background:var(--fond-clair)}
+#bd-outils a{display:flex;align-items:center;gap:6px;padding:5px 9px;font-size:12.5px;
+  border:1px solid var(--bord);border-radius:20px;background:var(--fond);
+  color:var(--encre-pale);text-decoration:none;white-space:nowrap}
+#bd-outils a:hover{color:var(--encre);border-color:var(--encre-pale)}
+#bd-outils a .pion{width:8px;height:8px;border-radius:50%;flex:none;
+  background:var(--teinte,var(--or))}
+#bd-outils a.ici{color:var(--or);border-color:var(--or);background:#2E2A22;
+  font-weight:600;cursor:default}
+#bandeau .corps{flex:1;min-height:0;overflow-y:auto;padding:12px 13px 26px;
+  -webkit-overflow-scrolling:touch}
+#bd-vues{display:flex;margin-bottom:11px;border:1px solid var(--bord);
+  border-radius:var(--r);overflow:hidden}
+#bd-vues button{flex:1;padding:9px 8px;font:inherit;font-size:13.5px;
+  background:var(--fond-clair);color:var(--encre-pale);border:none;cursor:pointer;
+  border-right:1px solid var(--bord)}
+#bd-vues button:last-child{border-right:none}
+#bd-vues button.actif{background:var(--fond);color:var(--or);font-weight:600}
+#bd-codex:not([hidden]),#bd-charpente:not([hidden]){display:grid;gap:9px}
+#bandeau .bloc{background:var(--fond-clair);border:1px solid var(--bord);
+  border-radius:var(--r);padding:12px 13px;font-size:13.5px;line-height:1.55;
+  color:var(--encre-pale)}
+#bandeau .bloc b{color:var(--encre)}
+#bandeau .cat{background:var(--fond-clair);border:1px solid var(--bord);
+  border-radius:var(--r);overflow:hidden}
+#bandeau .cat>summary{display:flex;align-items:center;gap:9px;padding:10px 12px;
+  cursor:pointer;list-style:none;font-family:var(--display,serif);font-size:15.5px;
+  font-weight:600}
+#bandeau .cat>summary::-webkit-details-marker{display:none}
+#bandeau .cat>summary .chevron{color:var(--encre-pale);font-size:12px;flex:none;
+  width:11px;transition:transform .15s}
+#bandeau .cat[open]>summary .chevron{transform:rotate(90deg)}
+#bandeau .cat>summary .compte{margin-left:auto;font-size:11.5px;color:var(--encre-pale);
+  font-variant-numeric:tabular-nums;font-family:inherit;font-weight:400}
+#bandeau .entrees{border-top:1px solid var(--bord)}
+#bandeau .entree{display:flex;align-items:center;gap:10px;padding:9px 12px;
+  border-bottom:1px solid #2E2A24}
+#bandeau .entree:last-child{border-bottom:none}
+#bandeau .entree .jeton{width:22px;height:22px;flex:none;color:var(--teinte,var(--or))}
+#bandeau .entree .jeton svg{width:100%;height:100%;display:block}
+#bandeau .entree .txt{flex:1;min-width:0}
+#bandeau .entree .txt b{display:block;font-size:13.5px;font-weight:600;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#bandeau .entree .txt small{display:block;font-size:11.5px;color:var(--encre-pale);
+  margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#bandeau .entree .manque{color:var(--or)}
+#bandeau .ouvrir{flex:none;font-size:12px;padding:5px 11px;border:1px solid var(--bord);
+  border-radius:20px;color:var(--encre);text-decoration:none;background:var(--fond)}
+#bandeau .ouvrir:hover{border-color:var(--or);color:var(--or)}
+#bandeau .rien{padding:10px 12px;font-size:13px;color:var(--encre-pale);font-style:italic}
+#bd-cherche{width:100%;padding:9px 12px;font-size:14.5px;color:var(--encre);
+  background:var(--fond-clair);border:1px solid var(--bord);border-radius:var(--r);
+  font-family:inherit}
+#bd-cherche::placeholder{color:var(--encre-pale)}
+#bandeau .tronc{background:var(--fond-clair);border:1px solid var(--bord);
+  border-radius:var(--r);padding:10px 11px}
+#bandeau .branche{position:relative;padding-left:14px}
+#bandeau .branche>.branche{margin-top:6px}
+#bandeau .branche::before{content:'';position:absolute;left:4px;top:0;bottom:9px;
+  width:1px;background:var(--bord)}
+#bandeau .branche.terminale::before{bottom:auto;height:14px}
+#bandeau .lien-dit{font-size:10.5px;font-variant:small-caps;letter-spacing:.08em;
+  color:var(--encre-pale);padding:2px 0 3px 2px;display:block}
+#bandeau .lien-dit b{color:var(--or);font-variant:normal;letter-spacing:0}
+#bandeau .oeud{display:flex;align-items:flex-start;gap:8px;padding:7px 8px;
+  background:var(--fond);border:1px solid var(--bord);border-radius:var(--r);
+  border-left:3px solid var(--teinte,var(--or))}
+#bandeau .oeud.repris{border-style:dashed;opacity:.7}
+#bandeau .oeud.boucle{border-left-color:var(--minium)}
+#bandeau .oeud .jeton{width:19px;height:19px;flex:none;color:var(--teinte,var(--or));
+  margin-top:1px}
+#bandeau .oeud .jeton svg{width:100%;height:100%;display:block}
+#bandeau .oeud .txt{flex:1;min-width:0}
+#bandeau .oeud .txt b{display:block;font-size:13px;font-weight:600;line-height:1.3}
+#bandeau .oeud .qui{display:block;font-size:11.5px;color:var(--encre-pale);margin-top:1px}
+#bandeau .oeud .qui i{font-style:normal;color:var(--teinte,var(--or))}
+#bandeau .oeud .genre{font-size:10px;font-variant:small-caps;letter-spacing:.08em}
+#bandeau .oeud .mentions{display:block;font-size:11px;color:var(--encre-pale);
+  margin-top:3px;line-height:1.45}
+#bandeau .oeud .renvoi{font-size:11px;color:var(--encre-pale);font-style:italic;flex:none}
+#bandeau .mesures{display:grid;grid-template-columns:1fr auto;gap:2px 10px;
+  font-size:12.5px;color:var(--encre-pale)}
+#bandeau .mesures b{text-align:right;color:var(--encre)}
+#bandeau .trous{background:var(--fond-clair);border:1px solid var(--bord);
+  border-left:3px solid var(--minium);border-radius:var(--r);padding:11px 12px}
+#bandeau .trous h3{font-family:var(--display,serif);font-size:15px;margin-bottom:6px}
+#bandeau .trous ul{list-style:none;display:grid;gap:5px}
+#bandeau .trous li{font-size:12.5px;line-height:1.5;color:var(--encre-pale)}
+#bandeau .trous li.dur{color:var(--encre)}
+@media (max-width:480px){
+  #bandeau-poignee{top:auto;bottom:96px;transform:none;padding:11px 6px}
+}
+@media print{#bandeau,#bandeau-poignee,#bandeau-voile{display:none}}
+`;
+
+let bandeauVue='codex', bandeauCherche='', bandeauPose=false;
+
+const rondBandeau=()=>`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"`+
+  ` fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
+function jetonBandeau(e){
+  if(e.svg)return `<svg viewBox="0 0 24 24">${e.svg}</svg>`;
+  if(e.glyphe)return svgGlypheDe(e.glyphe,'currentColor')||rondBandeau();
+  return rondBandeau();
+}
+
+function installerBandeau(){
+  if(bandeauPose||typeof document==='undefined')return;
+  bandeauPose=true;
+  const st=document.createElement('style');
+  st.textContent=STYLE_BANDEAU;
+  document.head.appendChild(st);
+
+  const ici=pageIci();
+  const poignee=document.createElement('button');
+  poignee.id='bandeau-poignee';
+  poignee.type='button';
+  poignee.setAttribute('aria-expanded','false');
+  poignee.innerHTML='Ce que vous avez écrit <span class="compte"></span>';
+
+  const voile=document.createElement('div');
+  voile.id='bandeau-voile';
+
+  const b=document.createElement('aside');
+  b.id='bandeau';
+  b.setAttribute('aria-label','Ce que vous avez écrit');
+  b.innerHTML=`
+    <div class="tete"><h2>Ce que vous avez écrit</h2>
+      <button class="fermer" type="button" id="bd-fermer">Fermer</button></div>
+    <nav id="bd-outils">`+OUTILS_TOUS.map(o=>
+      `<a href="${o.f}" style="--teinte:${o.t}"${o.f===ici?' class="ici" aria-current="page"':''}
+        ><span class="pion"></span>${ech(o.nom)}</a>`).join('')+`</nav>
+    <div class="corps">
+      <div id="bd-vues">
+        <button type="button" data-bvue="codex" class="actif">Le codex</button>
+        <button type="button" data-bvue="charpente">La charpente</button>
+      </div>
+      <div id="bd-codex"></div>
+      <div id="bd-charpente" hidden></div>
+    </div>`;
+
+  document.body.appendChild(poignee);
+  document.body.appendChild(voile);
+  document.body.appendChild(b);
+
+  const ouvrir=o=>{
+    b.classList.toggle('ouvert',o);
+    voile.classList.toggle('ouvert',o);
+    poignee.setAttribute('aria-expanded',String(o));
+    if(o)rendreBandeau();
+  };
+  poignee.onclick=()=>ouvrir(!b.classList.contains('ouvert'));
+  voile.onclick=()=>ouvrir(false);
+  $('#bd-fermer',b).onclick=()=>ouvrir(false);
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'&&b.classList.contains('ouvert')){ouvrir(false);}
+  });
+  b.addEventListener('click',e=>{
+    const t=e.target.closest('[data-bvue]');
+    if(!t)return;
+    bandeauVue=t.dataset.bvue;
+    rendreBandeau();
+  });
+  b.addEventListener('input',e=>{
+    if(e.target.id!=='bd-cherche')return;
+    bandeauCherche=e.target.value;
+    const p=e.target.selectionStart;
+    rendreCodexBandeau();
+    const c=$('#bd-cherche',b);
+    if(c){c.focus();c.setSelectionRange(p,p);}
+  });
+
+  /* Le compteur sur la poignée dit, sans l'ouvrir, combien de choses on a
+     écrites. C'est ce qui donne envie d'aller voir. */
+  const compter=()=>{
+    chargerDepot();
+    const n=depotCodex().reduce((s,c)=>s+c.entrees.length,0);
+    $('.compte',poignee).textContent=n||'';
+    if(b.classList.contains('ouvert'))rendreBandeau();
+  };
+  suivreDepot(compter);
+  addEventListener('pageshow',compter);
+  compter();
+}
+
+function rendreBandeau(){
+  chargerDepot();
+  const codex=bandeauVue==='codex';
+  $('#bd-codex').hidden=!codex;
+  $('#bd-charpente').hidden=codex;
+  document.querySelectorAll('#bd-vues button').forEach(x=>
+    x.classList.toggle('actif',x.dataset.bvue===bandeauVue));
+  if(codex)rendreCodexBandeau(); else rendreCharpenteBandeau();
+}
+
+function rendreCodexBandeau(){
+  const boite=$('#bd-codex');
+  if(!boite)return;
+  const cats=depotCodex();
+  const q=bandeauCherche.trim().toLowerCase();
+  const garde=e=>!q||((e.nom+' '+e.cle+' '+e.detail).toLowerCase().indexOf(q)>=0);
+  const total=cats.reduce((n,c)=>n+c.entrees.length,0);
+  if(!total){
+    boite.innerHTML=`<p class="bloc" id="bd-vide">Rien encore. Ce que vous créerez dans les
+      ateliers viendra se ranger ici, par catégorie — et un bouton rouvrira chaque élément
+      dans l'outil qui l'a fait.</p>`;
+    return;
+  }
+  const pleines=cats.filter(c=>c.entrees.length);
+  const vus=pleines.reduce((n,c)=>n+c.entrees.filter(garde).length,0);
+  let h=`<input id="bd-cherche" placeholder="Chercher dans le codex…"
+    value="${ech(bandeauCherche)}" autocomplete="off" spellcheck="false">`;
+  if(q&&!vus)h+=`<p class="rien" id="bd-rien">Rien de ce nom-là dans le codex.</p>`;
+  h+=pleines.map(c=>{
+    const gardees=c.entrees.filter(garde);
+    if(q&&!gardees.length)return '';
+    const n=c.entrees.length;
+    const ouvert=(q||n<=8)?' open':'';
+    return `<details class="cat"${ouvert} data-cat="${ech(c.nom)}">
+      <summary><span class="chevron">▶</span>${ech(c.titre)}
+        <span class="compte">${n} ${ech(n>1?c.des:c.un)}</span></summary>
+      <div class="entrees">`+
+      (gardees.length?gardees.map(e=>`
+        <div class="entree" style="--teinte:${ech(e.teinte)}">
+          <span class="jeton">${jetonBandeau(e)}</span>
+          <span class="txt"><b>${ech(e.nom||e.cle||'sans nom')}</b>
+            <small>${ech(e.detail)}${e.detail&&e.manque?' · ':''}`+
+            `${e.manque?`<span class="manque">${ech(e.manque)}</span>`:''}</small></span>
+          <a class="ouvrir" href="${ech(e.lien)}">Ouvrir</a>
+        </div>`).join('')
+        :`<p class="rien">Rien de ce nom-là ici.</p>`)+
+      `</div></details>`;
+  }).join('');
+  boite.innerHTML=h;
+}
+
+function rendreCharpenteBandeau(){
+  const boite=$('#bd-charpente');
+  if(!boite)return;
+  const c=depotCharpente();
+  if(!c.compte.missions&&!c.compte.dialogues){
+    boite.innerHTML=`<p class="bloc">Rien à charpenter. Écrivez des <b>missions</b> et des
+      <b>conversations</b> : dès qu'une conversation confie une mission, ou qu'une mission
+      accomplie en ouvre une autre, l'enchaînement paraîtra ici.</p>`;
+    return;
+  }
+  let h=`<div class="bloc"><div class="mesures">
+    <span>Missions d'histoire</span><b>${c.compte.missions}</b>
+    <span>Conversations</span><b>${c.compte.dialogues}</b>
+    <span>Enchaînements</span><b>${c.compte.liens}</b>
+    <span>Départs</span><b>${c.compte.racines}</b></div>
+    <p style="margin-top:8px">Ce qui n'attend rien est en haut ; on descend vers ce que
+      cela ouvre. Un élément déjà vu plus haut n'est pas redéveloppé.</p></div>`;
+  if(c.soucis.length){
+    const durs=c.soucis.filter(x=>x.dur), doux=c.soucis.filter(x=>!x.dur);
+    h+=`<div class="trous"><h3>Les trous de la charpente</h3><ul>`+
+      durs.map(x=>`<li class="dur">${x.txt}</li>`).join('')+
+      doux.map(x=>`<li>${x.txt}</li>`).join('')+`</ul></div>`;
+  }
+  h+=c.arbres.map(a=>`<div class="tronc">${brancherBandeau(a,true)}</div>`).join('');
+  boite.innerHTML=h;
+}
+
+function brancherBandeau(n,racine){
+  const teinte=(n.qui&&n.qui.teinte)||(n.genre==='mission'?'#4A7BC8':'#6E9B6A');
+  const dessin=n.qui?svgGlypheDe(n.qui.glyphe,'currentColor'):'';
+  const genre=n.genre==='mission'?'mission':'conversation';
+  let h='';
+  if(!racine&&n.relation)h+=`<span class="lien-dit">↳ <b>${ech(n.relation)}</b></span>`;
+  h+=`<div class="oeud${n.repris?' repris':''}${n.boucle?' boucle':''}"
+        style="--teinte:${ech(teinte)}">
+    <span class="jeton">${dessin||rondBandeau()}</span>
+    <span class="txt"><b>${ech(n.nom)}</b>
+      <span class="qui"><span class="genre">${genre}</span>`+
+      (n.qui?` · <i>${ech(n.qui.nom)}</i>`+
+        (n.qui.inconnu?' <b style="color:var(--minium)">(inconnu)</b>'
+          :n.qui.lieu?' à '+ech(n.qui.lieu):'')
+       :n.genre==='mission'?' · sans commanditaire':'')+
+      `</span>`+
+      (n.mentions.length&&!n.repris
+        ?`<span class="mentions">${n.mentions.map(ech).join(' · ')}</span>`:'')+
+    `</span>`+
+    (n.repris?`<span class="renvoi">↩ plus haut</span>`
+      :n.boucle?`<span class="renvoi" style="color:var(--minium)">↺ boucle</span>`
+      :`<a class="ouvrir" href="${ech(n.lien)}">Ouvrir</a>`)+
+  `</div>`;
+  if(n.enfants&&n.enfants.length)
+    h+=n.enfants.map((e,i)=>`<div class="branche${
+      i===n.enfants.length-1&&!(e.enfants||[]).length?' terminale':''
+    }">${brancherBandeau(e)}</div>`).join('');
+  return h;
+}
+
+/* On l'installe dès que le corps existe : les ateliers appellent leur propre
+   amorce, et aucun n'a à penser au bandeau. */
+if(typeof document!=='undefined'){
+  if(document.readyState==='loading')
+    document.addEventListener('DOMContentLoaded',installerBandeau);
+  else installerBandeau();
+}
+
 </script>
 
 <script>

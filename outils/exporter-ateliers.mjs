@@ -32,6 +32,7 @@ if (!existsSync(dest) || !statSync(dest).isDirectory()) {
 
 const A_COPIER = [
   'index.html',                      /* le hub */
+  'sauvegarde.html', 'tutoriels.html',            /* ses deux pages dédiées */
   'manifest.webmanifest', 'sw.js', 'icone.png',   /* ce qui le rend installable */
   'atelier-carte.html', 'atelier-personnages.html', 'atelier-objets.html',
   'atelier-missions.html', 'atelier-evenements.html', 'atelier-icones.html',

@@ -28,6 +28,11 @@ const VO = litJson('data', 'vocabulaire-objets.json');
 const VM = litJson('data', 'vocabulaire-missions.json');
 const VD = litJson('data', 'vocabulaire-dialogues.json');
 
+/* Les six modes d'emploi, retenus au passage : ils partent dans les fichiers
+   .md **et** dans outils/tutoriels.html, qui les met en page. Une seule source,
+   deux sorties — comme les catalogues et les formulaires. */
+const TUTOS = {};
+
 /* ════════════════════ 1. le tutoriel ════════════════════ */
 
 const l = [];
@@ -130,8 +135,8 @@ dit('## Il manque un effet ?', '',
   'réussite au lieu de trois, ce sont six paliers — le bouton *Ajouter un palier* ne',
   'compte pas jusqu\'à quatre.', '');
 
-writeFileSync(join(ICI, 'TUTORIEL-EVENEMENTS.md'),
-  l.join('\n').replace(/\n{3,}/g, '\n\n') + '\n', 'utf8');
+TUTOS['evenements'] = l.join('\n').replace(/\n{3,}/g, '\n\n') + '\n';
+writeFileSync(join(ICI, 'TUTORIEL-EVENEMENTS.md'), TUTOS['evenements'], 'utf8');
 
 /* ════════════════════ 1 bis. le tutoriel des personnages ════════════════════ */
 
@@ -241,8 +246,8 @@ ecrit('## Ce que l\'atelier vérifie', '',
   'c\'est là qu\'on voit ce qui reste scellé au bout de trois rencontres, et ce qui s\'ouvre',
   'à la dixième.', '');
 
-writeFileSync(join(ICI, 'TUTORIEL-PERSONNAGES.md'),
-  q.join('\n').replace(/\n{3,}/g, '\n\n') + '\n', 'utf8');
+TUTOS['personnages'] = q.join('\n').replace(/\n{3,}/g, '\n\n') + '\n';
+writeFileSync(join(ICI, 'TUTORIEL-PERSONNAGES.md'), TUTOS['personnages'], 'utf8');
 
 /* ════════════════════ 1 ter. le tutoriel des objets ════════════════════ */
 
@@ -321,8 +326,8 @@ note('## L\'onglet « Ce que ça pèse »', '',
   'sur mille pièces, et dit quelle part d\'un chariot son poids occupe.', '',
   'Un objet trop fort ne se voit pas quand on l\'écrit seul dans son coin. Il se voit là.', '');
 
-writeFileSync(join(ICI, 'TUTORIEL-OBJETS.md'),
-  s.join('\n').replace(/\n{3,}/g, '\n\n') + '\n', 'utf8');
+TUTOS['objets'] = s.join('\n').replace(/\n{3,}/g, '\n\n') + '\n';
+writeFileSync(join(ICI, 'TUTORIEL-OBJETS.md'), TUTOS['objets'], 'utf8');
 
 /* ════════════════════ 1 quater. le tutoriel des missions ════════════════════ */
 
@@ -393,8 +398,8 @@ dis('## Ce que l\'atelier vérifie', '',
   'Une mission **sans commanditaire** n\'est pas une faute : elle est simplement en attente.',
   'L\'atelier le signale en or, pas en rouge.', '');
 
-writeFileSync(join(ICI, 'TUTORIEL-MISSIONS.md'),
-  r.join('\n').replace(/\n{3,}/g, '\n\n') + '\n', 'utf8');
+TUTOS['missions'] = r.join('\n').replace(/\n{3,}/g, '\n\n') + '\n';
+writeFileSync(join(ICI, 'TUTORIEL-MISSIONS.md'), TUTOS['missions'], 'utf8');
 
 /* ════════════════════ 1 quinquies. le tutoriel des icônes ════════════════════
    Celui-ci n'a pas de vocabulaire à lui : ses formes vivent dans l'atelier, et
@@ -513,8 +518,8 @@ trace('## Où vos icônes servent', '',
   'dans la liste des dessins de l\'atelier d\'événements, de personnages, d\'objets et de',
   'missions, en dessous des dessins du jeu, et se choisit comme les autres.', '');
 
-writeFileSync(join(ICI, 'TUTORIEL-ICONES.md'),
-  t.join('\n').replace(/\n{3,}/g, '\n\n') + '\n', 'utf8');
+TUTOS['icones'] = t.join('\n').replace(/\n{3,}/g, '\n\n') + '\n';
+writeFileSync(join(ICI, 'TUTORIEL-ICONES.md'), TUTOS['icones'], 'utf8');
 
 /* ════════════════════ 1 sexies. le tutoriel des dialogues ════════════════════ */
 
@@ -614,8 +619,8 @@ conte('## Ce que la partie retient', '',
   'Les deux voyagent dans la sauvegarde. Un souvenir posé ne s\'efface que si un',
   'dialogue le repose à *faux*.', '');
 
-writeFileSync(join(ICI, 'TUTORIEL-DIALOGUES.md'),
-  u.join('\n').replace(/\n{3,}/g, '\n\n') + '\n', 'utf8');
+TUTOS['dialogues'] = u.join('\n').replace(/\n{3,}/g, '\n\n') + '\n';
+writeFileSync(join(ICI, 'TUTORIEL-DIALOGUES.md'), TUTOS['dialogues'], 'utf8');
 
 /* ════════════════════ 2. les exemples ════════════════════
    Découpés dans la spécification, pour qu'un exemple corrigé là-bas le soit dans
@@ -677,7 +682,8 @@ const reference = {
    code existe en trois exemplaires. */
 
 const commun = lit('outils', 'commun.js');
-const ATELIERS = ['atelier-evenements.html', 'atelier-personnages.html',
+const ATELIERS = ['atelier-carte.html',
+                  'atelier-evenements.html', 'atelier-personnages.html',
                   'atelier-objets.html', 'atelier-missions.html',
                   'atelier-icones.html', 'atelier-dialogues.html'];
 
@@ -699,17 +705,25 @@ for (const nom of ATELIERS) {
   poses.push(nom);
 }
 
-/* Le hub reçoit la même machinerie, mais pas le vocabulaire : son codex ne
-   montre que des noms et des dessins, il n'a besoin d'aucun formulaire. */
-{
-  const page = join(ICI, 'index.html');
-  let html = readFileSync(page, 'utf8');
-  html = injecte(html, 'commun', commun, 'index.html');
+/* Le hub et ses deux pages dédiées reçoivent la même machinerie, mais pas le
+   vocabulaire : leur codex ne montre que des noms et des dessins, ils n'ont
+   besoin d'aucun formulaire. La page des modes d'emploi reçoit en plus les six
+   tutoriels, pour les mettre en page sans aller chercher de fichier — elle doit
+   marcher hors ligne comme les ateliers. */
+const PAGES = ['index.html', 'sauvegarde.html', 'tutoriels.html'];
+for (const nom of PAGES) {
+  const page = join(ICI, nom);
+  let html;
+  try { html = readFileSync(page, 'utf8'); }
+  catch (e) { continue; }
+  html = injecte(html, 'commun', commun, nom);
   html = injecte(html, 'reference',
-    JSON.stringify({ glyphes: reference.glyphes, natures: reference.natures }),
-    'index.html');
+    JSON.stringify({ glyphes: reference.glyphes, natures: reference.natures }), nom);
+  if (/<script id="tutoriels"/.test(html))
+    html = injecte(html, 'tutoriels', JSON.stringify(
+      Object.fromEntries(Object.entries(TUTOS).map(([k, md]) => [k, { md }]))), nom);
   writeFileSync(page, html, 'utf8');
-  poses.push('index.html');
+  poses.push(nom);
 }
 
 /* ════════════════════ 5. le compte rendu ════════════════════ */

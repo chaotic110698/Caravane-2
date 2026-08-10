@@ -9,7 +9,9 @@
 | [`atelier-missions.html`](atelier-missions.html) | écrire les missions : qui les donne, ce qu'il faut faire, ce qu'elles rapportent |
 | [`atelier-dialogues.html`](atelier-dialogues.html) | écrire les conversations : répliques, réponses branchées, conditions |
 | [`atelier-icones.html`](atelier-icones.html) | dessiner les icônes : six formes, une teinte, et le SVG qui en sort |
-| [`index.html`](index.html) | le hub et son codex : tout ce qui est écrit, avec de quoi le rouvrir |
+| [`index.html`](index.html) | le hub : les sept ateliers, et deux boutons vers le reste |
+| [`sauvegarde.html`](sauvegarde.html) | emporter son travail d'un appareil à l'autre, et livrer les fichiers au jeu |
+| [`tutoriels.html`](tutoriels.html) | les modes d'emploi, en cinq onglets, avec les six pages engendrées mises en page |
 | [`TUTORIEL-EVENEMENTS.md`](TUTORIEL-EVENEMENTS.md) | ce que fait chaque effet, en français — engendré, jamais écrit à la main |
 | [`TUTORIEL-PERSONNAGES.md`](TUTORIEL-PERSONNAGES.md) | les rôles, ce qui fait mériter une couche de lore — engendré aussi |
 | [`TUTORIEL-OBJETS.md`](TUTORIEL-OBJETS.md) | les genres, les pouvoirs, les provenances — engendré aussi |
@@ -27,6 +29,21 @@ jusqu'à ce que vous exportiez.
 > Chaque atelier est un fichier unique et autonome, mais le code n'existe qu'en un
 > exemplaire : `construire.mjs` recopie `commun.js` et les catalogues dans chacun. C'est
 > pour ça qu'il faut le relancer après avoir touché à l'un ou à l'autre.
+
+## Le bandeau, sur le bord droit
+
+Les dix pages portent le même tiroir, posé par `commun.js` : une poignée sur le bord
+droit, qui annonce au passage combien d'éléments le dépôt contient. Il ouvre **ce que
+vous avez écrit** — le codex et la charpente, avec la recherche et le bouton *Ouvrir*
+qui rouvre chaque élément dans l'atelier qui l'a fait — et une rangée de pastilles qui
+**passe d'un outil à l'autre** sans repasser par le hub.
+
+C'est ce qui permet de vérifier une clé de lieu depuis l'atelier de dialogues, ou de
+relire le nom d'un personnage en écrivant une mission, sans quitter ce qu'on fait.
+<kbd>Échap</kbd> le referme.
+
+Le hub n'en tient donc plus copie : il montre les sept ateliers, et deux boutons — la
+**sauvegarde** et les **modes d'emploi** — chacun sur sa page.
 
 ## Le dépôt partagé
 
