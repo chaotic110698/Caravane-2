@@ -14,11 +14,11 @@
   --velin-ombre:#C6B58C;
   --velin-creux:#D8C9A2;
   --encre:#2B2116;
-  --encre-pale:#6C5C46;
+  --encre-pale:#6A5A44;
   --minium:#A32C1C;
   --minium-clair:#C4472F;
   --azur:#2B4478;
-  --vert:#4C6A44;
+  --vert:#46633D;
   --or:#96751F;
   --or-clair:#C6A24C;
   --bois:#4B3620;
@@ -655,6 +655,28 @@ details.regles li{margin-bottom:6px}
   transition:opacity .25s,transform .25s;max-width:86%;text-align:center;
   box-shadow:2px 3px 0 rgba(43,33,22,.25)}
 #toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* ── au doigt ──
+   Deux commandes tiennent en moins de trente pixels : l'accordéon des règles,
+   sur l'écran-titre, et les pastilles « mini » des panneaux. À la souris c'est
+   confortable ; au pouce, non. On ne les grossit que là où l'on pointe gros,
+   pour que le dessin de la page ne bouge pas sur un écran d'ordinateur. */
+@media (pointer:coarse){
+  details.regles summary{padding:6px 0;min-height:30px;display:flex;align-items:center;
+    justify-content:center}
+  .mini{min-height:30px;padding:6px 11px}
+  .organe .mini{display:flex;align-items:center;justify-content:center}
+}
+
+/* On respecte qui demande moins de mouvement. */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;
+    transition-duration:.001ms !important;scroll-behavior:auto !important}
+}
+
+/* Le trait de focus : sans lui, on ne sait pas où l'on est au clavier. */
+:focus-visible{outline:2px solid var(--minium);outline-offset:2px;border-radius:2px}
+.feuille:focus-visible,.ecran:focus-visible{outline:none}
 </style>
 </head>
 <body>
@@ -929,7 +951,7 @@ details.regles li{margin-bottom:6px}
 <div id="voile"></div>
 
 <!-- feuille de négoce -->
-<div class="feuille" id="feuille-negoce" role="dialog" aria-modal="true">
+<div class="feuille" id="feuille-negoce" role="dialog" aria-modal="true" aria-labelledby="neg-titre">
   <div class="poignee"></div>
   <h2 id="neg-titre">—</h2>
   <p class="info" id="neg-info">—</p>
@@ -945,7 +967,7 @@ details.regles li{margin-bottom:6px}
 </div>
 
 <!-- feuille de transfert -->
-<div class="feuille" id="feuille-transfert" role="dialog" aria-modal="true">
+<div class="feuille" id="feuille-transfert" role="dialog" aria-modal="true" aria-labelledby="tr-titre">
   <div class="poignee"></div>
   <h2 id="tr-titre">—</h2>
   <p class="info" id="tr-info">—</p>
@@ -961,7 +983,7 @@ details.regles li{margin-bottom:6px}
 </div>
 
 <!-- feuille d'équipement -->
-<div class="feuille" id="feuille-arme" role="dialog" aria-modal="true">
+<div class="feuille" id="feuille-arme" role="dialog" aria-modal="true" aria-labelledby="ar-titre">
   <div class="poignee"></div>
   <h2 id="ar-titre">—</h2>
   <p class="info" id="ar-info">—</p>
@@ -970,7 +992,7 @@ details.regles li{margin-bottom:6px}
 </div>
 
 <!-- feuille du harnois : une pièce d'armure pour un emplacement -->
-<div class="feuille" id="feuille-harnois" role="dialog" aria-modal="true">
+<div class="feuille" id="feuille-harnois" role="dialog" aria-modal="true" aria-labelledby="hn-titre">
   <div class="poignee"></div>
   <h2 id="hn-titre">—</h2>
   <p class="info" id="hn-info">—</p>
@@ -979,7 +1001,7 @@ details.regles li{margin-bottom:6px}
 </div>
 
 <!-- feuille de montage d'une pièce -->
-<div class="feuille" id="feuille-piece" role="dialog" aria-modal="true">
+<div class="feuille" id="feuille-piece" role="dialog" aria-modal="true" aria-labelledby="pc-titre">
   <div class="poignee"></div>
   <h2 id="pc-titre">—</h2>
   <p class="info" id="pc-info">—</p>
@@ -988,17 +1010,18 @@ details.regles li{margin-bottom:6px}
 </div>
 
 <!-- feuille de renommage -->
-<div class="feuille" id="feuille-nom" role="dialog" aria-modal="true">
+<div class="feuille" id="feuille-nom" role="dialog" aria-modal="true" aria-labelledby="nom-titre">
   <div class="poignee"></div>
-  <h2>Renommer</h2>
+  <h2 id="nom-titre">Renommer</h2>
   <p class="info" id="nom-info">—</p>
-  <input class="champ" id="nom-champ" maxlength="24" autocomplete="off" spellcheck="false">
+  <input class="champ" id="nom-champ" maxlength="24" autocomplete="off" spellcheck="false"
+    aria-label="Nouveau nom" aria-describedby="nom-info">
   <button class="bouton" id="nom-valider">Enregistrer</button>
   <button class="bouton creux petit" id="nom-fermer" style="width:100%;margin-top:8px">Annuler</button>
 </div>
 
 <!-- feuille d'événement -->
-<div class="feuille evenement" id="feuille-event" role="dialog" aria-modal="true">
+<div class="feuille evenement" id="feuille-event" role="dialog" aria-modal="true" aria-labelledby="ev-titre">
   <div class="poignee"></div>
   <div class="ev-tete">
     <div class="ev-ico" id="ev-ico"></div>
@@ -1025,7 +1048,7 @@ details.regles li{margin-bottom:6px}
   </div>
 </div>
 
-<div class="feuille evenement" id="feuille-dialogue" role="dialog" aria-modal="true">
+<div class="feuille evenement" id="feuille-dialogue" role="dialog" aria-modal="true" aria-labelledby="dlg-qui">
   <div class="poignee"></div>
   <div class="ev-tete">
     <div class="ev-ico" id="dlg-ico"></div>
@@ -1793,23 +1816,41 @@ const GLYPHE_REGISTRE=`<path d="M4.4 3h13.2a2.4 2.4 0 0 1 2.4 2.4v15.6H6.8A2.4 2
 const TITRES_ONGLET={};
 MENU.forEach(m=>{TITRES_ONGLET[m.cle]=m;});
 
+/* Une condition d'entrée lit l'état de la partie ; appelée avant qu'il y en ait
+   une, elle lève. Ce n'est pas une panne du jeu : l'entrée n'a simplement rien
+   à montrer. On la range, et le menu reste debout. */
+function conditionTenue(f){try{return !!f();}catch(e){return false;}}
 function rendreMenu(){
   document.querySelectorAll('#menu .menu-item').forEach(b=>{
     const m=TITRES_ONGLET[b.dataset.onglet];
     if(!m)return;
     /* une entrée conditionnelle disparaît quand elle n'a rien à montrer */
-    b.hidden=!!(m.si&&!m.si());
+    b.hidden=!!(m.si&&!conditionTenue(m.si));
     b.innerHTML=`${m.ico()}<span>${m.nom}<small>${m.sous}</small></span>`;
   });
 }
+/* Le tiroir est seulement poussé hors de l'écran : fermé, ses dix entrées
+   restent dans l'ordre de tabulation. On l'endort avec inert. */
+let dOuMenu=null;
 function ouvrirMenu(){
   rendreMenu();
-  $('#menu').classList.add('ouvert');
+  dOuMenu=document.activeElement;
+  const m=$('#menu');
+  m.removeAttribute('inert');
+  m.classList.add('ouvert');
   $('#voile-menu').classList.add('ouvert');
+  const p=[...m.querySelectorAll('.menu-item')].find(b=>!b.hidden);
+  if(p)p.focus({preventScroll:true});
 }
 function fermerMenu(){
-  $('#menu').classList.remove('ouvert');
+  const m=$('#menu'),etait=m.classList.contains('ouvert');
+  m.classList.remove('ouvert');
+  m.setAttribute('inert','');
   $('#voile-menu').classList.remove('ouvert');
+  if(!etait)return;
+  const c=(dOuMenu&&dOuMenu.isConnected&&dOuMenu!==document.body)?dOuMenu:$('#btn-menu');
+  dOuMenu=null;
+  if(c&&c.focus)c.focus({preventScroll:true});
 }
 function montrerOnglet(nom){
   const ec=$('#ecran-marche');
@@ -2214,7 +2255,9 @@ function rendreVignette(){
 
 function badgeRarete(r){
   const t=RARETES[r];
-  return `<span class="marque r${r}">${t.court}</span>`;
+  /* <wbr> ne se voit pas, mais laisse « Épices · peu fréquent » passer à la
+     ligne au lieu de déborder sur la colonne des prix dans une fenêtre étroite. */
+  return `<wbr><span class="marque r${r}">${t.court}</span>`;
 }
 function panneauMarche(){
   const p=$('#panneau-marche'),v=S.ville;
@@ -2237,8 +2280,10 @@ function panneauMarche(){
             consigne(g)?` · <span class="epuise">${fmt(consigne(g))} kg sous contrat</span>`:''}</div></div>
         <div class="prix">${fmt(pr.a)}<small>vend ${fmt(pr.v)} · le kg</small></div>
         <div class="duo">
-          <button class="pastille vendre" data-vendre="${g}" ${vendable(g)?'':'disabled'}>vendre</button>
-          <button class="pastille acheter" data-t-acheter="${g}" ${peutAcheter?'':'disabled'}>acheter</button>
+          <button class="pastille vendre" data-vendre="${g}"
+            aria-label="Vendre du ${d.nom.toLowerCase()}" ${vendable(g)?'':'disabled'}>vendre</button>
+          <button class="pastille acheter" data-acheter="${g}"
+            aria-label="Acheter du ${d.nom.toLowerCase()}" ${peutAcheter?'':'disabled'}>acheter</button>
         </div></div>`;
     }).join('');
   });
@@ -2881,7 +2926,8 @@ function panneauSauvegarde(){
     <h3>Reprendre une partie</h3>
     <p>Le voyage repart de la ville enregistrée. La partie en cours sera remplacée.</p>
     <button class="bouton petit creux" data-fichier="1" style="width:100%;margin-top:12px">Ouvrir un fichier .json</button>
-    <textarea class="zone" id="coller" placeholder="…ou collez ici le contenu d'une sauvegarde"></textarea>
+    <textarea class="zone" id="coller" aria-label="Contenu d'une sauvegarde à coller"
+      placeholder="…ou collez ici le contenu d'une sauvegarde"></textarea>
     <button class="bouton petit creux" data-importer="1" style="width:100%">Charger depuis le texte</button>
   </div>`;
 }
@@ -2932,7 +2978,7 @@ function panneauParametres(){
     <p style="margin-top:7px">Vous avez <b class="chiffre">${fmt(S.or)}</b> po en bourse.</p>
     <div class="rangee" style="margin-top:10px;gap:8px">
       <input type="number" min="0" step="100" max="${OR_AU_BANC}" value="${S.or}"
-        data-banc-champ="1" inputmode="numeric"
+        data-banc-champ="1" inputmode="numeric" aria-label="Or en bourse, en pièces"
         style="flex:1;min-width:0;padding:9px;background:var(--velin);border:1px solid var(--filet);
         border-radius:var(--r);color:var(--encre);font-family:var(--chiffres);font-size:17px">
       <button class="bouton petit" data-banc-fixer="1">Fixer</button>
@@ -3116,14 +3162,57 @@ function validerNegoce(){
   verifierRuine();
 }
 
-/* ═══════════════ feuilles ═══════════════ */
+/* ═══════════════ feuilles ═══════════════
+   Une feuille se dit role="dialog" aria-modal="true" : il faut tenir cette
+   promesse. Fermée, elle sort de l'ordre de tabulation (inert) — sinon le
+   clavier traverse une trentaine de boutons invisibles avant d'atteindre le
+   marché. Ouverte, elle prend le focus, le garde, et le rend d'où il venait. */
+/* Valider un achat referme la feuille puis redessine le marché : le bouton
+   « acheter » d'où l'on venait n'existe plus. On garde donc de quoi le
+   retrouver — son identifiant, ou sa marchandise — et on rend le focus une
+   image plus tard, quand le marché est reconstruit. */
+let dOuFeuille=null,dOuTrace=null;
+function repere(e){
+  if(!e||e===document.body||e===document.documentElement)return null;
+  if(e.id)return '#'+CSS.escape(e.id);
+  const a=[...e.attributes].find(x=>x.name.indexOf('data-')===0&&x.value);
+  return a?e.tagName.toLowerCase()+'['+a.name+'="'+CSS.escape(a.value)+'"]':null;
+}
 function ouvrirFeuille(sel){
+  const f=$(sel); if(!f)return;
+  dOuFeuille=document.activeElement;
+  dOuTrace=repere(dOuFeuille);
   $('#voile').classList.add('ouvert');
-  $(sel).classList.add('ouverte');
+  f.removeAttribute('inert');
+  f.classList.add('ouverte');
+  /* Une feuille qui demande un mot donne la main au champ ; les autres se font
+     annoncer par leur titre avant que le lecteur d'écran n'égrène les boutons. */
+  const champ=f.querySelector('input:not([type=hidden]),textarea');
+  const cible=(champ&&!champ.disabled)?champ:f;
+  if(cible===f)f.setAttribute('tabindex','-1');
+  cible.focus({preventScroll:true});
 }
 function fermerFeuilles(){
   $('#voile').classList.remove('ouvert');
-  document.querySelectorAll('.feuille').forEach(f=>f.classList.remove('ouverte'));
+  document.querySelectorAll('.feuille').forEach(f=>{
+    f.classList.remove('ouverte');
+    f.setAttribute('inert','');
+  });
+  const venu=dOuFeuille,trace=dOuTrace;
+  dOuFeuille=dOuTrace=null;
+  if(!venu&&!trace)return;
+  requestAnimationFrame(()=>{
+    /* si une autre feuille s'est ouverte entre-temps, on lui laisse le focus */
+    if(document.querySelector('.feuille.ouverte'))return;
+    /* le focus peut n'avoir pas encore quitté la feuille endormie : on ne le
+       reprend que s'il ne tient nulle part de visible */
+    const a=document.activeElement;
+    if(a&&a!==document.body&&a!==document.documentElement
+       &&!a.closest('.feuille')&&a.offsetParent!==null)return;
+    let c=(venu&&venu.isConnected&&venu!==document.body)?venu:null;
+    if(!c&&trace)c=document.querySelector(trace);
+    if(c&&c.offsetParent!==null&&!c.disabled&&c.focus)c.focus({preventScroll:true});
+  });
 }
 
 /* ═══════════════ itinéraires ═══════════════ */
@@ -5320,6 +5409,30 @@ $('#voile-menu').addEventListener('click',fermerMenu);
 $('#voile').addEventListener('click',()=>{
   if(!$('#feuille-event').classList.contains('ouverte'))fermerFeuilles();
 });
+
+/* Échap ferme ce qui est ouvert, et la tabulation tourne en rond dans la
+   feuille ouverte au lieu de s'en échapper. L'événement fait exception : c'est
+   un choix qu'on ne peut pas esquiver, ni du voile, ni du clavier. */
+document.addEventListener('keydown',e=>{
+  const ouverte=$('.feuille.ouverte');
+  if(e.key==='Escape'){
+    if(ouverte){
+      if(ouverte.id!=='feuille-event'){e.preventDefault();fermerFeuilles();}
+      return;
+    }
+    if($('#menu').classList.contains('ouvert')){e.preventDefault();fermerMenu();}
+    return;
+  }
+  if(e.key!=='Tab')return;
+  const cage=ouverte||($('#menu').classList.contains('ouvert')?$('#menu'):null);
+  if(!cage)return;
+  const dans=[...cage.querySelectorAll('a[href],button,input,select,textarea,[tabindex]')]
+    .filter(el=>!el.disabled&&el.tabIndex>=0&&!el.hidden&&el.offsetParent!==null);
+  if(!dans.length)return;
+  const premier=dans[0],dernier=dans[dans.length-1],ici=document.activeElement;
+  if(e.shiftKey&&(ici===premier||!cage.contains(ici))){e.preventDefault();dernier.focus();}
+  else if(!e.shiftKey&&(ici===dernier||!cage.contains(ici))){e.preventDefault();premier.focus();}
+});
 $('#fichier').addEventListener('change',e=>{
   const f=e.target.files&&e.target.files[0];
   if(!f)return;
@@ -7156,6 +7269,12 @@ function assigner(d){
 function demarrer(){
   appliquerTaille(tailleCourante());
   appliquerTheme(themePrefere());
+  /* Tout ce qui est hors de l'écran dort : le clavier n'a rien à y faire tant
+     que ce n'est pas ouvert. Le tiroir est peuplé une fois pour que ses entrées
+     portent un nom même avant la première ouverture. */
+  rendreMenu();
+  $('#menu').setAttribute('inert','');
+  document.querySelectorAll('.feuille').forEach(f=>f.setAttribute('inert',''));
   majTitre();
 }
 
