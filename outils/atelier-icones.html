@@ -8,7 +8,7 @@
 :root{
   --fond:#1C1A17; --fond-clair:#26231F; --bord:#3A352E;
   --encre:#E8E1D4; --encre-pale:#9C9484;
-  --or:#C9A227; --minium:#C24A32; --vert:#6E9B6A; --azur:#4A7BC8;
+  --or:#C9A227; --minium:#E0755C; --vert:#6E9B6A; --azur:#4A7BC8;
   --r:3px;
 }
 *{margin:0;padding:0;box-sizing:border-box;font:inherit;color:inherit;background:none;border:none}
@@ -1427,6 +1427,58 @@ function ecouterSaisie(apres){
   });
 }
 
+/* ═══════════════ les étiquettes et leurs champs ═══════════════
+   Les formulaires des ateliers écrivent
+
+       <div class="champ"><label>Nom</label><input …></div>
+
+   L'étiquette est **à côté** du champ, pas liée à lui : un lecteur d'écran
+   annonce « zone de saisie » sans dire laquelle, et cliquer le mot ne met pas
+   le curseur dedans. On les marie après coup plutôt que d'inventer un
+   identifiant à la main dans les quelques centaines d'endroits qui en écrivent
+   un — et comme les panneaux se réécrivent sans cesse, on refait le mariage à
+   chaque fois que le DOM bouge. */
+let nChamp=0;
+function lierEtiquettes(racine){
+  const r=racine||document;
+  r.querySelectorAll('.champ label:not([for])').forEach(l=>{
+    if(l.querySelector('input,select,textarea'))return;   /* déjà enveloppante */
+    const p=l.closest('.champ');
+    const c=p&&p.querySelector('input:not([type=hidden]),select,textarea');
+    if(!c)return;
+    if(!c.id)c.id='champ-'+(++nChamp);
+    l.setAttribute('for',c.id);
+  });
+  /* Deux formes que le mariage par .champ ne couvre pas.
+     Le menu « + Jalon… » : sa première option tient lieu d'étiquette, mais elle
+     ne s'annonce pas comme telle. */
+  r.querySelectorAll('select.ajout:not([aria-label])').forEach(s=>{
+    const o=s.options[0];
+    const t=o?o.textContent.replace(/^[+…\s]*/,'').replace(/…$/,'').trim():'';
+    s.setAttribute('aria-label',t||'Ajouter');
+  });
+  /* Un nombre encadré de deux mots dans une rangée — « de 3 à 9 » : c'est le
+     mot d'avant qui le nomme. */
+  r.querySelectorAll('.rangee>input:not([aria-label]),.rangee>select:not([aria-label])')
+   .forEach(c=>{
+    if(c.type==='hidden')return;
+    if(c.id&&document.querySelector('label[for="'+CSS.escape(c.id)+'"]'))return;
+    if(c.closest('label'))return;
+    const av=c.previousElementSibling;
+    const mot=av&&av.tagName==='SPAN'?av.textContent.trim():'';
+    if(mot)c.setAttribute('aria-label',mot);
+  });
+}
+function suivreLesChamps(){
+  lierEtiquettes();
+  let prevu=false;
+  new MutationObserver(()=>{
+    if(prevu)return;
+    prevu=true;
+    requestAnimationFrame(()=>{prevu=false;lierEtiquettes();});
+  }).observe(document.body,{childList:true,subtree:true});
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    LE BANDEAU
    ───────────────────────────────────────────────────────────────────────────
@@ -1459,17 +1511,29 @@ const OUTILS_TOUS=[
 const pageIci=()=>(location.pathname.split('/').pop()||'index.html');
 
 const STYLE_BANDEAU=`
-/* le jeton du coin : un livret ouvert, en masque pour suivre la couleur */
+/* ── le jeton ──
+   Une barre verticale posée le long du bord couvre ce qu'on lit : au téléphone
+   elle mangeait la flèche des cartes, au bureau le bord de l'aperçu. Un jeton
+   dans le coin ne recouvre jamais une colonne de lecture, et sa pastille dit
+   sans l'ouvrir combien de choses le dépôt contient. Le même partout : une
+   seule forme à tenir, et rien qui change de place selon la fenêtre. */
 #bandeau-poignee{--jeton:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M2.6 4.4h7.4a2.4 2.4 0 0 1 2 1.2 2.4 2.4 0 0 1 2-1.2h7.4v14.4h-7.4a2.4 2.4 0 0 0-2 1.2 2.4 2.4 0 0 0-2-1.2H2.6z' fill='none' stroke='%23000' stroke-width='2' stroke-linejoin='round'/%3E%3Cpath d='M12 5.6v14.4' stroke='%23000' stroke-width='1.6'/%3E%3C/svg%3E");
-  position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:60;
-  display:flex;flex-direction:column;align-items:center;gap:7px;padding:15px 7px;
+  position:fixed;right:0;z-index:60;
+  bottom:calc(104px + env(safe-area-inset-bottom,0px));
+  display:flex;align-items:center;justify-content:center;
+  width:46px;height:46px;padding:0;gap:0;font:inherit;font-size:0;
   background:var(--fond-clair);border:1px solid var(--bord);border-right:none;
-  border-radius:var(--r) 0 0 var(--r);color:var(--encre-pale);cursor:pointer;
-  font:inherit;font-size:12px;letter-spacing:.1em;writing-mode:vertical-rl;
-  text-orientation:mixed;font-variant:small-caps}
+  border-radius:50% 0 0 50%;color:var(--encre-pale);cursor:pointer;
+  box-shadow:-3px 0 12px #0006}
 #bandeau-poignee:hover{color:var(--or);border-color:var(--or)}
-#bandeau-poignee .compte{writing-mode:horizontal-tb;font-size:11px;color:var(--or);
-  font-variant-numeric:tabular-nums;letter-spacing:0}
+#bandeau-poignee::before{content:'';width:20px;height:20px;flex:none;
+  background:currentColor;
+  -webkit-mask:var(--jeton) center/contain no-repeat;
+  mask:var(--jeton) center/contain no-repeat}
+#bandeau-poignee .compte{position:absolute;top:-5px;left:-5px;min-width:19px;
+  height:19px;padding:0 4px;border-radius:10px;background:var(--or);color:#1C1A17;
+  font-size:11px;font-weight:700;line-height:19px;text-align:center}
+#bandeau-poignee .compte:empty{display:none}
 #bandeau-voile{position:fixed;inset:0;z-index:61;background:#0009;opacity:0;
   pointer-events:none;transition:opacity .18s}
 #bandeau-voile.ouvert{opacity:1;pointer-events:auto}
@@ -1576,27 +1640,14 @@ const STYLE_BANDEAU=`
 #bandeau .trous ul{list-style:none;display:grid;gap:5px}
 #bandeau .trous li{font-size:12.5px;line-height:1.5;color:var(--encre-pale)}
 #bandeau .trous li.dur{color:var(--encre)}
-/* ── au doigt ──
-   Une barre verticale de dix-sept centimètres posée en travers de la page
-   couvre ce qu'on est en train de lire, et cache la flèche des cartes. Sur un
-   écran étroit la poignée devient donc un simple jeton dans le coin, au-dessus
-   des barres que les ateliers y mettent déjà. */
-@media (max-width:720px){
-  #bandeau-poignee{top:auto;bottom:calc(104px + env(safe-area-inset-bottom,0px));
-    transform:none;writing-mode:horizontal-tb;padding:0;gap:0;
-    width:46px;height:46px;border-radius:50% 0 0 50%;border-right:none;
-    justify-content:center;font-size:0;box-shadow:-3px 0 12px #0006}
-  #bandeau-poignee::before{content:'';width:19px;height:19px;flex:none;
-    background:currentColor;
-    -webkit-mask:var(--jeton) center/contain no-repeat;
-    mask:var(--jeton) center/contain no-repeat}
-  #bandeau-poignee .compte{position:absolute;top:-5px;left:-5px;min-width:19px;
-    height:19px;padding:0 4px;border-radius:10px;background:var(--or);color:#1C1A17;
-    font-size:11px;font-weight:700;line-height:19px;text-align:center;
-    writing-mode:horizontal-tb}
-  #bandeau-poignee .compte:empty{display:none}
-}
 @media print{#bandeau,#bandeau-poignee,#bandeau-voile{display:none}}
+
+/* ── se voir au clavier ──
+   Le contour par défaut du navigateur est un liseré noir : sur un fond de
+   vélin brûlé il est invisible, et l'on ne sait plus où l'on est. Celui-ci ne
+   paraît qu'au clavier — :focus-visible — donc la souris n'y voit rien. */
+:focus-visible{outline:2px solid var(--or);outline-offset:2px;border-radius:2px}
+#bandeau a:focus-visible,#bandeau button:focus-visible{outline-offset:1px}
 `;
 
 let bandeauVue='codex', bandeauCherche='', bandeauPose=false;
@@ -1621,7 +1672,9 @@ function installerBandeau(){
   poignee.id='bandeau-poignee';
   poignee.type='button';
   poignee.setAttribute('aria-expanded','false');
-  poignee.innerHTML='Ce que vous avez écrit <span class="compte"></span>';
+  poignee.title='Ce que vous avez écrit';
+  poignee.setAttribute('aria-label','Ce que vous avez écrit');
+  poignee.innerHTML='<span class="compte"></span>';
 
   const voile=document.createElement('div');
   voile.id='bandeau-voile';
@@ -1648,12 +1701,36 @@ function installerBandeau(){
   document.body.appendChild(voile);
   document.body.appendChild(b);
 
+  /* Fermé, le tiroir reste dans la page : sans inert, la tabulation traverse
+     ses dix liens hors écran avant d'atteindre quoi que ce soit. Ouvert, le
+     focus y entre — sinon il faudrait retraverser toute la page pour lire ce
+     qu'on vient d'ouvrir — et à la fermeture il revient d'où il venait. */
+  let dOu=null;
+  const inerter=o=>{
+    b.toggleAttribute('inert',!o);
+    b.setAttribute('aria-hidden',String(!o));
+  };
   const ouvrir=o=>{
+    if(o&&!b.classList.contains('ouvert'))dOu=document.activeElement;
     b.classList.toggle('ouvert',o);
     voile.classList.toggle('ouvert',o);
     poignee.setAttribute('aria-expanded',String(o));
-    if(o)rendreBandeau();
+    inerter(o);
+    if(o){
+      rendreBandeau();
+      const premier=$('#bd-cherche',b)||$('#bd-fermer',b);
+      if(premier)premier.focus({preventScroll:true});
+    }else{
+      /* On rend le focus d'où il venait — mais une ouverture au clavier depuis
+         une page qui n'avait rien de focalisé le laisserait sur le corps, et
+         l'on repartirait du haut. La poignée est alors le bon endroit : c'est
+         là qu'on vient de refermer. */
+      const cible=(dOu&&dOu.isConnected&&dOu!==document.body)?dOu:poignee;
+      dOu=null;
+      if(cible&&cible.focus)cible.focus({preventScroll:true});
+    }
   };
+  inerter(false);
   poignee.onclick=()=>ouvrir(!b.classList.contains('ouvert'));
   voile.onclick=()=>ouvrir(false);
   $('#bd-fermer',b).onclick=()=>ouvrir(false);
@@ -1686,6 +1763,7 @@ function installerBandeau(){
   suivreDepot(compter);
   addEventListener('pageshow',compter);
   compter();
+  suivreLesChamps();
 }
 
 function rendreBandeau(){
