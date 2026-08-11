@@ -57,7 +57,10 @@
 /* .jet, .bouton et .record déclarent un display : sans ceci, l'attribut
    hidden serait sans effet sur eux, le navigateur les afficherait quand même. */
 [hidden]{display:none!important}
-html{height:100%}
+/* Safari sur iPhone grossit de lui-même le texte de certains blocs larges, ce
+   qui faisait déborder les mots hors des cadres taillés pour eux. On lui demande
+   de n'en rien faire : la mise en page décide seule de la taille. */
+html{height:100%;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{
   height:100%;overflow:hidden;
   background:var(--page);
@@ -70,7 +73,9 @@ body{
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;
   -webkit-tap-highlight-color:transparent;touch-action:manipulation;
   -webkit-user-select:none;user-select:none}
-:focus-visible{outline:2px solid var(--minium);outline-offset:2px}
+/* Le trait de focus : sans lui, on ne sait pas où l'on est au clavier. */
+:focus-visible{outline:2px solid var(--minium);outline-offset:2px;border-radius:2px}
+.feuille:focus-visible,.ecran:focus-visible{outline:none}
 
 #app{
   max-width:480px;margin:0 auto;height:100%;position:relative;
@@ -163,6 +168,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;
 :root[data-theme="nuit"] .barre-titre h1{text-shadow:0 0 15px rgba(255,186,92,.4)}
 .bouton-barre{width:40px;height:40px;flex:none;display:flex;align-items:center;justify-content:center;
   color:var(--encre);border-radius:3px}
+.bouton-barre.fantome{visibility:hidden;pointer-events:none}
 .bouton-barre svg{width:23px;height:23px;display:block}
 .torche-mini{width:17px;height:29px;flex:none;display:block}
 .torche-mini .corps{fill:var(--encre-pale)}
@@ -224,9 +230,19 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;
   padding-bottom:16px}
 .panneau{display:none;padding:6px 14px 8px}
 .panneau.actif{display:block}
+/* Au marché, c'est le rouleau qui défile ; le corps n'est plus qu'un bloc
+   parmi ceux qu'il emporte. */
+.defile{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain}
+.defile>.corps{flex:none;overflow:visible;min-height:0}
+/* Le nom de la catégorie reste en vue tant qu'on parcourt ses marchandises :
+   sans la vignette au-dessus, c'est lui qui dit où l'on en est. */
+#panneau-marche .cat-titre{position:sticky;top:0;z-index:2;
+  margin-left:-14px;margin-right:-14px;padding-left:14px;padding-right:14px;
+  background:var(--velin);box-shadow:0 6px 8px -6px rgba(20,14,6,.22)}
 
 /* ── lignes de marché : colonnes de grand-livre ── */
-.ligne{display:flex;align-items:center;gap:10px;padding:11px 2px;
+.ligne{display:flex;align-items:center;gap:8px;padding:11px 2px;
   border-bottom:1px dotted var(--velin-ombre)}
 .ligne:last-child{border-bottom:0}
 .ligne .nom{flex:1;min-width:0}
@@ -255,9 +271,12 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;
   font-variant-numeric:oldstyle-nums tabular-nums}
 .prix small{display:block;font-size:11px;color:var(--encre-pale);font-variant:small-caps;
   letter-spacing:.04em}
-.duo{display:flex;gap:6px}
-.pastille{width:48px;height:46px;border-radius:2px;border:1px solid var(--filet);
-  background:var(--velin-clair);font-size:13px;font-variant:small-caps;letter-spacing:.04em;
+.duo{display:flex;gap:6px;flex:none}
+/* Une pastille se taille sur son mot. Clouée à 48 px, « acheter » débordait du
+   cadre dès que le rendu du téléphone donnait la police un peu plus large. */
+.pastille{min-width:48px;height:46px;padding:0 6px;border-radius:2px;border:1px solid var(--filet);
+  background:var(--velin-clair);font-size:12px;font-variant:small-caps;letter-spacing:.03em;
+  white-space:nowrap;
   display:flex;align-items:center;justify-content:center;
   box-shadow:1px 1px 0 var(--velin-ombre)}
 .pastille:disabled{opacity:.3;box-shadow:none}
@@ -673,10 +692,6 @@ details.regles li{margin-bottom:6px}
   *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;
     transition-duration:.001ms !important;scroll-behavior:auto !important}
 }
-
-/* Le trait de focus : sans lui, on ne sait pas où l'on est au clavier. */
-:focus-visible{outline:2px solid var(--minium);outline-offset:2px;border-radius:2px}
-.feuille:focus-visible,.ecran:focus-visible{outline:none}
 </style>
 </head>
 <body>
@@ -845,6 +860,10 @@ details.regles li{margin-bottom:6px}
   <!-- ══════════ MARCHÉ ══════════ -->
   <section id="ecran-marche" class="ecran">
     <div id="registre" class="registre"></div>
+    <!-- Un seul rouleau : la cité, son air du jour et l'étal descendent
+         ensemble, pour que l'étal ait toute la fenêtre quand on cherche
+         une marchandise. Seuls le registre et le pied restent cloués. -->
+    <div class="defile" id="defile-marche">
     <div class="vignette" id="vignette"></div>
     <div class="entete" id="entete-marche">
       <p class="oeil" id="marche-oeil">Étape 1</p>
@@ -867,6 +886,7 @@ details.regles li{margin-bottom:6px}
       <div class="panneau" id="panneau-carnet"></div>
       <div class="panneau" id="panneau-parametres"></div>
       <div class="panneau" id="panneau-sauvegarde"></div>
+    </div>
     </div>
     <div class="pied"><button class="bouton" id="btn-route">Prendre la route</button></div>
   </section>
@@ -1871,6 +1891,9 @@ function montrerOnglet(nom){
   if(nom==='terrains')rendreTerrains();
   if(nom==='carnet')panneauCarnet();
   if(S)S.onglet=nom;
+  /* on change d'onglet : on revient en haut du rouleau, sinon on tombe au
+     milieu du convoi parce qu'on avait descendu l'étal */
+  const d=$('#defile-marche');if(d)d.scrollTop=0;
   fermerMenu();
 }
 function icoLumiere(){
@@ -1885,13 +1908,20 @@ function ecran(id){
   document.querySelectorAll('.ecran').forEach(e=>e.classList.remove('actif'));
   fermerMenu();
   $('#barre').hidden=(id==='ecran-titre'||id==='ecran-route');
-  $('#btn-menu').hidden=!(id==='ecran-marche'||id==='ecran-routes');
+  /* La poignée du menu ne sert qu'au marché et aux itinéraires — mais la cacher
+     tout à fait décalait le titre de vingt-trois pixels vers la gauche, puisque
+     la lune, elle, reste à droite. On lui laisse donc sa place et on la rend
+     seulement invisible et hors d'atteinte. */
+  const poignee=$('#btn-menu'),utile=(id==='ecran-marche'||id==='ecran-routes');
+  poignee.hidden=false;
+  poignee.classList.toggle('fantome',!utile);
+  poignee.toggleAttribute('inert',!utile);
   const e=$('#'+id);
   e.classList.add('actif');
   const pans=e.querySelectorAll('.panneau');
   if(pans.length===1)pans[0].classList.add('actif');
   else if(pans.length&&!e.querySelector('.panneau.actif'))montrerOnglet('marche');
-  const c=e.querySelector('.corps');if(c)c.scrollTop=0;
+  const c=e.querySelector('.defile')||e.querySelector('.corps');if(c)c.scrollTop=0;
   window.scrollTo(0,0);
 }
 function jaugeMini(part,classe){
@@ -2255,8 +2285,8 @@ function rendreVignette(){
 
 function badgeRarete(r){
   const t=RARETES[r];
-  /* <wbr> ne se voit pas, mais laisse « Épices · peu fréquent » passer à la
-     ligne au lieu de déborder sur la colonne des prix dans une fenêtre étroite. */
+  /* <wbr> ne se voit pas, mais laisse le cachet passer sous le nom au lieu de
+     déborder sur la colonne des prix quand la fenêtre est étroite. */
   return `<wbr><span class="marque r${r}">${t.court}</span>`;
 }
 function panneauMarche(){
