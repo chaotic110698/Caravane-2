@@ -64,6 +64,15 @@ option{background:var(--fond-clair)}
   repeating-conic-gradient(#211E1A 0% 25%,#1A1815 0% 50%) 50%/22px 22px;
   overflow:hidden;touch-action:none}
 #toile svg{display:block;width:100%;height:100%}
+#geste{position:absolute;left:50%;transform:translateX(-50%);z-index:6;
+  bottom:calc(12px + env(safe-area-inset-bottom,0px));
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;
+  max-width:calc(100% - 20px);padding:8px 10px;
+  background:var(--fond-clair);border:1px solid var(--bord);border-radius:4px;
+  box-shadow:0 6px 20px #0008}
+#geste-quoi{font-size:13px;color:var(--encre-pale);white-space:nowrap}
+#geste .bouton{min-height:38px}
+@media (pointer:coarse){#geste .bouton{min-height:44px}}
 #depot{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   flex-direction:column;gap:10px;text-align:center;padding:30px;color:var(--encre-pale);
   pointer-events:none}
@@ -248,6 +257,15 @@ h4.section{font-size:11px;font-variant:small-caps;letter-spacing:.09em;
       </g>
     </svg>
     <div id="depot"></div>
+    <!-- Fermer un tracé, défaire un sommet et abandonner n'existaient qu'au
+         clavier : sur un téléphone, il n'y a pas de touche Entrée quand aucun
+         champ n'est actif, et la frontière restait ouverte pour toujours. -->
+    <div id="geste" hidden>
+      <span id="geste-quoi"></span>
+      <button class="bouton" id="geste-finir">Fermer le tracé</button>
+      <button class="bouton creux" id="geste-defaire">Défaire un sommet</button>
+      <button class="bouton creux" id="geste-abandon">Abandonner</button>
+    </div>
   </div>
 
   <div id="panneau">
@@ -303,7 +321,7 @@ h4.section{font-size:11px;font-variant:small-caps;letter-spacing:.09em;
         avec le clic gauche, ou deux doigts. La molette zoome. Le clic gauche seul ne
         déplace jamais la carte.</p>
         <p style="margin-top:6px"><b>Lieu</b> — cliquez pour poser. <b>Voie</b> — cliquez un lieu
-        puis un autre. <b>Frontière</b> — cliquez les sommets, <kbd>Entrée</kbd> pour fermer.
+        puis un autre. <b>Frontière</b> — cliquez les sommets, puis le bouton <b>Fermer le tracé</b> qui apparaît sous la carte (ou <kbd>Entrée</kbd>).
         <b>Étalon</b> — cliquez deux points, puis saisissez la distance réelle.</p>
         <p style="margin-top:6px"><b>Plusieurs cartes</b> — <b>+ Carte</b> en ouvre une autre :
         le monde d'un côté, l'intérieur d'une cité de l'autre, chacune avec son fond, son
@@ -2268,6 +2286,7 @@ function dessiner(){
   /* Tout ce qui se dessine appartient à la carte ouverte : les autres attendent
      leur onglet. C'est aussi ce que fait le jeu, qui n'affiche jamais que la
      carte où l'on se trouve. */
+  majGeste();
   /* ── régions ── */
   $('#c-regions').innerHTML=contreesIci().filter(c=>c.frontiere&&c.frontiere.length>2).map(c=>
     `<polygon class="region${choix&&choix.genre==='contree'&&choix.cle===c.cle?' choisi':''}"
@@ -2404,7 +2423,37 @@ function dessinerProvisoire(pos){
     h+=`<line class="provisoire" x1="${etalonEnCours.x}" y1="${etalonEnCours.y}"
          x2="${pos.x}" y2="${pos.y}"/>`;
   c.innerHTML=h;
+  majGeste();
   appliquerVue();
+}
+
+/* La barre des gestes en cours. Fermer un tracé, revenir d'un sommet et
+   abandonner n'avaient qu'un raccourci clavier ; sur un téléphone, on ne
+   pouvait plus rien faire d'une frontière commencée. */
+function majGeste(){
+  const g=$('#geste');if(!g)return;
+  const n=frontiereEnCours?frontiereEnCours.points.length:0;
+  const quoi=n?'frontiere':voieDepuis?'voie':passageDepuis?'passage':etalonEnCours?'etalon':null;
+  g.hidden=!quoi;
+  if(!quoi)return;
+  const finir=$('#geste-finir'),defaire=$('#geste-defaire');
+  finir.hidden=quoi!=='frontiere';
+  defaire.hidden=quoi!=='frontiere';
+  if(quoi==='frontiere'){
+    finir.disabled=n<3;
+    $('#geste-quoi').textContent=n+(n>1?' sommets posés':' sommet posé')
+      +(n<3?' — il en faut trois':'');
+  }else{
+    $('#geste-quoi').textContent=quoi==='voie'?'Voie commencée — cliquez le lieu d\'arrivée.'
+      :quoi==='passage'?'Passage commencé — cliquez la porte de l\'autre côté.'
+      :'Étalon commencé — cliquez le second point.';
+  }
+}
+function abandonnerGeste(){
+  voieDepuis=null;etalonEnCours=null;
+  if(frontiereEnCours)frontiereEnCours={cle:contreeCourante,points:[]};
+  if(passageDepuis){passageDepuis=null;message('Passage abandonné.');dessiner();}
+  dessinerProvisoire(null);
 }
 
 /* ═══════════════ panneau ═══════════════ */
@@ -2571,7 +2620,7 @@ function rendreSelection(){
       <div class="champ"><label>Teinte</label><input type="color" id="s-teinte" value="${c.teinte}"></div>
       <p class="aide" style="margin-top:7px">${c.frontiere&&c.frontiere.length>2
         ? c.frontiere.length+' sommets de frontière tracés.'
-        : 'Pas de frontière tracée. Outil <b>Frontière</b>, puis <kbd>Entrée</kbd> pour fermer.'}</p>
+        : 'Pas de frontière tracée. Outil <b>Frontière</b>, posez trois sommets, puis <b>Fermer le tracé</b>.'}</p>
       <button class="bouton" style="margin-top:9px" id="s-refrontiere">Retracer la frontière</button>`;
     $('#s-nom').oninput=e=>{c.nom=e.target.value;rendreContrees();sauverAuto();};
     $('#s-gentile').oninput=e=>{c.gentile=e.target.value;sauverAuto();};
@@ -3317,6 +3366,18 @@ $('#toile').addEventListener('dblclick',ev=>{
 
 $('#toile').addEventListener('auxclick',ev=>{if(ev.button===1)ev.preventDefault();});
 
+/* La barre est posée sur la toile : sans cela, appuyer sur « Fermer » poserait
+   un sommet de plus avant de fermer. */
+['pointerdown','pointerup','pointermove','click','dblclick'].forEach(t=>
+  $('#geste').addEventListener(t,ev=>ev.stopPropagation()));
+
+$('#geste-finir').addEventListener('click',()=>{terminerFrontiere();dessinerProvisoire(null);});
+$('#geste-defaire').addEventListener('click',()=>{
+  if(frontiereEnCours&&frontiereEnCours.points.length)frontiereEnCours.points.pop();
+  dessinerProvisoire(null);
+});
+$('#geste-abandon').addEventListener('click',abandonnerGeste);
+
 document.addEventListener('keyup',ev=>{
   if(ev.code==='Space'){espace=false;$('#toile').style.cursor=CURSEURS[outil]||'default';}
 });
@@ -3345,10 +3406,10 @@ document.addEventListener('keydown',ev=>{
   }
   else if(ev.key==='Enter'&&outil==='frontiere')terminerFrontiere();
   else if(ev.key==='Escape'){
-    if(frontiereEnCours&&frontiereEnCours.points.length)frontiereEnCours.points.pop();
-    voieDepuis=null;etalonEnCours=null;
-    if(passageDepuis){passageDepuis=null;message('Passage abandonné.');dessiner();}
-    dessinerProvisoire(null);
+    if(frontiereEnCours&&frontiereEnCours.points.length){
+      frontiereEnCours.points.pop();dessinerProvisoire(null);return;
+    }
+    abandonnerGeste();
   }
   else if(ev.key==='Delete'||ev.key==='Backspace'){ev.preventDefault();supprimerSelection();}
 });
