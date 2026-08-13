@@ -416,6 +416,36 @@ les embauche à la Troupe, ils touchent leur solde à chaque arrivée. Ils se ba
 on ne les touche qu'une fois le dernier homme d'armes tombé — perdre son comptable dans
 une embuscade est donc le prix de n'avoir gardé personne pour le défendre.
 
+### Faire parler quelqu'un d'un cap
+
+Personne ne connaît un cap en entier. Dans l'atelier d'événements ou de dialogues, l'effet
+**Dire un morceau de savoir** livre un bout de ce que quelqu'un sait — et le bout se
+calcule à l'instant où la phrase se dit, depuis la carte réelle. **Vous n'écrivez jamais
+un chiffre** : déplacer le lieu change ce qu'on en dit, sans que rien ne se désaccorde.
+
+Un cap se lit sur trois chiffres — 045, 130, 287 — et se coupe en trois morceaux :
+
+| morceau | pour 130 | ce qu'on peut en faire dire |
+|---|---|---|
+| **début** | `1` | « Je crois que ça commence par 1. » |
+| **milieu** | `3` | « Il y a un 3 dedans, ça j'en suis sûr. » |
+| **fin** | `30` | « La fin, c'est 30. Enfin, je crois. » |
+
+Le **début** plus la **fin** refont le cap entier : il faut donc au moins deux bouches, et
+l'on peut en mettre trois. Vous écrivez la phrase avec un trou — `{bout}` — et le jeu y
+glisse le chiffre.
+
+Cochez **C'est un mensonge** et le morceau donné sera faux : même longueur, même place,
+impossible à distinguer d'un vrai. Le joueur ne l'apprendra qu'en suivant le cap et en ne
+trouvant rien.
+
+Le jeu ne retient rien de tout cela. Il ne note pas la rumeur, ne dit pas si elle était
+vraie, ne recoupe pas les morceaux. C'est au joueur de tenir ses pages — le carnet a
+quarante pages pour ça.
+
+> À ne pas confondre avec **Lancer une rumeur de prix**, qui existait déjà : celle-là fait
+> réellement monter le prix à l'arrivée. Celle-ci ne fait que parler.
+
 ### Ce qu'une voie exige
 
 Sous les mesures, le bloc **Ce que la voie exige** ajoute des conditions à n'importe

@@ -656,6 +656,82 @@
           ]
         }
       }
+    },
+    {
+      "cle": "bavard-essai",
+      "personnage": "bavard-d-essai",
+      "titre": "Un bruit de comptoir (exemple)",
+      "priorite": 1,
+      "entree": "accueil",
+      "repliques": {
+        "accueil": {
+          "oeil": "Exemple jetable — les morceaux de cap",
+          "dit": [
+            "« Il paraît qu'il y a quelque chose là-haut, hors des routes. Je ne sais pas tout. »"
+          ],
+          "reponses": [
+            {
+              "txt": "Ce que vous savez, alors. (20 po)",
+              "effets": [
+                {
+                  "faire": "or",
+                  "de": -20
+                },
+                {
+                  "faire": "savoir",
+                  "quoi": "cap",
+                  "lieu": "lieu-cache-essai",
+                  "depuis": "vaulmier",
+                  "part": "debut",
+                  "nomme": "bout"
+                }
+              ],
+              "vers": "vrai"
+            },
+            {
+              "txt": "Et gratuitement ?",
+              "effets": [
+                {
+                  "faire": "savoir",
+                  "quoi": "cap",
+                  "lieu": "lieu-cache-essai",
+                  "depuis": "vaulmier",
+                  "part": "fin",
+                  "faux": true,
+                  "nomme": "bout"
+                }
+              ],
+              "vers": "faux"
+            },
+            {
+              "txt": "Une autre fois.",
+              "vers": null
+            }
+          ]
+        },
+        "vrai": {
+          "dit": [
+            "« Depuis Vaulmier, le cap commence par {bout}. Le reste, demandez à d'autres. »"
+          ],
+          "reponses": [
+            {
+              "txt": "Merci.",
+              "vers": null
+            }
+          ]
+        },
+        "faux": {
+          "dit": [
+            "« La fin, c'est {bout}. Enfin, je crois. »"
+          ],
+          "reponses": [
+            {
+              "txt": "Vous croyez.",
+              "vers": null
+            }
+          ]
+        }
+      }
     }
   ]
 }

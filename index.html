@@ -6450,6 +6450,18 @@ function effetsEv(liste,sac){
       case 'escorte':S.escorte=Math.max(S.escorte||0,Number(e.de)||1);break;
       /* Un papier qu'on vous délivre : il ouvre les passages qui le réclament,
          et il s'inscrit au carnet. Sans lieu, il vaut partout. */
+      /* ── la rumeur ──
+         Quelqu'un vous dit un morceau de ce qu'il sait. Le morceau n'est jamais
+         écrit dans le fichier : le jeu le tire du cap réel, ou du prix réel, au
+         moment où la phrase se prononce. Poser le lieu sur la carte suffit donc,
+         et rien ne peut se désaccorder.
+
+         Rien n'est retenu nulle part. Le jeu ne note pas la rumeur, ne dit pas
+         si elle est vraie, ne recoupe rien. C'est au joueur de tenir ses pages.
+         Une rumeur fausse se dit exactement comme une vraie. */
+      case 'savoir':{
+        retenu=morceauDeSavoir(e);
+        break;}
       case 'laissezPasser':{
         const c=e.cle||'';
         if(!c)break;
@@ -6484,7 +6496,9 @@ function effetsEv(liste,sac){
         break;}
       default:console.warn('effet inconnu dans data/evenements.json :',e.faire);
     }
-    if(e.nomme&&sac[e.nomme]===undefined)sac[e.nomme]=retenu;
+    /* un effet nommé appelé sans sac ne doit pas renverser la partie : il n'a
+       simplement personne à qui donner ce qu'il a retenu */
+    if(e.nomme&&sac&&sac[e.nomme]===undefined)sac[e.nomme]=retenu;
   });
 }
 /* Ce qu'une note annonce avant qu'on choisisse : les montants sont évalués à
@@ -7731,6 +7745,54 @@ function panneauCarnet(){
   if(!h)h=`<div class="carte"><h3>Le carnet</h3><p>Rien encore. Les gens qu'on croise,
     les objets qu'on rapporte et les services qu'on rend viendront s'inscrire ici.</p></div>`;
   p.innerHTML=tete+h;
+}
+
+/* ═══════════════ ce qu'on vous dit ═══════════════
+   Personne ne connaît un cap en entier. On en tient un bout — le début, le
+   milieu, la fin — et il faut trois bouches pour trois cents soixante degrés.
+   Le morceau se calcule à l'instant où la phrase se dit, depuis le cap réel :
+   déplacer le lieu sur la carte change les rumeurs sans qu'on y touche.
+
+   Une rumeur fausse donne un chiffre faux, de la même longueur et à la même
+   place, et se dit exactement comme une vraie. Le jeu ne retient rien, ne
+   recoupe rien et ne prévient de rien : c'est au joueur de tenir ses pages. */
+const PARTS_CAP={debut:1,milieu:1,fin:2};
+function capEnTrois(c){
+  const t=String(Math.max(0,Math.min(359,Math.round(c)))).padStart(3,'0');
+  return {debut:t.slice(0,1),milieu:t.slice(1,2),fin:t.slice(1)};
+}
+/* Un chiffre faux, jamais le vrai, et de la même longueur : sinon le mensonge
+   se verrait à l'œil. */
+function mentir(vrai){
+  const n=vrai.length;
+  const haut=Math.pow(10,n);
+  for(let i=0;i<40;i++){
+    const f=String(ri(0,haut-1)).padStart(n,'0');
+    if(f!==vrai)return f;
+  }
+  return vrai;
+}
+function morceauDeSavoir(e){
+  if(e.quoi==='prix'){
+    const v=S.villes.find(x=>x.cle===e.lieu||x.nom===e.lieu);
+    const g=e.bien;
+    if(!v||!g||!G[g])return '—';
+    /* le prix d'ailleurs se devine du nôtre : ni le joueur ni le bavard ne
+       peuvent connaître au sou près un étal où l'on n'est pas */
+    const p=Math.round((S.prix[g]||{a:G[g].base}).a*(v.stat[g]||1)*rnd(.85,1.15));
+    return fmt(e.faux?Math.round(p*pick([.45,.55,1.7,2.2])):p);
+  }
+  /* par défaut : un morceau de cap */
+  const j=LIEUX?LIEUX.findIndex(l=>l.cle===e.lieu):-1;
+  if(j<0)return '—';
+  const depuis=e.depuis?(PAR_CLE[e.depuis]!==undefined?PAR_CLE[e.depuis]:-1)
+                       :indexVille(S.ville);
+  if(depuis<0)return '—';
+  const c=capEntre(depuis,j);
+  if(c===null)return '—';
+  const part=PARTS_CAP[e.part]!==undefined?e.part:'debut';
+  const vrai=capEnTrois(c)[part];
+  return e.faux?mentir(vrai):vrai;
 }
 
 /* ═══════════════ la boussole ═══════════════

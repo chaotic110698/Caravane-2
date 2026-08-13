@@ -56,7 +56,7 @@ L'issue ne dépend pas du sort mais de ce que vous avez : assez d'or, assez de p
 
 ## Ce qu'un choix peut faire
 
-19 effets, qu'on empile dans l'ordre qu'on veut. Chacun peut **retenir son**
+20 effets, qu'on empile dans l'ordre qu'on veut. Chacun peut **retenir son**
 **résultat** sous un nom, pour que le texte le cite ensuite entre accolades.
 
 ### Gagner ou perdre de l'or
@@ -274,6 +274,23 @@ Remet au marchand un papier qui ouvre les frontières le réclamant. Il s'inscri
 **Ce qu'il retient** — Retient le nom du laissez-passer, pour le citer dans le texte.
 
 > On vous glisse {papier} dans la main sans un mot.
+
+### Dire un morceau de savoir
+
+Quelqu'un vous livre un bout de ce qu'il sait — un chiffre du cap qui mène quelque part, ou le prix qu'on pratique ailleurs. Le bout se calcule à l'instant où la phrase se dit, depuis la carte réelle : déplacer un lieu change ce qu'on en dit sans qu'on y touche, et aucun nombre n'est à recopier. Le jeu ne retient rien, ne recoupe rien, ne dit jamais si c'est vrai — c'est au joueur de le noter dans ses pages. À ne pas confondre avec « Lancer une rumeur de prix », qui, elle, fait vraiment monter le prix : celle-ci ne fait que parler.
+
+| réglage | ce que c'est | à savoir |
+|---|---|---|
+| **De quoi on parle** | Une valeur parmi une liste fermée. | « cap » donne un morceau du cap qui mène à un lieu caché ; « prix » donne le prix approximatif d'une marchandise dans une cité. Par défaut : cap. |
+| **Quel lieu** | La clé d'un lieu du monde, telle que l'atelier de carte la donne. Laissé vide, l'effet vaut partout. | Le lieu caché dont on donne le cap, ou la cité dont on donne le prix. **Obligatoire.** |
+| **Depuis quelle cité** | La clé d'un lieu du monde, telle que l'atelier de carte la donne. Laissé vide, l'effet vaut partout. | Le point de départ du cap. Laissé vide, c'est la cité où la conversation se tient. |
+| **Quel morceau du cap** | Une valeur parmi une liste fermée. | Un cap se lit sur trois chiffres — 045, 130, 287. « début » donne le premier, « milieu » le deuxième, « fin » les deux derniers. Il faut donc au moins deux bouches, et l'on peut en mettre trois. Par défaut : debut. |
+| **Quelle marchandise** | Une marchandise de biens.json, ou « au hasard ». | Seulement pour un prix. |
+| **C'est un mensonge** | Oui ou non. | Le morceau donné sera faux — de la même longueur, à la même place, et impossible à distinguer d'un vrai. Le joueur ne l'apprendra qu'en suivant le cap. Par défaut : false. |
+
+**Ce qu'il retient** — Retient le morceau dit, pour le glisser dans la phrase.
+
+> Je crois bien que ça commence par {bout}. Ou alors je confonds.
 
 ## Ce qu'on peut demander à l'état du convoi
 

@@ -385,6 +385,59 @@
     "explique": "Retient le nom du laissez-passer, pour le citer dans le texte.",
     "exemple": "On vous glisse {papier} dans la main sans un mot."
    }
+  },
+  "savoir": {
+   "nom": "Dire un morceau de savoir",
+   "explique": "Quelqu'un vous livre un bout de ce qu'il sait — un chiffre du cap qui mène quelque part, ou le prix qu'on pratique ailleurs. Le bout se calcule à l'instant où la phrase se dit, depuis la carte réelle : déplacer un lieu change ce qu'on en dit sans qu'on y touche, et aucun nombre n'est à recopier. Le jeu ne retient rien, ne recoupe rien, ne dit jamais si c'est vrai — c'est au joueur de le noter dans ses pages. À ne pas confondre avec « Lancer une rumeur de prix », qui, elle, fait vraiment monter le prix : celle-ci ne fait que parler.",
+   "parametres": {
+    "quoi": {
+     "nom": "De quoi on parle",
+     "type": "choix",
+     "defaut": "cap",
+     "options": [
+      "cap",
+      "prix"
+     ],
+     "aide": "« cap » donne un morceau du cap qui mène à un lieu caché ; « prix » donne le prix approximatif d'une marchandise dans une cité."
+    },
+    "lieu": {
+     "nom": "Quel lieu",
+     "type": "lieu",
+     "requis": true,
+     "aide": "Le lieu caché dont on donne le cap, ou la cité dont on donne le prix."
+    },
+    "depuis": {
+     "nom": "Depuis quelle cité",
+     "type": "lieu",
+     "aide": "Le point de départ du cap. Laissé vide, c'est la cité où la conversation se tient."
+    },
+    "part": {
+     "nom": "Quel morceau du cap",
+     "type": "choix",
+     "defaut": "debut",
+     "options": [
+      "debut",
+      "milieu",
+      "fin"
+     ],
+     "aide": "Un cap se lit sur trois chiffres — 045, 130, 287. « début » donne le premier, « milieu » le deuxième, « fin » les deux derniers. Il faut donc au moins deux bouches, et l'on peut en mettre trois."
+    },
+    "bien": {
+     "nom": "Quelle marchandise",
+     "type": "bien",
+     "aide": "Seulement pour un prix."
+    },
+    "faux": {
+     "nom": "C'est un mensonge",
+     "type": "booleen",
+     "defaut": false,
+     "aide": "Le morceau donné sera faux — de la même longueur, à la même place, et impossible à distinguer d'un vrai. Le joueur ne l'apprendra qu'en suivant le cap."
+    }
+   },
+   "nomme": {
+    "explique": "Retient le morceau dit, pour le glisser dans la phrase.",
+    "exemple": "Je crois bien que ça commence par {bout}. Ou alors je confonds."
+   }
   }
  },
  "interrogations": {
