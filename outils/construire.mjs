@@ -521,6 +521,108 @@ trace('## Où vos icônes servent', '',
 TUTOS['icones'] = t.join('\n').replace(/\n{3,}/g, '\n\n') + '\n';
 writeFileSync(join(ICI, 'TUTORIEL-ICONES.md'), TUTOS['icones'], 'utf8');
 
+/* ════════════════════ 1 quinquies bis. le tutoriel du calendrier ════════════════════
+   Il se lit dans data/calendrier.json : changer l'horloge livrée change le
+   mode d'emploi, sans qu'on ait à y penser. */
+
+const CAL = litJson('data', 'calendrier.json');
+const kal = [];
+const horloge = (...x) => kal.push(...x);
+const romainCal = (n) => {
+  const t = [[1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'], [100, 'C'], [90, 'XC'],
+             [50, 'L'], [40, 'XL'], [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']];
+  let r = '', v = Math.max(1, Math.round(n || 1));
+  t.forEach(([p, s]) => { while (v >= p) { r += s; v -= p; } });
+  return r;
+};
+const jpa = CAL.joursParMois * CAL.mois.length;
+
+horloge('# Le calendrier — mode d\'emploi', '',
+  '> Cette page est **engendrée** depuis [`data/calendrier.json`](../data/calendrier.json).',
+  '> Ne la corrigez pas à la main : corrigez le fichier — ou l\'atelier — et relancez',
+  '> `node outils/construire.mjs`.', '');
+
+horloge('## Où le trouver', '',
+  'L\'atelier est [`atelier-calendrier.html`](atelier-calendrier.html), depuis le hub ou',
+  'depuis le bandeau de n\'importe quel atelier. Il tient dans une page : la forme du',
+  'temps, les mois, les moments du jour, et le premier jour du monde.', '');
+
+horloge('## Ce que le temps fait dans le jeu', '',
+  '**Une étape de voyage vaut une journée.** Le jour tourne à chaque pas de la route, pas',
+  'à l\'arrivée : une traite de cinq étapes coûte cinq jours. La date se lit en haut de',
+  'l\'écran du marché, et en entier sur l\'écran de fin.', '',
+  'L\'**heure**, elle, n\'a qu\'un pouvoir pour l\'instant : elle décide de la lumière sur la',
+  'cité où l\'on débouche. Une longue traite arrive au couchant, une courte au matin. Tout',
+  'le reste — les cols qui se ferment, les relevés du comptable qui se périment, une',
+  'créature qui ne sort que certains mois — viendra s\'accrocher là, et ne coûtera alors',
+  'qu\'une condition de plus.', '');
+
+horloge('## La forme du temps', '', '| | |', '|---|---|',
+  `| Heures dans une journée | **${CAL.heuresParJour}** |`,
+  `| Jours dans un mois | **${CAL.joursParMois}** |`,
+  `| Mois dans une année | **${CAL.mois.length}** |`,
+  `| Jours dans une année | **${jpa}** — donc ${jpa} étapes de voyage |`, '');
+
+horloge('Les trois premiers se règlent dans l\'atelier ; le quatrième s\'en déduit. Changer la',
+  'longueur d\'un jour ramène les moments dans la nouvelle journée : rien ne peut sortir',
+  'des bornes.', '');
+
+horloge('## Les mois', '');
+if (CAL.mois.some((m) => m.saison)) {
+  horloge('| Rang | Nom | Saison |', '|---|---|---|');
+  CAL.mois.forEach((m, i) => horloge(`| ${i + 1} | **${m.nom}** | ${m.saison || '—'} |`));
+} else {
+  horloge('| Rang | Nom |', '|---|---|');
+  CAL.mois.forEach((m, i) => horloge(`| ${i + 1} | **${m.nom}** |`));
+}
+horloge('', 'Le **nom** paraît partout dans le jeu. La **saison** ne sert encore à rien et attend',
+  'les cols qui s\'ouvrent et se ferment ; posez-la quand même, elle sera lue le jour venu.', '',
+  'Chaque mois garde une **clé** invisible et stable : renommer un mois ne casse rien de',
+  'ce qui s\'y accroche. Les flèches le déplacent, la croix l\'ôte — il en faut au moins un.', '');
+
+horloge('## Les moments du jour', '');
+horloge('| Moment | De | À |', '|---|---|---|');
+const NOM_MOMENT = { aube: 'Le petit matin', midi: 'Le plein midi',
+                     couchant: 'Le soleil couchant', nuit: 'La nuit tombée' };
+CAL.moments.forEach((m) => horloge(`| ${NOM_MOMENT[m.cle] || m.cle} | ${m.de}ʰ | ${m.a}ʰ |`));
+horloge('', 'Un moment peut **enjamber minuit** : la nuit va de ' + CAL.moments[3].de + ' à ' +
+  CAL.moments[3].a + ', et l\'atelier le comprend sans qu\'on ait rien à dire.', '',
+  'Le ruban coloré sous les champs montre la journée entière, heure par heure. Une case',
+  '**grise** est une heure que personne ne réclame — ce n\'est pas une panne, elle retombe',
+  'sur le premier moment, mais c\'est presque toujours un oubli. Une heure réclamée par',
+  'deux moments revient au premier de la liste ; l\'atelier vous le dit aussi.', '');
+
+const d0 = CAL.debut;
+horloge('## Le premier jour du monde', '',
+  `La première étape d'une partie tombe le **${d0.jour}${d0.jour === 1 ? 'ᵉʳ' : 'ᵉ'} jour du ` +
+  `${CAL.mois[d0.mois].nom}, an ${romainCal(d0.annee)}**, à ${d0.heure} heures.`, '',
+  'Tout le reste se compte à partir de là. Décaler ce jour décale l\'histoire entière —',
+  'utile quand on veut qu\'une partie commence juste avant la fermeture d\'un col.', '');
+
+horloge('## Les trois boutons de la barre', '', '| | |', '|---|---|',
+  '| **Tirer au sort** | Des nombres plausibles, et rien d\'autre : il ne nomme jamais un mois autrement que « Mois I ». C\'est un banc d\'essai, pas un générateur de récit. |',
+  '| **Repartir de l\'horloge nue** | Rétablit le calendrier livré, celui qui ne dit rien. |',
+  '| **Exporter calendrier.json** | Le fichier que le jeu lit. Posez-le dans `data/`. |', '');
+
+horloge('## Où poser le vôtre', '',
+  'Deux endroits, au choix :', '',
+  '- **`data/calendrier.json`** — le fichier livré. Le remplacer suffit.',
+  '- **`data/<votre dossier>/calendrier.json`** — un calendrier d\'auteur, qui l\'emporte',
+  '  sur le premier quand il existe. C\'est la voie à prendre si vous voulez garder vos',
+  '  noms hors d\'un dépôt public : le jeu tourne sans, avec l\'horloge nue.', '',
+  'Dans les deux cas le jeu se charge du reste : il n\'y a rien à déclarer ailleurs.', '');
+
+horloge('## Ce que l\'atelier vous dit', '',
+  'La colonne de droite montre trois choses en permanence : le **premier mois** jour par',
+  'jour, **un jour au hasard** traduit en date — tapez 137 et il vous dit où cela tombe —',
+  'et **ce qui cloche** : un mois sans nom, deux mois du même nom, une heure orpheline,',
+  'une heure réclamée deux fois.', '',
+  'Il vous signale aussi, en vert, quand vos mois portent **vos** noms plutôt que « Mois I ».',
+  'Ce n\'est pas un reproche : c\'est un rappel que ce fichier-là n\'a plus rien de jetable.', '');
+
+TUTOS['calendrier'] = kal.join('\n').replace(/\n{3,}/g, '\n\n') + '\n';
+writeFileSync(join(ICI, 'TUTORIEL-CALENDRIER.md'), TUTOS['calendrier'], 'utf8');
+
 /* ════════════════════ 1 sexies. le tutoriel des dialogues ════════════════════ */
 
 const u = [];
@@ -685,7 +787,8 @@ const commun = lit('outils', 'commun.js');
 const ATELIERS = ['atelier-carte.html',
                   'atelier-evenements.html', 'atelier-personnages.html',
                   'atelier-objets.html', 'atelier-missions.html',
-                  'atelier-icones.html', 'atelier-dialogues.html'];
+                  'atelier-icones.html', 'atelier-dialogues.html',
+                  'atelier-calendrier.html'];
 
 const injecte = (html, id, contenu, quoi) => {
   const balise = new RegExp(`(<script id="${id}"[^>]*>)[\\s\\S]*?(</script>)`);

@@ -36,7 +36,7 @@ const A_COPIER = [
   'manifest.webmanifest', 'sw.js', 'icone.png',   /* ce qui le rend installable */
   'atelier-carte.html', 'atelier-personnages.html', 'atelier-objets.html',
   'atelier-missions.html', 'atelier-evenements.html', 'atelier-icones.html',
-  'atelier-dialogues.html',
+  'atelier-dialogues.html', 'atelier-calendrier.html',
   'TUTORIEL-EVENEMENTS.md', 'TUTORIEL-PERSONNAGES.md',
   'TUTORIEL-OBJETS.md', 'TUTORIEL-MISSIONS.md', 'TUTORIEL-ICONES.md',
   'TUTORIEL-DIALOGUES.md'
