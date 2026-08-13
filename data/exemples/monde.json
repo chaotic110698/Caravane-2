@@ -81,7 +81,8 @@
         "port"
       ],
       "x": 220,
-      "y": 340
+      "y": 340,
+      "depart": true
     },
     {
       "cle": "le-gue",
@@ -105,7 +106,8 @@
         "temple"
       ],
       "x": 400,
-      "y": 470
+      "y": 470,
+      "depart": true
     },
     {
       "cle": "porte-haute",
@@ -183,6 +185,16 @@
       "etiq": {
         "pos": "dessus"
       }
+    },
+    {
+      "cle": "lieu-cache-essai",
+      "nom": "Lieu Caché d'Essai",
+      "contree": "humain",
+      "carte": "val",
+      "rang": "village",
+      "x": 340,
+      "y": 220,
+      "cache": true
     }
   ],
   "voies": [
@@ -462,9 +474,8 @@
           "combien": 140
         },
         {
-          "quoi": "laissezPasser",
-          "cle": "passe-essai",
-          "nom": "le passe d'essai"
+          "quoi": "karma",
+          "min": 25
         }
       ],
       "refus": "Le garde d'essai vous renvoie d'un geste."

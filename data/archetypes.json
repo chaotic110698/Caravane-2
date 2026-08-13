@@ -217,6 +217,34 @@
         1.08,
         0.82
       ]
+    },
+    "cartographe": {
+      "nom": "Cartographe",
+      "pvMax": 58,
+      "force": 0.35,
+      "garde": 0.02,
+      "prix": 1.7,
+      "agilite": 52,
+      "endurance": 48,
+      "vigilance": 86,
+      "negoce": 54,
+      "affinite": "dague",
+      "civil": true,
+      "dit": "Il note ce que vous trouvez. Sans lui, la carte s'efface derrière vous."
+    },
+    "comptable": {
+      "nom": "Comptable",
+      "pvMax": 52,
+      "force": 0.3,
+      "garde": 0.02,
+      "prix": 1.4,
+      "agilite": 44,
+      "endurance": 46,
+      "vigilance": 58,
+      "negoce": 88,
+      "affinite": "dague",
+      "civil": true,
+      "dit": "Il retient les prix des cités où vous êtes passé, et la date du relevé."
     }
   }
 }

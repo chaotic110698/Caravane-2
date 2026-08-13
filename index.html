@@ -915,6 +915,7 @@ details.regles li{margin-bottom:6px}
       <div class="panneau" id="panneau-gens"></div>
       <div class="panneau" id="panneau-terrains"></div>
       <div class="panneau" id="panneau-carnet"></div>
+      <div class="panneau" id="panneau-boussole"></div>
       <div class="panneau" id="panneau-parametres"></div>
       <div class="panneau" id="panneau-sauvegarde"></div>
     </div>
@@ -1466,7 +1467,8 @@ function prixChariot(cle){return Math.round(CHARIOTS[cle].prix*(1+S.etapes*.045)
 function nouvellePartie(cle){
   const a=ARCHETYPES[cle]||ARCHETYPES.guerrier;
   S={or:260,repit:0,evCount:0,maxEv:3,petitCount:0,maxPetits:4,rallonge:0,etapes:0,lieues:0,orMax:260,reputation:50,
-     jour:1,heure:CALENDRIER.debut.heure,notes:[],passes:{},
+     jour:1,heure:CALENDRIER.debut.heure,notes:[],passes:{},connues:{},vise:null,
+     /* ouvrirLesDeparts() suit la création : il lui faut S en place */
      marchand:{nom:'Vous',archetype:ARCHETYPES[cle]?cle:'guerrier',pv:a.pvMax,pvMax:a.pvMax},
      chariots:[nouveauChariot('Le Patient','bache'),nouveauChariot('La Grise','charrette')],
      gardes:[],recrues:[],
@@ -1489,8 +1491,10 @@ function nouvellePartie(cle){
      emplacements, et les bottes souples ne pèsent sur aucun équilibre. */
   S.marchand.armure={bottes:'cuir-bottes'};
   S.villes=creerMonde();
-  /* on commence dans une cité de la première contrée, jamais à un poste */
-  const departs=lieuxDe(0).filter(i=>!estFrontiere(i));
+  ouvrirLesDeparts();
+  /* on commence dans une cité connue de la première contrée, jamais à un poste
+     ni dans un lieu qu'on est censé découvrir */
+  const departs=lieuxDe(0).filter(i=>!estFrontiere(i)&&!estCache(i));
   S.ville=S.villes[departs.length?pick(departs):0];
   /* les objets qui sont dans les bagages depuis toujours */
   if(OBJETS)Object.keys(OBJETS).forEach(k=>{
@@ -1554,7 +1558,8 @@ function lieuxDe(c){
 function lieuxDeCarte(i){
   if(!MONDE)return lieuxDe(contreeDe(i));
   const k=carteDeLieu(i),l=[];
-  for(let x=0;x<LIEUX.length;x++)if(carteDeLieu(x)===k)l.push(x);
+  /* un lieu caché n'est pas sur la carte tant qu'on ne l'a pas trouvé */
+  for(let x=0;x<LIEUX.length;x++)if(carteDeLieu(x)===k&&connue(x))l.push(x);
   return l;
 }
 const KM_PAR_LIEUE=4.82;
@@ -1579,9 +1584,129 @@ function distance(i,j){
   if(estFrontiere(i)&&estFrontiere(j))return DIST_FRONTIERE;
   return Infinity;
 }
-function relies(i,j){return distance(i,j)!==Infinity&&i!==j;}
+/* Un lieu caché n'a pas de route : c'est précisément ce qui le cache. Une fois
+   trouvé au cap, on y va donc à vol d'oiseau, depuis la cité où l'on se tient et
+   sur la même carte. */
+function aVolDoiseau(i,j){
+  if(!MONDE||!LIEUX[i]||!LIEUX[j])return false;
+  if(carteDeLieu(i)!==carteDeLieu(j))return false;
+  return (estCache(i)||estCache(j))&&connue(i)&&connue(j);
+}
+function lieuesAVol(i,j){
+  const c=(CARTES&&CARTES[carteDeLieu(i)])||{};
+  const lpp=Number(c.lieuesParPixel)||0;
+  const px=Math.hypot(LIEUX[j].x-LIEUX[i].x,LIEUX[j].y-LIEUX[i].y);
+  /* sans étalon sur la carte, on retombe sur l'échelle qui sert partout ailleurs */
+  return Math.max(1,Math.round(lpp?px*lpp:px*.22));
+}
+function relies(i,j){
+  if(i===j||!connue(j))return false;
+  if(distance(i,j)!==Infinity)return true;
+  return aVolDoiseau(i,j);
+}
+
+/* ═══════════════ ce que la carte ne montre pas ═══════════════
+   Un lieu peut être caché : il existe, il est posé sur la carte, mais personne
+   n'en parle et aucune route n'y mène. On ne le trouve qu'en donnant, sur la
+   boussole, le cap exact qui y conduit depuis la cité où l'on se tient.
+
+   Ce cap n'est écrit nulle part. C'est l'angle réel entre les deux points —
+   zéro au nord, quatre-vingt-dix à l'est, dans le sens des aiguilles. L'atelier
+   de carte le calcule de la même façon et vous le montre, pour que vous
+   puissiez l'écrire dans la bouche d'un personnage. Tolérance : aucune.
+
+   Trouver n'est pas savoir. Le premier voyage se fait à l'aveugle, par une
+   piste dangereuse et sans choix d'itinéraire. Et sans cartographe dans la
+   troupe, rien n'est noté : on oublie, et il faut redonner le cap la fois
+   suivante. */
+function estCache(i){
+  if(!MONDE||!LIEUX[i])return false;
+  return !!LIEUX[i].cache;
+}
+function connue(i){
+  if(!estCache(i))return true;
+  const cle=LIEUX[i].cle;
+  return !!(S&&S.connues&&S.connues[cle]);
+}
+/* Les cités du premier jour. Dans un monde écrit, celles que vous avez marquées
+   « connu dès le départ » ; sans marque, les capitales, une par contrée — il
+   faut bien commencer quelque part. */
+function villesDuDepart(){
+  if(!MONDE)return [];
+  const marquees=LIEUX.map((l,i)=>l.depart?i:-1).filter(i=>i>=0);
+  if(marquees.length)return marquees;
+  return LIEUX.map((l,i)=>l.capitale||l.rang==='capitale'?i:-1).filter(i=>i>=0);
+}
+function ouvrirLesDeparts(){
+  S.connues=S.connues||{};
+  if(!MONDE)return;
+  /* tout ce qui n'est pas caché est connu d'office ; on ne note que le reste */
+  villesDuDepart().forEach(i=>{if(estCache(i))S.connues[LIEUX[i].cle]='depart';});
+}
+/* Le cap de i vers j, en degrés entiers. Nul si les deux ne sont pas sur la
+   même carte : on ne vise pas à la boussole ce qui est derrière une porte. */
+function capEntre(i,j){
+  if(!MONDE||!LIEUX[i]||!LIEUX[j])return null;
+  if(carteDeLieu(i)!==carteDeLieu(j))return null;
+  const a=LIEUX[i],b=LIEUX[j];
+  const d=Math.round(Math.atan2(b.x-a.x,-(b.y-a.y))*180/Math.PI);
+  return (d%360+360)%360;
+}
+/* Ce que la boussole trouve depuis ici, à ce cap précis. Le plus proche
+   l'emporte si deux lieux se présentent au même degré. */
+function auCap(depuis,cap){
+  if(!MONDE)return -1;
+  const c=((Math.round(Number(cap))%360)+360)%360;
+  let trouve=-1,plus=Infinity;
+  LIEUX.forEach((l,j)=>{
+    if(j===depuis||!l.cache)return;
+    if(capEntre(depuis,j)!==c)return;
+    const d=Math.hypot(l.x-LIEUX[depuis].x,l.y-LIEUX[depuis].y);
+    if(d<plus){plus=d;trouve=j;}
+  });
+  return trouve;
+}
+function cartographeALaTroupe(){
+  return S.gardes.some(g=>g.metier==='cartographe');
+}
+/* On vise un lieu : la piste s'ouvre pour ce voyage-ci. Le cartographe, lui,
+   l'inscrit pour de bon. */
+function viser(j){
+  if(j<0||!LIEUX[j])return null;
+  const cle=LIEUX[j].cle;
+  S.connues=S.connues||{};
+  const deja=S.connues[cle];
+  S.vise=cle;
+  if(!deja)S.connues[cle]='piste';
+  return LIEUX[j];
+}
+/* Arriver quelque part le fixe — si quelqu'un tient la plume. */
+function noterLArrivee(){
+  if(!MONDE||!S.ville)return;
+  const cle=S.ville.cle||((LIEUX[indexVille(S.ville)]||{}).cle);
+  if(!cle)return;
+  S.connues=S.connues||{};
+  if(S.connues[cle]==='piste'&&cartographeALaTroupe())S.connues[cle]='carte';
+  /* Sans cartographe, ce qu'on a trouvé au cap s'efface dès qu'on repart :
+     la piste ne tenait qu'à la mémoire, et la mémoire est courte. */
+  if(!cartographeALaTroupe())
+    Object.keys(S.connues).forEach(k=>{
+      if(S.connues[k]==='piste'&&k!==cle)delete S.connues[k];
+    });
+  S.vise=null;
+}
+/* Un lieu trouvé au cap mais pas encore relevé n'offre qu'une piste : longue
+   comme la distance, deux fois plus rude que tout le reste. */
+function surPiste(j){
+  if(!MONDE||!LIEUX[j])return false;
+  return S.connues&&S.connues[LIEUX[j].cle]==='piste';
+}
 function lieuesEntre(i,j){
-  if(MONDE){const c=chemin(i,j);return c?c.lieues:0;}
+  if(MONDE){
+    const c=chemin(i,j);
+    if(c)return c.lieues;
+    return aVolDoiseau(i,j)?lieuesAVol(i,j):0;
+  }
   return Math.round(distance(i,j)*.22);
 }
 function kmEntre(i,j){return Math.round(lieuesEntre(i,j)*KM_PAR_LIEUE);}
@@ -1839,11 +1964,18 @@ const MENU=[
   si:()=>!!PROPRIETES&&(proprietesIci().length>0||Object.keys(S.terrains||{}).length>0)},
  {cle:'carnet',   nom:'Carnet',    sous:'gens, objets, histoires',ico:()=>svgIco(GLYPHE_REGISTRE,'#A084C0'),
   si:()=>!!(PERSONNAGES||OBJETS||MISSIONS_ECRITES.length)},
+ {cle:'boussole', nom:'Boussole',  sous:'suivre un cap',        ico:()=>svgIco(GLYPHE_BOUSSOLE,'#4A7BC8'),
+  si:()=>!!MONDE&&LIEUX.some(l=>l.cache)},
  {cle:'convoi',   nom:'Convoi',    sous:'chariots et soute',   ico:()=>icoChariot('bache')},
  {cle:'troupe',   nom:'Troupe',    sous:'marchand et escorte', ico:()=>svgIco(GLYPHES_EV.heaume,'#6E9B6A')},
  {cle:'parametres',nom:'Paramètres',sous:'partie et record',   ico:()=>svgIco(GLYPHE_CLEF,'#9A9488')},
  {cle:'sauvegarde',nom:'Sauvegarde',sous:'emporter la partie', ico:()=>svgIco(GLYPHE_REGISTRE,'#9A7343')}
 ];
+const GLYPHE_BOUSSOLE=`<circle cx="12" cy="12" r="9.6" fill="none" stroke="currentColor" stroke-width="2"/>
+  <path d="M15.6 8.4l-2.2 5.2-5.2 2.2 2.2-5.2z" fill="currentColor"/>
+  <circle cx="12" cy="12" r="1.3" fill="var(--velin)"/>
+  <path d="M12 .9v2.4M12 20.7v2.4M.9 12h2.4M20.7 12h2.4" stroke="currentColor"
+    stroke-width="1.9" stroke-linecap="round"/>`;
 const GLYPHE_TOIT=`<path d="M12 2.6L1.8 10.4h2.6v10.8h15.2V10.4h2.6z" fill="currentColor"/>
   <rect x="9.4" y="14.2" width="5.2" height="7" fill="var(--velin)"/>
   <rect x="5.6" y="12" width="3.2" height="3.2" fill="var(--velin)" opacity=".7"/>
@@ -1925,6 +2057,7 @@ function montrerOnglet(nom){
   if(nom==='gens')rendreGens();
   if(nom==='terrains')rendreTerrains();
   if(nom==='carnet')panneauCarnet();
+  if(nom==='boussole')panneauBoussole();
   if(S)S.onglet=nom;
   /* on change d'onglet : on revient en haut du rouleau, sinon on tombe au
      milieu du convoi parce qu'on avait descendu l'étal */
@@ -2006,8 +2139,14 @@ function genererRecrues(){
       prix:Math.round(coutGarde()*m.prix*rnd(.85,1.2))};
     if(Math.random()<.45){
       const siennes=CLES_COMMUNES.filter(c=>ARMES[c].famille===m.affinite&&ARMES[c].poids<=6);
-      r.arme=pick(siennes);
-      r.prix+=Math.round(ARMES[r.arme].prix*.45);
+      /* Un métier dont l'affinité ne désigne aucune arme arrivait ici avec une
+         liste vide, et le convoi entier s'écroulait sur un pick() de rien. Un
+         métier sans arme de prédilection se présente simplement les mains
+         vides. */
+      if(siennes.length){
+        r.arme=pick(siennes);
+        r.prix+=Math.round(ARMES[r.arme].prix*.45);
+      }
     }
     S.recrues.push(r);
   }
@@ -3180,7 +3319,7 @@ function paquet(){
   const idx=v=>S.villes.indexOf(v);
   return {jeu:'caravane',v:9,date:new Date().toISOString(),
     or:S.or,etapes:S.etapes,lieues:S.lieues,orMax:S.orMax,reputation:S.reputation,
-    jour:S.jour,heure:S.heure,notes:S.notes,passes:S.passes,
+    jour:S.jour,heure:S.heure,notes:S.notes,passes:S.passes,connues:S.connues,
     marchand:S.marchand,chariots:S.chariots,gardes:S.gardes,recrues:S.recrues,
     armes:S.armes,armures:S.armures,mythes:S.mythes,banc:S.banc,karma:S.karma,chien:S.chien,contrats:S.contrats,
     gens:S.gens,objets:S.objets,objetsDepuis:S.objetsDepuis,mecrites:S.mecrites,
@@ -3212,6 +3351,7 @@ function ouvrirPaquet(d){
      heure:d.heure===undefined?CALENDRIER.debut.heure:d.heure,
      notes:Array.isArray(d.notes)?d.notes:[],
      passes:(d.passes&&typeof d.passes==='object')?d.passes:{},
+     connues:(d.connues&&typeof d.connues==='object')?d.connues:{},vise:null,
      marchand:d.marchand,chariots:d.chariots,gardes:d.gardes||[],recrues:d.recrues||[],
      armes:d.armes||{},armures:d.armures||{},mythes:d.mythes||{},
      troupeVue:'marchand',banc:!!d.banc,
@@ -3238,6 +3378,9 @@ function partieEnCours(){
 function effacerPartie(){try{localStorage.removeItem(CLE_PARTIE);}catch(e){}}
 function reprendre_partie(d){
   ouvrirPaquet(d);
+  /* une partie d'avant les lieux cachés n'a rien noté : on lui rend ses cités
+     de départ, sans quoi la carte serait vide */
+  ouvrirLesDeparts();
   ecran('ecran-marche');
   S.banniere=`Reprise du voyage à ${S.ville.nom}.`;
   rendreMarche();
@@ -3395,6 +3538,13 @@ function routesVers(j){
     if(extra)for(const k in extra)r[k]=extra[k];
     return r;
   };
+  /* Un lieu trouvé au cap et pas encore relevé n'a pas de routes : une piste,
+     et rien d'autre. Deux fois plus d'agressions qu'ailleurs. */
+  if(surPiste(j)){
+    return [trace('La piste au jugé',
+      'aucune route ne mène là ; on suit le cap et l\'on se garde',
+      2,1.25,1.15,{piste:true})];
+  }
   if(estFranchissement(i,j)){
     /* Une voie franchissable porte ce qu'elle exige. Sans rien d'écrit, on
        retombe sur la douane d'autrefois : un droit en or qui monte avec le
@@ -3830,13 +3980,22 @@ function abimer(n){
   });
 }
 let mythesPerdus=[];
+/* Un cartographe ou un comptable ne se bat pas : il se cache derrière les
+   autres. On ne le touche que lorsqu'il ne reste plus un seul homme d'armes —
+   et perdre son comptable dans une embuscade coûte alors des milliers de
+   pièces, ce qui est le prix de n'avoir gardé personne pour le défendre. */
+const estCivil=g=>!!((METIERS[g.metier]||{}).civil);
+function combattants(){return S.gardes.filter(g=>!estCivil(g));}
 function blesserTroupe(total,cibles){
   const u=troupe();
-  const urne=S.gardes.concat(S.gardes,S.gardes,[S.marchand]);
+  const durs=combattants();
+  const exposes=durs.length?durs:S.gardes;
+  const urne=exposes.concat(exposes,exposes,[S.marchand]);
   cibles=Math.max(1,Math.min(cibles,u.length));
   const noms=[],morts=[];
   for(let i=0;i<cibles;i++){
     const c=pick(urne.filter(x=>x===S.marchand||S.gardes.includes(x)));
+    if(!c)continue;
     const d=Math.round(total/cibles*rnd(.7,1.3)*(1-gardeTotale(c)));
     c.pv=Math.max(0,c.pv-d);
     if(!noms.includes(c.nom))noms.push(c.nom);
@@ -3899,6 +4058,7 @@ function pas(){
 function arriver(){
   stopper();
   S.etapes++;
+  noterLArrivee();
   /* les jours ont été comptés en chemin ; ne reste que l'heure à laquelle on
      débouche, qui dépend de la longueur de la traite et donne sa lumière à la
      cité */
@@ -5338,6 +5498,7 @@ document.addEventListener('click',e=>{
   if(t.dataset.troupe){S.troupeVue=t.dataset.troupe;panneauTroupe();return;}
   if(t.dataset.carnet){S.carnetVue=t.dataset.carnet;panneauCarnet();return;}
   if(t.dataset.notePage!==undefined){S.notePage=+t.dataset.notePage;panneauCarnet();return;}
+  if(t.id==='cap-suivre'){suivreLeCap();return;}
   if(t.id==='note-ajouter'){
     if(!ajouterNote())return toast('Quarante pages, c\'est tout ce que tient le carnet.');
     panneauCarnet();
@@ -5762,9 +5923,13 @@ function normaliserMonde(d){
   const premiere=m.cartes[0].cle;
   m.contrees=(d.contrees||[]).map(c=>({cle:c.cle,nom:c.nom||c.cle,
     gentile:c.gentile||'',teinte:c.teinte||'#C9A227',carte:c.carte||premiere}));
+  /* La liste est blanche à dessein : le fichier d'un auteur ne doit pas pouvoir
+     glisser n'importe quoi dans le moteur. Tout champ neuf doit donc être nommé
+     ici — sans quoi il traverse l'atelier, le fichier, et se perd en silence. */
   m.lieux=d.lieux.map(l=>({cle:l.cle,nom:l.nom||l.cle,contree:l.contree||'',
     carte:l.carte||premiere,rang:l.rang||'ville',traits:l.traits||[],
-    x:l.x||0,y:l.y||0,etiq:l.etiq||null}));
+    x:l.x||0,y:l.y||0,etiq:l.etiq||null,
+    depart:!!l.depart,cache:!!l.cache}));
   const carteDe={};m.lieux.forEach(l=>{carteDe[l.cle]=l.carte;});
   const contreeDeCle={};m.lieux.forEach(l=>{contreeDeCle[l.cle]=l.contree;});
   m.voies=(d.voies||[]).filter(v=>carteDe[v.de]!==undefined&&carteDe[v.vers]!==undefined)
@@ -5775,7 +5940,10 @@ function normaliserMonde(d){
         /* Une voie « franchit » quand elle change de contrée ou de carte : on ne
            l'emprunte qu'en passant par l'écran de frontière. C'est ce qui fait
            qu'on entre dans une cité par sa porte, et pas n'importe comment. */
-        franchit:contreeDeCle[v.de]!==contreeDeCle[v.vers]||carteDe[v.de]!==carteDe[v.vers]};
+        franchit:contreeDeCle[v.de]!==contreeDeCle[v.vers]||carteDe[v.de]!==carteDe[v.vers],
+        /* ce que la voie exige, et le mot du refus */
+        exige:Array.isArray(v.exige)&&v.exige.length?v.exige:undefined,
+        refus:v.refus||undefined};
     });
   m.rangs=d.rangs||{};
   m.mesures=d.mesures||{};
@@ -7563,6 +7731,61 @@ function panneauCarnet(){
   if(!h)h=`<div class="carte"><h3>Le carnet</h3><p>Rien encore. Les gens qu'on croise,
     les objets qu'on rapporte et les services qu'on rend viendront s'inscrire ici.</p></div>`;
   p.innerHTML=tete+h;
+}
+
+/* ═══════════════ la boussole ═══════════════
+   On donne un cap, en degrés entiers, depuis la cité où l'on se tient. Si un
+   lieu caché se présente exactement à ce degré, la piste s'ouvre. Sinon, rien —
+   et le jeu ne dit pas si l'on est passé à un degré près. Aucune tolérance :
+   c'est le prix de ce que les gens vous disent, et de ce que vous en notez. */
+function panneauBoussole(){
+  const p=$('#panneau-boussole');
+  if(!p)return;
+  const i=indexVille(S.ville);
+  const carto=cartographeALaTroupe();
+  const pistes=Object.keys(S.connues||{}).filter(k=>S.connues[k]==='piste');
+  const releves=Object.keys(S.connues||{}).filter(k=>S.connues[k]==='carte');
+  let h=`<div class="carte">
+    <h3>Depuis ${S.ville.nom}</h3>
+    <p>Un cap, en degrés : <b>0</b> au nord, <b>90</b> à l'est, et l'on tourne
+      dans le sens des aiguilles. Il n'y a pas d'à-peu-près : le degré est
+      juste, ou il ne l'est pas.</p>
+    <div class="rangee" style="margin-top:11px;gap:8px;align-items:stretch">
+      <input class="champ" id="cap-champ" type="number" min="0" max="359" step="1"
+        inputmode="numeric" placeholder="000" aria-label="Le cap, de 0 à 359"
+        style="flex:1;min-width:0;background:var(--velin);border:1px solid var(--filet);
+        border-radius:var(--r);color:var(--encre);padding:11px;font-family:var(--chiffres);
+        font-size:22px;text-align:center">
+      <button class="bouton" id="cap-suivre" style="flex:0 0 40%">Suivre ce cap</button>
+    </div>
+    <p class="info" id="cap-dit" style="margin-top:9px">&nbsp;</p>
+  </div>`;
+  if(!carto)h+=`<div class="carte"><h3>Personne ne tient la plume</h3>
+    <p>Ce que vous trouvez au cap ne s'écrit nulle part : la piste s'ouvre pour ce
+    voyage-ci, puis s'efface. Un <b>cartographe</b> dans la troupe l'inscrirait sur la
+    carte, et les routes ordinaires s'ouvriraient ensuite.</p></div>`;
+  if(pistes.length)h+=`<div class="carte"><h3>Une piste s'ouvre</h3><p>`+
+    pistes.map(k=>`<b>${(LIEUX.find(l=>l.cle===k)||{}).nom||k}</b>`).join(', ')+
+    ` — sur la carte des routes, sans chemin au choix, et deux fois plus rude.</p></div>`;
+  if(releves.length)h+=`<div class="carte"><h3>Relevé sur la carte</h3><p>`+
+    releves.map(k=>`<b>${(LIEUX.find(l=>l.cle===k)||{}).nom||k}</b>`).join(', ')+
+    ` — accessible comme n'importe quelle cité.</p></div>`;
+  p.innerHTML=h;
+}
+function suivreLeCap(){
+  const c=$('#cap-champ'), dit=$('#cap-dit');
+  const v=Math.round(Number(c.value));
+  if(!(v>=0&&v<=359)){dit.textContent='Un degré, entre 0 et 359.';return;}
+  const i=indexVille(S.ville);
+  const j=auCap(i,v);
+  if(j<0){
+    dit.textContent='Rien de ce côté-là. Le pays est vide, ou le chiffre est faux.';
+    return;
+  }
+  const l=viser(j);
+  chronique(`Cap ${v}° depuis ${S.ville.nom} : une piste s'ouvre vers ${l.nom}.`,'bon');
+  panneauBoussole();
+  toast(`${l.nom} — la piste est ouverte.`);
 }
 
 /* ═══════════════ les notes du marchand ═══════════════

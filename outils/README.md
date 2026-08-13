@@ -382,6 +382,40 @@ passage n'a pas de longueur mesurable — ses deux bouts sont sur deux images sa
 alors on la **déclare**, en lieues, dans le panneau de sélection. Donnez le rang **poste
 frontière** à au moins un des deux bouts : c'est ainsi que le jeu le dessine en porte.
 
+### Ce qu'on sait d'un lieu
+
+Dans le panneau d'un lieu, **Ce qu'on en sait** décide de trois états.
+
+| | |
+|---|---|
+| **Connu, sans plus** | le lieu ordinaire : accessible dès qu'une voie connue y mène |
+| **Connu dès le départ** | une des cités que le marchand connaît en commençant. Marquez-en cinq environ ; sans aucune marque, le jeu prend les capitales |
+| **Caché — à trouver au cap** | le lieu n'est ni sur la carte, ni dans les itinéraires. Il n'existe pour le joueur qu'une fois trouvé |
+
+Un lieu caché ne se trouve qu'en donnant, sur l'onglet **Boussole** du jeu, le cap exact
+qui y mène depuis la cité où l'on se tient. **Ce cap n'est écrit nulle part** : c'est
+l'angle réel entre les deux points — zéro au nord, quatre-vingt-dix à l'est, dans le sens
+des aiguilles. Poser le lieu sur la carte suffit donc à décider du chiffre, et l'atelier
+vous le donne sous le menu : *« Vaulmier → 143° »*. C'est ce nombre-là que vous mettez
+dans la bouche d'un personnage.
+
+**Aucune tolérance** : 143 ouvre la piste, 142 ne dit rien — et le jeu ne prévient pas
+qu'on est passé à un degré près. Si deux lieux cachés se présentent au même degré depuis
+la même cité, l'atelier vous le signale en rouge : déplacez-en un.
+
+**Le premier voyage** se fait à vol d'oiseau, par une piste sans chemin au choix, avec
+deux fois plus d'agressions qu'ailleurs. Ensuite, tout dépend de qui tient la plume :
+
+- **sans cartographe** dans la troupe, rien n'est noté. La piste s'efface dès qu'on
+  repart, et il faut redonner le cap la fois suivante.
+- **avec un cartographe**, arriver là-bas l'inscrit sur la carte pour de bon, et les trois
+  itinéraires ordinaires s'ouvrent.
+
+Le **cartographe** et le **comptable** sont deux métiers d'escorte comme les autres : on
+les embauche à la Troupe, ils touchent leur solde à chaque arrivée. Ils se battent mal, et
+on ne les touche qu'une fois le dernier homme d'armes tombé — perdre son comptable dans
+une embuscade est donc le prix de n'avoir gardé personne pour le défendre.
+
 ### Ce qu'une voie exige
 
 Sous les mesures, le bloc **Ce que la voie exige** ajoute des conditions à n'importe
