@@ -1,0 +1,20 @@
+{
+  "format": "caravane.calendrier.v1",
+  "apropos": "CALENDRIER D'ESSAI — noms plats et volontairement sans saveur. Il n'y a pas une ligne de récit là-dedans : c'est une horloge nue, faite pour être remplacée. Posez le vôtre dans data/<votre dossier>/calendrier.json et celui-ci disparaît.",
+  "heuresParJour": 25,
+  "joursParMois": 50,
+  "anneeUn": "an I",
+  "mois": [
+    { "cle": "m1", "nom": "Mois I", "saison": "saison A" },
+    { "cle": "m2", "nom": "Mois II", "saison": "saison B" },
+    { "cle": "m3", "nom": "Mois III", "saison": "saison C" },
+    { "cle": "m4", "nom": "Mois IV", "saison": "saison D" }
+  ],
+  "moments": [
+    { "cle": "aube", "de": 4, "a": 9 },
+    { "cle": "midi", "de": 10, "a": 15 },
+    { "cle": "couchant", "de": 16, "a": 20 },
+    { "cle": "nuit", "de": 21, "a": 3 }
+  ],
+  "debut": { "annee": 1, "mois": 0, "jour": 1, "heure": 8 }
+}

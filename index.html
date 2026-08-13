@@ -1446,6 +1446,7 @@ function prixChariot(cle){return Math.round(CHARIOTS[cle].prix*(1+S.etapes*.045)
 function nouvellePartie(cle){
   const a=ARCHETYPES[cle]||ARCHETYPES.guerrier;
   S={or:260,repit:0,evCount:0,maxEv:3,petitCount:0,maxPetits:4,rallonge:0,etapes:0,lieues:0,orMax:260,reputation:50,
+     jour:1,heure:CALENDRIER.debut.heure,notes:[],
      marchand:{nom:'Vous',archetype:ARCHETYPES[cle]?cle:'guerrier',pv:a.pvMax,pvMax:a.pvMax},
      chariots:[nouveauChariot('Le Patient','bache'),nouveauChariot('La Grise','charrette')],
      gardes:[],recrues:[],
@@ -2014,7 +2015,7 @@ function arriverEnVille(premiere){
 }
 function rendreMarche(){
   const v=S.ville;
-  $('#marche-oeil').textContent=`Étape ${S.etapes+1} · ${fmt(S.lieues)} lieues parcourues`;
+  $('#marche-oeil').textContent=`Étape ${S.etapes+1} · ${nomDate()} · ${fmt(S.lieues)} lieues`;
   $('#marche-type').textContent=CONTREES[v.contree].nom+(v.capitale?' · capitale':'')+
     (v.visites>1?` · ${v.visites}ᵉ visite`:' · première visite');
   $('#marche-ambiance').textContent=ambianceDe(v).texte;
@@ -2269,18 +2270,111 @@ let OUVERTURES_DEFAUT=null; /* data/ambiance.json → ouverturesDefaut */
 let ODEURS=null;            /* data/ambiance.json → odeurs */
 let FOULES=null;            /* data/ambiance.json → foules */
 
+/* ═══════════════ le calendrier ═══════════════
+   Le temps du monde tient dans deux nombres : S.jour, compté depuis le premier
+   jour du voyage, et S.heure. Une étape vaut une journée. L'heure existe, se
+   voit et se raconte — mais aucune règle n'en dépend encore : elle attend qu'on
+   lui donne du pouvoir, ce qui ne coûtera alors qu'une condition de plus.
+
+   Tout est lu dans data/calendrier.json : le nombre de mois, leur longueur, la
+   longueur d'un jour et les bornes des quatre moments. Le calendrier livré est
+   une horloge nue, sans un mot de récit, faite pour être remplacée. */
+let CALENDRIER=null;
+const CALENDRIER_NU={format:'caravane.calendrier.v1',heuresParJour:25,joursParMois:50,
+  anneeUn:'an I',
+  mois:[{cle:'m1',nom:'Mois I'},{cle:'m2',nom:'Mois II'},
+        {cle:'m3',nom:'Mois III'},{cle:'m4',nom:'Mois IV'}],
+  moments:[{cle:'aube',de:4,a:9},{cle:'midi',de:10,a:15},
+           {cle:'couchant',de:16,a:20},{cle:'nuit',de:21,a:3}],
+  debut:{annee:1,mois:0,jour:1,heure:8}};
+
+function normaliserCalendrier(c){
+  const d=Object.assign({},CALENDRIER_NU,c||{});
+  d.heuresParJour=Math.max(1,Math.round(Number(d.heuresParJour)||25));
+  d.joursParMois=Math.max(1,Math.round(Number(d.joursParMois)||50));
+  if(!Array.isArray(d.mois)||!d.mois.length)d.mois=CALENDRIER_NU.mois;
+  d.mois=d.mois.map((m,i)=>({cle:m.cle||('m'+(i+1)),nom:m.nom||('Mois '+(i+1)),
+    saison:m.saison||''}));
+  if(!Array.isArray(d.moments)||!d.moments.length)d.moments=CALENDRIER_NU.moments;
+  d.debut=Object.assign({},CALENDRIER_NU.debut,d.debut||{});
+  d.joursParAn=d.joursParMois*d.mois.length;
+  return d;
+}
+/* Le jour un est le premier jour du voyage ; le calendrier dit à quelle date il
+   tombe, et tout le reste se compte à partir de là. */
+function dateDe(jour){
+  const c=CALENDRIER;
+  const depuis=(jour||1)-1;
+  const offset=(c.debut.annee-1)*c.joursParAn+c.debut.mois*c.joursParMois+(c.debut.jour-1);
+  const abs=offset+depuis;
+  const annee=Math.floor(abs/c.joursParAn)+1;
+  const reste=abs-(annee-1)*c.joursParAn;
+  const mois=Math.floor(reste/c.joursParMois);
+  return {annee:annee,mois:mois,jour:reste-mois*c.joursParMois+1,
+          nomMois:c.mois[mois].nom,saison:c.mois[mois].saison};
+}
+function nomDate(jour){
+  const d=dateDe(jour||S.jour);
+  return `${d.jour}${d.jour===1?'ᵉʳ':'ᵉ'} jour du ${d.nomMois}`;
+}
+function nomDateLongue(jour){
+  const d=dateDe(jour||S.jour);
+  return `${nomDate(jour)}, an ${chiffreRomain(d.annee)}`;
+}
+function chiffreRomain(n){
+  const t=[[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],
+           [40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']];
+  let r='',v=Math.max(1,Math.round(n||1));
+  t.forEach(([p,s])=>{while(v>=p){r+=s;v-=p;}});
+  return r;
+}
+/* Un moment peut enjamber minuit — « nuit » va de 21 à 3. */
+function momentDe(heure){
+  const c=CALENDRIER,h=((heure||0)%c.heuresParJour+c.heuresParJour)%c.heuresParJour;
+  const m=c.moments.find(x=>x.de<=x.a?(h>=x.de&&h<=x.a):(h>=x.de||h<=x.a));
+  return (m||c.moments[0]).cle;
+}
+function heureDite(heure){
+  const h=(heure===undefined?S.heure:heure);
+  return h+'ʰ';
+}
+/* Avancer le temps. Les jours et les heures se déversent l'un dans l'autre :
+   passer minuit change de jour, et c'est la seule règle du système. */
+function avancerHeures(n){
+  const c=CALENDRIER;
+  let total=(S.jour-1)*c.heuresParJour+S.heure+Math.round(n||0);
+  if(total<0)total=0;
+  S.jour=Math.floor(total/c.heuresParJour)+1;
+  S.heure=total-(S.jour-1)*c.heuresParJour;
+}
+function avancerJours(n,heure){
+  S.jour=Math.max(1,S.jour+Math.round(n||0));
+  if(heure!==undefined)S.heure=clamp(Math.round(heure),0,CALENDRIER.heuresParJour-1);
+}
+/* L'heure à laquelle on débouche dans une cité : une longue traite arrive tard,
+   une courte au matin. C'est ce qui donne à chaque arrivée sa lumière, et cela
+   remplace le tirage au sort qui la donnait avant. */
+function heureArrivee(lieues){
+  const c=CALENDRIER;
+  const l=Math.max(0,Number(lieues)||0);
+  const part=clamp(.28+l*.055,.25,.92);
+  return clamp(Math.round(part*(c.heuresParJour-1)+ri(-1,1)),0,c.heuresParJour-1);
+}
+
 function ambianceDe(v){
   const a=v.amb||{h:1,o:0,od:0,f:0};
   const cle=CONTREES[v.contree].cle;
   const pool=OUVERTURES[v.type.nom]||OUVERTURES_DEFAUT[cle]||OUVERTURES_DEFAUT.nain;
-  return {heure:HEURES[a.h],
+  const quand=momentDe(S?S.heure:0);
+  const h=HEURES.find(x=>x.cle===quand)||HEURES[a.h]||HEURES[0];
+  return {heure:h,
     texte:pool[a.o%pool.length]+' '+ODEURS[a.od%ODEURS.length]+' '+FOULES[a.f%FOULES.length]};
 }
 function profilVille(v){
   return PROFILS_VILLE[v.type.nom]||PROFILS_VILLE[CONTREES[v.contree].cle]||PROFILS_VILLE['nain'];
 }
 function rendreVignette(){
-  const v=S.ville,a=ambianceDe(v),H=a.heure;
+  const v=S.ville,a=ambianceDe(v),H=a.heure;   /* l'heure vient du calendrier */
   const el=$('#vignette');
   if(!el)return;
   el.innerHTML=`<svg viewBox="0 0 180 54" preserveAspectRatio="none" aria-hidden="true">
@@ -2294,7 +2388,7 @@ function rendreVignette(){
       <rect y="46" width="180" height="8" class="sol"/>
     </svg>
     <div class="vignette-titre"><h1>${v.nom}</h1>
-      <span class="oeil">${v.type.nom} · ${H.mot}</span></div>`;
+      <span class="oeil">${v.type.nom} · ${H.mot} · ${heureDite()}</span></div>`;
 }
 
 function badgeRarete(r){
@@ -3041,7 +3135,8 @@ function panneauParametres(){
   </div>
   <div class="carte">
     <h3>Ce voyage</h3>
-    <p>Étape ${S.etapes+1} · ${fmt(S.lieues)} lieues parcourues · fortune au sommet ${fmt(S.orMax)} po ·
+    <p>Étape ${S.etapes+1} · ${nomDateLongue()} · ${fmt(S.lieues)} lieues parcourues ·
+       fortune au sommet ${fmt(S.orMax)} po ·
        ${S.contratsHonores||0} contrat${(S.contratsHonores||0)>1?'s':''} honoré${(S.contratsHonores||0)>1?'s':''}.</p>
     <p style="margin-top:6px">${r?`Meilleur voyage enregistré : ${r.etapes} étapes, ${fmt(r.or)} po.`
       :'Aucun record enregistré pour l\'instant.'}${S.banc
@@ -3065,6 +3160,7 @@ function paquet(){
   const idx=v=>S.villes.indexOf(v);
   return {jeu:'caravane',v:9,date:new Date().toISOString(),
     or:S.or,etapes:S.etapes,lieues:S.lieues,orMax:S.orMax,reputation:S.reputation,
+    jour:S.jour,heure:S.heure,notes:S.notes,
     marchand:S.marchand,chariots:S.chariots,gardes:S.gardes,recrues:S.recrues,
     armes:S.armes,armures:S.armures,mythes:S.mythes,banc:S.banc,karma:S.karma,chien:S.chien,contrats:S.contrats,
     gens:S.gens,objets:S.objets,objetsDepuis:S.objetsDepuis,mecrites:S.mecrites,
@@ -3092,6 +3188,9 @@ function ouvrirPaquet(d){
     contree:v.c===undefined?contreeDe(i):v.c,
     frontiere:v.fr===undefined?estFrontiere(i):!!v.fr}));
   S={or:d.or,etapes:d.etapes,lieues:d.lieues,orMax:d.orMax,reputation:d.reputation,
+     jour:d.jour||(Number(d.etapes)||0)+1,
+     heure:d.heure===undefined?CALENDRIER.debut.heure:d.heure,
+     notes:Array.isArray(d.notes)?d.notes:[],
      marchand:d.marchand,chariots:d.chariots,gardes:d.gardes||[],recrues:d.recrues||[],
      armes:d.armes||{},armures:d.armures||{},mythes:d.mythes||{},
      troupeVue:'marchand',banc:!!d.banc,
@@ -3736,6 +3835,9 @@ function allonger(n){
 function pas(){
   if(S.fini)return;
   S.pas++;
+  /* une étape vaut une journée : le calendrier tourne ici, pas à l'arrivée —
+     sinon une traite de cinq étapes ne coûterait qu'un jour */
+  avancerJours(1);
   if(S.repit>0)S.repit--;
   S.lieues+=Math.round(S.route.lieues/S.route.etapes);
   usure();
@@ -3755,6 +3857,10 @@ function pas(){
 function arriver(){
   stopper();
   S.etapes++;
+  /* les jours ont été comptés en chemin ; ne reste que l'heure à laquelle on
+     débouche, qui dépend de la longueur de la traite et donne sa lumière à la
+     cité */
+  S.heure=heureArrivee(S.route?S.route.lieues:0);
   const du=solde();
   let msg=[];
   if(S.gardes.length){
@@ -5525,7 +5631,7 @@ $('#nom-champ').addEventListener('keydown',e=>{if(e.key==='Enter')$('#nom-valide
    bien à la racine d'un domaine que dans un sous-dossier de GitHub Pages.
    Rien du jeu ne s'exécute avant que les douze fichiers soient là. */
 const FICHIERS_DONNEES=['biens','raretes','contrees','archetypes','armes','armures',
-  'chariots','ambiance','pnj','routes','missions','icones'];
+  'chariots','ambiance','pnj','routes','missions','icones','calendrier'];
 
 /* Les cinq fichiers d'auteur, ceux que produisent les ateliers de outils/, sont
    en revanche **facultatifs**. Absents, le jeu tourne exactement comme avant :
@@ -5534,7 +5640,7 @@ const FICHIERS_DONNEES=['biens','raretes','contrees','archetypes','armes','armur
    relais sans que rien d'autre change. C'est ce qui permet de les écrire à son
    rythme, un par un.  */
 const FICHIERS_AUTEUR=['monde','evenements','personnages','objets','missions-ecrites',
-                       'dialogues','proprietes'];
+                       'dialogues','proprietes','calendrier'];
 
 /* ═══════════════════════════════════════════════════════════════════════════
    LE MONDE D'AUTEUR
@@ -5803,6 +5909,8 @@ function monterEnCent(f){
   return liste;
 }
 function assignerAuteur(d){
+  /* Un calendrier posé dans le dossier d'auteur remplace l'horloge nue. */
+  if(d.calendrier)CALENDRIER=normaliserCalendrier(d.calendrier);
   TYPES_PAR_CLE={humain:TYPES_HUMAIN,nain:TYPES_NAIN,elfe:TYPES_ELFE};
   TYPES_CAP_PAR_CLE={humain:TYPE_CAP_HUMAIN,nain:TYPE_CAP_NAIN,elfe:TYPE_CAP_ELFE};
   MONDE=normaliserMonde(d.monde);
@@ -7325,6 +7433,8 @@ function assigner(d){
   PIECES=d.chariots.pieces;
   ORGANES=d.chariots.organes;
   VERBE_PIECE=d.chariots.verbePiece;
+  /* — le temps du monde — */
+  CALENDRIER=normaliserCalendrier(d.calendrier);
   /* — ambiance des villes — */
   HEURES=d.ambiance.heures;
   PROFILS_VILLE=d.ambiance.profilsVille;
@@ -7413,11 +7523,15 @@ function chargerDonnees(){
   return Promise.all(FICHIERS_DONNEES.map(requis)
       .concat(FICHIERS_AUTEUR.map(facultatif)))
     .then(charges=>{
-      const d={};
+      /* Deux paniers séparés : un fichier d'auteur qui porte le même nom qu'un
+         fichier du jeu — calendrier — doit pouvoir le remplacer sans l'effacer
+         quand il est absent. Mêlés, un dossier d'auteur vide aurait rendu null
+         le calendrier livré. */
+      const d={},a={};
       FICHIERS_DONNEES.forEach((nom,i)=>{d[nom]=charges[i];});
-      FICHIERS_AUTEUR.forEach((nom,i)=>{d[nom]=charges[FICHIERS_DONNEES.length+i];});
+      FICHIERS_AUTEUR.forEach((nom,i)=>{a[nom]=charges[FICHIERS_DONNEES.length+i];});
       assigner(d);
-      assignerAuteur(d);
+      assignerAuteur(a);
       demarrer();
     })
     .catch(echecChargement);
