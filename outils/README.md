@@ -382,6 +382,41 @@ passage n'a pas de longueur mesurable — ses deux bouts sont sur deux images sa
 alors on la **déclare**, en lieues, dans le panneau de sélection. Donnez le rang **poste
 frontière** à au moins un des deux bouts : c'est ainsi que le jeu le dessine en porte.
 
+### Ce qu'une voie exige
+
+Sous les mesures, le bloc **Ce que la voie exige** ajoute des conditions à n'importe
+quelle voie — passage ou route ordinaire. Sans condition, on passe librement ; sur un
+passage sans condition, le jeu demande la **douane** d'autrefois, un droit en or qui monte
+avec le voyage. Dès qu'une condition est posée, c'est elle qui décide.
+
+| condition | ce qu'elle demande |
+|---|---|
+| **Un droit en or** | une somme, prélevée au départ |
+| **Un objet à montrer** | la clé d'un objet de votre atelier d'objets ; il reste en soute |
+| **Un laissez-passer** | un papier délivré par un personnage — la clé doit être la même des deux côtés |
+| **Une réputation** | un karma minimum, maximum, ou les deux |
+| **Un convoi assez grand** | un nombre de chariots |
+| **Une escorte assez nombreuse** | un nombre de gardes |
+| **Une saison** | les mois du calendrier pendant lesquels la voie est praticable |
+
+Elles s'empilent : **toutes** doivent être tenues. Le champ du bas, **ce qu'on vous
+répond quand on vous refuse**, est la phrase que le joueur lira sur la carte du chemin —
+« Le sergent secoue la tête sans lever les yeux. » Ce qui manque s'affiche à côté, et le
+bouton reste éteint : on ne s'engage jamais sans savoir.
+
+Un **laissez-passer** ou un objet à ce pouvoir dispense de ce qui s'achète ou se montre —
+jamais de ce que la saison ou la taille du convoi imposent. Un papier n'ouvre pas un col
+enneigé.
+
+**Délivrer un laissez-passer** se fait ailleurs : dans l'atelier d'événements ou de
+dialogues, l'effet *Délivrer un laissez-passer* remet le papier au marchand, avec la même
+clé que la frontière réclame. Il s'inscrit au carnet du joueur, avec le jour et le lieu où
+il a été délivré, et ne se perd pas.
+
+Un **quartier fermé** (l'idée 8) est un passage avec un laissez-passer ou du karma pour
+condition ; une **contrée où l'on ne va pas seul** (l'idée 14) est un passage avec un
+nombre de chariots. C'est la même case à remplir.
+
 ```json
 {
   "format": "caravane.carte.v2",

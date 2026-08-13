@@ -1466,7 +1466,7 @@ function prixChariot(cle){return Math.round(CHARIOTS[cle].prix*(1+S.etapes*.045)
 function nouvellePartie(cle){
   const a=ARCHETYPES[cle]||ARCHETYPES.guerrier;
   S={or:260,repit:0,evCount:0,maxEv:3,petitCount:0,maxPetits:4,rallonge:0,etapes:0,lieues:0,orMax:260,reputation:50,
-     jour:1,heure:CALENDRIER.debut.heure,notes:[],
+     jour:1,heure:CALENDRIER.debut.heure,notes:[],passes:{},
      marchand:{nom:'Vous',archetype:ARCHETYPES[cle]?cle:'guerrier',pv:a.pvMax,pvMax:a.pvMax},
      chariots:[nouveauChariot('Le Patient','bache'),nouveauChariot('La Grise','charrette')],
      gardes:[],recrues:[],
@@ -3180,7 +3180,7 @@ function paquet(){
   const idx=v=>S.villes.indexOf(v);
   return {jeu:'caravane',v:9,date:new Date().toISOString(),
     or:S.or,etapes:S.etapes,lieues:S.lieues,orMax:S.orMax,reputation:S.reputation,
-    jour:S.jour,heure:S.heure,notes:S.notes,
+    jour:S.jour,heure:S.heure,notes:S.notes,passes:S.passes,
     marchand:S.marchand,chariots:S.chariots,gardes:S.gardes,recrues:S.recrues,
     armes:S.armes,armures:S.armures,mythes:S.mythes,banc:S.banc,karma:S.karma,chien:S.chien,contrats:S.contrats,
     gens:S.gens,objets:S.objets,objetsDepuis:S.objetsDepuis,mecrites:S.mecrites,
@@ -3211,6 +3211,7 @@ function ouvrirPaquet(d){
      jour:d.jour||(Number(d.etapes)||0)+1,
      heure:d.heure===undefined?CALENDRIER.debut.heure:d.heure,
      notes:Array.isArray(d.notes)?d.notes:[],
+     passes:(d.passes&&typeof d.passes==='object')?d.passes:{},
      marchand:d.marchand,chariots:d.chariots,gardes:d.gardes||[],recrues:d.recrues||[],
      armes:d.armes||{},armures:d.armures||{},mythes:d.mythes||{},
      troupeVue:'marchand',banc:!!d.banc,
@@ -3395,12 +3396,23 @@ function routesVers(j){
     return r;
   };
   if(estFranchissement(i,j)){
-    /* un insigne, un sauf-conduit : l'objet qui ouvre le passage le rend gratuit */
-    const franc=laissezPasser(j);
-    return [trace('La route de douane',
-             franc?'on vous laisse passer sans rien demander'
-                  :'l\'unique passage, gardé aux deux bouts',
-             .7,1,1,franc?{}:{douane:douane()})];
+    /* Une voie franchissable porte ce qu'elle exige. Sans rien d'écrit, on
+       retombe sur la douane d'autrefois : un droit en or qui monte avec le
+       voyage. Un insigne ou un papier en dispense. */
+    const jug=jugerPassage(i,j);
+    const ecrit=exigencesDe(i,j).length>0;
+    if(!ecrit){
+      const franc=jug.franc;
+      return [trace('La route de douane',
+               franc?'on vous laisse passer sans rien demander'
+                    :'l\'unique passage, gardé aux deux bouts',
+               .7,1,1,franc?{}:{douane:douane()})];
+    }
+    const tag=jug.ouvert
+      ? (jug.dus.length?jug.dus.join(' · '):'le passage est libre')
+      : (jug.refus||jug.manques[0]);
+    return [trace('Le passage gardé',tag,.7,1,1,
+      {exige:{de:i,vers:j},bloque:!jug.ouvert,douane:jug.prix||0})];
   }
   return PROFILS.map(p=>trace(p.nom,p.tag,p.risque,p.rudesse,p.detour));
 }
@@ -3505,19 +3517,23 @@ function rendrePanneauChemins(){
   let h=carteDestination();
   h+=S.routes.map((r,i)=>{
     const dg=r.risque>1.3?['perilleux','périlleuse']:(r.risque<.8?['sur','sûre']:['','incertaine']);
-    const impayable=r.douane&&S.or<r.douane;
+    /* une voie à conditions dit ce qui manque, et se refuse tant qu'il manque */
+    const jug=r.exige?jugerPassage(r.exige.de,r.exige.vers):null;
+    const impayable=jug?!jug.ouvert:(r.douane&&S.or<r.douane);
     return `<button class="route-carte${i===routeChoisie?' choisie':''}" data-route="${i}"
       ${impayable?'disabled':''} aria-pressed="${i===routeChoisie}">
       <h3>${r.nom}${i===routeChoisie?' <span class="coche">❧</span>':''}</h3>
       <p class="dest">${impayable
-        ? `Il manque ${fmt(r.douane-S.or)} po pour acquitter le droit de passage.`
+        ? (jug ? (jug.refus?jug.refus+' — ':'')+jug.manques.join(' ; ')+'.'
+               : `Il manque ${fmt(r.douane-S.or)} po pour acquitter le droit de passage.`)
         : r.tag+'.'}</p>
       <div class="tags">
         <span class="tag ${dg[0]}">Route ${dg[1]}</span>
         <span class="tag">${r.lieues} lieues · ${fmt(r.km)} km</span>
         <span class="tag">${r.etapes} étapes</span>
         <span class="tag">solde ${fmt(Math.round((13+S.etapes*1.15)*S.gardes.length))} po</span>
-        ${r.douane?`<span class="tag perilleux">douane ${fmt(r.douane)} po</span>`:''}
+        ${r.douane?`<span class="tag perilleux">droit ${fmt(r.douane)} po</span>`:''}
+        ${jug&&jug.franc?`<span class="tag sur">on vous laisse passer</span>`:''}
       </div>
       ${(()=>{const lent=chariotLeplusLent(r.km);
         if(!lent)return '';
@@ -3702,7 +3718,13 @@ function couleursCiel(p){
 }
 function partir(r){
   if(r.km)r.etapes=etapesConvoi(r.km*(r.lenteur||1));  /* la charge a pu changer */
-  if(r.douane){
+  if(r.exige){
+    /* on rejuge au départ : l'or a pu partir ailleurs, le jour a pu tourner */
+    const jug=jugerPassage(r.exige.de,r.exige.vers);
+    if(!jug.ouvert){toast(jug.refus||jug.manques[0]);return;}
+    acquitterPassage(r.exige.de,r.exige.vers);
+  }
+  else if(r.douane){
     if(S.or<r.douane){toast('La douane exige '+fmt(r.douane)+' po.');return;}
     S.or-=r.douane;
   }
@@ -5775,8 +5797,10 @@ function batirTopologie(){
   MONDE.voies.forEach(v=>{
     const a=PAR_CLE[v.de],b=PAR_CLE[v.vers];
     if(a===undefined||b===undefined)return;
-    VOISINS[a].push({vers:b,lieues:v.lieues,franchit:v.franchit});
-    VOISINS[b].push({vers:a,lieues:v.lieues,franchit:v.franchit});
+    /* Ce qu'une voie exige se transporte dans les deux sens : une frontière
+       gardée l'est aux deux bouts. */
+    VOISINS[a].push({vers:b,lieues:v.lieues,franchit:v.franchit,exige:v.exige,refus:v.refus});
+    VOISINS[b].push({vers:a,lieues:v.lieues,franchit:v.franchit,exige:v.exige,refus:v.refus});
   });
   /* Les contrées du monde écrit remplacent la liste de data/contrees.json, en
      lui empruntant tout ce qui est économique : la forge, les types de cité, le
@@ -6256,6 +6280,16 @@ function effetsEv(liste,sac){
         S.rumeur={ville:ou,bien:g,mult:Number(e.mult)||1.45};
         retenu=G[g].nom.toLowerCase();break;}
       case 'escorte':S.escorte=Math.max(S.escorte||0,Number(e.de)||1);break;
+      /* Un papier qu'on vous délivre : il ouvre les passages qui le réclament,
+         et il s'inscrit au carnet. Sans lieu, il vaut partout. */
+      case 'laissezPasser':{
+        const c=e.cle||'';
+        if(!c)break;
+        if(e.vaut===false){delete S.passes[c];retenu=e.nom||c;break;}
+        S.passes[c]={nom:e.nom||c,lieu:e.lieu||'',de:e.de||'',
+                     jour:S.jour,ou:(S.ville||{}).nom||''};
+        retenu=e.nom||c;
+        break;}
       /* ── les trois qui n'ont de sens qu'en conversation ── */
       case 'souvenir':{
         const n=e.nom||'';
@@ -6566,9 +6600,104 @@ function ouvrirCouchesParObjets(){
 }
 /* Un passage normalement fermé, qu'un objet ouvre. */
 function laissezPasser(j){
-  if(!OBJETS||!MONDE||!LIEUX[j])return false;
-  return objetsEnSoute().some(k=>(OBJETS[k].pouvoirs||[]).some(p=>
-    p.faire==='laissezPasser'&&(!p.lieu||p.lieu===LIEUX[j].cle)));
+  if(!MONDE||!LIEUX[j])return false;
+  /* un insigne dans la soute, ou un papier qu'on vous a délivré */
+  if(OBJETS&&objetsEnSoute().some(k=>(OBJETS[k].pouvoirs||[]).some(p=>
+    p.faire==='laissezPasser'&&(!p.lieu||p.lieu===LIEUX[j].cle))))return true;
+  return Object.keys(S.passes||{}).some(c=>{
+    const p=S.passes[c];
+    return !p.lieu||p.lieu===LIEUX[j].cle;
+  });
+}
+
+/* ═══════════════ ce qu'une voie exige ═══════════════
+   La douane n'était qu'un prix en or codé en dur dans le moteur. Elle devient
+   un cas parmi d'autres : une voie porte une liste d'exigences, et l'on ne
+   passe que si toutes sont tenues. Or, objet, karma, chariots, escorte, date,
+   laissez-passer — un seul mécanisme, une seule liste dans l'atelier.
+
+   Rien n'est jamais caché au joueur : ce qui manque se lit sur la carte du
+   chemin, avant qu'il ne s'engage. */
+const EXIGENCES={
+  or:{nom:'un droit de passage',
+    tenue:e=>S.or>=(Number(e.combien)||0),
+    dit:e=>`${fmt(Number(e.combien)||0)} po de droit`,
+    manque:e=>`il manque ${fmt((Number(e.combien)||0)-S.or)} po pour le droit de passage`,
+    prix:e=>Number(e.combien)||0},
+  objet:{nom:'un objet à montrer',
+    tenue:e=>!!(OBJETS&&objetsEnSoute().indexOf(e.objet)>=0),
+    dit:e=>`montrer ${((OBJETS||{})[e.objet]||{}).nom||e.objet}`,
+    manque:e=>`il faut montrer ${((OBJETS||{})[e.objet]||{}).nom||e.objet}`},
+  laissezPasser:{nom:'un laissez-passer',
+    tenue:e=>!!(S.passes||{})[e.cle],
+    dit:e=>`un laissez-passer${e.nom?' — '+e.nom:''}`,
+    manque:e=>`il faut un laissez-passer${e.nom?' : '+e.nom:''}`},
+  karma:{nom:'une réputation',
+    tenue:e=>(e.min===undefined||S.karma>=e.min)&&(e.max===undefined||S.karma<=e.max),
+    dit:e=>e.min!==undefined?`karma ${e.min} au moins`:`karma ${e.max} au plus`,
+    manque:e=>e.min!==undefined&&S.karma<e.min
+      ?`on ne laisse pas passer une caravane de si mauvais renom`
+      :`on ne laisse pas passer une caravane si bien vue`},
+  chariots:{nom:'un convoi assez fort',
+    tenue:e=>S.chariots.length>=(Number(e.min)||0),
+    dit:e=>`${e.min} chariots au moins`,
+    manque:e=>`il faut ${e.min} chariots ; vous en avez ${S.chariots.length}`},
+  escorte:{nom:'une escorte assez nombreuse',
+    tenue:e=>S.gardes.length>=(Number(e.min)||0),
+    dit:e=>`${e.min} gardes au moins`,
+    manque:e=>`il faut ${e.min} gardes ; vous en avez ${S.gardes.length}`},
+  date:{nom:'une saison',
+    tenue:e=>{
+      const d=dateDe(S.jour);
+      if(Array.isArray(e.mois)&&e.mois.length&&e.mois.indexOf(d.mois)<0)return false;
+      if(e.du!==undefined&&e.au!==undefined){
+        const j=d.jour;
+        return e.du<=e.au?(j>=e.du&&j<=e.au):(j>=e.du||j<=e.au);
+      }
+      return true;
+    },
+    dit:e=>Array.isArray(e.mois)&&e.mois.length
+      ?'ouvert '+e.mois.map(i=>(CALENDRIER.mois[i]||{}).nom||'?').join(', ')
+      :`ouvert du ${e.du} au ${e.au} du mois`,
+    manque:e=>'la voie est fermée en cette saison'}
+};
+/* Ce qu'exige la voie qui mène de i à j — la première trouvée, car deux lieux
+   ne sont reliés que par une voie. */
+function exigencesDe(i,j){
+  const v=(VOISINS&&VOISINS[i]||[]).find(x=>x.vers===j);
+  return (v&&Array.isArray(v.exige))?v.exige:[];
+}
+function refusDe(i,j){
+  const v=(VOISINS&&VOISINS[i]||[]).find(x=>x.vers===j);
+  return (v&&v.refus)||'';
+}
+/* Un laissez-passer dispense de tout ce qui s'achète ou se montre — pas de ce
+   que le calendrier ou la taille du convoi imposent : un col fermé par la neige
+   ne s'ouvre pas sur présentation d'un papier. */
+const DISPENSABLE={or:1,objet:1};
+function jugerPassage(i,j){
+  const liste=exigencesDe(i,j);
+  const franc=laissezPasser(j);
+  const dus=[],manques=[];
+  let prix=0;
+  liste.forEach(e=>{
+    const r=EXIGENCES[e.quoi];
+    if(!r)return;                                   /* une exigence inconnue n'arrête personne */
+    if(franc&&DISPENSABLE[e.quoi])return;
+    dus.push(r.dit(e));
+    if(!r.tenue(e))manques.push(r.manque(e));
+    else if(r.prix)prix+=r.prix(e);
+  });
+  return {ouvert:manques.length===0,dus:dus,manques:manques,prix:prix,
+          franc:franc,refus:refusDe(i,j)};
+}
+/* On acquitte ce qui se paie, une fois le convoi engagé. */
+function acquitterPassage(i,j){
+  const franc=laissezPasser(j);
+  exigencesDe(i,j).forEach(e=>{
+    if(e.quoi!=='or'||franc)return;
+    S.or=Math.max(0,S.or-(Number(e.combien)||0));
+  });
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

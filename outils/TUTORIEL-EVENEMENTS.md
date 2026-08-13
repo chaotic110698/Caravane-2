@@ -56,7 +56,7 @@ L'issue ne dépend pas du sort mais de ce que vous avez : assez d'or, assez de p
 
 ## Ce qu'un choix peut faire
 
-18 effets, qu'on empile dans l'ordre qu'on veut. Chacun peut **retenir son**
+19 effets, qu'on empile dans l'ordre qu'on veut. Chacun peut **retenir son**
 **résultat** sous un nom, pour que le texte le cite ensuite entre accolades.
 
 ### Gagner ou perdre de l'or
@@ -258,6 +258,22 @@ Des compagnons de route protègent la caravane pendant quelques étapes. Les mau
 | réglage | ce que c'est | à savoir |
 |---|---|---|
 | **Combien d'étapes** | Un nombre simple. |  Par défaut : 2. **Obligatoire.** |
+
+### Délivrer un laissez-passer
+
+Remet au marchand un papier qui ouvre les frontières le réclamant. Il s'inscrit au carnet, avec le jour et le lieu où il a été délivré, et ne se perd pas. Sans lieu précisé, il vaut partout ; avec un lieu, il n'ouvre que celui-là.
+
+| réglage | ce que c'est | à savoir |
+|---|---|---|
+| **Clé du laissez-passer** | Du texte, qui accepte les trous entre accolades. | Le même mot que la frontière réclame, dans l'atelier de carte. Sans accents ni espaces. **Obligatoire.** |
+| **Comment on l'appelle** | Du texte, qui accepte les trous entre accolades. | Ce que le carnet affiche — « sauf-conduit du bailli ». |
+| **Pour quel lieu** | La clé d'un lieu du monde, telle que l'atelier de carte la donne. Laissé vide, l'effet vaut partout. | Laissé vide, il ouvre partout où sa clé est réclamée. |
+| **Qui l'a délivré** | Du texte, qui accepte les trous entre accolades. | Pour le carnet, et pour s'en souvenir. |
+| **Le retirer** | Oui ou non. | Mettre « non » reprend le papier au lieu de le donner. Par défaut : true. |
+
+**Ce qu'il retient** — Retient le nom du laissez-passer, pour le citer dans le texte.
+
+> On vous glisse {papier} dans la main sans un mot.
 
 ## Ce qu'on peut demander à l'état du convoi
 

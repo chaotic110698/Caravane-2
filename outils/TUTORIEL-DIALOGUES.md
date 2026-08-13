@@ -73,7 +73,7 @@ l'état du convoi — plus celles-ci, qui n'ont de sens qu'en conversation.
 
 ## Ce qu'un dialogue peut faire
 
-Les 18 effets des événements, sans exception : donner de l'or, blesser,
+Les 19 effets des événements, sans exception : donner de l'or, blesser,
 charger, recruter, lancer une rumeur. Un dialogue ne peut donc rien faire qu'un
 événement ne sache déjà faire, et les deux s'équilibrent pareil.
 

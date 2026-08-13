@@ -455,7 +455,19 @@
           "km": 4,
           "etapes": 1
         }
-      ]
+      ],
+      "exige": [
+        {
+          "quoi": "or",
+          "combien": 140
+        },
+        {
+          "quoi": "laissezPasser",
+          "cle": "passe-essai",
+          "nom": "le passe d'essai"
+        }
+      ],
+      "refus": "Le garde d'essai vous renvoie d'un geste."
     }
   ]
 }
