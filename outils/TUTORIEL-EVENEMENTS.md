@@ -36,7 +36,7 @@ Le choix a une seule fin, connue d'avance. On paie, on attend, on repart : pas d
 
 ### Jet de dé
 
-On lance un dé à vingt faces, auquel s'ajoutent le karma et l'état du convoi. Selon le total, l'issue change.
+On lance un dé à cent faces, auquel s'ajoutent l'aptitude choisie, le karma et l'état du convoi. Selon le total, l'issue change. Tout se compte en centièmes : un seuil de 75 demande un total de 75.
 
 *Quand s'en servir :* Dès que le résultat doit dépendre de la chance et de la valeur de la troupe.
 

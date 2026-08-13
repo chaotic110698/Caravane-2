@@ -631,20 +631,31 @@ details.regles li{margin-bottom:6px}
 .de svg{width:100%;height:100%;display:block}
 .de-corps{fill:var(--velin-clair);stroke:var(--filet);stroke-width:3.5}
 .de-tri{fill:none;stroke:var(--velin-ombre);stroke-width:2.5}
-.de-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-  font-family:var(--display);font-size:25px;font-weight:600;padding-top:7px;color:var(--encre)}
+/* Le nombre ne clignote plus : il défile. Une colonne de crans glisse derrière
+   la fenêtre du dé et ralentit jusqu'à s'arrêter sur le résultat. */
+/* La fenêtre reste dans la taille de l'hexagone : les crans qui montent et
+   descendent glissent derrière le cœur du dé, pas par-dessus ses arêtes. */
+.de-num{position:absolute;left:0;right:0;top:15px;height:36px;overflow:hidden;
+  font-family:var(--display);font-size:24px;font-weight:600;color:var(--encre)}
+.roue{position:absolute;left:0;right:0;top:0;will-change:transform}
+.roue i{display:flex;align-items:center;justify-content:center;
+  height:36px;font-style:normal;font-variant-numeric:tabular-nums}
 .de.roule{animation:roule .1s linear infinite}
-@keyframes roule{0%{transform:rotate(-9deg) scale(.95)}50%{transform:rotate(10deg) scale(1.05)}
-  100%{transform:rotate(-9deg) scale(.95)}}
+@keyframes roule{0%{transform:rotate(-6deg) scale(.97)}50%{transform:rotate(7deg) scale(1.03)}
+  100%{transform:rotate(-6deg) scale(.97)}}
 .de.pose{animation:pose .42s cubic-bezier(.2,1.7,.4,1)}
-@keyframes pose{0%{transform:scale(1.4)}100%{transform:scale(1)}}
+@keyframes pose{0%{transform:scale(1.35)}100%{transform:scale(1)}}
+.jet-corps{flex:1;min-width:0}
+/* Ce qu'il faut atteindre, annoncé avant que le dé ne s'arrête. */
+.jet-faut{font-size:13px;color:var(--encre-pale);font-variant:small-caps;letter-spacing:.06em}
+.jet-faut b{font-family:var(--chiffres);font-size:16px;color:var(--encre);letter-spacing:0}
 .jet.reussi .de-corps{stroke:var(--vert)}
 .jet.reussi .de-num,.jet.reussi .jet-verdict{color:var(--vert)}
 .jet.rate .de-corps{stroke:var(--minium)}
 .jet.rate .de-num,.jet.rate .jet-verdict{color:var(--minium)}
 .jet.crit .de-corps{stroke:var(--or);fill:rgba(198,162,76,.16)}
 .jet.crit .de-num,.jet.crit .jet-verdict{color:var(--or)}
-.jet-detail{flex:1;font-size:13px;color:var(--encre-pale);line-height:1.4}
+.jet-detail{font-size:13px;color:var(--encre-pale);line-height:1.4}
 .jet-detail b{color:var(--encre);font-family:var(--chiffres)}
 .jet-verdict{font-family:var(--display);font-size:17.5px;font-weight:600;display:block;
   margin-bottom:2px}
@@ -805,7 +816,7 @@ details.regles li{margin-bottom:6px}
         <li>Vingt marchandises en cinq catégories. Chacune a un niveau de rareté qui dépend de la
             contrée, de la spécialité de la cité et de la cité elle-même : on achète là où c'est
             commun, on vend là où c'est introuvable.</li>
-        <li>Les décisions vraiment incertaines se jouent au dé à vingt faces, majoré par l'aptitude
+        <li>Les décisions vraiment incertaines se jouent au dé à cent faces, majoré par l'aptitude
             qui convient, par le karma et par l'état du convoi. Ces décisions-là portent un dé sur
             leur bouton : les autres sont sûres, leur issue est écrite.</li>
         <li>Le karma part de 50. Les gestes désintéressés coûtent une étape et paient en chance ;
@@ -1058,9 +1069,12 @@ details.regles li{margin-bottom:6px}
         <polygon class="de-corps" points="50,5 91,28.5 91,71.5 50,95 9,71.5 9,28.5"/>
         <polygon class="de-tri" points="50,25 73,64 27,64"/>
       </svg>
-      <div class="de-num" id="de-num">20</div>
+      <div class="de-num" id="de-num"><div class="roue" id="de-roue"><i>100</i></div></div>
     </div>
-    <div class="jet-detail" id="jet-detail"></div>
+    <div class="jet-corps">
+      <div class="jet-faut" id="jet-faut" hidden></div>
+      <div class="jet-detail" id="jet-detail"></div>
+    </div>
   </div>
   <div id="ev-issue" hidden>
     <div class="issue" id="ev-issue-texte">—</div>
@@ -3845,25 +3859,45 @@ function mouvementReduit(){
   try{return window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;}
   catch(e){return false;}
 }
+const CRAN=36;                 /* la hauteur d'un cran de la roue, en pixels */
 function montrerDe(j,apres){
-  const bloc=$('#ev-jet'),num=$('#de-num'),boite=$('#de-boite'),det=$('#jet-detail');
+  const bloc=$('#ev-jet'),boite=$('#de-boite'),roue=$('#de-roue'),
+        det=$('#jet-detail'),faut=$('#jet-faut');
   bloc.hidden=false;bloc.className='jet';det.innerHTML='';
+  /* Ce qu'il faut est annoncé d'abord : on regarde la roue en sachant ce qu'on
+     attend d'elle, ce qui vaut mieux que de l'apprendre après coup. */
+  const apport=j.mods.reduce((s,m)=>s+m.v,0);
+  if(j.seuil){
+    faut.hidden=false;
+    faut.innerHTML=`il faut <b>${j.seuil}</b>`+
+      (apport?` — vous apportez <b>${apport>0?'+':''}${apport}</b>, le dé doit faire <b>${Math.max(1,j.seuil-apport)}</b>`:'');
+  }else faut.hidden=true;
+
   const poser=()=>{
     boite.classList.remove('roule');boite.classList.add('pose');
-    num.textContent=j.de;
     bloc.classList.add(j.classe||((j.critique||j.desastre)?'crit':(j.reussi?'reussi':'rate')));
     det.innerHTML=detailJet(j);
-    setTimeout(apres,mouvementReduit()?0:280);
+    setTimeout(apres,mouvementReduit()?0:300);
   };
-  clearInterval(tmDe);
+  clearTimeout(tmDe);
   boite.classList.remove('pose');
-  if(mouvementReduit()){poser();return;}
+  roue.style.transition='none';
+  if(mouvementReduit()){
+    roue.innerHTML=`<i>${j.de}</i>`;roue.style.transform='none';poser();return;
+  }
+  /* une colonne de crans au hasard, le résultat tout en bas */
+  const n=17,crans=[];
+  for(let i=0;i<n-1;i++)crans.push(ri(1,FACES));
+  crans.push(j.de);
+  roue.innerHTML=crans.map(v=>`<i>${v}</i>`).join('');
+  roue.style.transform='translateY(0)';
   boite.classList.add('roule');
-  let n=0;
-  tmDe=setInterval(()=>{
-    num.textContent=ri(1,20);
-    if(++n>=14){clearInterval(tmDe);poser();}
-  },62);
+  /* deux images pour que le navigateur prenne acte du point de départ */
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    roue.style.transition='transform 1.15s cubic-bezier(.12,.72,.16,1)';
+    roue.style.transform=`translateY(${-(n-1)*CRAN}px)`;
+  }));
+  tmDe=setTimeout(poser,1180);
 }
 function resoudre(i){
   const c=$('#ev-choix')._choix[i];
@@ -3891,8 +3925,8 @@ function reprendre(){
 }
 function combat(bonus){
   const f=forceTroupe()*(bonus||1),m=menace();
-  const mod=Math.max(0,Math.round(4*Math.log(Math.max(f,.25))));
-  const seuil=clamp(14+Math.round(4*Math.log(Math.max(m,.25))),3,30);
+  const mod=Math.max(0,Math.round(20*Math.log(Math.max(f,.25))));
+  const seuil=clamp(66+Math.round(20*Math.log(Math.max(m,.25))),11,146);
   const j=jet({carac:mod,nom:'force',seuil:seuil,titre:'Mêlée'});
   if(j.reussi){
     const butin=Math.round((25+S.etapes*9)*rnd(.7,1.4)*(j.critique?1.8:1));
@@ -3912,10 +3946,19 @@ function combat(bonus){
       (r.noms.length?` ${r.noms.join(' et ')} ${r.noms.length>1?'sont touchés':'est touché'}.`:''));
 }
 
-/* ═══════════════ le dé à vingt faces ═══════════════
-   Tout ce qui tient du hasard passe par un jet unique : un d20, majoré par
+/* ═══════════════ le dé à cent faces ═══════════════
+   Tout ce qui tient du hasard passe par un jet unique : un d100, majoré par
    l'aptitude qui convient, par le karma de la caravane et par l'état du convoi.
-   Plus le total est élevé, meilleure est l'issue. */
+   Plus le total est élevé, meilleure est l'issue.
+
+   Cent faces plutôt que vingt pour une seule raison : les aptitudes vont déjà
+   de 0 à 100, et tout ce qui s'écrit dans les ateliers s'écrit en centièmes.
+   Une chance sur cent se lit, une chance sur vingt se calcule. Les bornes du
+   coup de maître et du désastre gardent la part qu'elles avaient sur le d20 —
+   un vingtième de chaque côté : 96 et plus, 5 et moins. */
+const FACES=100;
+const HAUT=96;              /* coup de maître : les cinq faces du haut */
+const BAS=5;                /* désastre : les cinq faces du bas */
 /* ═══════════════ le chien du convoi ═══════════════
    Un errant nourri se laisse parfois adopter. Il ne se bat pas à la place des
    hommes : il flaire ce qui attend sur la piste, et il ne quitte pas le marchand. */
@@ -3928,7 +3971,7 @@ function chanceFlair(){return S.chien?clamp(S.chien.flair*.09,0,.4):0;}
 
 function bonusKarma(){
   /* un objet porte-chance s'ajoute au karma pour le seul calcul du dé */
-  return clamp(Math.round((S.karma+bonusObjet('karma')-50)/17),-3,3);
+  return clamp(Math.round((S.karma+bonusObjet('karma')-50)/3.4),-15,15);
 }
 function etatConvoi(){
   const ch=S.chariots.length?S.chariots.reduce((s,c)=>s+etatChariot(c),0)/S.chariots.length:0;
@@ -3936,18 +3979,18 @@ function etatConvoi(){
   const pv=t.reduce((s,u)=>s+100*u.pv/u.pvMax,0)/t.length;
   return (ch+pv)/2;
 }
-function bonusConvoi(){return clamp(Math.round((etatConvoi()-66)/15),-2,2);}
+function bonusConvoi(){return clamp(Math.round((etatConvoi()-66)/3),-10,10);}
 
 let dernierJet=null;
 function jet(o){
-  const de=ri(1,20),mods=[];
+  const de=ri(1,FACES),mods=[];
   if(o.carac)mods.push({nom:o.nom||'aptitude',v:o.carac});
   const k=bonusKarma();if(k)mods.push({nom:'karma',v:k});
   const c=bonusConvoi();if(c)mods.push({nom:'convoi',v:c});
   const total=de+mods.reduce((s,m)=>s+m.v,0);
   const j={de:de,mods:mods,total:total,seuil:o.seuil,
-    reussi:de===20?true:(de===1?false:total>=o.seuil),
-    critique:de===20,desastre:de===1,titre:o.titre||'',verdict:null,classe:null};
+    reussi:de>=HAUT?true:(de<=BAS?false:total>=o.seuil),
+    critique:de>=HAUT,desastre:de<=BAS,titre:o.titre||'',verdict:null,classe:null};
   if(!dernierJet)dernierJet=j;   /* seul le jet de la décision s'affiche */
   return j;
 }
@@ -3971,8 +4014,8 @@ function motKarma(){
 
 /* ═══════════════ menus événements de la route ═══════════════ */
 function trouvaille(txtOr,txtPiege,txtVide){
-  const j=jet({seuil:20,titre:'Fouille'});
-  if(j.total>=20){
+  const j=jet({seuil:96,titre:'Fouille'});
+  if(j.total>=96){
     j.verdict='Magot !';j.classe='crit';
     const g=Math.round((40+S.etapes*11)*rnd(.8,1.6));S.or+=g;
     return txtOr.replace('%',fmt(g));
@@ -4063,7 +4106,7 @@ let PETITS=[
       karmaBon(4);
       if(S.chien)
         return `Vous partagez les restes en deux parts égales. ${S.chien.nom} tolère l'intrus le temps du repas, puis le raccompagne fermement jusqu'à la crête.`;
-      const j=jet({carac:1,nom:'patience',seuil:14,titre:'Apprivoiser'});
+      const j=jet({carac:5,nom:'patience',seuil:66,titre:'Apprivoiser'});
       if(j.reussi){
         S.chien=nouveauChien();
         j.verdict='Adopté !';j.classe='crit';
@@ -4247,7 +4290,7 @@ let PETITS=[
   choix:[
    {txt:'Tenter le coup',de:'tir',note:()=>troupe().some(u=>u.arme&&ARMES[u.arme].famille==='arc')?'Un arc en main, autant s\'en servir':'Sans arc, ce sera au jugé',
     act:()=>{const arc=troupe().some(u=>u.arme&&ARMES[u.arme].famille==='arc');
-      const j=jet({carac:arc?5:0,nom:arc?'tir':'au jugé',seuil:16,titre:'Chasse'});
+      const j=jet({carac:arc?25:0,nom:arc?'tir':'au jugé',seuil:76,titre:'Chasse'});
       if(j.reussi){reposer(j.critique?.28:.15);
         return 'Deux oiseaux tombent. Le soir, on mange autre chose que des galettes.';}
       return 'Tout le monde tire, personne ne touche. Les outardes s\'éloignent sans se presser.';}},
@@ -4474,7 +4517,7 @@ let PETITS=[
 ];
 
 function fouillerRuine(txtArme,txtOr,txtAccident,txtRien){
-  const j=jet({carac:Math.round(vigilanceTroupe()/20),nom:'vigilance',seuil:18,titre:'Exploration'});
+  const j=jet({carac:Math.round(vigilanceTroupe()/4),nom:'vigilance',seuil:86,titre:'Exploration'});
   if(j.total>=23){j.verdict='Découverte !';j.classe='crit';
     return txtArme.replace('%arme',armeTrouvee());}
   if(j.total>=18){j.verdict='Belle prise';j.classe='reussi';
@@ -4502,7 +4545,7 @@ let EVENEMENTS=[
      return `La bourse n'y suffit pas : ils prennent le reste dans les chariots — ${p}.`;}},
   {txt:'Fuir vers les dunes',de:'agilité',note:()=>`Décrocher · agilité ${Math.round(agiliteTroupe())}`,
    ton:'mauvais',
-   act:()=>{const j=jet({carac:Math.round(agiliteTroupe()/20),nom:'agilité',seuil:15,titre:'Décrocher'});
+   act:()=>{const j=jet({carac:Math.round(agiliteTroupe()/4),nom:'agilité',seuil:71,titre:'Décrocher'});
      const p=delester(j.reussi?rnd(.09,.18):rnd(.26,.40));abimer(j.reussi?3:8);
      return j.reussi
        ?`Les chariots filent par un ravin qu'eux seuls connaissent : on ne laisse que ${p}.`
@@ -4520,7 +4563,7 @@ let EVENEMENTS=[
    ton:'mauvais',act:()=>combat(1)},
   {txt:'Fuir en désordre',de:'agilité',note:()=>`Décrocher sous les coups · agilité ${Math.round(agiliteTroupe())}`,
    ton:'mauvais',
-   act:()=>{const j=jet({carac:Math.round(agiliteTroupe()/20),nom:'agilité',seuil:17,titre:'Décrocher'});
+   act:()=>{const j=jet({carac:Math.round(agiliteTroupe()/4),nom:'agilité',seuil:81,titre:'Décrocher'});
      const p=delester(j.reussi?rnd(.16,.28):rnd(.34,.52));abimer(j.reussi?5:11);
      const r=blesserTroupe(Math.round(ri(18,38)*(1+S.etapes*.02)*(j.reussi?.5:1)),
        Math.min(2,troupe().length));
@@ -4566,7 +4609,7 @@ let EVENEMENTS=[
   {txt:'Prendre le détour',note:'Deux étapes de plus, aucun risque',
    act:()=>{allonger(2);return 'Deux jours à remonter la rive pour trouver un gué praticable. Long, mais sec.';}},
   {txt:'Traverser à gué',de:'attelage',note:'Rapide, mais l\'eau emporte ce qu\'elle veut',ton:'mauvais',
-   act:()=>{const j=jet({carac:Math.round(etatConvoi()/26),nom:'attelage',seuil:15,titre:'Passer le gué'});
+   act:()=>{const j=jet({carac:Math.round(etatConvoi()/5.2),nom:'attelage',seuil:71,titre:'Passer le gué'});
      if(j.reussi){abimer(ri(4,10));
        return 'Les roues mordent le fond, l\'eau monte aux moyeux, et tout passe. Les chariots ont pris l\'humidité.';}
      const p=delester(rnd(.15,.3));abimer(ri(10,20));
@@ -4594,7 +4637,7 @@ let EVENEMENTS=[
    act:()=>{abimer(ri(8,15));allonger(1);
      return 'Une journée à patauger, les roues jusqu\'aux moyeux. Rien payé, mais les chariots s\'en souviendront.';}},
   {txt:'Montrer un sauf-conduit douteux',de:'aplomb',note:'Un faux passe rarement',
-   act:()=>{const j=jet({carac:Math.round(S.reputation/22),nom:'aplomb',seuil:18,titre:'Bluff'});
+   act:()=>{const j=jet({carac:Math.round(S.reputation/4.4),nom:'aplomb',seuil:86,titre:'Bluff'});
      if(j.reussi){return 'Le clerc plisse les yeux, compare, puis lève la chaîne sans un mot.';}
      const a=Math.round(35+S.etapes*6);S.or=Math.max(0,S.or-a);S.reputation=clamp(S.reputation-9,0,100);
      return `Le faux est repéré. Amende de ${fmt(a)} po et votre nom noté dans le registre.`;}}
@@ -4694,7 +4737,7 @@ let EVENEMENTS=[
   {txt:'Revenir au dernier repère',note:'Une étape perdue, mais on sait où l\'on va',
    act:()=>{allonger(1);return 'Retour en arrière jusqu\'à la borne, puis cap corrigé. Une journée pour rien.';}},
   {txt:'Continuer au flair',de:'vigilance',note:'Ça passe ou ça coûte cher',ton:'mauvais',
-   act:()=>{const j=jet({carac:Math.round(vigilanceTroupe()/20),nom:'vigilance',seuil:15,titre:'Se repérer'});
+   act:()=>{const j=jet({carac:Math.round(vigilanceTroupe()/4),nom:'vigilance',seuil:71,titre:'Se repérer'});
      if(j.reussi)return 'Le flair était bon : la piste réapparaît avant le soir.';
      allonger(2);abimer(8);
      return 'Deux jours dans un dédale de dunes avant de retrouver la trace. Les bêtes sont à bout.';}}
@@ -5725,12 +5768,46 @@ let DIALOGUES=[];            /* data/dialogues.json → dialogues */
 let DIALOGUES_DE={};         /* clé de personnage → ses dialogues, du plus prioritaire */
 let TYPES_PAR_CLE=null, TYPES_CAP_PAR_CLE=null;
 
+/* Les événements écrits avant le passage au d100 portent des seuils sur vingt.
+   On ne demande à personne de les réécrire : le fichier dit son format, et un
+   fichier d'avant se hausse tout seul à cent au chargement. Ce qui se lit sur
+   la même échelle que le dé est multiplié par cinq ; une chance annoncée ou une
+   condition de karma, qui ne se lisent pas sur le dé, ne bougent pas. */
+function monterEnCent(f){
+  const liste=(f&&f.evenements)||[];
+  const vieux=!f||!f.format||/\.v1$/.test(f.format);
+  if(!vieux)return liste;
+  /* Une majoration s'ajoute au dé : elle vaut cinq fois plus. Un seuil se
+     compare au total : la face 15 d'un d20 couvre les faces 71 à 75 d'un d100,
+     et c'est la plus basse qui compte — d'où cinq fois moins quatre. Sans cette
+     soustraction, chaque jet deviendrait quatre points plus dur. */
+  const majore=v=>v===undefined||v===null?v
+    :typeof v==='number'?v*5
+    :Array.isArray(v)?v.map(majore)
+    :(v.divise?Object.assign({},v,{divise:v.divise/5})
+              :Object.assign({},v,{fois:(v.fois===undefined?1:v.fois)*5}));
+  const borne=v=>v===undefined||v===null?v
+    :typeof v==='number'?v*5-4
+    :Array.isArray(v)?v.map(borne)
+    :Object.assign({},majore(v),{base:(v.base===undefined?0:v.base*5)-4});
+  liste.forEach(ev=>(ev.choix||[]).forEach(c=>{
+    if(!c.jet)return;
+    const j=c.jet;
+    if(j.carac!==undefined)j.carac=majore(j.carac);
+    if(j.seuil!==undefined)j.seuil=borne(j.seuil);
+    (j.paliers||[]).forEach(p=>{
+      if(p.min!==undefined)p.min=borne(p.min);
+      if(p.max!==undefined)p.max=borne(p.max);
+    });
+  }));
+  return liste;
+}
 function assignerAuteur(d){
   TYPES_PAR_CLE={humain:TYPES_HUMAIN,nain:TYPES_NAIN,elfe:TYPES_ELFE};
   TYPES_CAP_PAR_CLE={humain:TYPE_CAP_HUMAIN,nain:TYPE_CAP_NAIN,elfe:TYPE_CAP_ELFE};
   MONDE=normaliserMonde(d.monde);
   if(MONDE)batirTopologie();
-  EVENEMENTS_DONNEES=(d.evenements&&d.evenements.evenements)||[];
+  EVENEMENTS_DONNEES=monterEnCent(d.evenements);
   MISSIONS_ECRITES=(d['missions-ecrites']&&d['missions-ecrites'].missions)||[];
   PROPRIETES=null;
   if(d.proprietes&&d.proprietes.proprietes){
@@ -6088,8 +6165,8 @@ function actEv(c){
     sac.mise=fmt(mise);
     if(S.or<mise)return 'La bourse ne suit pas : on décline poliment.';
     const carac=Math.round(valeurEv(p.carac));
-    const seuil=clamp(Math.round(21-20*clamp(p.chance===undefined?.5:p.chance,.05,.95))
-      +carac+2,2,26);
+    const seuil=clamp(5*Math.round(21-20*clamp(p.chance===undefined?.5:p.chance,.05,.95))
+      +carac+6,6,126);
     const r=jet({carac:carac,nom:p.nom||'adresse',seuil:seuil,titre:'Pari'});
     if(r.reussi){S.or+=mise;return issueEv(c.gagne,sac);}
     S.or=Math.max(0,S.or-mise);

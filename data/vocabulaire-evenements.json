@@ -11,7 +11,7 @@
     },
     "jet": {
       "nom": "Jet de dé",
-      "explique": "On lance un dé à vingt faces, auquel s'ajoutent le karma et l'état du convoi. Selon le total, l'issue change.",
+      "explique": "On lance un dé à cent faces, auquel s'ajoutent l'aptitude choisie, le karma et l'état du convoi. Selon le total, l'issue change. Tout se compte en centièmes : un seuil de 75 demande un total de 75.",
       "quand": "Dès que le résultat doit dépendre de la chance et de la valeur de la troupe.",
       "champs": ["jet", "reussi", "rate"],
       "variante": {
