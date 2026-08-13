@@ -210,6 +210,26 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;
 .sous-onglet{flex:1;padding:10px 6px;border:1px solid var(--velin-ombre);
   border-top:2px solid var(--filet);border-radius:0 0 var(--r) var(--r);
   font-family:var(--display);font-size:16px;background:var(--velin)}
+/* ── le carnet de notes ── */
+.tranche{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px}
+.feuillet{width:30px;height:30px;flex:none;border:1px solid var(--velin-ombre);
+  border-radius:2px;background:var(--velin-clair);font-family:var(--chiffres);
+  font-size:12.5px;color:var(--encre-pale);display:flex;align-items:center;
+  justify-content:center}
+.feuillet.actif{border-color:var(--minium);color:var(--minium);background:var(--velin);
+  box-shadow:inset 0 -2px 0 var(--minium)}
+@media (pointer:coarse){.feuillet{width:34px;height:34px}}
+.page-note .champ{width:100%;background:var(--velin);border:1px solid var(--filet);
+  border-radius:var(--r);color:var(--encre);padding:9px 10px;font-family:var(--corps);
+  font-size:15px}
+.page-note .note-titre{font-family:var(--display);font-size:18px;font-weight:600;
+  margin-bottom:8px}
+/* les lignes du papier tombent sous la ligne d'écriture, pas au travers :
+   même pas de 24 px des deux côtés, et le premier trait décalé du padding */
+.page-note .note-texte{line-height:24px;resize:vertical;min-height:168px;
+  padding-top:8px;padding-bottom:8px;
+  background-image:repeating-linear-gradient(var(--velin) 0 23px,var(--filet) 23px 24px);
+  background-position:0 8px;background-attachment:local}
 .sous-onglet.actif{background:var(--velin-clair);border-top-color:var(--minium);color:var(--minium);
   font-weight:600}
 .bientot{text-align:center;padding:48px 20px}
@@ -5294,6 +5314,21 @@ document.addEventListener('click',e=>{
     return;
   }
   if(t.dataset.troupe){S.troupeVue=t.dataset.troupe;panneauTroupe();return;}
+  if(t.dataset.carnet){S.carnetVue=t.dataset.carnet;panneauCarnet();return;}
+  if(t.dataset.notePage!==undefined){S.notePage=+t.dataset.notePage;panneauCarnet();return;}
+  if(t.id==='note-ajouter'){
+    if(!ajouterNote())return toast('Quarante pages, c\'est tout ce que tient le carnet.');
+    panneauCarnet();
+    const c=$('#note-titre');if(c)c.focus();
+    return;
+  }
+  if(t.dataset.noteOter!==undefined){
+    const l=notes(),i=+t.dataset.noteOter,p=l[i];
+    if(p&&((p.titre||'').trim()||(p.texte||'').trim())
+       &&!confirm('Arracher cette page ? Ce qui y est écrit est perdu.'))return;
+    oterNote(i);panneauCarnet();
+    return;
+  }
   if(t.dataset.accepter){accepterOffre(+t.dataset.accepter);return;}
   if(t.dataset.mission){accepterMission(t.dataset.mission);return;}
   /* ── les propriétés ── */
@@ -5622,6 +5657,27 @@ $('#fichier').addEventListener('change',e=>{
   e.target.value='';
 });
 $('#nom-champ').addEventListener('keydown',e=>{if(e.key==='Enter')$('#nom-valider').click();});
+
+/* Les notes s'écrivent dans l'état à chaque frappe, mais on ne redessine rien :
+   redessiner arracherait le curseur des mains du joueur. Seul le compte de
+   signes qui reste se met à jour. */
+document.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.id!=='note-titre'&&t.id!=='note-texte')return;
+  const l=notes(),p=l[clamp(Number(S.notePage)||0,0,Math.max(0,l.length-1))];
+  if(!p)return;
+  if(t.id==='note-titre'){
+    p.titre=t.value.slice(0,NOTE_TITRE);
+    const f=$('.feuillet.actif');
+    if(f)f.setAttribute('aria-label','Page '+((S.notePage|0)+1)+(p.titre?' — '+p.titre:''));
+  }else{
+    p.texte=t.value.slice(0,NOTE_SIGNES);
+    const r=$('#note-reste');
+    if(r){const n=NOTE_SIGNES-p.texte.length;
+      r.textContent=n+' signe'+(n>1?'s':'')+' de libre'+
+        (p.jour?' · ouverte le '+nomDate(p.jour)+(p.lieu?' à '+p.lieu:''):'');}
+  }
+});
 
 /* ═══════════════ chargement des données ═══════════════
    Le moteur tient dans ce fichier ; tout le contenu — biens, raretés, contrées,
@@ -7266,9 +7322,19 @@ function carteLore(titre, sous, premiere, couches, ouvertes, sac, pied){
     ${pied?`<p class="info" style="margin-top:9px">${pied}</p>`:''}
   </div>`;
 }
+const VUES_CARNET=[
+ {cle:'lore',  nom:'Ce qu\'on sait'},
+ {cle:'notes', nom:'Mes notes'}
+];
 function panneauCarnet(){
   const p=$('#panneau-carnet');
   if(!p)return;
+  const vue=(S&&S.carnetVue)||'lore';
+  const tete=`<div class="sous-onglets">`+VUES_CARNET.map(v=>
+    `<button class="sous-onglet${v.cle===vue?' actif':''}" data-carnet="${v.cle}">${v.nom}${
+      v.cle==='notes'&&(S.notes||[]).length
+        ? ` · <span class="chiffre">${S.notes.length}</span>` : ''}</button>`).join('')+`</div>`;
+  if(vue==='notes'){p.innerHTML=tete+vueNotes();return;}
   let h='';
   if((S.chronique||[]).length){
     h+=`<div class="carte"><h3>Ce qui vient d'arriver</h3>`+
@@ -7367,7 +7433,66 @@ function panneauCarnet(){
 
   if(!h)h=`<div class="carte"><h3>Le carnet</h3><p>Rien encore. Les gens qu'on croise,
     les objets qu'on rapporte et les services qu'on rend viendront s'inscrire ici.</p></div>`;
-  p.innerHTML=h;
+  p.innerHTML=tete+h;
+}
+
+/* ═══════════════ les notes du marchand ═══════════════
+   Quarante pages, pas une de plus, et cinq cents signes par page. La contrainte
+   est le sel de la chose : à un moment il faut choisir ce qu'on garde.
+
+   Le jeu n'écrit jamais rien ici et ne lit jamais ce qui s'y trouve. Il ne dit
+   pas si un cap noté est bon, ni si une rumeur était vraie. C'est du papier :
+   il tient ce qu'on y met, y compris des mensonges. */
+const NOTES_MAX=40, NOTE_SIGNES=500, NOTE_TITRE=40;
+function notes(){if(!Array.isArray(S.notes))S.notes=[];return S.notes;}
+function ajouterNote(){
+  const l=notes();
+  if(l.length>=NOTES_MAX)return false;
+  l.unshift({titre:'',texte:'',jour:S.jour,lieu:(S.ville||{}).nom||''});
+  S.notePage=0;
+  return true;
+}
+function oterNote(i){
+  const l=notes();
+  if(i<0||i>=l.length)return;
+  l.splice(i,1);
+  if(S.notePage>=l.length)S.notePage=Math.max(0,l.length-1);
+}
+function vueNotes(){
+  const l=notes();
+  const i=clamp(Number(S.notePage)||0,0,Math.max(0,l.length-1));
+  S.notePage=i;
+  const reste=NOTES_MAX-l.length;
+  let h=`<div class="rangee" style="padding:0 2px 10px;align-items:baseline">
+    <p class="oeil" style="flex:1">${l.length} page${l.length>1?'s':''} sur ${NOTES_MAX}</p>
+    <button class="bouton petit${reste?'':' creux'}" id="note-ajouter"
+      ${reste?'':'disabled'}>Nouvelle page</button></div>`;
+  if(!l.length){
+    return h+`<div class="carte"><h3>Le carnet est vierge</h3>
+      <p>Ce que les gens vous disent ne s'écrit nulle part tout seul : un cap, un prix,
+      un nom. À vous de tenir vos comptes — et de vous méfier de ce que vous y recopiez.</p>
+      </div>`;
+  }
+  /* la tranche des pages, comme les onglets d'un vrai carnet */
+  h+=`<div class="tranche" id="note-tranche">`+l.map((p,k)=>
+    `<button class="feuillet${k===i?' actif':''}" data-note-page="${k}"
+      aria-label="Page ${k+1}${p.titre?' — '+p.titre:''}">${k+1}</button>`).join('')+`</div>`;
+  const p=l[i];
+  const reste2=NOTE_SIGNES-(p.texte||'').length;
+  h+=`<div class="carte page-note">
+    <input class="champ note-titre" id="note-titre" maxlength="${NOTE_TITRE}"
+      value="${(p.titre||'').replace(/"/g,'&quot;')}" placeholder="Titre de la page"
+      aria-label="Titre de la page ${i+1}" autocomplete="off">
+    <textarea class="champ note-texte" id="note-texte" rows="9" maxlength="${NOTE_SIGNES}"
+      placeholder="Ce qu'on vous a dit, et ce que vous en pensez."
+      aria-label="Texte de la page ${i+1}">${(p.texte||'')
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')}</textarea>
+    <div class="rangee" style="margin-top:8px;align-items:center">
+      <span class="oeil" id="note-reste" style="flex:1">${reste2} signe${reste2>1?'s':''}
+        de libre${p.jour?` · ouverte le ${nomDate(p.jour)}${p.lieu?' à '+p.lieu:''}`:''}</span>
+      <button class="bouton petit creux" data-note-oter="${i}">Arracher la page</button>
+    </div></div>`;
+  return h;
 }
 
 function assigner(d){
