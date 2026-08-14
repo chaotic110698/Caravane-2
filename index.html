@@ -1983,8 +1983,9 @@ const MENU=[
   si:()=>personnagesIci().length>0},
  {cle:'terrains', nom:'Propriétés', sous:'terrains et bâtiments',ico:()=>svgIco(GLYPHE_TOIT,'#9A7343'),
   si:()=>!!PROPRIETES&&(proprietesIci().length>0||Object.keys(S.terrains||{}).length>0)},
- {cle:'carnet',   nom:'Carnet',    sous:'gens, objets, histoires',ico:()=>svgIco(GLYPHE_REGISTRE,'#A084C0'),
-  si:()=>!!(PERSONNAGES||OBJETS||MISSIONS_ECRITES.length)},
+ {cle:'carnet',   nom:'Carnet',    sous:'ce qu'+'\''+'on sait, ce qu'+'\''+'on note',ico:()=>svgIco(GLYPHE_REGISTRE,'#A084C0'),
+  /* il tient maintenant les notes et les découvertes : il vaut toujours d'être ouvert */
+  si:()=>true},
  {cle:'boussole', nom:'Boussole',  sous:'suivre un cap',        ico:()=>svgIco(GLYPHE_BOUSSOLE,'#4A7BC8'),
   si:()=>!!MONDE&&LIEUX.some(l=>l.cache)},
  {cle:'convoi',   nom:'Convoi',    sous:'chariots et soute',   ico:()=>icoChariot('bache')},
@@ -7709,8 +7710,9 @@ function carteLore(titre, sous, premiere, couches, ouvertes, sac, pied){
   </div>`;
 }
 const VUES_CARNET=[
- {cle:'lore',  nom:'Ce qu\'on sait'},
- {cle:'notes', nom:'Mes notes'}
+ {cle:'lore',      nom:'Ce qu\'on sait'},
+ {cle:'trouve',    nom:'Trouvé'},
+ {cle:'notes',     nom:'Mes notes'}
 ];
 function panneauCarnet(){
   const p=$('#panneau-carnet');
@@ -7721,6 +7723,7 @@ function panneauCarnet(){
       v.cle==='notes'&&(S.notes||[]).length
         ? ` · <span class="chiffre">${S.notes.length}</span>` : ''}</button>`).join('')+`</div>`;
   if(vue==='notes'){p.innerHTML=tete+vueNotes();return;}
+  if(vue==='trouve'){p.innerHTML=tete+vueTrouve();return;}
   let h='';
   if((S.chronique||[]).length){
     h+=`<div class="carte"><h3>Ce qui vient d'arriver</h3>`+
@@ -8024,6 +8027,80 @@ function suivreLeCap(){
   chronique(`Cap ${v}° depuis ${S.ville.nom} : une piste s'ouvre vers ${l.nom}.`,'bon');
   panneauBoussole();
   toast(`${l.nom} — la piste est ouverte.`);
+}
+
+/* ═══════════════ le registre des découvertes ═══════════════
+   Ce que le jeu, lui, tient pour acquis : les lieux qu'on a relevés, les
+   papiers qu'on vous a remis, les cités que le comptable garde en tête. Rien
+   d'incertain n'entre ici — les rumeurs et les caps devinés restent l'affaire
+   du joueur et de ses quarante pages. C'est la différence entre ce qu'on sait
+   et ce qu'on croit. */
+function vueTrouve(){
+  let h='',rien=true;
+
+  /* ── les lieux ── */
+  if(MONDE){
+    const releves=Object.keys(S.connues||{}).filter(k=>S.connues[k]==='carte');
+    const pistes=Object.keys(S.connues||{}).filter(k=>S.connues[k]==='piste');
+    const caches=LIEUX.filter(l=>l.cache).length;
+    if(caches){
+      rien=false;
+      const nom=k=>(LIEUX.find(l=>l.cle===k)||{}).nom||k;
+      h+=`<div class="carte"><h3>Les lieux hors des routes</h3>
+        <p><span class="chiffre">${releves.length}</span> relevé${releves.length>1?'s':''}
+          sur <span class="chiffre">${caches}</span> qui se cachent.</p>
+        ${releves.length?`<p style="margin-top:6px">`+
+          releves.map(k=>`<b>${nom(k)}</b>`).join(', ')+`.</p>`:''}
+        ${pistes.length?`<p class="info" style="margin-top:6px">Une piste ouverte vers `+
+          pistes.map(k=>`<b>${nom(k)}</b>`).join(', ')+
+          ` — elle s'effacera si personne ne la note.</p>`:''}
+        ${!releves.length&&!pistes.length
+          ? `<p class="info" style="margin-top:6px">Rien encore. Un cap juste, donné sur
+             la boussole, ouvre une piste ; un cartographe la fixe.</p>`:''}
+      </div>`;
+    }
+  }
+
+  /* ── les papiers ── */
+  const passes=Object.keys(S.passes||{});
+  if(passes.length){
+    rien=false;
+    h+=`<div class="carte"><h3>Ce qu'on vous a remis</h3>`+
+      passes.map(k=>{const p=S.passes[k];
+        return `<p style="margin-top:6px"><b>${p.nom||k}</b>${
+          p.de?` — de ${p.de}`:''}${
+          p.jour?`<br><span class="oeil">reçu le ${nomDate(p.jour)}${p.ou?' à '+p.ou:''}</span>`:''}${
+          p.lieu?`<br><span class="oeil">n'ouvre que ${p.lieu}</span>`:''}</p>`;
+      }).join('')+`</div>`;
+  }
+
+  /* ── le livre du comptable ── */
+  const cles=Object.keys(S.releves||{});
+  if(comptableALaTroupe()||cles.length){
+    rien=false;
+    const c=comptableALaTroupe();
+    const max=memoireComptable();
+    const tries=cles.slice().sort((a,b)=>(S.releves[b].jour||0)-(S.releves[a].jour||0));
+    h+=`<div class="carte"><h3>Le livre du comptable</h3>
+      ${c?`<p>${c.nom}, niveau ${'I'.repeat(niveauComptable())} — il retient
+            <b>${max===Infinity?'toutes les cités':max+' cités'}</b>.</p>`
+         :`<p class="info">Plus personne ne tient le livre. Ce qui y est écrit reste,
+            mais rien de neuf ne s'y ajoutera.</p>`}
+      ${tries.length?`<div class="prix-liste" style="margin-top:8px">`+
+        tries.map(k=>{const r=S.releves[k],age=S.jour-r.jour;
+          return `<span>${r.nom||k}</span><b class="chiffre"${
+            relevePerime(r)?' style="text-decoration:line-through"':''
+            }>${age===0?'ce jour':age+' j'}</b>`;}).join('')+`</div>`
+        :`<p class="info" style="margin-top:6px">Le livre est vierge : il se remplira aux
+          prochaines arrivées.</p>`}
+    </div>`;
+  }
+
+  if(rien)h+=`<div class="carte"><h3>Rien de trouvé</h3>
+    <p>Ce cahier tient ce que le voyage a établi — les lieux relevés, les papiers reçus,
+    les prix qu'on vous garde en mémoire. Ce qu'on vous a seulement <i>dit</i> n'y entre
+    pas : cela va dans vos notes, et il vous revient de démêler le vrai du faux.</p></div>`;
+  return h;
 }
 
 /* ═══════════════ les notes du marchand ═══════════════
