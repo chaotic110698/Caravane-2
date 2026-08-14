@@ -1813,6 +1813,7 @@ function regarnir(v){
 }
 function calculerPrix(){
   const v=S.ville, vol=volatilite();
+  const folie=folieDesRives(v);
   S.prix={};
   IDS.forEach(g=>{
     v.mem[g]=1+(v.mem[g]-1)*.7;
@@ -1825,6 +1826,9 @@ function calculerPrix(){
     let vente=Math.max(1,Math.round(p*.9*(1+(S.reputation-50)/560)*(1+(ng-50)/660)*(1+rV)));
     if(S.rumeur&&S.rumeur.ville===v.nom&&S.rumeur.bien===g){
       vente=Math.round(vente*S.rumeur.mult);achat=Math.round(achat*S.rumeur.mult);}
+    /* la bête est dans l'eau : plus personne ne traverse, et la rive s'affole */
+    if(folie!==1){achat=Math.max(1,Math.round(achat*folie));
+                  vente=Math.max(1,Math.round(vente*folie));}
     vente=Math.max(1,Math.min(vente,Math.floor(achat*.92)));
     S.prix[g]={a:achat,v:vente,r:r};
   });
@@ -3616,6 +3620,22 @@ function routesVers(j){
       'aucune route ne mène là ; on suit le cap et l\'on se garde',
       2,1.25,1.15,{piste:true})];
   }
+  /* Une eau se passe en bateau : on ne choisit pas un chemin mais un homme
+     pour tenir la barre. */
+  const tr=traverseeDe(i,j);
+  if(tr&&capitainesDe(tr).length){
+    const l=Math.max(1,Math.round(lieues));
+    return capitainesDe(tr).map(c=>({
+      nom:c.nom||'Un capitaine',
+      tag:(c.dit||'')+(c.prix?` · ${fmt(c.prix)} po`:' · pour rien'),
+      risque:1,rudesse:1,lenteur:1,
+      lieues:l,km:enKm(l),etapes:etapesConvoi(enKm(l)),dest:S.villes[j],
+      traversee:{de:i,vers:j,capitaine:c.cle||c.nom},
+      /* le prix du capitaine se paie dans partir(), pas par la douane : les
+         deux additionnés auraient fait payer deux fois */
+      nolis:Math.max(0,Math.round(Number(c.prix)||0))
+    }));
+  }
   if(estFranchissement(i,j)){
     /* Une voie franchissable porte ce qu'elle exige. Sans rien d'écrit, on
        retombe sur la douane d'autrefois : un droit en or qui monte avec le
@@ -3749,13 +3769,15 @@ function rendrePanneauChemins(){
     const dg=r.risque>1.3?['perilleux','périlleuse']:(r.risque<.8?['sur','sûre']:['','incertaine']);
     /* une voie à conditions dit ce qui manque, et se refuse tant qu'il manque */
     const jug=r.exige?jugerPassage(r.exige.de,r.exige.vers):null;
-    const impayable=jug?!jug.ouvert:(r.douane&&S.or<r.douane);
+    const impayable=jug?!jug.ouvert
+      :(r.nolis?S.or<r.nolis:(r.douane&&S.or<r.douane));
     return `<button class="route-carte${i===routeChoisie?' choisie':''}" data-route="${i}"
       ${impayable?'disabled':''} aria-pressed="${i===routeChoisie}">
       <h3>${r.nom}${i===routeChoisie?' <span class="coche">❧</span>':''}</h3>
       <p class="dest">${impayable
         ? (jug ? (jug.refus?jug.refus+' — ':'')+jug.manques.join(' ; ')+'.'
-               : `Il manque ${fmt(r.douane-S.or)} po pour acquitter le droit de passage.`)
+           : r.nolis ? `Il manque ${fmt(r.nolis-S.or)} po pour le nolis.`
+           : `Il manque ${fmt(r.douane-S.or)} po pour acquitter le droit de passage.`)
         : r.tag+'.'}</p>
       <div class="tags">
         <span class="tag ${dg[0]}">Route ${dg[1]}</span>
@@ -3763,6 +3785,11 @@ function rendrePanneauChemins(){
         <span class="tag">${r.etapes} étapes</span>
         <span class="tag">solde ${fmt(Math.round((13+S.etapes*1.15)*S.gardes.length))} po</span>
         ${r.douane?`<span class="tag perilleux">droit ${fmt(r.douane)} po</span>`:''}
+        ${r.nolis?`<span class="tag">nolis ${fmt(r.nolis)} po</span>`:''}
+        ${(()=>{if(!r.traversee)return '';
+          const tr=traverseeDe(r.traversee.de,r.traversee.vers);
+          if(!beteLa(tr))return '';
+          return `<span class="tag perilleux">${b0(tr)} est dans l'eau</span>`;})()}
         ${jug&&jug.franc?`<span class="tag sur">on vous laisse passer</span>`:''}
       </div>
       ${(()=>{const lent=chariotLeplusLent(r.km);
@@ -3948,6 +3975,27 @@ function couleursCiel(p){
 }
 function partir(r){
   if(r.km)r.etapes=etapesConvoi(r.km*(r.lenteur||1));  /* la charge a pu changer */
+  /* Une traversée se joue avant de partir : on paie, on embarque, et la bête
+     décide. Perdu, on ne quitte pas la rive — mais on y laisse la soute. */
+  if(r.traversee){
+    const tr=traverseeDe(r.traversee.de,r.traversee.vers);
+    const cap=capitainesDe(tr).find(c=>(c.cle||c.nom)===r.traversee.capitaine);
+    const prix=Math.max(0,Math.round(Number(cap&&cap.prix)||0));
+    if(S.or<prix){toast(`${(cap&&cap.nom)||'Le capitaine'} demande ${fmt(prix)} po.`);return;}
+    S.or-=prix;
+    dernierJet=null;
+    const issue=jugerLaTraversee(tr,cap);
+    if(!issue.calme&&!issue.passe){
+      const b=bete(tr);
+      const texte=leNavireSombre(tr,b);
+      chronique(texte,'mauvais');
+      montrerLeNaufrage(tr,b,texte);
+      return;
+    }
+    if(!issue.calme)chronique(
+      `${(cap&&cap.nom)||'Le capitaine'} passe sous le nez de ${b0(tr)}. `+
+      `On respire de l'autre côté.`,'bon');
+  }
   if(r.exige){
     /* on rejuge au départ : l'or a pu partir ailleurs, le jour a pu tourner */
     const jug=jugerPassage(r.exige.de,r.exige.vers);
@@ -6066,7 +6114,9 @@ function normaliserMonde(d){
         franchit:contreeDeCle[v.de]!==contreeDeCle[v.vers]||carteDe[v.de]!==carteDe[v.vers],
         /* ce que la voie exige, et le mot du refus */
         exige:Array.isArray(v.exige)&&v.exige.length?v.exige:undefined,
-        refus:v.refus||undefined};
+        refus:v.refus||undefined,
+        /* une eau qu'on passe en bateau, et ce qui vit dessous */
+        traversee:v.traversee||undefined};
     });
   m.rangs=d.rangs||{};
   m.mesures=d.mesures||{};
@@ -6090,8 +6140,10 @@ function batirTopologie(){
     if(a===undefined||b===undefined)return;
     /* Ce qu'une voie exige se transporte dans les deux sens : une frontière
        gardée l'est aux deux bouts. */
-    VOISINS[a].push({vers:b,lieues:v.lieues,franchit:v.franchit,exige:v.exige,refus:v.refus});
-    VOISINS[b].push({vers:a,lieues:v.lieues,franchit:v.franchit,exige:v.exige,refus:v.refus});
+    VOISINS[a].push({vers:b,lieues:v.lieues,franchit:v.franchit,exige:v.exige,
+      refus:v.refus,traversee:v.traversee});
+    VOISINS[b].push({vers:a,lieues:v.lieues,franchit:v.franchit,exige:v.exige,
+      refus:v.refus,traversee:v.traversee});
   });
   /* Les contrées du monde écrit remplacent la liste de data/contrees.json, en
      lui empruntant tout ce qui est économique : la forge, les types de cité, le
@@ -7982,6 +8034,109 @@ function panneauCarnet(){
   if(!h)h=`<div class="carte"><h3>Le carnet</h3><p>Rien encore. Les gens qu'on croise,
     les objets qu'on rapporte et les services qu'on rend viendront s'inscrire ici.</p></div>`;
   p.innerHTML=tete+h;
+}
+
+/* ═══════════════ les traversées et ce qui vit dessous ═══════════════
+   Une voie peut être une eau qu'on traverse en bateau. On n'y choisit pas un
+   chemin mais un capitaine : chacun a son prix et sa main. Et certains mois de
+   l'année, quelque chose remonte — le kraken du lac, un mois par an. Le
+   capitaine décide alors si l'on passe ou si le navire y reste.
+
+   Le mois où la bête est là, les rives s'affolent : plus personne ne traverse,
+   les marchandises s'entassent d'un côté et manquent de l'autre, et les prix
+   suivent. C'est un moment à guetter plutôt qu'à subir — pour qui a un bon
+   capitaine et le cœur bien accroché. */
+function traverseeDe(i,j){
+  const v=(VOISINS&&VOISINS[i]||[]).find(x=>x.vers===j);
+  return (v&&v.traversee)||null;
+}
+function bete(tr){
+  return (tr&&tr.creature)||null;
+}
+/* La bête est-elle là, à cette date ? */
+function beteLa(tr,jour){
+  const b=bete(tr);
+  if(!b||!Array.isArray(b.mois)||!b.mois.length)return false;
+  return b.mois.indexOf(dateDe(jour===undefined?S.jour:jour).mois)>=0;
+}
+/* Toutes les eaux du monde, pour savoir si une rive s'affole. */
+function eauxDuMonde(){
+  if(!MONDE||!VOISINS)return [];
+  const vues={},l=[];
+  VOISINS.forEach(liste=>liste.forEach(v=>{
+    if(!v.traversee)return;
+    const c=v.traversee.cle||v.traversee.nom||'eau';
+    if(vues[c])return;
+    vues[c]=1;l.push(v.traversee);
+  }));
+  return l;
+}
+/* Ce que la présence d'une bête fait aux prix d'une rive. 1 quand tout est
+   calme : la multiplication ne se voit pas. */
+function folieDesRives(v){
+  if(!MONDE||!v)return 1;
+  const cle=cleVille(v);
+  let f=1;
+  eauxDuMonde().forEach(tr=>{
+    const b=bete(tr);
+    if(!b||!beteLa(tr))return;
+    if(Array.isArray(b.rives)&&b.rives.indexOf(cle)<0)return;
+    f*=Math.max(.2,Math.min(5,Number(b.folie)||1));
+  });
+  return f;
+}
+function ceQuiRemonte(){
+  const l=[];
+  eauxDuMonde().forEach(tr=>{if(beteLa(tr))l.push({eau:tr,bete:bete(tr)});});
+  return l;
+}
+/* Les capitaines qu'on peut embaucher pour une traversée. */
+function capitainesDe(tr){
+  return (tr&&Array.isArray(tr.capitaines))?tr.capitaines:[];
+}
+/* Le jet du passage : la main du capitaine contre la fureur de la bête. Sans
+   bête, on ne jette rien — une eau calme se traverse. */
+const b0=tr=>((bete(tr)||{}).nom||'la bête');
+/* Le naufrage se raconte dans la feuille d'événement, avec son dé : il n'y a
+   pas deux façons d'annoncer un résultat dans ce jeu. */
+function montrerLeNaufrage(tr,b,texte){
+  /* on rentre à la rive avant de raconter : rester sur l'écran des chemins
+     laisserait croire qu'on peut encore embarquer */
+  ecran('ecran-marche');
+  rendreMarche();
+  evCourant={titre:b.nom||'La traversée',ico:null};
+  $('#ev-oeil').textContent=S.ville.nom;
+  $('#ev-titre').textContent=b.nom||'La traversée';
+  $('#ev-recit').textContent=b.dit||'Quelque chose bouge sous la coque.';
+  $('#ev-choix').hidden=true;
+  $('#ev-issue').hidden=true;
+  ouvrirFeuille('#feuille-event');
+  const afficher=()=>{
+    $('#ev-issue').hidden=false;
+    $('#ev-issue-texte').textContent=texte;
+    rendreMarche();majRegistres();
+  };
+  if(dernierJet)montrerDe(dernierJet,afficher); else afficher();
+}
+function jugerLaTraversee(tr,cap){
+  const b=bete(tr);
+  if(!b||!beteLa(tr))return {calme:true,passe:true};
+  const j=jet({carac:Math.round(Number(cap&&cap.barre)||0),nom:'la barre',
+    seuil:Math.max(1,Math.round(Number(b.peril)||90)),
+    titre:b.nom||'La traversée'});
+  return {calme:false,passe:j.reussi,jet:j};
+}
+/* Le navire y reste : la soute part par le fond, la troupe encaisse, et l'on
+   se retrouve sur la rive d'où l'on venait. */
+function leNavireSombre(tr,b){
+  const perdus=delester(rnd(.55,.85));
+  const r=blesserTroupe(Math.round(ri(30,64)),Math.min(3,1+S.gardes.length));
+  S.reputation=clamp(S.reputation-3,0,100);
+  return `${b.nom||'La bête'} passe sous la coque et la retourne comme une écuelle. `+
+    `${perdus} disparaissent dans l'eau noire.`+
+    (r.morts.length?` ${r.morts.join(' et ')} ne remonte${r.morts.length>1?'nt':''} pas.`:
+      (r.noms.length?` ${r.noms.join(' et ')} s'en tire${r.noms.length>1?'nt':''} trempé${r.noms.length>1?'s':''}.`:''))+
+    ` On regagne la rive d'où l'on venait.`;
 }
 
 /* ═══════════════ les endroits qu'on fouille ═══════════════

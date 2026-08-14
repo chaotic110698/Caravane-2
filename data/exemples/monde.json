@@ -249,6 +249,24 @@
       "x": 340,
       "y": 220,
       "cache": true
+    },
+    {
+      "cle": "rive-nord-d-essai",
+      "nom": "Rive Nord d'Essai",
+      "contree": "humain",
+      "carte": "val",
+      "rang": "village",
+      "x": -40,
+      "y": 280
+    },
+    {
+      "cle": "rive-sud-d-essai",
+      "nom": "Rive Sud d'Essai",
+      "contree": "humain",
+      "carte": "val",
+      "rang": "village",
+      "x": -40,
+      "y": 580
     }
   ],
   "voies": [
@@ -533,6 +551,53 @@
         }
       ],
       "refus": "Le garde d'essai vous renvoie d'un geste."
+    },
+    {
+      "cle": "rive-nord-d-essai--rive-sud-d-essai",
+      "de": "rive-nord-d-essai",
+      "vers": "rive-sud-d-essai",
+      "terrain": "plaine",
+      "lieues": 12,
+      "traversee": {
+        "cle": "lac-d-essai",
+        "nom": "Le Lac d'Essai",
+        "capitaines": [
+          {
+            "cle": "cap-1",
+            "nom": "Le Vieux",
+            "prix": 80,
+            "barre": 6,
+            "dit": "Il connaît l'eau, pas la bête"
+          },
+          {
+            "cle": "cap-2",
+            "nom": "La Sévère",
+            "prix": 260,
+            "barre": 34,
+            "dit": "Elle est passée deux fois pendant la saison"
+          },
+          {
+            "cle": "cap-3",
+            "nom": "Le Téméraire",
+            "prix": 150,
+            "barre": 18,
+            "dit": "Il jure que la bête dort"
+          }
+        ],
+        "creature": {
+          "nom": "Le Kraken d'Essai",
+          "mois": [
+            2
+          ],
+          "peril": 95,
+          "folie": 2.4,
+          "rives": [
+            "rive-nord-d-essai",
+            "rive-sud-d-essai"
+          ],
+          "dit": "Une ombre plus longue que le bateau glisse sous la coque, sans hâte."
+        }
+      }
     }
   ]
 }

@@ -416,6 +416,47 @@ les embauche à la Troupe, ils touchent leur solde à chaque arrivée. Ils se ba
 on ne les touche qu'une fois le dernier homme d'armes tombé — perdre son comptable dans
 une embuscade est donc le prix de n'avoir gardé personne pour le défendre.
 
+### Une eau qu'on traverse, et ce qui vit dessous
+
+Une voie peut porter une **traversée** : une eau qu'on passe en bateau. On n'y choisit
+plus un chemin mais un **capitaine** — chacun a son prix et sa main sur la barre.
+
+```json
+{ "de": "rive-nord", "vers": "rive-sud", "lieues": 12,
+  "traversee": {
+    "cle": "le-lac", "nom": "Le Lac",
+    "capitaines": [
+      { "cle": "vieux",   "nom": "Le Vieux",     "prix": 80,  "barre": 6,
+        "dit": "Il connaît l'eau, pas la bête" },
+      { "cle": "severe",  "nom": "La Sévère",    "prix": 260, "barre": 34,
+        "dit": "Elle est passée deux fois pendant la saison" }],
+    "creature": {
+      "nom": "Le Kraken", "mois": [2], "peril": 95, "folie": 2.4,
+      "rives": ["rive-nord", "rive-sud"],
+      "dit": "Une ombre plus longue que le bateau glisse sous la coque." } } }
+```
+
+**Hors saison**, l'eau se traverse sans jet : on paie, on passe. Le capitaine n'est alors
+qu'une dépense — et c'est le moment de prendre le moins cher.
+
+**Pendant les mois de la créature**, tout change. Un d100 majoré de la **barre** du
+capitaine affronte le **péril** de la bête. Réussi, on passe. Manqué, le navire sombre :
+la soute part par le fond, la troupe encaisse, le renom en prend un coup, et l'on se
+réveille sur la rive d'où l'on venait — le nolis payé pour rien. La carte du chemin
+annonce la bête avant qu'on s'engage ; on ne monte jamais à bord sans savoir.
+
+| | |
+|---|---|
+| `mois` | les mois du calendrier où la bête est là — `[2]` pour le troisième |
+| `peril` | le seuil à battre, sur cent |
+| `barre` | ce que le capitaine ajoute au dé |
+| `folie` | ce que les prix des rives font pendant la saison — `2.4` les multiplie par deux et demi |
+| `rives` | les lieux touchés par cette folie ; absent, toutes les rives |
+
+La **folie des rives** est le sel de la chose : le mois où plus personne ne traverse, les
+marchandises s'entassent d'un côté et manquent de l'autre. Qui a un bon capitaine et le
+cœur bien accroché y gagne une fortune. Les autres regardent passer la saison.
+
 ### Les énigmes
 
 Une énigme n'est pas une mécanique de plus : c'est un **événement** dont le récit pose la
