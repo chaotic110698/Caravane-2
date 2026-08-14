@@ -4139,6 +4139,7 @@ function arriver(){
   S.etapes++;
   noterLArrivee();
   relever();
+  ouvrirCeQueLesCartesRevelent();
   /* les jours ont été comptés en chemin ; ne reste que l'heure à laquelle on
      débouche, qui dépend de la longueur de la traite et donne sa lumière à la
      cité */
@@ -6821,6 +6822,60 @@ function rencontrer(cle){
    un état qu'on suit, et une disparition définitive. */
 function etatObjet(cle){return S.objets[cle]||'monde';}
 const objetsEnSoute=()=>OBJETS?Object.keys(OBJETS).filter(k=>etatObjet(k)==='soute'):[];
+/* ═══════════════ les fragments de carte ═══════════════
+   La septième vertu d'un objet : révéler un lieu. Un objet seul l'ouvre à lui
+   tout seul ; un objet marqué « en trois morceaux » n'ouvre rien tant que les
+   trois ne sont pas dans la soute. C'est de quoi déchirer une carte et en
+   disperser les bouts dans les missions, les dialogues et les fouilles.
+
+   Un lieu révélé s'ouvre comme s'il avait été trouvé au cap : une piste
+   d'abord, que seul un cartographe fixe. Tenir les morceaux ne dispense pas
+   d'y aller. */
+function pouvoirsReveler(){
+  if(!OBJETS)return [];
+  const l=[];
+  objetsEnSoute().forEach(k=>(OBJETS[k].pouvoirs||[]).forEach(p=>{
+    if(p.faire==='reveler'&&p.lieu)l.push({objet:k,lieu:p.lieu,
+      total:Math.max(1,Math.round(Number(p.fragments)||1))});
+  }));
+  return l;
+}
+/* Les lieux dont on tient tous les morceaux. */
+function lieuxRevelables(){
+  const par={};
+  pouvoirsReveler().forEach(p=>{
+    const e=par[p.lieu]=par[p.lieu]||{tenus:0,total:p.total};
+    e.tenus++;
+    e.total=Math.max(e.total,p.total);
+  });
+  return Object.keys(par).filter(l=>par[l].tenus>=par[l].total);
+}
+/* Ce qu'on tient, complet ou non — le carnet le montre. */
+function etatDesFragments(){
+  const par={};
+  pouvoirsReveler().forEach(p=>{
+    const e=par[p.lieu]=par[p.lieu]||{tenus:0,total:p.total,objets:[]};
+    e.tenus++;e.total=Math.max(e.total,p.total);e.objets.push(p.objet);
+  });
+  return par;
+}
+/* Appelé à chaque arrivée et chaque fois qu'un objet change de main : ce qui
+   est complet s'ouvre, et l'on ne le dit qu'une fois. */
+function ouvrirCeQueLesCartesRevelent(){
+  if(!MONDE)return [];
+  const neufs=[];
+  lieuxRevelables().forEach(cle=>{
+    const j=LIEUX.findIndex(l=>l.cle===cle);
+    if(j<0)return;
+    S.connues=S.connues||{};
+    if(S.connues[cle])return;
+    viser(j);
+    neufs.push(LIEUX[j].nom||cle);
+  });
+  if(neufs.length)chronique(
+    `Les morceaux s'assemblent : une piste s'ouvre vers ${neufs.join(' et ')}.`,'bon');
+  return neufs;
+}
 function donnerObjet(cle){
   const o=OBJETS&&OBJETS[cle];
   if(!o||etatObjet(cle)!=='monde')return '';
@@ -6828,6 +6883,8 @@ function donnerObjet(cle){
   S.objetsDepuis=S.objetsDepuis||{};
   S.objetsDepuis[cle]=S.etapes;
   if((o.pouvoirs||[]).some(p=>p.faire==='arme'))rangerArme('objet:'+cle);
+  /* le morceau qui manquait vient peut-être d'arriver */
+  if((o.pouvoirs||[]).some(p=>p.faire==='reveler'))ouvrirCeQueLesCartesRevelent();
   return o.nom;
 }
 function perdreObjet(cle){
@@ -8160,6 +8217,24 @@ function vueTrouve(){
              la boussole, ouvre une piste ; un cartographe la fixe.</p>`:''}
       </div>`;
     }
+  }
+
+  /* ── les morceaux de carte ── */
+  const frag=etatDesFragments();
+  const clesF=Object.keys(frag);
+  if(clesF.length){
+    rien=false;
+    h+=`<div class="carte"><h3>Les morceaux de carte</h3>`+
+      clesF.map(k=>{
+        const f=frag[k];
+        const nom=(LIEUX?(LIEUX.find(l=>l.cle===k)||{}).nom:'')||k;
+        const complet=f.tenus>=f.total;
+        return `<p style="margin-top:6px">${complet?'<b>':''}${nom}${complet?'</b>':''} —
+          <span class="chiffre">${f.tenus}</span> sur
+          <span class="chiffre">${f.total}</span> morceau${f.total>1?'x':''}${
+          complet?' · <b>la piste est ouverte</b>'
+                 :' · il en manque '+(f.total-f.tenus)}</p>`;
+      }).join('')+`</div>`;
   }
 
   /* ── les papiers ── */

@@ -416,6 +416,23 @@ les embauche à la Troupe, ils touchent leur solde à chaque arrivée. Ils se ba
 on ne les touche qu'une fois le dernier homme d'armes tombé — perdre son comptable dans
 une embuscade est donc le prix de n'avoir gardé personne pour le défendre.
 
+### Une carte déchirée en trois
+
+Le septième pouvoir d'un objet, dans l'atelier d'objets : **Révéler un lieu**. Tenir
+l'objet en soute ouvre une piste vers un lieu caché, sans qu'on ait à en donner le cap.
+
+Le réglage **combien de morceaux en tout** en fait autre chose. À `3`, l'objet ne révèle
+rien tout seul : il faut tenir les **trois** morceaux, chacun déclarant le même lieu et le
+même total. Vous les dispersez où vous voulez — une récompense de mission, un dialogue,
+un palier de fouille, un objet posé au départ.
+
+Ce qui s'ouvre est une **piste**, pas une route : le premier voyage se fait à vol
+d'oiseau, deux fois plus rude, et seul un cartographe le fixera sur la carte. Tenir les
+morceaux ne dispense pas d'y aller.
+
+Le carnet du joueur compte les morceaux au fil de la collecte — *« 2 sur 3 morceaux, il en
+manque 1 »* — et annonce l'ouverture quand le dernier tombe.
+
 ### Les endroits qu'on fouille
 
 Une cité n'est pas qu'un étal. Dans le panneau d'un lieu, le bloc **Ce qu'on peut y

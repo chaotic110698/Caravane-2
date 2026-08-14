@@ -32,7 +32,7 @@ Comme pour les personnages : **la première description reste toujours lisible**
 
 ## Ce qu'un objet peut faire
 
-6 pouvoirs, qu'on empile. Un objet sans aucun pouvoir est
+7 pouvoirs, qu'on empile. Un objet sans aucun pouvoir est
 parfaitement valable : une relique n'a pas à être utile.
 
 ### Améliorer une aptitude
@@ -87,6 +87,15 @@ On vous fait un meilleur prix, ou on vous en donne un meilleur. Le sceau d'une g
 |---|---|
 | **Dans quel sens** |  Par défaut : les deux. **Obligatoire.** |
 | **De combien** | 0,08 fait 8 % de mieux. Au-delà de 0,2 le commerce ne veut plus rien dire. Par défaut : 0,08. **Obligatoire.** |
+
+### Révéler un lieu
+
+Tenir cet objet en soute ouvre une piste vers un lieu caché, sans qu'on ait à en donner le cap sur la boussole. S'il est marqué comme fragment, il ne révèle rien tout seul : il faut réunir tous les fragments du même lieu. C'est de quoi faire d'une carte déchirée en trois morceaux la clef d'un endroit, à disperser dans les missions, les dialogues et les fouilles.
+
+| réglage | à savoir |
+|---|---|
+| **Quel lieu** | Le lieu caché que l'objet révèle. Chargez un monde.json pour choisir. **Obligatoire.** |
+| **Combien de morceaux en tout** | 1 pour un objet qui révèle à lui seul. 3 pour une carte déchirée en trois : il faudra tenir les trois morceaux, chacun déclarant le même lieu et le même total. Par défaut : 1. |
 
 ## D'où il vient
 

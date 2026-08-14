@@ -11,21 +11,92 @@
       "valeur": 0,
       "vendable": false,
       "perdable": true,
-      "ico": { "glyphe": "sceau", "nature": "ruines" },
-      "provenance": { "genre": "mission", "mission": "le-registre-rature", "quand": "à la fin" },
+      "ico": {
+        "glyphe": "sceau",
+        "nature": "ruines"
+      },
+      "provenance": {
+        "genre": "mission",
+        "mission": "le-registre-rature",
+        "quand": "à la fin"
+      },
       "pouvoirs": [
-        { "faire": "ouvreCouche", "personnage": "harn", "couche": "le-peage" },
-        { "faire": "prix", "sens": "achat", "part": 0.04 }
+        {
+          "faire": "ouvreCouche",
+          "personnage": "harn",
+          "couche": "le-peage"
+        },
+        {
+          "faire": "prix",
+          "sens": "achat",
+          "part": 0.04
+        }
       ],
       "premiere": "Un in-folio relié de peau, gonflé d'humidité. Onze années de convois y sont écrites d'une main appliquée, et onze lignes en ont été grattées si soigneusement qu'on voit encore le creux du couteau.",
       "couches": [
         {
           "cle": "la-main",
           "titre": "La main qui a gratté",
-          "gagne": [{ "quoi": "etapesPorte", "min": 8 }],
+          "gagne": [
+            {
+              "quoi": "etapesPorte",
+              "min": 8
+            }
+          ],
           "texte": "À force de le porter on finit par voir : les onze lignes ont été grattées par deux mains différentes. Neuf d'un coup, à la hâte. Deux longtemps après, avec soin."
         }
       ]
+    },
+    {
+      "cle": "morceau-d-essai-1",
+      "nom": "Morceau d'Essai I",
+      "genre": "document",
+      "recit": "Un exemple jetable : le Iᵉ tiers d'une carte déchirée. Les trois réunis ouvrent une piste.",
+      "perdable": false,
+      "pouvoirs": [
+        {
+          "faire": "reveler",
+          "lieu": "lieu-cache-essai",
+          "fragments": 3
+        }
+      ],
+      "provenance": {
+        "genre": "depart"
+      }
+    },
+    {
+      "cle": "morceau-d-essai-2",
+      "nom": "Morceau d'Essai II",
+      "genre": "document",
+      "recit": "Un exemple jetable : le IIᵉ tiers d'une carte déchirée. Les trois réunis ouvrent une piste.",
+      "perdable": false,
+      "pouvoirs": [
+        {
+          "faire": "reveler",
+          "lieu": "lieu-cache-essai",
+          "fragments": 3
+        }
+      ],
+      "provenance": {
+        "genre": "monde"
+      }
+    },
+    {
+      "cle": "morceau-d-essai-3",
+      "nom": "Morceau d'Essai III",
+      "genre": "document",
+      "recit": "Un exemple jetable : le IIIᵉ tiers d'une carte déchirée. Les trois réunis ouvrent une piste.",
+      "perdable": false,
+      "pouvoirs": [
+        {
+          "faire": "reveler",
+          "lieu": "lieu-cache-essai",
+          "fragments": 3
+        }
+      ],
+      "provenance": {
+        "genre": "monde"
+      }
     }
   ]
 }
