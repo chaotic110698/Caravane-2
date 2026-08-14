@@ -54,6 +54,14 @@ L'issue ne dépend pas du sort mais de ce que vous avez : assez d'or, assez de p
 
 *Quand s'en servir :* Quand vouloir ne suffit pas — payer un droit qu'on n'a peut-être pas les moyens de payer.
 
+### Énigme
+
+Le récit pose la question, les choix sont les réponses — quatre par défaut, une seule marquée « bonne ». La bonne laisse le chemin tel quel ; une mauvaise l'allonge. On ne repose pas l'énigme tout de suite : cinq jours du calendrier par défaut, et résolue, elle ne revient plus.
+
+*Quand s'en servir :* Un carrefour sans panneau, un gardien qui ne laisse passer qu'à qui répond, un vieux qui s'amuse.
+
+**En toutes lettres.** Au lieu de boutons, un champ où le joueur écrit sa réponse. Le jeu normalise avant de comparer : minuscules, sans accents, sans ponctuation, sans article de tête — « L'Écho ! » vaut « echo ». Vous écrivez la liste des réponses acceptées ; l'énigme reste aussi dure, seule la faute de frappe cesse d'être une punition.
+
 ## Ce qu'un choix peut faire
 
 20 effets, qu'on empile dans l'ordre qu'on veut. Chacun peut **retenir son**

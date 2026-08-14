@@ -1485,7 +1485,7 @@ function nouvellePartie(cle){
   const a=ARCHETYPES[cle]||ARCHETYPES.guerrier;
   S={or:260,repit:0,evCount:0,maxEv:3,petitCount:0,maxPetits:4,rallonge:0,etapes:0,lieues:0,orMax:260,reputation:50,
      jour:1,heure:CALENDRIER.debut.heure,notes:[],passes:{},connues:{},vise:null,releves:{},
-     fouilles:{},
+     fouilles:{},enigmes:{},
      /* ouvrirLesDeparts() suit la création : il lui faut S en place */
      marchand:{nom:'Vous',archetype:ARCHETYPES[cle]?cle:'guerrier',pv:a.pvMax,pvMax:a.pvMax},
      chariots:[nouveauChariot('Le Patient','bache'),nouveauChariot('La Grise','charrette')],
@@ -3387,7 +3387,7 @@ function paquet(){
   return {jeu:'caravane',v:9,date:new Date().toISOString(),
     or:S.or,etapes:S.etapes,lieues:S.lieues,orMax:S.orMax,reputation:S.reputation,
     jour:S.jour,heure:S.heure,notes:S.notes,passes:S.passes,connues:S.connues,
-    releves:S.releves,fouilles:S.fouilles,
+    releves:S.releves,fouilles:S.fouilles,enigmes:S.enigmes,
     marchand:S.marchand,chariots:S.chariots,gardes:S.gardes,recrues:S.recrues,
     armes:S.armes,armures:S.armures,mythes:S.mythes,banc:S.banc,karma:S.karma,chien:S.chien,contrats:S.contrats,
     gens:S.gens,objets:S.objets,objetsDepuis:S.objetsDepuis,mecrites:S.mecrites,
@@ -3422,6 +3422,7 @@ function ouvrirPaquet(d){
      connues:(d.connues&&typeof d.connues==='object')?d.connues:{},vise:null,
      releves:(d.releves&&typeof d.releves==='object')?d.releves:{},
      fouilles:(d.fouilles&&typeof d.fouilles==='object')?d.fouilles:{},
+     enigmes:(d.enigmes&&typeof d.enigmes==='object')?d.enigmes:{},
      marchand:d.marchand,chariots:d.chariots,gardes:d.gardes||[],recrues:d.recrues||[],
      armes:d.armes||{},armures:d.armures||{},mythes:d.mythes||{},
      troupeVue:'marchand',banc:!!d.banc,
@@ -4228,8 +4229,44 @@ function declencher(petit){
     return `<button class="choix" data-choix="${i}" ${gris?'disabled':''}>
       <strong>${c.txt}${d?`<span class="marque-de">${icoDe()}${d}</span>`:''}</strong>
       <span>${sous===undefined?'':sous}</span></button>`;}).join('');
+  /* Une énigme en toutes lettres : un champ et un bouton, plutôt que des
+     boutons de réponse. Les autres choix restent offerts en dessous — il faut
+     toujours pouvoir passer son chemin. */
+  if(ev.enigme&&(ev.enigme.libre||[]).length){
+    box.innerHTML=`<div class="carte" style="margin-bottom:10px">
+      <input class="champ" id="enigme-champ" autocomplete="off" spellcheck="false"
+        placeholder="Votre réponse" aria-label="Votre réponse à l'énigme"
+        style="width:100%;background:var(--velin);border:1px solid var(--filet);
+        border-radius:var(--r);color:var(--encre);padding:11px;font-size:17px">
+      <button class="bouton" id="enigme-dire" style="width:100%;margin-top:8px"
+        >Répondre</button>
+      <p class="info" style="margin-top:6px">Les accents, les majuscules et la
+        ponctuation ne comptent pas.</p>
+    </div>`+box.innerHTML;
+  }
   box._choix=choix;
+  box._enigme=ev.enigme||null;
   ouvrirFeuille('#feuille-event');
+}
+/* Répondre en toutes lettres : on résout comme un choix, avec la même issue. */
+function direLEnigme(){
+  const box=$('#ev-choix'),e=box._enigme;
+  if(!e)return;
+  const champ=$('#enigme-champ');
+  const juste=reponseJuste(e,champ?champ.value:'');
+  noterEnigme(e.cle,juste);
+  let texte=juste?texteEv(e.juste,contexteEv())
+                 :texteEv(e.faux,contexteEv());
+  if(!juste&&S.route){
+    const n=allonger(Math.max(1,Math.round(Number(e.rallonge)||2)));
+    if(n)texte+=` Le chemin s'allonge de ${n} étape${n>1?'s':''}.`;
+  }
+  box.hidden=true;
+  noter(`<b>${evCourant.titre}.</b> ${texte}`,juste?'bon':'mauvais');
+  registre($('#registre-3'));
+  majHorizon();
+  $('#ev-issue').hidden=false;
+  $('#ev-issue-texte').textContent=texte;
 }
 let tmDe=null;
 function icoDe(){
@@ -5583,6 +5620,7 @@ document.addEventListener('click',e=>{
   if(t.id==='cap-suivre'){suivreLeCap();return;}
   if(t.id==='comptable-promu'){promouvoirComptable();return;}
   if(t.dataset.fouiller){fouiller(t.dataset.fouiller);return;}
+  if(t.id==='enigme-dire'){direLEnigme();return;}
   if(t.id==='note-ajouter'){
     if(!ajouterNote())return toast('Quarante pages, c\'est tout ce que tient le carnet.');
     panneauCarnet();
@@ -6609,8 +6647,18 @@ function issueEv(o,sac){
   effetsEv(o.effets,sac);
   return texteEv(o.texte,sac);
 }
-function actEv(c){
+function actEv(c,ev){
   const sac=contexteEv();
+  /* Une énigme : on note ce qu'on a répondu, et une erreur rallonge le chemin.
+     Le reste du choix se résout comme n'importe quel autre. */
+  const e=ev&&ev.enigme;
+  if(e&&e.cle&&c.bon!==undefined){
+    noterEnigme(e.cle,!!c.bon);
+    if(!c.bon&&S.route){
+      const n=allonger(Math.max(1,Math.round(Number(e.rallonge)||2)));
+      if(n)sac.rallonge=n;
+    }
+  }
   if(c.jet){
     const j=c.jet;
     const carac=Math.round(valeurEv(j.carac));
@@ -6643,6 +6691,50 @@ function actEv(c){
 }
 
 /* ── la compilation ── */
+/* ═══════════════ les énigmes ═══════════════
+   Une énigme n'est pas une mécanique de plus : c'est un événement dont le récit
+   pose la question et dont les choix sont les réponses. L'un porte « bon », les
+   autres non. La bonne réponse laisse le chemin tel quel ; une mauvaise
+   l'allonge.
+
+   Deux façons de répondre. Par boutons — quatre par défaut, solide au pouce.
+   Ou en toutes lettres, et alors le jeu normalise avant de comparer : minuscule,
+   sans accents, sans ponctuation, sans article de tête. « L'Écho ! » vaut
+   « echo ». L'énigme reste aussi dure ; seule la faute de frappe cesse d'être
+   une punition.
+
+   On ne la repose pas tout de suite : cinq jours du calendrier, par défaut,
+   avant de retenter. Résolue, elle ne revient plus. */
+function normaliserReponse(t){
+  return String(t||'')
+    .normalize('NFD').replace(/[̀-ͯ]/g,'')   /* les accents s'en vont */
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g,' ')                       /* la ponctuation aussi */
+    .replace(/^\s*(le|la|les|l|un|une|des|du|de)\s+/,'')
+    .trim().replace(/\s+/g,' ');
+}
+function etatEnigme(cle){return (S.enigmes||{})[cle]||null;}
+function enigmeOuverte(ev){
+  const e=ev.enigme;
+  if(!e||!e.cle)return true;
+  const q=etatEnigme(e.cle);
+  if(!q)return true;
+  if(q.juste)return false;                      /* résolue une fois pour toutes */
+  const repos=e.jours===undefined?5:Math.max(0,Math.round(e.jours));
+  return (S.jour-q.jour)>=repos;
+}
+function noterEnigme(cle,juste){
+  if(!cle)return;
+  S.enigmes=S.enigmes||{};
+  S.enigmes[cle]={jour:S.jour,juste:!!juste,essais:((etatEnigme(cle)||{}).essais||0)+1};
+}
+/* Une réponse en toutes lettres est juste si elle vaut, une fois normalisée,
+   l'une de celles que l'auteur a écrites. */
+function reponseJuste(e,dite){
+  const n=normaliserReponse(dite);
+  if(!n)return false;
+  return (e.libre||[]).some(r=>normaliserReponse(r)===n);
+}
 function compilerEvenement(ev){
   const quand=ev.quand||'route';
   const c={
@@ -6654,7 +6746,8 @@ function compilerEvenement(ev){
       if(typeof p==='number')return p;
       return (p.base===undefined?1:p.base)+(p.parEtape||0)*S.etapes;
     },
-    si:()=>localisationEv(ev.ou,quand)&&conditionsEv(ev.si),
+    si:()=>enigmeOuverte(ev)&&localisationEv(ev.ou,quand)&&conditionsEv(ev.si),
+    enigme:ev.enigme||null,
     recit:()=>texteEv(ev.recit,contexteEv()),
     choix:(ev.choix||[]).map(ch=>({
       txt:ch.txt,de:ch.de||null,ton:ch.ton||'',
@@ -6662,7 +6755,8 @@ function compilerEvenement(ev){
       si:ch.si?(()=>conditionsEv(ch.si)):null,
       bloque:ch.bloque?(()=>!conditionsEv(ch.bloque)):null,
       raison:()=>raisonBloque(ch.bloque),
-      act:()=>actEv(ch)
+      bon:!!ch.bon,
+      act:()=>actEv(ch,ev)
     }))
   };
   return c;

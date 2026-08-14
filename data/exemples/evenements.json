@@ -1,0 +1,194 @@
+{
+  "format": "caravane.evenements.v2",
+  "apropos": "ÉVÉNEMENTS D'ESSAI — trois énigmes à boutons, trois en toutes lettres. Rien de ce monde-ci ne s'y joue : ce sont des devinettes de foire, posées pour montrer le format.",
+  "evenements": [
+    {
+      "cle": "enigme-essai-1",
+      "titre": "Le carrefour sans panneau",
+      "oeil": "Sur la route",
+      "genre": "majeur",
+      "quand": "route",
+      "poids": 1,
+      "recit": "Un vieux assis sur une borne vous barre le chemin d'un bâton. « Quatre pattes le matin, deux le midi, trois le soir. Qui ? »",
+      "enigme": {
+        "cle": "enigme-essai-1",
+        "jours": 5,
+        "rallonge": 2
+      },
+      "choix": [
+        {
+          "txt": "L'homme",
+          "bon": true,
+          "texte": "Le vieux s'écarte sans un mot. La route tient sa distance."
+        },
+        {
+          "txt": "Le chien",
+          "bon": false,
+          "texte": "On vous indique un détour. Ce n'était pas la bonne réponse."
+        },
+        {
+          "txt": "La table",
+          "bon": false,
+          "texte": "On vous indique un détour. Ce n'était pas la bonne réponse."
+        },
+        {
+          "txt": "Le voyageur",
+          "bon": false,
+          "texte": "On vous indique un détour. Ce n'était pas la bonne réponse."
+        }
+      ]
+    },
+    {
+      "cle": "enigme-essai-2",
+      "titre": "La borne creuse",
+      "oeil": "Sur la route",
+      "genre": "majeur",
+      "quand": "route",
+      "poids": 1,
+      "recit": "Une pierre gravée, à demi effacée. « Plus on m'en ôte, plus je grandis. »",
+      "enigme": {
+        "cle": "enigme-essai-2",
+        "jours": 5,
+        "rallonge": 2
+      },
+      "choix": [
+        {
+          "txt": "Un trou",
+          "bon": true,
+          "texte": "Le vieux s'écarte sans un mot. La route tient sa distance."
+        },
+        {
+          "txt": "Un sac",
+          "bon": false,
+          "texte": "On vous indique un détour. Ce n'était pas la bonne réponse."
+        },
+        {
+          "txt": "Une dette",
+          "bon": false,
+          "texte": "On vous indique un détour. Ce n'était pas la bonne réponse."
+        },
+        {
+          "txt": "Une ombre",
+          "bon": false,
+          "texte": "On vous indique un détour. Ce n'était pas la bonne réponse."
+        }
+      ]
+    },
+    {
+      "cle": "enigme-essai-3",
+      "titre": "Le passeur muet",
+      "oeil": "Sur la route",
+      "genre": "majeur",
+      "quand": "route",
+      "poids": 1,
+      "recit": "Il ne dit rien, montre l'eau, puis trace trois mots dans la boue : « Je traverse la rivière et ne me mouille jamais. »",
+      "enigme": {
+        "cle": "enigme-essai-3",
+        "jours": 5,
+        "rallonge": 2
+      },
+      "choix": [
+        {
+          "txt": "Le pont",
+          "bon": true,
+          "texte": "Le vieux s'écarte sans un mot. La route tient sa distance."
+        },
+        {
+          "txt": "Le poisson",
+          "bon": false,
+          "texte": "On vous indique un détour. Ce n'était pas la bonne réponse."
+        },
+        {
+          "txt": "La barque",
+          "bon": false,
+          "texte": "On vous indique un détour. Ce n'était pas la bonne réponse."
+        },
+        {
+          "txt": "Le gué",
+          "bon": false,
+          "texte": "On vous indique un détour. Ce n'était pas la bonne réponse."
+        }
+      ]
+    },
+    {
+      "cle": "enigme-libre-1",
+      "titre": "La dent de pierre",
+      "oeil": "Sur la route",
+      "genre": "majeur",
+      "quand": "route",
+      "poids": 1,
+      "recit": "« Qu'est-ce qui a des dents et ne mord pas ? »",
+      "enigme": {
+        "cle": "enigme-libre-1",
+        "jours": 5,
+        "rallonge": 2,
+        "libre": [
+          "peigne",
+          "le peigne",
+          "un peigne"
+        ],
+        "juste": "On vous laisse passer. La route tient sa distance.",
+        "faux": "On secoue la tête, et l'on vous montre le long chemin."
+      },
+      "choix": [
+        {
+          "txt": "Passer sans répondre.",
+          "texte": "On hausse les épaules. Vous continuez."
+        }
+      ]
+    },
+    {
+      "cle": "enigme-libre-2",
+      "titre": "La voix du vallon",
+      "oeil": "Sur la route",
+      "genre": "majeur",
+      "quand": "route",
+      "poids": 1,
+      "recit": "« Je parle sans bouche et j'entends sans oreilles. »",
+      "enigme": {
+        "cle": "enigme-libre-2",
+        "jours": 5,
+        "rallonge": 2,
+        "libre": [
+          "echo",
+          "un echo"
+        ],
+        "juste": "On vous laisse passer. La route tient sa distance.",
+        "faux": "On secoue la tête, et l'on vous montre le long chemin."
+      },
+      "choix": [
+        {
+          "txt": "Passer sans répondre.",
+          "texte": "On hausse les épaules. Vous continuez."
+        }
+      ]
+    },
+    {
+      "cle": "enigme-libre-3",
+      "titre": "Ce qui vient au soir",
+      "oeil": "Sur la route",
+      "genre": "majeur",
+      "quand": "route",
+      "poids": 1,
+      "recit": "« Plus j'en ai, moins on me voit. »",
+      "enigme": {
+        "cle": "enigme-libre-3",
+        "jours": 5,
+        "rallonge": 2,
+        "libre": [
+          "obscurite",
+          "noir",
+          "nuit"
+        ],
+        "juste": "On vous laisse passer. La route tient sa distance.",
+        "faux": "On secoue la tête, et l'on vous montre le long chemin."
+      },
+      "choix": [
+        {
+          "txt": "Passer sans répondre.",
+          "texte": "On hausse les épaules. Vous continuez."
+        }
+      ]
+    }
+  ]
+}

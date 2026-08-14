@@ -416,6 +416,49 @@ les embauche à la Troupe, ils touchent leur solde à chaque arrivée. Ils se ba
 on ne les touche qu'une fois le dernier homme d'armes tombé — perdre son comptable dans
 une embuscade est donc le prix de n'avoir gardé personne pour le défendre.
 
+### Les énigmes
+
+Une énigme n'est pas une mécanique de plus : c'est un **événement** dont le récit pose la
+question et dont les choix sont les réponses. L'une porte **bonne réponse**, les autres
+non. La bonne laisse le chemin tel quel ; une mauvaise l'**allonge** de deux étapes par
+défaut.
+
+```json
+{ "cle": "le-carrefour", "titre": "Le carrefour sans panneau",
+  "recit": "« Quatre pattes le matin, deux le midi, trois le soir. Qui ? »",
+  "enigme": { "cle": "le-carrefour", "jours": 5, "rallonge": 2 },
+  "choix": [
+    { "txt": "L'homme",     "bon": true, "texte": "Le vieux s'écarte sans un mot." },
+    { "txt": "Le chien",    "texte": "On vous indique un détour." },
+    { "txt": "La table",    "texte": "On vous indique un détour." },
+    { "txt": "Le voyageur", "texte": "On vous indique un détour." }] }
+```
+
+On ne repose pas l'énigme tout de suite : **cinq jours** du calendrier par défaut, réglables
+par `jours`. Résolue, elle ne revient plus.
+
+**En toutes lettres** — au lieu de boutons, un champ où le joueur écrit. Le jeu
+**normalise** avant de comparer :
+
+```
+« L'Écho ! »  →  echo        minuscules, accents, ponctuation,
+« un peigne » →  peigne      espaces et article de tête
+```
+
+Vous écrivez la liste des réponses acceptées dans `libre`, et les deux issues dans
+`juste` et `faux`. L'énigme reste aussi dure — seule la faute de frappe cesse d'être une
+punition. Laissez toujours un choix ordinaire à côté : il faut pouvoir passer son chemin.
+
+```json
+"enigme": { "cle": "la-dent", "libre": ["peigne", "un peigne"],
+            "juste": "On vous laisse passer.",
+            "faux":  "On vous montre le long chemin." },
+"choix": [{ "txt": "Passer sans répondre.", "texte": "On hausse les épaules." }]
+```
+
+Six énigmes jetables — trois à boutons, trois en toutes lettres — sont posées dans
+`data/exemples/evenements.json`.
+
 ### Une carte déchirée en trois
 
 Le septième pouvoir d'un objet, dans l'atelier d'objets : **Révéler un lieu**. Tenir

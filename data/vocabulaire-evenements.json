@@ -47,6 +47,24 @@
     "oui",
     "non"
    ]
+  },
+  "enigme": {
+   "nom": "Énigme",
+   "explique": "Le récit pose la question, les choix sont les réponses — quatre par défaut, une seule marquée « bonne ». La bonne laisse le chemin tel quel ; une mauvaise l'allonge. On ne repose pas l'énigme tout de suite : cinq jours du calendrier par défaut, et résolue, elle ne revient plus.",
+   "quand": "Un carrefour sans panneau, un gardien qui ne laisse passer qu'à qui répond, un vieux qui s'amuse.",
+   "champs": [
+    "enigme",
+    "choix.bon"
+   ],
+   "variante": {
+    "nom": "En toutes lettres",
+    "explique": "Au lieu de boutons, un champ où le joueur écrit sa réponse. Le jeu normalise avant de comparer : minuscules, sans accents, sans ponctuation, sans article de tête — « L'Écho ! » vaut « echo ». Vous écrivez la liste des réponses acceptées ; l'énigme reste aussi dure, seule la faute de frappe cesse d'être une punition.",
+    "champs": [
+     "enigme.libre",
+     "enigme.juste",
+     "enigme.faux"
+    ]
+   }
   }
  },
  "effets": {
@@ -569,6 +587,9 @@
   },
   "lieu": {
    "explique": "La clé d'un lieu du monde, telle que l'atelier de carte la donne. Laissé vide, l'effet vaut partout."
+  },
+  "liste": {
+   "explique": "Plusieurs textes, un par ligne."
   }
  },
  "moments": {
