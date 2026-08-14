@@ -2362,6 +2362,114 @@ function capsDitsDe(l){
       heurts.join(', ')} — déplacez l'un des deux.</span>`:'');
 }
 
+/* ═══════════════ les endroits qu'on fouille ═══════════════
+   Une arrière-cour, une archive, un gué, une tour brûlée : des endroits qui ne
+   vendent rien et qui rendent parfois quelque chose. Ils s'accrochent au lieu
+   où on les trouve, donc ils voyagent dans monde.json — pas de fichier de plus.
+
+   Chacun porte ses paliers : ce qu'on trouve selon le jet. Le premier palier
+   dont le seuil est atteint l'emporte, en descendant ; celui qui n'a pas de
+   seuil ramasse le reste. Le jet est un d100 majoré de la moitié de la
+   vigilance de la troupe, arrondie au supérieur — comptez large. */
+const cleLibre=(liste,base)=>{
+  let c=base,i=2;
+  while(liste.some(x=>x.cle===c))c=base+'-'+(i++);
+  return c;
+};
+function blocEndroits(l){
+  const e=Array.isArray(l.endroits)?l.endroits:[];
+  let h=`<div class="bloc" style="margin-top:11px"><h2>Ce qu'on peut y fouiller
+    <span class="pousse"></span><button id="en-ajouter">+ Endroit</button></h2>
+    <div class="corps">`;
+  if(!e.length)h+=`<p class="aide" style="margin:0">Rien. Ajoutez un endroit et le jeu
+    proposera d'y passer une journée — une fois par venue, avec un jet de vigilance.</p>`;
+  e.forEach((x,i)=>{
+    h+=`<div style="border:1px solid var(--bord);border-radius:var(--r);padding:8px;
+      background:var(--fond)">
+      <div class="rangee">
+        <input data-en="${i}" data-quoi="nom" value="${echappe(x.nom||'')}"
+          placeholder="Le nom de l'endroit" aria-label="Nom de l'endroit"
+          style="flex:1 1 160px">
+        <button class="fixe" data-en-oter="${i}" aria-label="Ôter cet endroit"
+          style="padding:5px 9px;border:1px solid var(--bord);border-radius:var(--r);
+          color:var(--encre-pale)">✕</button>
+      </div>
+      <textarea data-en="${i}" data-quoi="texte" rows="2" style="margin-top:6px"
+        placeholder="Ce qu'on voit en arrivant. Relisible au carnet."
+        aria-label="Description de l'endroit">${echappe(x.texte||'')}</textarea>
+      <div class="champ" style="margin-top:6px"><label>Qui s'y tient</label>
+        <select data-en="${i}" data-quoi="personnage">
+          <option value="">— personne —</option>${
+          (((depotLire('personnages')||{}).personnages)||[]).map(q=>
+            `<option value="${echappe(q.cle)}"${q.cle===x.personnage?' selected':''}
+              >${echappe(q.nom||q.cle)}</option>`).join('')}</select></div>
+      <p class="aide" style="margin:8px 0 4px;color:var(--or)">Les paliers</p>`;
+    (x.paliers||[]).forEach((p,k)=>{
+      h+=`<div class="rangee" style="align-items:flex-start;margin-bottom:5px">
+        <input type="number" min="0" max="200" data-en="${i}" data-pal="${k}"
+          data-quoi="min" value="${p.min===undefined?'':p.min}"
+          placeholder="reste" aria-label="Seuil du palier ${k+1}" style="flex:0 0 78px">
+        <input data-en="${i}" data-pal="${k}" data-quoi="texte"
+          value="${echappe(p.texte||'')}" placeholder="Ce qu'on trouve"
+          aria-label="Texte du palier ${k+1}" style="flex:1 1 140px">
+        <button class="fixe" data-en="${i}" data-pal-oter="${k}"
+          aria-label="Ôter ce palier"
+          style="padding:5px 9px;border:1px solid var(--bord);border-radius:var(--r);
+          color:var(--encre-pale)">✕</button></div>`;
+    });
+    h+=`<button class="bouton" data-pal-ajouter="${i}"
+        style="margin-top:2px;font-size:12px;padding:4px 9px">+ Palier</button>
+      <p class="aide" style="margin-top:6px">Un seuil vide ramasse tout le reste — mettez-en
+        un, sinon un mauvais jet ne dira rien. Les effets d'un palier s'écrivent dans le
+        fichier ; l'atelier ne règle ici que le seuil et la phrase.</p>
+    </div>`;
+    if(i<e.length-1)h+='<div style="height:7px"></div>';
+  });
+  return h+`</div></div>`;
+}
+function brancherEndroits(l){
+  const a=$('#en-ajouter');
+  if(a)a.onclick=()=>{
+    l.endroits=Array.isArray(l.endroits)?l.endroits:[];
+    l.endroits.push({cle:cleLibre(l.endroits,'endroit'),nom:'',texte:'',
+      paliers:[{min:80,texte:''},{texte:''}]});
+    sauverAuto();rendreSelection();
+  };
+  $$('[data-en-oter]').forEach(b=>b.onclick=()=>{
+    l.endroits.splice(+b.dataset.enOter,1);
+    if(!l.endroits.length)delete l.endroits;
+    sauverAuto();rendreSelection();
+  });
+  $$('[data-pal-ajouter]').forEach(b=>b.onclick=()=>{
+    const x=l.endroits[+b.dataset.palAjouter];
+    x.paliers=x.paliers||[];
+    x.paliers.push({texte:''});
+    sauverAuto();rendreSelection();
+  });
+  $$('[data-pal-oter]').forEach(b=>b.onclick=()=>{
+    const x=l.endroits[+b.dataset.en];
+    x.paliers.splice(+b.dataset.palOter,1);
+    sauverAuto();rendreSelection();
+  });
+  $$('[data-en]').forEach(ch=>{
+    if(ch.dataset.palOter!==undefined)return;
+    const x=l.endroits[+ch.dataset.en];
+    if(!x)return;
+    const cible=ch.dataset.pal!==undefined?(x.paliers||[])[+ch.dataset.pal]:x;
+    if(!cible)return;
+    const pose=()=>{
+      const q=ch.dataset.quoi;
+      if(ch.type==='number'){
+        if(ch.value==='')delete cible[q];
+        else cible[q]=Math.max(0,Math.round(Number(ch.value)||0));
+      }else if(ch.value==='')delete cible[q];
+      else cible[q]=ch.value;
+      sauverAuto();
+    };
+    if(ch.tagName==='SELECT')ch.onchange=pose; else ch.oninput=pose;
+  });
+}
+
 const estPassage=v=>{
   const a=lieuDe(v.de),b=lieuDe(v.vers);
   return !!(a&&b&&(a.carte||'')!==(b.carte||''));
@@ -2722,7 +2830,9 @@ function rendreSelection(){
           `<span>${echappe(autre.nom)}</span><b>${pr[1].lieues===null?'—':pr[1].lieues+' lieues'}</b>`
         ).join('')||'<span class="rien">aucune</span><b></b>'}
       </div>
+      ${blocEndroits(l)}
       <button class="bouton danger" style="margin-top:9px" id="s-suppr">Supprimer ce lieu</button>`;
+    brancherEndroits(l);
     $('#s-nom').oninput=e=>{l.nom=e.target.value;dessiner();};
     $('#s-rang').onchange=e=>{memo();l.rang=e.target.value;rangDefaut=l.rang;dessiner();};
     $('#s-contree').onchange=e=>{memo();l.contree=e.target.value;dessiner();};

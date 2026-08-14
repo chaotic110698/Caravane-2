@@ -928,6 +928,7 @@ details.regles li{margin-bottom:6px}
       <div class="panneau" id="panneau-terrains"></div>
       <div class="panneau" id="panneau-carnet"></div>
       <div class="panneau" id="panneau-boussole"></div>
+      <div class="panneau" id="panneau-lieux"></div>
       <div class="panneau" id="panneau-parametres"></div>
       <div class="panneau" id="panneau-sauvegarde"></div>
     </div>
@@ -1484,6 +1485,7 @@ function nouvellePartie(cle){
   const a=ARCHETYPES[cle]||ARCHETYPES.guerrier;
   S={or:260,repit:0,evCount:0,maxEv:3,petitCount:0,maxPetits:4,rallonge:0,etapes:0,lieues:0,orMax:260,reputation:50,
      jour:1,heure:CALENDRIER.debut.heure,notes:[],passes:{},connues:{},vise:null,releves:{},
+     fouilles:{},
      /* ouvrirLesDeparts() suit la création : il lui faut S en place */
      marchand:{nom:'Vous',archetype:ARCHETYPES[cle]?cle:'guerrier',pv:a.pvMax,pvMax:a.pvMax},
      chariots:[nouveauChariot('Le Patient','bache'),nouveauChariot('La Grise','charrette')],
@@ -1988,6 +1990,8 @@ const MENU=[
   si:()=>true},
  {cle:'boussole', nom:'Boussole',  sous:'suivre un cap',        ico:()=>svgIco(GLYPHE_BOUSSOLE,'#4A7BC8'),
   si:()=>!!MONDE&&LIEUX.some(l=>l.cache)},
+ {cle:'lieux',    nom:'Les lieux', sous:'où l\'on peut fouiller',ico:()=>svgIco(GLYPHE_TOIT,'#9A7343'),
+  si:()=>endroitsIci().length>0},
  {cle:'convoi',   nom:'Convoi',    sous:'chariots et soute',   ico:()=>icoChariot('bache')},
  {cle:'troupe',   nom:'Troupe',    sous:'marchand et escorte', ico:()=>svgIco(GLYPHES_EV.heaume,'#6E9B6A')},
  {cle:'parametres',nom:'Paramètres',sous:'partie et record',   ico:()=>svgIco(GLYPHE_CLEF,'#9A9488')},
@@ -2080,6 +2084,7 @@ function montrerOnglet(nom){
   if(nom==='terrains')rendreTerrains();
   if(nom==='carnet')panneauCarnet();
   if(nom==='boussole')panneauBoussole();
+  if(nom==='lieux')panneauLieux();
   if(S)S.onglet=nom;
   /* on change d'onglet : on revient en haut du rouleau, sinon on tombe au
      milieu du convoi parce qu'on avait descendu l'étal */
@@ -3382,7 +3387,7 @@ function paquet(){
   return {jeu:'caravane',v:9,date:new Date().toISOString(),
     or:S.or,etapes:S.etapes,lieues:S.lieues,orMax:S.orMax,reputation:S.reputation,
     jour:S.jour,heure:S.heure,notes:S.notes,passes:S.passes,connues:S.connues,
-    releves:S.releves,
+    releves:S.releves,fouilles:S.fouilles,
     marchand:S.marchand,chariots:S.chariots,gardes:S.gardes,recrues:S.recrues,
     armes:S.armes,armures:S.armures,mythes:S.mythes,banc:S.banc,karma:S.karma,chien:S.chien,contrats:S.contrats,
     gens:S.gens,objets:S.objets,objetsDepuis:S.objetsDepuis,mecrites:S.mecrites,
@@ -3416,6 +3421,7 @@ function ouvrirPaquet(d){
      passes:(d.passes&&typeof d.passes==='object')?d.passes:{},
      connues:(d.connues&&typeof d.connues==='object')?d.connues:{},vise:null,
      releves:(d.releves&&typeof d.releves==='object')?d.releves:{},
+     fouilles:(d.fouilles&&typeof d.fouilles==='object')?d.fouilles:{},
      marchand:d.marchand,chariots:d.chariots,gardes:d.gardes||[],recrues:d.recrues||[],
      armes:d.armes||{},armures:d.armures||{},mythes:d.mythes||{},
      troupeVue:'marchand',banc:!!d.banc,
@@ -5575,6 +5581,7 @@ document.addEventListener('click',e=>{
   if(t.dataset.notePage!==undefined){S.notePage=+t.dataset.notePage;panneauCarnet();return;}
   if(t.id==='cap-suivre'){suivreLeCap();return;}
   if(t.id==='comptable-promu'){promouvoirComptable();return;}
+  if(t.dataset.fouiller){fouiller(t.dataset.fouiller);return;}
   if(t.id==='note-ajouter'){
     if(!ajouterNote())return toast('Quarante pages, c\'est tout ce que tient le carnet.');
     panneauCarnet();
@@ -6005,7 +6012,8 @@ function normaliserMonde(d){
   m.lieux=d.lieux.map(l=>({cle:l.cle,nom:l.nom||l.cle,contree:l.contree||'',
     carte:l.carte||premiere,rang:l.rang||'ville',traits:l.traits||[],
     x:l.x||0,y:l.y||0,etiq:l.etiq||null,
-    depart:!!l.depart,cache:!!l.cache}));
+    depart:!!l.depart,cache:!!l.cache,
+    endroits:Array.isArray(l.endroits)&&l.endroits.length?l.endroits:undefined}));
   const carteDe={};m.lieux.forEach(l=>{carteDe[l.cle]=l.carte;});
   const contreeDeCle={};m.lieux.forEach(l=>{contreeDeCle[l.cle]=l.contree;});
   m.voies=(d.voies||[]).filter(v=>carteDe[v.de]!==undefined&&carteDe[v.vers]!==undefined)
@@ -7823,6 +7831,99 @@ function panneauCarnet(){
   if(!h)h=`<div class="carte"><h3>Le carnet</h3><p>Rien encore. Les gens qu'on croise,
     les objets qu'on rapporte et les services qu'on rend viendront s'inscrire ici.</p></div>`;
   p.innerHTML=tete+h;
+}
+
+/* ═══════════════ les endroits qu'on fouille ═══════════════
+   Une cité n'est pas qu'un étal. On peut y perdre une journée à fouiller une
+   arrière-cour, une archive, un gué, une tour brûlée — des endroits qui ne
+   vendent rien et qui rendent parfois quelque chose.
+
+   Ils vivent dans le monde écrit, accrochés au lieu où on les trouve : pas de
+   fichier de plus, pas de chargeur de plus. Chacun porte sa description, qu'on
+   relit au carnet quand on veut, et ses paliers : ce qu'on trouve selon le jet.
+
+   Le jet est un d100 majoré de la moitié de la vigilance, arrondie au
+   supérieur. Une fois par venue : revenir demande de repartir et de revenir. */
+function endroitsDe(v){
+  if(!MONDE||!v)return [];
+  const i=S.villes.indexOf(v);
+  const l=LIEUX&&LIEUX[i];
+  return (l&&Array.isArray(l.endroits))?l.endroits:[];
+}
+function endroitsIci(){return endroitsDe(S.ville);}
+function endroitDe(cle){
+  return endroitsIci().find(e=>e.cle===cle)||null;
+}
+/* Fouillé à cette venue-ci ? On note le numéro de la visite, pas un simple
+   drapeau : repasser plus tard rouvre l'endroit. */
+function dejaFouille(cle){
+  const f=(S.fouilles||{})[cle];
+  return !!f&&f.ville===cleVille(S.ville)&&f.visite===S.ville.visites;
+}
+function apportVigilance(){
+  return Math.ceil(vigilanceTroupe()/2);
+}
+/* Le palier qui l'emporte : le premier dont le seuil est atteint, en
+   descendant. Le dernier sans seuil ramasse le reste. */
+function palierAtteint(paliers,total){
+  const l=(paliers||[]).slice().sort((a,b)=>(Number(b.min)||0)-(Number(a.min)||0));
+  return l.find(p=>p.min===undefined||p.min===null||total>=Number(p.min))||null;
+}
+function fouiller(cle){
+  const e=endroitDe(cle);
+  if(!e||dejaFouille(cle))return;
+  /* la journée se paie d'abord : on l'a passée là, quoi qu'on trouve */
+  avancerJours(1);
+  S.fouilles=S.fouilles||{};
+  S.fouilles[cle]={ville:cleVille(S.ville),visite:S.ville.visites,jour:S.jour};
+  dernierJet=null;
+  const j=jet({carac:apportVigilance(),nom:'vigilance',seuil:0,
+    titre:e.nom||'Fouille'});
+  const p=palierAtteint(e.paliers,j.total);
+  const sac=contexteEv();
+  if(p){
+    effetsEv(p.effets,sac);
+    if(dernierJet===j){j.verdict=p.verdict||null;j.classe=p.classe||null;j.seuil=null;}
+  }
+  const texte=p?texteEv(p.texte,sac):'On ne trouve rien qui vaille la peine.';
+  /* on se sert de la feuille d'événement : le dé s'y montre déjà, et l'on n'a
+     pas deux façons d'annoncer un résultat */
+  evCourant={titre:e.nom||'Fouille',ico:e.ico||null};
+  $('#ev-oeil').textContent=S.ville.nom;
+  $('#ev-titre').textContent=e.nom||'Fouille';
+  $('#ev-recit').textContent=e.texte||'';
+  $('#ev-choix').hidden=true;
+  $('#ev-issue').hidden=true;
+  ouvrirFeuille('#feuille-event');
+  chronique(`${S.ville.nom} — ${e.nom} : ${texte}`, p&&p.ton?p.ton:'');
+  const afficher=()=>{
+    $('#ev-issue').hidden=false;
+    $('#ev-issue-texte').textContent=texte;
+  };
+  if(dernierJet)montrerDe(dernierJet,afficher); else afficher();
+  majRegistres();
+}
+function panneauLieux(){
+  const p=$('#panneau-lieux');
+  if(!p)return;
+  const l=endroitsIci();
+  if(!l.length){p.innerHTML=`<p class="vide">Rien à fouiller ici.</p>`;return;}
+  p.innerHTML=`<p class="oeil" style="padding:2px 2px 10px">Fouiller coûte une
+      journée, et ne se fait qu'une fois par venue. Votre vigilance —
+      <span class="chiffre">${Math.round(vigilanceTroupe())}</span> — y ajoute
+      <span class="chiffre">+${apportVigilance()}</span>.</p>`+
+    l.map(e=>{
+      const fait=dejaFouille(e.cle);
+      return `<div class="carte">
+        <h3>${e.nom||'Un endroit'}</h3>
+        ${e.texte?`<p>${e.texte}</p>`:''}
+        ${e.personnage&&PERSONNAGES&&PERSONNAGES[e.personnage]
+          ?`<p class="info">${appellationDe(PERSONNAGES[e.personnage])} s'y tient.</p>`:''}
+        <button class="bouton petit${fait?' creux':''}" data-fouiller="${e.cle}"
+          style="width:100%;margin-top:10px" ${fait?'disabled':''}>${
+          fait?'Déjà fouillé aujourd\'hui':'Y passer la journée'}</button>
+      </div>`;
+    }).join('');
 }
 
 /* ═══════════════ le comptable et ses relevés ═══════════════

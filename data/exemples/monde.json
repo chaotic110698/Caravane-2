@@ -82,7 +82,61 @@
       ],
       "x": 220,
       "y": 340,
-      "depart": true
+      "depart": true,
+      "endroits": [
+        {
+          "cle": "endroit-d-essai",
+          "nom": "L'Arrière-Cour d'Essai",
+          "texte": "Un exemple jetable. Une cour derrière la halle, où traînent des caisses vides et deux chats. Rien de ce monde-ci ne s'y joue.",
+          "paliers": [
+            {
+              "min": 85,
+              "ton": "bon",
+              "verdict": "Une trouvaille",
+              "texte": "Sous une planche, une bourse oubliée : {gain} po.",
+              "effets": [
+                {
+                  "faire": "or",
+                  "de": [
+                    120,
+                    260
+                  ],
+                  "nomme": "gain"
+                }
+              ]
+            },
+            {
+              "min": 55,
+              "texte": "Deux sacs de grain encore bons. On les charge.",
+              "effets": [
+                {
+                  "faire": "charger",
+                  "bien": "ble",
+                  "de": [
+                    8,
+                    18
+                  ]
+                }
+              ]
+            },
+            {
+              "min": 25,
+              "texte": "Rien. De la poussière et un chat qui vous regarde."
+            },
+            {
+              "ton": "mauvais",
+              "verdict": "Mauvaise pioche",
+              "texte": "Une planche cède. On y laisse une journée et un peu d'orgueil.",
+              "effets": [
+                {
+                  "faire": "reputation",
+                  "de": -1
+                }
+              ]
+            }
+          ]
+        }
+      ]
     },
     {
       "cle": "le-gue",

@@ -416,6 +416,43 @@ les embauche à la Troupe, ils touchent leur solde à chaque arrivée. Ils se ba
 on ne les touche qu'une fois le dernier homme d'armes tombé — perdre son comptable dans
 une embuscade est donc le prix de n'avoir gardé personne pour le défendre.
 
+### Les endroits qu'on fouille
+
+Une cité n'est pas qu'un étal. Dans le panneau d'un lieu, le bloc **Ce qu'on peut y
+fouiller** ajoute des endroits qui ne vendent rien : une arrière-cour, une archive, un
+gué, une tour brûlée. Ils s'accrochent au lieu et voyagent dans `monde.json` — pas de
+fichier de plus.
+
+Le jeu en fait un onglet **Les lieux**, visible quand la cité en compte au moins un. Y
+passer la journée coûte **un jour du calendrier**, et ne se fait qu'**une fois par venue** :
+revenir demande de repartir et de revenir.
+
+Le jet est un **d100 majoré de la moitié de la vigilance de la troupe, arrondie au
+supérieur** — une troupe à 62 de vigilance ajoute +31. Comptez large en posant vos seuils.
+
+Chaque endroit porte des **paliers**. Le premier dont le seuil est atteint l'emporte, en
+descendant ; celui qui n'a **pas** de seuil ramasse le reste — mettez-en un, sinon un
+mauvais jet ne dira rien.
+
+```json
+"endroits": [{
+  "cle": "la-tour-brulee", "nom": "La Tour Brûlée",
+  "texte": "Des piles noircies, des poutres emportées.",
+  "personnage": "harn",
+  "paliers": [
+    { "min": 92, "ton": "bon", "verdict": "Une trouvaille",
+      "texte": "Sous une dalle : {gain} po.",
+      "effets": [{ "faire": "or", "de": [200, 400], "nomme": "gain" }] },
+    { "min": 55, "texte": "Deux sacs encore bons.",
+      "effets": [{ "faire": "charger", "bien": "ble", "de": [8, 18] }] },
+    { "texte": "Rien. De la poussière." }]
+}]
+```
+
+L'atelier règle le **nom**, la **description**, **qui s'y tient** et, pour chaque palier,
+le **seuil** et la **phrase**. Les **effets** s'écrivent dans le fichier — ce sont les
+mêmes que ceux d'un événement, avec leurs trous entre accolades.
+
 ### Le comptable, et ce qu'on sait des prix
 
 Le jeu n'a jamais dit les prix d'ailleurs. Il ne dit plus non plus **ce qu'une cité
