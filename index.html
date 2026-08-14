@@ -515,6 +515,18 @@ details.regles li{margin-bottom:6px}
   border:1px solid var(--velin-ombre);color:var(--encre-pale);background:var(--velin)}
 .tag.perilleux{color:var(--minium);border-color:rgba(163,44,28,.5)}
 .tag.sur{color:var(--vert);border-color:rgba(76,106,68,.5)}
+/* ── le livre du comptable ── */
+.releve{margin-top:10px;padding:9px 10px;background:var(--velin);
+  border:1px solid var(--filet);border-radius:2px}
+.releve .oeil{font-size:11.5px;margin-bottom:6px}
+.releve.perime{opacity:.72}
+.releve.perime .prix-liste b{text-decoration:line-through}
+.prix-liste{display:grid;grid-template-columns:repeat(2,1fr auto);gap:3px 10px;
+  font-size:13px;align-items:baseline}
+.prix-liste span{color:var(--encre-pale);overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap}
+.prix-liste b{text-align:right}
+@media (max-width:400px){.prix-liste{grid-template-columns:1fr auto}}
 
 /* ── feuilles glissantes ── */
 #voile{position:fixed;inset:0;background:rgba(30,22,12,.6);opacity:0;pointer-events:none;
@@ -1400,7 +1412,11 @@ function nomLibre(){
 function creerGarde(cle){
   cle=cle||pick(CLES_METIERS);
   const m=METIERS[cle];
-  return {nom:nomLibre(),metier:cle,pv:m.pvMax,pvMax:m.pvMax};
+  const g={nom:nomLibre(),metier:cle,pv:m.pvMax,pvMax:m.pvMax};
+  /* un comptable arrive toujours au premier niveau : c'est en le formant qu'on
+     lui fait retenir davantage */
+  if(cle==='comptable')g.niveau=1;
+  return g;
 }
 function fiche(u){return u.archetype?ARCHETYPES[u.archetype]:METIERS[u.metier];}
 let CHARIOTS=null;          /* data/chariots.json → chariots */
@@ -1467,7 +1483,7 @@ function prixChariot(cle){return Math.round(CHARIOTS[cle].prix*(1+S.etapes*.045)
 function nouvellePartie(cle){
   const a=ARCHETYPES[cle]||ARCHETYPES.guerrier;
   S={or:260,repit:0,evCount:0,maxEv:3,petitCount:0,maxPetits:4,rallonge:0,etapes:0,lieues:0,orMax:260,reputation:50,
-     jour:1,heure:CALENDRIER.debut.heure,notes:[],passes:{},connues:{},vise:null,
+     jour:1,heure:CALENDRIER.debut.heure,notes:[],passes:{},connues:{},vise:null,releves:{},
      /* ouvrirLesDeparts() suit la création : il lui faut S en place */
      marchand:{nom:'Vous',archetype:ARCHETYPES[cle]?cle:'guerrier',pv:a.pvMax,pvMax:a.pvMax},
      chariots:[nouveauChariot('Le Patient','bache'),nouveauChariot('La Grise','charrette')],
@@ -1721,7 +1737,12 @@ function etapesEntre(i,j){
 function indexVille(v){return S.villes.indexOf(v);}
 function contreeCourante(){return CONTREES[contreeDe(indexVille(S.ville))];}
 function douane(){return Math.round(55+S.etapes*9+valeurSoute()*.06);}
-function enContree(c){return 'les '+CONTREES[c].nom.toLowerCase();}
+/* « les Contreforts » prend l'article ; « les les Contreforts » n'existe pas.
+   Un monde écrit peut nommer une contrée avec son article déjà dedans. */
+function enContree(c){
+  const n=(CONTREES[c].nom||'').toLowerCase();
+  return /^(le |la |les |l')/.test(n)?n:'les '+n;
+}
 
 function nomsDeContree(cle,combien){
   const src=NOMS_LIEUX[cle],noms=[];
@@ -2799,12 +2820,52 @@ function vueMarchand(){
   }
   return h;
 }
+/* Ce que le comptable coûte, et ce qu'il faudrait pour qu'il retienne plus.
+   On paie le plein tarif du niveau visé : c'est un homme qu'on élève, pas un
+   escalier qu'on monte marche par marche à prix réduit. */
+function blocComptable(){
+  const c=comptableALaTroupe();
+  const n=niveauComptable();
+  const suivant=prochainNiveau();
+  if(!c)return `<div class="carte"><h3>Pas de comptable</h3>
+    <p>Personne ne tient les prix des cités où vous passez. Sans lui, on part
+    toujours à l'aveugle : une cité où l'on n'a jamais mis les pieds ne dit que
+    son nom. Il s'en présente parfois à l'embauche, plus bas.</p></div>`;
+  const tenues=Object.keys(S.releves||{}).length;
+  const max=memoireComptable();
+  return `<div class="carte">
+    <div class="rangee"><h3>${c.nom} tient le livre</h3>
+      <span class="oeil">niveau ${'I'.repeat(n)}</span></div>
+    <p>Il retient <b>${max===Infinity?'toutes les cités':max+' cités'}</b> —
+      <span class="chiffre">${tenues}</span> ${tenues>1?'notées':'notée'} pour l'instant.
+      Un relevé se périme au bout d'un mois.</p>
+    ${suivant?`<div class="rangee" style="margin-top:10px">
+        <span class="oeil chiffre">${fmt(suivant.prix)} po pour qu'il en retienne
+          ${suivant.villes===Infinity?'toutes':suivant.villes}</span>
+        <button class="bouton petit creux" id="comptable-promu"
+          ${S.or>=suivant.prix?'':'disabled'}>Le former</button>
+      </div>`
+      :`<p class="info" style="margin-top:8px">Il ne peut pas apprendre davantage.</p>`}
+  </div>`;
+}
+function promouvoirComptable(){
+  const c=comptableALaTroupe(),suivant=prochainNiveau();
+  if(!c||!suivant)return;
+  if(S.or<suivant.prix)return toast('La bourse ne suit pas.');
+  S.or-=suivant.prix;
+  c.niveau=suivant.n;
+  chronique(`${c.nom} passe au niveau ${'I'.repeat(suivant.n)} : il retiendra `+
+    `${suivant.villes===Infinity?'toutes les cités':suivant.villes+' cités'}.`,'bon');
+  toast(`${c.nom} a été formé.`);
+  panneauTroupe();majRegistres();
+}
 function vueEscorte(){
   let h=`<p class="oeil" style="padding:2px 2px 8px">Solde de
       <span class="chiffre">${fmt(solde())}</span> po à la prochaine arrivée</p>`;
   h+=S.gardes.length?S.gardes.map((g,i)=>carteUnite(g,String(i),
       `<p style="margin-top:4px">Solde <span class="chiffre">${fmt(soldeUnite(g))}</span> po par étape.</p>`)).join('')
     :'<p class="vide">Vous voyagez seul. Les bandits le sentent de loin.</p>';
+  h+=blocComptable();
   h+=`<p class="oeil" style="padding:16px 2px 8px">À l'embauche dans cette ville</p>`;
   if(!S.recrues.length){
     h+=`<p class="vide">Personne ne cherche de place ici. Les villes n'en fournissent pas toujours —
@@ -3320,6 +3381,7 @@ function paquet(){
   return {jeu:'caravane',v:9,date:new Date().toISOString(),
     or:S.or,etapes:S.etapes,lieues:S.lieues,orMax:S.orMax,reputation:S.reputation,
     jour:S.jour,heure:S.heure,notes:S.notes,passes:S.passes,connues:S.connues,
+    releves:S.releves,
     marchand:S.marchand,chariots:S.chariots,gardes:S.gardes,recrues:S.recrues,
     armes:S.armes,armures:S.armures,mythes:S.mythes,banc:S.banc,karma:S.karma,chien:S.chien,contrats:S.contrats,
     gens:S.gens,objets:S.objets,objetsDepuis:S.objetsDepuis,mecrites:S.mecrites,
@@ -3352,6 +3414,7 @@ function ouvrirPaquet(d){
      notes:Array.isArray(d.notes)?d.notes:[],
      passes:(d.passes&&typeof d.passes==='object')?d.passes:{},
      connues:(d.connues&&typeof d.connues==='object')?d.connues:{},vise:null,
+     releves:(d.releves&&typeof d.releves==='object')?d.releves:{},
      marchand:d.marchand,chariots:d.chariots,gardes:d.gardes||[],recrues:d.recrues||[],
      armes:d.armes||{},armures:d.armures||{},mythes:d.mythes||{},
      troupeVue:'marchand',banc:!!d.banc,
@@ -3647,13 +3710,22 @@ function carteDestination(){
   const dem=d.type.demande.length?noms(d.type.demande):'un peu de tout';
   const pro=d.type.produit.length?noms(d.type.produit):'rien en propre';
   const etranger=contreeDe(S.dest)!==contreeDe(ici);
+  /* Une cité où l'on n'est jamais allé et que personne ne tient ne dit que son
+     nom et sa distance. Ce qu'on y cherche et ce qu'on y produit se paie d'un
+     voyage, ou d'un comptable. */
+  const lue=citeLue(d);
   return `<div class="carte">
     <div class="rangee"><h3>${d.nom}</h3>
       <span class="oeil chiffre">${lieuesEntre(ici,S.dest)} lieues · ${fmt(kmEntre(ici,S.dest))} km</span></div>
-    <p>${d.type.nom.charAt(0).toUpperCase()+d.type.nom.slice(1)}${
-       etranger?`, en ${CONTREES[d.contree].nom.toLowerCase()}`:''} —
-       on y cherche <b>${dem}</b>, on y produit ${pro}.
-       ${d.visites?`Vous y êtes déjà passé ${d.visites} fois.`:'Vous n\'y avez jamais mis les pieds.'}</p>
+    ${lue
+      ? `<p>${d.type.nom.charAt(0).toUpperCase()+d.type.nom.slice(1)}${
+           etranger?`, en ${CONTREES[d.contree].nom.toLowerCase()}`:''} —
+           on y cherche <b>${dem}</b>, on y produit ${pro}.
+           ${d.visites?`Vous y êtes déjà passé ${d.visites} fois.`:'Vous n\'y avez jamais mis les pieds.'}</p>`
+      : `<p>${etranger?`En ${CONTREES[d.contree].nom.toLowerCase()}. `:''}On vous en a donné
+           le nom, rien de plus. Ce qu'on y vend, ce qu'on y cherche, à quel prix : il
+           faudra y aller pour le savoir — ou tenir un comptable.</p>`}
+    ${feuilleDePrix(d)}
   </div>`;
 }
 /* premier temps : la carte, et sous elle ce qu'on sait de la cité touchée */
@@ -4059,6 +4131,7 @@ function arriver(){
   stopper();
   S.etapes++;
   noterLArrivee();
+  relever();
   /* les jours ont été comptés en chemin ; ne reste que l'heure à laquelle on
      débouche, qui dépend de la longueur de la traite et donne sa lumière à la
      cité */
@@ -5483,7 +5556,8 @@ document.addEventListener('click',e=>{
     const r=S.recrues[+t.dataset.embaucher];
     if(r&&S.or>=r.prix){
       S.or-=r.prix;
-      S.gardes.push({nom:r.nom,metier:r.metier,pv:r.pv,pvMax:r.pvMax,arme:r.arme});
+      S.gardes.push({nom:r.nom,metier:r.metier,pv:r.pv,pvMax:r.pvMax,arme:r.arme,
+        niveau:r.metier==='comptable'?1:undefined});
       S.recrues.splice(+t.dataset.embaucher,1);
       rendreMarche();
     }
@@ -5499,6 +5573,7 @@ document.addEventListener('click',e=>{
   if(t.dataset.carnet){S.carnetVue=t.dataset.carnet;panneauCarnet();return;}
   if(t.dataset.notePage!==undefined){S.notePage=+t.dataset.notePage;panneauCarnet();return;}
   if(t.id==='cap-suivre'){suivreLeCap();return;}
+  if(t.id==='comptable-promu'){promouvoirComptable();return;}
   if(t.id==='note-ajouter'){
     if(!ajouterNote())return toast('Quarante pages, c\'est tout ce que tient le carnet.');
     panneauCarnet();
@@ -7745,6 +7820,107 @@ function panneauCarnet(){
   if(!h)h=`<div class="carte"><h3>Le carnet</h3><p>Rien encore. Les gens qu'on croise,
     les objets qu'on rapporte et les services qu'on rend viendront s'inscrire ici.</p></div>`;
   p.innerHTML=tete+h;
+}
+
+/* ═══════════════ le comptable et ses relevés ═══════════════
+   Le jeu n'a jamais dit les prix d'ailleurs, et c'est bien ainsi : on part sans
+   savoir. Le comptable est la seule façon d'en savoir quelque chose — il note
+   ce qu'on a vu, et sa mémoire a un plafond qu'on paie pour lever.
+
+   Un relevé porte sa date. Passé un mois, il ne vaut plus rien : les prix
+   dérivent, et un chiffre vieux affiché comme frais serait un mensonge. On le
+   garde tout de même à l'écran, barré, parce qu'un prix périmé reste une
+   indication — simplement, on sait qu'il l'est.
+
+   Les cités du premier jour ne comptent pas dans le plafond : on connaît sa
+   propre contrée sans qu'un homme la note. */
+const NIVEAUX_COMPTABLE=[
+ {n:1,prix:350, villes:8},
+ {n:2,prix:700, villes:14},
+ {n:3,prix:1400,villes:22},
+ {n:4,prix:2600,villes:32},
+ {n:5,prix:4800,villes:Infinity}
+];
+function comptableALaTroupe(){
+  return S.gardes.find(g=>g.metier==='comptable')||null;
+}
+function niveauComptable(){
+  const c=comptableALaTroupe();
+  return c?Math.max(1,Math.min(5,Number(c.niveau)||1)):0;
+}
+function memoireComptable(){
+  const n=niveauComptable();
+  return n?NIVEAUX_COMPTABLE[n-1].villes:0;
+}
+function prochainNiveau(){
+  const n=niveauComptable();
+  return (n&&n<5)?NIVEAUX_COMPTABLE[n]:null;
+}
+/* Une cité du premier jour se lit toujours, sans peser sur la mémoire. */
+function citePermanente(v){
+  if(!MONDE)return false;
+  const i=S.villes.indexOf(v);
+  return i>=0&&villesDuDepart().indexOf(i)>=0;
+}
+function cleVille(v){
+  if(!v)return '';
+  if(MONDE){const i=S.villes.indexOf(v);return (LIEUX[i]||{}).cle||v.nom;}
+  return v.nom;
+}
+function releveDe(v){
+  const r=(S.releves||{})[cleVille(v)];
+  return r||null;
+}
+function relevePerime(r){
+  return !!r&&(S.jour-r.jour)>CALENDRIER.joursParMois;
+}
+/* Ce qu'on sait d'une cité : on y est passé, ou le comptable la tient. */
+function citeLue(v){
+  if(!v)return false;
+  if(v===S.ville||v.visites>0)return true;
+  if(citePermanente(v))return true;
+  return !!releveDe(v);
+}
+/* À l'arrivée, le comptable ouvre son livre. Au-delà de sa mémoire, le plus
+   vieux relevé s'efface — il n'y a pas de place pour tout. */
+function relever(){
+  const c=comptableALaTroupe();
+  if(!c||!S.ville)return;
+  S.releves=S.releves||{};
+  const prix={};
+  IDS.forEach(g=>{const p=S.prix[g];if(p)prix[g]={a:p.a,v:p.v,r:p.r};});
+  S.releves[cleVille(S.ville)]={jour:S.jour,nom:S.ville.nom,prix:prix};
+  const max=memoireComptable();
+  const tenues=Object.keys(S.releves)
+    .filter(k=>{const i=LIEUX?LIEUX.findIndex(l=>l.cle===k):-1;
+                return !(i>=0&&villesDuDepart().indexOf(i)>=0);});
+  while(tenues.length>max){
+    /* le plus vieux part le premier, et l'on ne touche pas à celui d'ici */
+    let vieux=null;
+    tenues.forEach(k=>{
+      if(k===cleVille(S.ville))return;
+      if(!vieux||S.releves[k].jour<S.releves[vieux].jour)vieux=k;
+    });
+    if(!vieux)break;
+    delete S.releves[vieux];
+    tenues.splice(tenues.indexOf(vieux),1);
+  }
+}
+/* La feuille de prix d'une cité, telle qu'on peut la lire avant d'y aller. */
+function feuilleDePrix(v){
+  const r=releveDe(v);
+  if(!r)return '';
+  const vieux=relevePerime(r);
+  const age=S.jour-r.jour;
+  const lignes=IDS.filter(g=>r.prix[g]).slice(0,6).map(g=>
+    `<span>${G[g].nom}</span><b class="chiffre">${fmt(r.prix[g].a)}</b>`).join('');
+  return `<div class="releve${vieux?' perime':''}">
+    <p class="oeil">Relevé du comptable · ${nomDate(r.jour)} ·
+      ${age===0?'aujourd\'hui':'il y a '+age+' jour'+(age>1?'s':'')}${
+      vieux?' — <b>périmé</b>':''}</p>
+    <div class="prix-liste">${lignes}</div>
+    ${vieux?'<p class="info">Plus d\'un mois : les prix ont bougé depuis.</p>':''}
+  </div>`;
 }
 
 /* ═══════════════ ce qu'on vous dit ═══════════════

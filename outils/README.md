@@ -416,6 +416,32 @@ les embauche à la Troupe, ils touchent leur solde à chaque arrivée. Ils se ba
 on ne les touche qu'une fois le dernier homme d'armes tombé — perdre son comptable dans
 une embuscade est donc le prix de n'avoir gardé personne pour le défendre.
 
+### Le comptable, et ce qu'on sait des prix
+
+Le jeu n'a jamais dit les prix d'ailleurs. Il ne dit plus non plus **ce qu'une cité
+cherche et ce qu'elle produit** tant qu'on n'y est pas allé : une ville inconnue ne donne
+que son nom et sa distance. Le premier voyage redevient un pari.
+
+Le **comptable** est la seule façon d'en savoir davantage. On l'embauche à la Troupe comme
+n'importe quel homme d'escorte ; il note les prix de chaque cité où l'on passe, avec la
+date du relevé.
+
+| niveau | à payer | cités retenues |
+|---|---|---|
+| I | 350 po | 8 |
+| II | 700 po | 14 |
+| III | 1 400 po | 22 |
+| IV | 2 600 po | 32 |
+| V | 4 800 po | toutes |
+
+On le **forme** plutôt que de le remplacer, et l'on paie le plein tarif du niveau visé.
+Au-delà de sa mémoire, le plus vieux relevé s'efface. Les cités marquées *connu dès le
+départ* ne comptent pas dans le plafond : on connaît sa propre contrée sans qu'un homme la
+note.
+
+Un relevé se **périme au bout d'un mois** du calendrier. Il reste affiché, barré, avec son
+âge — un prix vieux est encore une indication, à condition de savoir qu'il l'est.
+
 ### Faire parler quelqu'un d'un cap
 
 Personne ne connaît un cap en entier. Dans l'atelier d'événements ou de dialogues, l'effet
