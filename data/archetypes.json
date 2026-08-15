@@ -230,7 +230,7 @@
       "negoce": 54,
       "affinite": "dague",
       "civil": true,
-      "dit": "Il note ce que vous trouvez. Sans lui, la carte s'efface derrière vous."
+      "dit": "Il note les lieux qu'on trouve au cap. Sans lui, la carte s'efface derrière vous et il faut redonner le cap à chaque fois."
     },
     "comptable": {
       "nom": "Comptable",
@@ -244,7 +244,7 @@
       "negoce": 88,
       "affinite": "dague",
       "civil": true,
-      "dit": "Il retient les prix des cités où vous êtes passé, et la date du relevé."
+      "dit": "Il retient les prix des cités traversées, avec la date. Sans lui, une ville où l'on n'est jamais allé ne dit que son nom."
     }
   }
 }
