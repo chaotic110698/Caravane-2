@@ -3417,23 +3417,6 @@ function panneauParametres(){
     </div>
   </div>
   <div class="carte">
-    <h3>Le jeu d'exemple</h3>
-    <p>Un petit monde tout prêt — cinq lieux, quatre personnages et leurs conversations,
-       deux missions, un objet unique — pour éprouver les dialogues sans attendre votre
-       carte. Il vit dans <b>data/exemples/</b> et ne touche pas à vos fichiers.</p>
-    <p style="margin-top:6px">${dossierAuteur()
-      ?'<b>Le jeu d\'exemple est chargé.</b> Vos propres fichiers de data/ sont mis de côté, pas effacés.'
-      :'Vos fichiers de <b>data/</b> sont chargés, ou aucun s\'il n\'y en a pas encore.'}</p>
-    <div class="rangee" style="margin-top:12px;gap:8px">
-      <button class="bouton petit${dossierAuteur()?' creux':''}" data-auteur="exemples/"
-        style="flex:1"${dossierAuteur()?' disabled':''}>Charger l'exemple</button>
-      <button class="bouton petit${dossierAuteur()?'':' creux'}" data-auteur=""
-        style="flex:1"${dossierAuteur()?'':' disabled'}>Revenir aux miens</button>
-    </div>
-    <p class="info" style="margin-top:8px">Changer recommence une partie neuve : le monde
-       n'est pas le même, et une sauvegarde ne s'y retrouverait pas.</p>
-  </div>
-  <div class="carte">
     <h3>Le banc d'essai</h3>
     <p>De quoi éprouver ce qui coûte cher sans jouer dix étapes pour se le payer —
        une panoplie de plates vaut deux mille pièces. Et l'inverse : la bourse vide
@@ -3475,12 +3458,6 @@ function panneauParametres(){
 
 /* ═══════════════ sauvegarde ═══════════════ */
 const CLE_PARTIE='caravane.partie.v2';
-/* Où le jeu va chercher les fichiers d'auteur : data/ par défaut, ou
-   data/exemples/ quand on demande le jeu d'exemple depuis les Paramètres. */
-const CLE_DOSSIER='caravane.auteur.v1';
-function dossierAuteur(){
-  try{return localStorage.getItem(CLE_DOSSIER)||'';}catch(e){return '';}
-}
 function paquet(){
   const idx=v=>S.villes.indexOf(v);
   return {jeu:'caravane',v:9,date:new Date().toISOString(),
@@ -6005,21 +5982,6 @@ document.addEventListener('click',e=>{
     else toast('Collez d\'abord le texte d\'une sauvegarde.');
     return;
   }
-  if(t.dataset.auteur!==undefined){
-    /* changer de jeu de fichiers change le monde : on repart de zéro, et on le
-       dit avant, parce qu'une partie en cours ne s'y retrouverait pas */
-    if(!t.dataset.sur){
-      t.dataset.sur='1';t.textContent='Confirmer';
-      toast('Le voyage en cours sera perdu.');return;
-    }
-    try{
-      if(t.dataset.auteur)localStorage.setItem(CLE_DOSSIER,t.dataset.auteur);
-      else localStorage.removeItem(CLE_DOSSIER);
-    }catch(e){}
-    effacerPartie();
-    location.reload();
-    return;
-  }
   if(t.dataset.oublier){
     try{localStorage.removeItem(CLE);}catch(e){}
     S.ref=null;rendreMarche();toast('Meilleur score effacé.');return;
@@ -6140,12 +6102,18 @@ document.addEventListener('input',e=>{
 const FICHIERS_DONNEES=['biens','raretes','contrees','archetypes','armes','armures',
   'chariots','ambiance','pnj','routes','missions','icones','calendrier'];
 
-/* Les cinq fichiers d'auteur, ceux que produisent les ateliers de outils/, sont
+/* Les huit fichiers d'auteur, ceux que produisent les ateliers de outils/, sont
    en revanche **facultatifs**. Absents, le jeu tourne exactement comme avant :
    monde inventé à chaque partie, événements écrits en JavaScript, ni personnages
    nommés, ni objets uniques, ni missions scénarisées. Présents, ils prennent le
    relais sans que rien d'autre change. C'est ce qui permet de les écrire à son
-   rythme, un par un.  */
+   rythme, un par un.
+
+   Ils vivent dans data/, avec le reste. Il y eut un temps un second jeu dans
+   data/exemples/ et un bouton des Paramètres pour basculer de l'un à l'autre :
+   deux mondes à tenir, dont un seul était éprouvé, et le charron est resté mort
+   des semaines dans celui qu'on ne regardait pas. Il n'y a plus qu'un monde,
+   celui-ci, et ce qu'on y écrit est le jeu. */
 const FICHIERS_AUTEUR=['monde','evenements','personnages','objets','missions-ecrites',
                        'dialogues','proprietes','calendrier'];
 
@@ -8832,7 +8800,7 @@ function chargerDonnees(){
   /* Un fichier d'auteur absent n'est pas une panne : on rend null et le jeu
      garde son comportement d'origine. Un fichier présent mais illisible, en
      revanche, doit se voir — on le signale sans arrêter le chargement. */
-  const facultatif=nom=>fetch('data/'+dossierAuteur()+nom+'.json')
+  const facultatif=nom=>fetch('data/'+nom+'.json')
     .then(r=>r.ok?r.json():null)
     .catch(e=>{console.warn('data/'+nom+'.json illisible :',e.message);return null;});
   return Promise.all(FICHIERS_DONNEES.map(requis)

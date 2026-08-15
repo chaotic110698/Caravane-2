@@ -26,16 +26,16 @@ et de la reprendre ailleurs.
 ```
 index.html        le moteur : HTML, CSS, règles, calculs, rendu, dés, combat
 data/*.json       le contenu : biens, raretés, contrées, armes, chariots…
+                  et le monde lui-même, ses gens, ses objets, ses missions
 data/FORMAT.md    le format de chaque fichier de données, clé par clé
-data/exemples/    un petit monde tout prêt, pour éprouver ce qu'on écrit
 outils/           les outils d'auteur, qui ne partent pas avec le jeu
 ```
 
 ## Ce que vous pouvez écrire
 
-Six fichiers **facultatifs et indépendants** viennent se poser dans `data/`. Posez-en
-un, le jeu s'en sert ; n'en posez aucun, il tourne comme avant, avec son monde tiré
-au sort.
+Huit fichiers **facultatifs et indépendants** se posent dans `data/`. Posez-en un, le
+jeu s'en sert ; retirez-les tous, il tourne comme à ses débuts, avec un monde tiré au
+sort à chaque partie. Ils y sont tous aujourd'hui : c'est le jeu.
 
 | fichier | ce qu'il ajoute |
 |---|---|
@@ -46,6 +46,7 @@ au sort.
 | `evenements.json` | vos propres événements de route |
 | `dialogues.json` | des conversations écrites d'avance, avec choix et conséquences |
 | `proprietes.json` | des terrains à acheter, et ce qu'on peut y bâtir |
+| `calendrier.json` | vos mois, vos jours, vos heures — il remplace l'horloge livrée |
 
 Tous s'écrivent dans les [ateliers](outils/) — les propriétés se posent sur la carte,
 avec l'outil **Propriété**, et leurs tarifs se règlent dans l'encart de droite.
@@ -76,9 +77,11 @@ une arme en réserve voyage dans les chariots et prend la place d'autant de marc
 On ne trimballe donc plus six haches lourdes « au cas où » : on les revend, ou on les
 laisse à la maison d'une propriété, ce qui rend leur poids au convoi.
 
-**Pour tout essayer sans rien écrire :** *Paramètres › Le jeu d'exemple › Charger
-l'exemple*. Cinq lieux, quatre personnages, leurs conversations, deux missions et un
-objet unique se chargent depuis `data/exemples/`, sans toucher à vos fichiers.
+**Le monde est dans `data/`, et c'est le seul.** Il y eut un temps un second jeu dans
+`data/exemples/` et un bouton des Paramètres pour basculer de l'un à l'autre. Deux
+mondes à tenir, dont un seul était vraiment éprouvé : ce qui cassait dans l'autre
+pouvait le rester longtemps. Ce qu'on écrit dans les ateliers de `outils/` va
+maintenant droit dans `data/`, et c'est le jeu.
 
 Le moteur ne contient aucun contenu, et les fichiers de données aucune logique.
 Au démarrage, `chargerDonnees()` va chercher les onze fichiers `data/*.json` en

@@ -698,10 +698,10 @@ conte('', 'Un texte peut proposer **plusieurs variantes**, et le jeu en tire une
   'fichier, c\'est un tableau de textes.', '');
 
 conte('## Un exemple complet', '',
-  'Le dossier [`data/exemples/`](../data/exemples/) contient un petit monde tout prêt —',
-  'cinq lieux, quatre personnages, cinq conversations, deux missions et un objet unique.',
-  'Il se charge depuis **Paramètres › Le jeu d\'exemple**, et ne touche pas à vos',
-  'fichiers de `data/`.', '',
+  'Le monde livré dans [`data/`](../data/) porte de quoi voir chaque cas à l\'œuvre :',
+  'cinq conversations, deux missions et un objet unique. Ouvrez le jeu, il est là —',
+  'et [`data/dialogues.json`](../data/dialogues.json) se lit à côté pour comparer ce',
+  'qu\'on voit à l\'écran et ce qui l\'a écrit.', '',
   'On y trouve, dans l\'ordre où l\'on s\'en sert :', '',
   '- **donner une mission en conversation** — Orlanne, avec une branche de marchandage',
   '  qui ne s\'ouvre qu\'à quarante-cinq de réputation ;',

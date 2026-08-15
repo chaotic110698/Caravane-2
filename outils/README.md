@@ -498,7 +498,7 @@ punition. Laissez toujours un choix ordinaire à côté : il faut pouvoir passer
 ```
 
 Six énigmes jetables — trois à boutons, trois en toutes lettres — sont posées dans
-`data/exemples/evenements.json`.
+`data/evenements.json`.
 
 ### Une carte déchirée en trois
 
