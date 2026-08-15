@@ -1219,7 +1219,9 @@ let CLES_COMMUNES=[], CLES_MYTHIQUES=[];   /* dérivés */
 function estMythique(cle){return !!(ARMES[cle]&&ARMES[cle].mythique);}
 function mytheDeLaVille(){
   if(!S.ville.capitale)return null;
-  const cle=CONTREES[S.ville.contree].cle;
+  const ct=CONTREES&&CONTREES[S.ville.contree];
+  if(!ct)return null;
+  const cle=ct.cle;
   return CLES_MYTHIQUES.find(c=>ARMES[c].mythique===cle&&S.mythes[c]==='etal')||null;
 }
 let MAITRISE=null;          /* data/armes.json → maitriseDefaut */
@@ -1441,15 +1443,43 @@ function etatChariot(c){
   return ORGANES.reduce((s,q)=>s+etatPiece(c,q),0)/ORGANES.length;
 }
 function immobilise(c){return etatPiece(c,'essieu')<=0||!c.cheval||etatPiece(c,'cheval')<=0;}
+/* La culture à laquelle une pièce est réservée. Le catalogue des chariots parle
+   des trois peuples d'origine ; un monde écrit dans l'atelier nomme ses contrées
+   comme il l'entend et n'a pas forcément d'elfes. Sans cette recherche, le
+   charron entier tombait sur un ct.nom d'undefined dès qu'une culture manquait :
+   panneauBoutique() mourait avant d'écrire, l'échoppe gardait l'affichage
+   précédent, et l'onglet paraissait simplement mort au doigt.
+   On fait comme pour les armes mythiques : ce que le monde ne contient pas ne
+   s'achète nulle part, et on le dit plutôt que de faire semblant. */
+function cultureDe(n){
+  if(!n||!n.exclusif||!CONTREES)return null;
+  return CONTREES.find(x=>x.cle===n.exclusif)||null;
+}
+function contreeDeVille(v){return (CONTREES&&v&&CONTREES[v.contree])||null;}
+/* « la capitale des Terres naines », mais « la capitale des Contreforts » et
+   « la capitale du Val d'Ambre » : un monde écrit nomme ses contrées avec leur
+   article dedans, et « la capitale des le val d'ambre » ne se dit pas. */
+function deLaContree(nom){
+  const n=(nom||'').toLowerCase();
+  if(/^les /.test(n))return 'des '+n.slice(4);
+  if(/^le /.test(n))return 'du '+n.slice(3);
+  if(/^la /.test(n))return 'de la '+n.slice(3);
+  if(/^l'/.test(n))return 'de l\''+n.slice(2);
+  return 'des '+n;
+}
 function pieceDispo(n){
   if(!n.exclusif)return true;
-  return !!(S.ville.capitale&&CONTREES[S.ville.contree].cle===n.exclusif);
+  if(!cultureDe(n))return false;
+  const c=contreeDeVille(S.ville);
+  return !!(S.ville.capitale&&c&&c.cle===n.exclusif);
 }
 let VERBE_PIECE=null;       /* data/chariots.json → verbePiece */
 function ouTrouver(n){
-  const cite=S.villes.find(v=>v.capitale&&CONTREES[v.contree].cle===n.exclusif);
-  const ct=CONTREES.find(x=>x.cle===n.exclusif);
-  return (cite&&cite.visites)?cite.nom:'la capitale des '+ct.nom.toLowerCase();
+  const ct=cultureDe(n);
+  if(!ct)return '';
+  const cite=S.villes.find(v=>{const c=contreeDeVille(v);
+    return v.capitale&&c&&c.cle===n.exclusif;});
+  return (cite&&cite.visites)?cite.nom:'la capitale '+deLaContree(ct.nom);
 }
 function prixPiece(q,cle){
   const n=niveauxDe(q).find(x=>x.cle===cle)||niveauxDe(q)[0];
@@ -3046,8 +3076,10 @@ function contenuCharron(){
       const monte=S.chariots.filter(c=>piece(c,q).cle===n.cle).length;
       const base=(rang===0);
       const ici=pieceDispo(n);
+      const culture=cultureDe(n);
       let libelle;
-      if(!ici)libelle=VERBE_PIECE[q]+' '+ouTrouver(n);
+      if(!ici)libelle=culture?VERBE_PIECE[q]+' '+ouTrouver(n)
+        :'On n\'en fait nulle part en ce monde';
       else if(!S.chariots.length)libelle='Aucun chariot à équiper';
       else if(S.or<px)libelle='Il manque '+fmt(px-S.or)+' po';
       else libelle='Faire monter sur un chariot';
@@ -3059,7 +3091,7 @@ function contenuCharron(){
           <span class="tag${base?'':' sur'}">${base?(q==='cheval'?detailPiece(q,n):'qualité d\'origine')
               :detailPiece(q,n)}</span>
           ${n.exclusif?`<span class="tag ${ici?'sur':'perilleux'}">${ici?'on en fait ici'
-              :'seulement à '+ouTrouver(n)}</span>`:''}
+              :(culture?'seulement à '+ouTrouver(n):'nulle part en ce monde')}</span>`:''}
           ${monte?`<span class="tag">${monte} en service</span>`:''}
         </div>
         <button class="bouton petit creux" data-piece="${q}:${n.cle}"
