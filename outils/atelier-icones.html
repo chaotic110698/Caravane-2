@@ -1981,6 +1981,29 @@ const FORMES={
       return `<g transform="translate(${n(o.x)} ${n(o.y)})`+
         (r?` rotate(${r})`:'')+
         ` scale(${n(t)}) translate(-12 -12)">${d}</g>`;}},
+  /* ── un tracé libre ──
+     Les quarante-neuf dessins du jeu sont des chemins SVG, et quarante-deux
+     d'entre eux ont des courbes : aucun disque, aucun triangle ne les rendrait.
+     Plutôt que de les approximer — donc de les abîmer — on les accueille tels
+     quels, comme une forme parmi les autres. On ne peut pas déformer la courbe à
+     la souris, mais on peut la déplacer, la tourner, la mettre à l'échelle, la
+     dupliquer, la passer devant ou derrière, l'ôter. C'est ce qui manquait pour
+     retoucher un dessin livré au lieu de le reprendre à zéro.
+     x,y désignent le centre du tracé, comme pour tout le reste : la boîte se
+     mesure une fois puis se retient. */
+  chemin:{nom:'Tracé',neuf:()=>({f:'chemin',d:'M6 18L12 6L18 18Z',x:12,y:12,t:1,
+    plein:true,ep:2}),
+    svg:o=>{
+      if(!traceValide(o.d))return '';
+      const b=bboxChemin(o.d);
+      const t=o.t===undefined?1:Math.max(.05,o.t);
+      const cx=b.x+b.l/2, cy=b.y+b.h/2;
+      const peint=o.plein===false
+        ?`fill="none" stroke="currentColor" stroke-width="${n((o.ep||2)/t)}" `+
+         `stroke-linecap="round" stroke-linejoin="round"`
+        :`fill="currentColor"`;
+      return `<path d="${o.d}" ${peint} transform="translate(${n(o.x)} ${n(o.y)}) `+
+        `scale(${n(t)}) translate(${n(-cx)} ${n(-cy)})"/>`;}},
   arc:{nom:'Arc',neuf:()=>({f:'arc',x:12,y:14,r:7,ouvert:180,ep:2}),
     svg:o=>{
       const a=Math.max(10,Math.min(350,o.ouvert||180))*Math.PI/180;
@@ -1992,6 +2015,38 @@ const FORMES={
         `stroke-width="${n(o.ep)}" stroke-linecap="round"/>`}}
 };
 const n=v=>Math.round((Number(v)||0)*100)/100;
+/* La boîte d'un tracé, mesurée par le navigateur — lui seul sait où passe une
+   courbe. On la retient : boite() est appelée à chaque redessin, pour chaque
+   forme, et remesurer un chemin à chaque fois rendrait la planche poisseuse.
+   Le tracé ne change presque jamais ; sa clé est le tracé lui-même. */
+const BOITES={};
+let mesureur=null;
+/* Un tracé SVG commence par un « moveto ». Tout le reste n'en est pas un, et le
+   donner au navigateur lui fait écrire une erreur dans la console — celle de
+   l'auteur qui tape dans le champ, aussi. On refuse en amont plutôt que de
+   rattraper l'exception après coup. */
+const traceValide=d=>typeof d==='string'&&/^\s*[Mm][\s,.\-0-9]/.test(d);
+function bboxChemin(d){
+  if(!traceValide(d))return {x:0,y:0,l:24,h:24};
+  if(BOITES[d])return BOITES[d];
+  if(!mesureur){
+    const s=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    s.setAttribute('viewBox','0 0 24 24');
+    s.style.cssText='position:absolute;width:0;height:0;overflow:hidden;'+
+      'left:-9999px;pointer-events:none';
+    document.body.appendChild(s);
+    mesureur=document.createElementNS('http://www.w3.org/2000/svg','path');
+    s.appendChild(mesureur);
+  }
+  let b;
+  try{
+    mesureur.setAttribute('d',d);
+    const r=mesureur.getBBox();
+    b=(r.width||r.height)?{x:r.x,y:r.y,l:r.width,h:r.height}:{x:0,y:0,l:24,h:24};
+  }catch(e){ b={x:0,y:0,l:24,h:24}; }
+  BOITES[d]=b;
+  return b;
+}
 /* Les réglages que chaque forme propose, et rien d'autre : un trait n'a pas de
    rayon, un disque n'a pas de second point. */
 /* La rotation est proposée partout où elle change quelque chose : un disque est
@@ -2010,6 +2065,8 @@ const REGLAGES={
           ['ep','Épaisseur du trait',.4,4,.2]],
   arc:[['r','Rayon',1,12,.5],['ouvert','Ouverture (degrés)',20,340,10],
        ['rot','Rotation (degrés)',0,355,5],['ep','Épaisseur',.4,4,.2]],
+  chemin:[['t','Échelle',.05,3,.05],['rot','Rotation (degrés)',0,355,5],
+          ['ep','Épaisseur du trait',.4,4,.2]],
   icone:[['t','Échelle',.1,2,.05],['rot','Rotation (degrés)',0,355,5]]
 };
 
@@ -2120,6 +2177,137 @@ function iconeDe(cle){
   }
   const g=(typeof REF!=='undefined'&&REF.glyphes)||{};
   return g[cle]?{source:g[cle]}:null;
+}
+/* ═══════════════ d'un SVG vers des formes ═══════════════
+   Un dessin collé — ou repris du jeu — arrivait en bloc : on le voyait, on ne
+   pouvait rien y toucher. On le découpe donc élément par élément, et chacun
+   devient une couche ordinaire : on la déplace, on la tourne mais aussi on
+   l'ôte, on la duplique, on la passe derrière.
+
+   Ce qui se reconnaît devient une vraie forme — un <circle> redevient un disque
+   avec son rayon au curseur. Le reste devient un « tracé » : la courbe est
+   gardée telle quelle, intacte, parce qu'aucun disque ne la remplacerait sans
+   l'abîmer. On perd les fioritures de style — les bouts arrondis, les jointures —
+   et c'est tout ce qu'on perd. */
+function nombreAttr(e,nom,defaut){
+  const v=parseFloat(e.getAttribute(nom));
+  return isFinite(v)?v:defaut;
+}
+function peintureDe(e){
+  const f=(e.getAttribute('fill')||'').trim();
+  const s=(e.getAttribute('stroke')||'').trim();
+  if(f==='none'&&s)return {plein:false,ep:nombreAttr(e,'stroke-width',2)};
+  return {plein:true};
+}
+function formesDepuisSvg(svg){
+  if(!svg||!svg.trim())return [];
+  let doc;
+  try{
+    doc=new DOMParser().parseFromString(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'+svg+'</svg>',
+      'image/svg+xml');
+  }catch(e){return [];}
+  if(doc.querySelector('parsererror'))return [];
+  const out=[];
+  /* on descend dans les groupes : leur transformation n'est pas reprise, mais un
+     groupe sans transformation — le cas courant — se déplie sans rien perdre */
+  const visite=noeud=>{
+    [].forEach.call(noeud.children||[],e=>{
+      const t=(e.tagName||'').toLowerCase();
+      const p=peintureDe(e);
+      if(t==='g'){visite(e);return;}
+      if(t==='circle'){
+        out.push(Object.assign({f:'disque',x:nombreAttr(e,'cx',12),
+          y:nombreAttr(e,'cy',12),r:nombreAttr(e,'r',6)},p));
+        return;
+      }
+      if(t==='rect'){
+        out.push(Object.assign({f:'rectangle',x:nombreAttr(e,'x',0),
+          y:nombreAttr(e,'y',0),l:nombreAttr(e,'width',10),
+          h:nombreAttr(e,'height',10),arr:nombreAttr(e,'rx',0)},p));
+        return;
+      }
+      if(t==='line'){
+        out.push({f:'trait',x:nombreAttr(e,'x1',0),y:nombreAttr(e,'y1',0),
+          x2:nombreAttr(e,'x2',24),y2:nombreAttr(e,'y2',24),
+          ep:nombreAttr(e,'stroke-width',2)});
+        return;
+      }
+      /* une ellipse ronde est un disque ; sinon elle devient un tracé */
+      if(t==='ellipse'){
+        const rx=nombreAttr(e,'rx',6),ry=nombreAttr(e,'ry',6);
+        const cx=nombreAttr(e,'cx',12),cy=nombreAttr(e,'cy',12);
+        if(Math.abs(rx-ry)<.01){
+          out.push(Object.assign({f:'disque',x:cx,y:cy,r:rx},p));
+        }else{
+          const d=`M${n(cx-rx)} ${n(cy)}a${n(rx)} ${n(ry)} 0 1 0 ${n(rx*2)} 0`+
+                  `a${n(rx)} ${n(ry)} 0 1 0 ${n(-rx*2)} 0Z`;
+          out.push(Object.assign({f:'chemin',d:d,x:cx,y:cy,t:1},p));
+        }
+        return;
+      }
+      let d=null;
+      if(t==='path')d=e.getAttribute('d');
+      else if(t==='polygon'||t==='polyline'){
+        const pts=(e.getAttribute('points')||'').trim().split(/\s+/);
+        if(pts.length>1)d='M'+pts.join('L')+(t==='polygon'?'Z':'');
+      }
+      if(!d)return;
+      const b=bboxChemin(d);
+      out.push(Object.assign({f:'chemin',d:d,
+        x:Math.round((b.x+b.l/2)*100)/100,y:Math.round((b.y+b.h/2)*100)/100,t:1},p));
+    });
+  };
+  visite(doc.documentElement);
+  return out;
+}
+/* ═══════════════ détacher un renvoi ═══════════════
+   Reprendre une roue est commode tant qu'on veut la même roue. Le jour où l'on
+   veut celle-ci un peu différente, il faut pouvoir rompre le lien : la forme
+   « icône » se remplace alors par les formes de ce qu'elle reprenait, portées à
+   leur place, à leur taille, à leur angle. On ne perd rien et l'on gagne le
+   droit de tout bouger — mais on quitte le renvoi, donc corriger la roue ne
+   corrigera plus celle-ci. */
+function transformer(o,ox,oy,t,rot){
+  const a=rot*Math.PI/180, co=Math.cos(a), si=Math.sin(a);
+  const pose=(px,py)=>{
+    const dx=(px-12)*t, dy=(py-12)*t;
+    return {x:ox+dx*co-dy*si, y:oy+dx*si+dy*co};
+  };
+  const q=Object.assign({},o);
+  if(o.ep!==undefined)q.ep=o.ep*t;
+  if(o.f==='trait'){
+    const a1=pose(o.x,o.y), a2=pose(o.x2,o.y2);
+    q.x=n(a1.x);q.y=n(a1.y);q.x2=n(a2.x);q.y2=n(a2.y);
+    return q;
+  }
+  if(o.f==='rectangle'){
+    const c=pose(o.x+(o.l||0)/2,o.y+(o.h||0)/2);
+    q.l=n((o.l||0)*t);q.h=n((o.h||0)*t);
+    q.x=n(c.x-q.l/2);q.y=n(c.y-q.h/2);
+    if(o.arr)q.arr=n(o.arr*t);
+    q.rot=((Math.round(Number(o.rot)||0)+rot)%360+360)%360||undefined;
+    return q;
+  }
+  const c=pose(o.x,o.y);
+  q.x=n(c.x);q.y=n(c.y);
+  if(o.r!==undefined)q.r=n(o.r*t);
+  if(o.l!==undefined)q.l=n(o.l*t);
+  if(o.h!==undefined)q.h=n(o.h*t);
+  if(o.t!==undefined)q.t=n(o.t*t);          /* un tracé, ou un renvoi imbriqué */
+  q.rot=((Math.round(Number(o.rot)||0)+rot)%360+360)%360||undefined;
+  return q;
+}
+function detacher(o){
+  const cible=iconeDe(o.ref);
+  if(!cible)return null;
+  const t=o.t===undefined?1:Math.max(.05,o.t);
+  const rot=Math.round(Number(o.rot)||0);
+  /* un dessin du jeu n'a pas de formes : on le découpe d'abord */
+  const dedans=cible.mienne?(cible.mienne.formes||[])
+    :formesDepuisSvg(cible.source);
+  if(!dedans.length)return null;
+  return JSON.parse(JSON.stringify(dedans)).map(x=>transformer(x,o.x,o.y,t,rot));
 }
 function apercuBibli(piece,taille){
   RESOUT_DANS_BIBLI=true;
@@ -2277,8 +2465,22 @@ function rendreFeuilleIcone(){
     `</div></div>`;
 
   if(ic.source){
+    /* Combien de couches ce bloc donnerait, si on le découpait. C'est la seule
+       façon de sortir d'un SVG collé sans le perdre : « Revenir aux formes »
+       jetait le dessin et repartait de rien. */
+    const decoupe=formesDepuisSvg(ic.source);
     h+=`<div class="bloc"><h2>Du SVG collé<span class="pousse"></span>`+
-      `<button data-act="source-oter">Revenir aux formes</button></h2><div class="corps">`+
+      `<button data-act="source-oter">Repartir de rien</button></h2><div class="corps">`+
+      (decoupe.length
+        ?`<div class="rangee" style="margin-bottom:9px">`+
+         `<button class="outil fort" data-act="source-en-formes" style="flex:1">`+
+         `Le découper en ${decoupe.length} forme${decoupe.length>1?'s':''} retouchables`+
+         `</button></div>`+
+         `<p class="aide" style="margin:-4px 0 10px">Chaque élément devient une couche `+
+         `qu'on déplace, tourne, met à l'échelle ou supprime. Les courbes sont gardées `+
+         `telles quelles ; seules les fioritures de style — bouts arrondis, jointures — `+
+         `se perdent.</p>`
+        :`<p class="vide">Rien de découpable là-dedans.</p>`)+
       champ('Le contenu',texte('source','',8),
         'Ce qui va <b>entre</b> les balises svg — des &lt;path&gt;, &lt;circle&gt;, '+
         '&lt;rect&gt;… sur une grille de 24 sur 24. Utilisez <b>currentColor</b> pour '+
@@ -2302,7 +2504,11 @@ function rendreFeuilleIcone(){
               :'⧉ '+o.ref+' — introuvable')
             :'⧉ aucune icône choisie')
           :ech(d.nom)+(o.plein===false?' (au trait)':'');
-        return `<div class="couche${i===selForme?' choisi':''}">`+
+        /* Une vignette de la couche seule. Cinq lignes disant « Tracé, Tracé,
+           Disque » ne se distinguent pas les unes des autres ; le dessin, si. */
+        const seule=`<svg viewBox="0 0 24 24" width="18" height="18"
+          style="color:var(--or);flex:none">${corpsSvg({cle:ic.cle,formes:[o]})}</svg>`;
+        return `<div class="couche${i===selForme?' choisi':''}">`+seule+
           `<span class="nom" data-act="choisir" data-i="${i}">`+
           `${o.f==='icone'?ech(dit):dit}</span>`+
           (i>0?`<button data-act="monter" data-i="${i}" title="Passer devant">↑</button>`:'')+
@@ -2348,6 +2554,26 @@ function rendreFeuilleIcone(){
         if(!miennes.length&&!o.ref)
           h+=`<p class="vide">Vous n'avez pas encore d'autre icône à reprendre. `+
              `Les dessins du jeu, eux, sont toujours là.</p>`;
+        if(o.ref&&!perdu){
+          const dedans=detacher(o);
+          if(dedans&&dedans.length)
+            h+=champ('Rompre le lien',
+              `<button class="outil" data-act="detacher" style="width:100%">`+
+              `Détacher en ${dedans.length} forme${dedans.length>1?'s':''}</button>`,
+              'Le renvoi se remplace par les formes de ce qu\'il reprend, à leur '+
+              'place et à leur taille. On gagne le droit de tout bouger ici — et '+
+              'l\'on perd le lien : corriger la roue ne corrigera plus celle-ci.');
+        }
+      }
+      /* Un tracé : on montre sa courbe, et on la laisse corriger à la main pour
+         qui sait lire du SVG. Le champ est facultatif — on peut très bien vivre
+         une vie entière sans y toucher et se contenter de déplacer la forme. */
+      if(o.f==='chemin'){
+        h+=champ('Le tracé',texte('formes.'+selForme+'.d','M6 18L12 6L18 18Z',3),
+          'Les données d\'un &lt;path&gt; SVG, sur la grille de 24. Elles viennent '+
+          'du dessin d\'origine et se gardent telles quelles : on ne les corrige '+
+          'que si l\'on sait ce qu\'on fait. Tout le reste — la place, l\'échelle, '+
+          'la rotation — se règle ci-dessous, comme pour n\'importe quelle forme.',true);
       }
       if(o.f!=='trait'&&o.f!=='icone'){
         h+=champ('Rempli',`<div class="chips">${coche('formes.'+selForme+'.plein',
@@ -2458,6 +2684,12 @@ function boite(o){
   /* une icône reprise occupe sa boîte de 24, mise à l'échelle et centrée sur x,y */
   if(o.f==='icone'){const d=12*(o.t===undefined?1:Math.max(.05,o.t));
     return {x0:o.x-d,y0:o.y-d,x1:o.x+d,y1:o.y+d};}
+  /* un tracé : sa boîte mesurée, mise à l'échelle et centrée sur x,y */
+  if(o.f==='chemin'){
+    const b=bboxChemin(o.d), t=(o.t===undefined?1:Math.max(.05,o.t));
+    const e=o.plein===false?(o.ep||2)/2:0;
+    return {x0:o.x-(b.l/2)*t-e,y0:o.y-(b.h/2)*t-e,
+            x1:o.x+(b.l/2)*t+e,y1:o.y+(b.h/2)*t+e};}
   /* Un arc ne dessine qu'une portion de cercle : lui donner la boîte du cercle
      entier faisait un cadre deux fois trop haut, et l'avertissement « ça dépasse »
      se déclenchait pour du vide. On prend l'étendue réellement parcourue — les
@@ -2634,6 +2866,11 @@ function brancherPlanche(){
          l'échelle 1, donc un vingtième d'échelle par unité tirée */
       else if(o.f==='icone')
         o.t=Math.max(.1,Math.round(((d.t===undefined?1:d.t)+Math.max(dx,dy)/12)*20)/20);
+      /* un tracé de même, à sa propre demi-largeur près */
+      else if(o.f==='chemin'){
+        const b=bboxChemin(o.d), demi=Math.max(1,Math.max(b.l,b.h)/2);
+        o.t=Math.max(.05,Math.round(((d.t===undefined?1:d.t)+Math.max(dx,dy)/demi)*20)/20);
+      }
       else o.r=Math.max(.5,q(d.r+Math.max(dx,dy)));
     }
     rendrePlancheSeule();
@@ -2781,6 +3018,12 @@ document.addEventListener('click',ev=>{
     selForme=i+1;tout();}
   else if(a==='monter'){bouger(ic.formes,i,-1);selForme=i-1;tout();}
   else if(a==='descendre'){bouger(ic.formes,i,1);selForme=i+1;tout();}
+  else if(a==='detacher'){
+    const o=ic.formes[selForme];
+    const dedans=o&&o.f==='icone'?detacher(o):null;
+    if(!dedans||!dedans.length)return;
+    ic.formes.splice.apply(ic.formes,[selForme,1].concat(dedans));
+    tout();}
   else if(a==='centrer'){const o=ic.formes[selForme];
     if(o){if(o.f==='rectangle'){o.x=12-o.l/2;o.y=12-o.h/2;}
       else if(o.f==='trait'){const dx=o.x2-o.x,dy=o.y2-o.y;
@@ -2817,6 +3060,14 @@ document.addEventListener('click',ev=>{
     tout();}
   else if(a==='coller'){ecrire('source',corpsSvg(ic));tout();}
   else if(a==='source-oter'){ecrire('source',undefined);tout();}
+  /* Découper le SVG collé : le bloc devient une pile de formes, et l'on garde
+     la couleur de remplissage de chacune telle qu'elle était écrite. */
+  else if(a==='source-en-formes'){
+    const l=formesDepuisSvg(ic.source);
+    if(!l.length)return;
+    ic.formes=l;
+    ecrire('source',undefined);
+    selForme=0;tout();}
 });
 $$('#onglets button').forEach(b=>b.addEventListener('click',()=>{
   onglet=b.dataset.onglet;
@@ -2853,13 +3104,22 @@ $('#b-bibli').onclick=()=>{
 };
 /* Reprendre un dessin du jeu : c'est la façon la plus rapide d'en faire un
    qui lui ressemble — on part de sa source et on la modifie. */
+/* Reprendre un dessin du jeu le rendait tel quel, en bloc : on le voyait sans
+   pouvoir y toucher, ce qui n'est pas « partir de » — c'est recopier. On le
+   découpe en formes, et le dessin arrive retouchable. Si le découpage ne donne
+   rien — un SVG qu'on ne sait pas lire — on garde le bloc plutôt que rien. */
 $('#b-partir').onclick=()=>{
   const cles=Object.keys(REF.glyphes||{});
   if(!cles.length)return;
   const q=prompt('Quel dessin reprendre ?\n\n'+cles.join(', '),cles[0]);
   if(!q||!REF.glyphes[q])return;
-  ajouter({cle:q+'-a-moi',nom:q+' (repris)',nature:'trouvaille',
-    source:REF.glyphes[q]});
+  /* slug : les dessins du jeu portent des soulignés, que la clé n'accepte pas —
+     on arrivait avec une icône déjà « à corriger » */
+  const cle=slug(q+' a moi');
+  const formes=formesDepuisSvg(REF.glyphes[q]);
+  ajouter(formes.length
+    ?{cle:cle,nom:q+' (repris)',nature:'trouvaille',formes:formes}
+    :{cle:cle,nom:q+' (repris)',nature:'trouvaille',source:REF.glyphes[q]});
 };
 let attente=null;
 const ouvrirFichier=accueillirFichiers(d=>{

@@ -505,6 +505,22 @@ trace('', 'Chaque forme se dit **pleine** ou **creuse**, sauf le trait et l\'arc
   'que leur épaisseur. Une forme creuse ne montre que son contour : c\'est ce qui donne',
   'aux dessins du jeu leur air gravé.', '');
 
+trace('## Rien n\'est à prendre ou à laisser', '',
+  'Toute icône se retouche, d\'où qu\'elle vienne.', '',
+  `Le bouton **Partir d'une icône du jeu** reprend l'un des ${Object.keys(ICO.glyphesEvenement).length} dessins livrés`,
+  'et le **découpe en couches** : chaque cercle redevient un disque avec son rayon au',
+  'curseur, chaque rectangle un rectangle, et chaque courbe un **tracé** — une forme',
+  'comme les autres, qu\'on déplace, tourne, met à l\'échelle, duplique, passe derrière',
+  'ou supprime. La courbe elle-même est gardée intacte : aucun disque ne la remplacerait',
+  'sans l\'abîmer, alors on ne l\'approxime pas.', '',
+  'Un **SVG collé** se découpe de la même façon, par le bouton qui apparaît au-dessus du',
+  'champ. Ce qui se perd au passage : les fioritures de style — bouts de trait arrondis,',
+  'jointures — et rien d\'autre. Le dessin ne bouge pas d\'un pixel.', '',
+  'Un **renvoi** vers une autre icône se **détache** : la forme se remplace par les formes',
+  'de ce qu\'elle reprenait, à leur place, à leur taille et à leur angle. On gagne le droit',
+  'de tout bouger ici, et l\'on perd le lien — corriger la roue ne corrigera plus celle-ci.',
+  'C\'est le chemin inverse de la composition, et il est exact : rien ne se déplace.', '');
+
 trace('## La réserve de pièces', '',
   `Le bouton **Bibliothèque…** ouvre une réserve de ${pieces.pieces.length} dessins déjà faits,`,
   `rangés en ${Object.keys(pieces.familles || {}).length} familles. Ce ne sont pas des images :`,
