@@ -70,8 +70,8 @@ C'est le chemin inverse de la composition, et il est exact : rien ne se déplace
 
 ## La réserve de pièces
 
-Le bouton **Bibliothèque…** ouvre une réserve de 74 dessins déjà faits,
-rangés en 11 familles. Ce ne sont pas des images :
+Le bouton **Bibliothèque…** ouvre une réserve de 108 dessins déjà faits,
+rangés en 12 familles. Ce ne sont pas des images :
 ce sont des **listes de formes**, comme les vôtres, donc réglables au curseur une fois
 versées. Trois genres :
 
@@ -91,6 +91,35 @@ charrette, elle roulera sur la vôtre.
 > pictogramme est un assemblage de quatre ou cinq formes. On empile des morceaux qui
 > existent déjà, on les tourne, on les met à l'échelle — et l'on obtient un dessin
 > sans avoir tracé une courbe.
+
+### Les grades, ou à quoi sert vraiment la composition
+
+La famille **Grades et emblèmes** en contient 34, et elle est bâtie sur
+une seule règle : **un cadre toujours le même, une marque qui change**. Un grade se lit
+d'un coup d'œil quand il ne dit qu'une chose.
+
+| ce que c'est | ce qu'il y a dedans |
+|---|---|
+| **cadres** | écusson, rondache, losange, pennon, bannière — le fond |
+| **marques** | barrette, un à trois chevrons, molette, couronne, croix pattée, fleur de lys… |
+| **grades** | un cadre **plus** une marque : deux renvois, rien de plus |
+
+Chaque grade ne pèse donc que **deux formes**, et aucune n'est un dessin : ce sont des
+renvois. La conséquence est ce qui rend l'échelle utilisable :
+
+- **Retouchez l'écusson une fois** — sa pointe, son épaisseur, sa largeur — et **toute
+  l'échelle** change avec, du routier au vétéran, sans y revenir huit fois.
+- **Renommez** une clé et les renvois suivent : `ecusson` devient `blason-de-la-marche`,
+  les grades pointent toujours dessus.
+- Une marque peut venir de **n'importe quelle famille** : le grade du chevalier reprend
+  l'épée, celui du châtelain la tour. Verser le grade les amène avec lui.
+- Un grade qui ne vous va pas se **détache** : ses deux renvois se remplacent par les
+  formes qu'ils reprenaient, et vous les poussez une à une.
+
+> L'échelle livrée suit les huit métiers du jeu — routier, coutilier, lancier,
+> arbalétrier, sergent, vétéran, puis cartographe et comptable, qui sont civils et
+> portent la rose des vents et la bourse. Ce sont des **exemples** : renommez-les, la
+> hiérarchie est la vôtre.
 
 ## Une icône dans une autre
 

@@ -1,6 +1,6 @@
 {
  "format": "caravane.pieces.v1",
- "apropos": "Une réserve de pièces à assembler, écrites en listes de formes — donc modifiables au curseur comme n'importe quel dessin. Les « pièces » sont des morceaux faits pour être repris plusieurs fois (une roue, une aile) ; les « icônes » sont des dessins finis, à prendre tels quels ou à retoucher ; les « assemblages » montrent la composition à l'œuvre — ils renvoient à des pièces au lieu de les recopier, et les emportent avec eux quand on les verse dans son propre jeu d'icônes. Rien ici n'est du récit : ce sont des objets.",
+ "apropos": "Une réserve de pièces à assembler, écrites en listes de formes — donc modifiables au curseur comme n'importe quel dessin. Les « pièces » sont des morceaux faits pour être repris plusieurs fois (une roue, une aile) ; les « icônes » sont des dessins finis, à prendre tels quels ou à retoucher ; les « assemblages » montrent la composition à l'œuvre — ils renvoient à des pièces au lieu de les recopier, et les emportent avec eux quand on les verse dans son propre jeu d'icônes. Les grades s'en servent à fond : un cadre commun, une marque qui change — retouchez le cadre une fois et toute l'échelle suit, renommez une clé et les renvois suivent aussi. Rien ici n'est du récit : ce sont des objets.",
  "familles": {
   "roulant": {
    "nom": "Roues et roulant"
@@ -31,6 +31,9 @@
   },
   "mesure": {
    "nom": "Écrit, mesure, outil"
+  },
+  "grades": {
+   "nom": "Grades et emblèmes"
   },
   "composes": {
    "nom": "Assemblages"
@@ -3139,6 +3142,1138 @@
      "x2": 15.5,
      "y2": 20.5,
      "ep": 1.8
+    }
+   ]
+  },
+  {
+   "cle": "ecusson",
+   "nom": "Écusson",
+   "famille": "grades",
+   "genre": "piece",
+   "dit": "Le fond commun de l'échelle. Cinq traits, pas de remplissage : tout ce qu'on pose dessus reste lisible.",
+   "formes": [
+    {
+     "f": "trait",
+     "x": 4.2,
+     "y": 3.8,
+     "x2": 19.8,
+     "y2": 3.8,
+     "ep": 1.9
+    },
+    {
+     "f": "trait",
+     "x": 4.2,
+     "y": 3.8,
+     "x2": 4.2,
+     "y2": 12.5,
+     "ep": 1.9
+    },
+    {
+     "f": "trait",
+     "x": 19.8,
+     "y": 3.8,
+     "x2": 19.8,
+     "y2": 12.5,
+     "ep": 1.9
+    },
+    {
+     "f": "trait",
+     "x": 4.2,
+     "y": 12.5,
+     "x2": 12,
+     "y2": 20.8,
+     "ep": 1.9
+    },
+    {
+     "f": "trait",
+     "x": 19.8,
+     "y": 12.5,
+     "x2": 12,
+     "y2": 20.8,
+     "ep": 1.9
+    }
+   ]
+  },
+  {
+   "cle": "rondache",
+   "nom": "Rondache",
+   "famille": "grades",
+   "genre": "piece",
+   "dit": "",
+   "formes": [
+    {
+     "f": "disque",
+     "x": 12,
+     "y": 12,
+     "r": 9.4,
+     "plein": false,
+     "ep": 2.2
+    },
+    {
+     "f": "disque",
+     "x": 12,
+     "y": 12,
+     "r": 7.8,
+     "plein": false,
+     "ep": 0.9
+    }
+   ]
+  },
+  {
+   "cle": "losange",
+   "nom": "Losange",
+   "famille": "grades",
+   "genre": "piece",
+   "dit": "",
+   "formes": [
+    {
+     "f": "trait",
+     "x": 12,
+     "y": 2.6,
+     "x2": 20.4,
+     "y2": 12,
+     "ep": 1.9
+    },
+    {
+     "f": "trait",
+     "x": 20.4,
+     "y": 12,
+     "x2": 12,
+     "y2": 21.4,
+     "ep": 1.9
+    },
+    {
+     "f": "trait",
+     "x": 12,
+     "y": 21.4,
+     "x2": 3.6,
+     "y2": 12,
+     "ep": 1.9
+    },
+    {
+     "f": "trait",
+     "x": 3.6,
+     "y": 12,
+     "x2": 12,
+     "y2": 2.6,
+     "ep": 1.9
+    }
+   ]
+  },
+  {
+   "cle": "pennon",
+   "nom": "Pennon",
+   "famille": "grades",
+   "genre": "piece",
+   "dit": "La flamme du chevalier simple : une pointe, une hampe.",
+   "formes": [
+    {
+     "f": "trait",
+     "x": 3.5,
+     "y": 2.4,
+     "x2": 3.5,
+     "y2": 21.6,
+     "ep": 2.2
+    },
+    {
+     "f": "disque",
+     "x": 3.5,
+     "y": 2,
+     "r": 1.2,
+     "plein": true
+    },
+    {
+     "f": "triangle",
+     "x": 12,
+     "y": 10,
+     "l": 12.5,
+     "h": 15,
+     "plein": true,
+     "rot": 90
+    }
+   ]
+  },
+  {
+   "cle": "banniere",
+   "nom": "Bannière",
+   "famille": "grades",
+   "genre": "piece",
+   "dit": "Carrée, elle est celle du banneret : il mène sous la sienne.",
+   "formes": [
+    {
+     "f": "trait",
+     "x": 3.5,
+     "y": 2.4,
+     "x2": 3.5,
+     "y2": 21.6,
+     "ep": 2.2
+    },
+    {
+     "f": "disque",
+     "x": 3.5,
+     "y": 2,
+     "r": 1.2,
+     "plein": true
+    },
+    {
+     "f": "rectangle",
+     "x": 3.5,
+     "y": 4,
+     "l": 14,
+     "h": 13,
+     "arr": 0.5,
+     "plein": false,
+     "ep": 1.9
+    }
+   ]
+  },
+  {
+   "cle": "barrette",
+   "nom": "Barrette",
+   "famille": "grades",
+   "genre": "piece",
+   "dit": "",
+   "formes": [
+    {
+     "f": "rectangle",
+     "x": 3.5,
+     "y": 10.4,
+     "l": 17,
+     "h": 3.2,
+     "arr": 1.5,
+     "plein": true
+    }
+   ]
+  },
+  {
+   "cle": "chevron",
+   "nom": "Chevron",
+   "famille": "grades",
+   "genre": "piece",
+   "dit": "",
+   "formes": [
+    {
+     "f": "trait",
+     "x": 3.6,
+     "y": 16.5,
+     "x2": 12,
+     "y2": 7.2,
+     "ep": 3.2
+    },
+    {
+     "f": "trait",
+     "x": 20.4,
+     "y": 16.5,
+     "x2": 12,
+     "y2": 7.2,
+     "ep": 3.2
+    }
+   ]
+  },
+  {
+   "cle": "chevron-2",
+   "nom": "Double chevron",
+   "famille": "grades",
+   "genre": "piece",
+   "dit": "",
+   "formes": [
+    {
+     "f": "trait",
+     "x": 4,
+     "y": 12.4,
+     "x2": 12,
+     "y2": 4.2,
+     "ep": 3
+    },
+    {
+     "f": "trait",
+     "x": 20,
+     "y": 12.4,
+     "x2": 12,
+     "y2": 4.2,
+     "ep": 3
+    },
+    {
+     "f": "trait",
+     "x": 4,
+     "y": 20.6,
+     "x2": 12,
+     "y2": 12.4,
+     "ep": 3
+    },
+    {
+     "f": "trait",
+     "x": 20,
+     "y": 20.6,
+     "x2": 12,
+     "y2": 12.4,
+     "ep": 3
+    }
+   ]
+  },
+  {
+   "cle": "chevron-3",
+   "nom": "Triple chevron",
+   "famille": "grades",
+   "genre": "piece",
+   "dit": "",
+   "formes": [
+    {
+     "f": "trait",
+     "x": 5,
+     "y": 10,
+     "x2": 12,
+     "y2": 3.6,
+     "ep": 2.5
+    },
+    {
+     "f": "trait",
+     "x": 19,
+     "y": 10,
+     "x2": 12,
+     "y2": 3.6,
+     "ep": 2.5
+    },
+    {
+     "f": "trait",
+     "x": 5,
+     "y": 16.2,
+     "x2": 12,
+     "y2": 9.8,
+     "ep": 2.5
+    },
+    {
+     "f": "trait",
+     "x": 19,
+     "y": 16.2,
+     "x2": 12,
+     "y2": 9.8,
+     "ep": 2.5
+    },
+    {
+     "f": "trait",
+     "x": 5,
+     "y": 22.4,
+     "x2": 12,
+     "y2": 16,
+     "ep": 2.5
+    },
+    {
+     "f": "trait",
+     "x": 19,
+     "y": 22.4,
+     "x2": 12,
+     "y2": 16,
+     "ep": 2.5
+    }
+   ]
+  },
+  {
+   "cle": "molette",
+   "nom": "Molette",
+   "famille": "grades",
+   "genre": "piece",
+   "dit": "L'étoile à six pointes de l'éperon — la marque d'un rang, pas d'un astre.",
+   "formes": [
+    {
+     "f": "etoile",
+     "x": 12,
+     "y": 12,
+     "r": 9.6,
+     "branches": 6,
+     "creux": 0.42,
+     "plein": true
+    }
+   ]
+  },
+  {
+   "cle": "couronne",
+   "nom": "Couronne",
+   "famille": "grades",
+   "genre": "piece",
+   "dit": "",
+   "formes": [
+    {
+     "f": "rectangle",
+     "x": 4.6,
+     "y": 15.4,
+     "l": 14.8,
+     "h": 4.2,
+     "arr": 0.9,
+     "plein": true
+    },
+    {
+     "f": "triangle",
+     "x": 7.2,
+     "y": 11.6,
+     "l": 5,
+     "h": 8,
+     "plein": true
+    },
+    {
+     "f": "triangle",
+     "x": 12,
+     "y": 10.4,
+     "l": 5.6,
+     "h": 9.2,
+     "plein": true
+    },
+    {
+     "f": "triangle",
+     "x": 16.8,
+     "y": 11.6,
+     "l": 5,
+     "h": 8,
+     "plein": true
+    },
+    {
+     "f": "disque",
+     "x": 7.2,
+     "y": 7.2,
+     "r": 1.4,
+     "plein": true
+    },
+    {
+     "f": "disque",
+     "x": 12,
+     "y": 5.5,
+     "r": 1.5,
+     "plein": true
+    },
+    {
+     "f": "disque",
+     "x": 16.8,
+     "y": 7.2,
+     "r": 1.4,
+     "plein": true
+    }
+   ]
+  },
+  {
+   "cle": "laurier",
+   "nom": "Laurier",
+   "famille": "grades",
+   "genre": "piece",
+   "dit": "",
+   "formes": [
+    {
+     "f": "arc",
+     "x": 12,
+     "y": 12,
+     "r": 8,
+     "ouvert": 150,
+     "ep": 1.3,
+     "rot": 270
+    },
+    {
+     "f": "arc",
+     "x": 12,
+     "y": 12,
+     "r": 8,
+     "ouvert": 150,
+     "ep": 1.3,
+     "rot": 90
+    },
+    {
+     "f": "triangle",
+     "x": 7.76,
+     "y": 18.78,
+     "l": 3.6,
+     "h": 5.4,
+     "plein": true,
+     "rot": 302
+    },
+    {
+     "f": "triangle",
+     "x": 4.48,
+     "y": 14.74,
+     "l": 3.6,
+     "h": 5.4,
+     "plein": true,
+     "rot": 340
+    },
+    {
+     "f": "triangle",
+     "x": 4.39,
+     "y": 9.53,
+     "l": 3.6,
+     "h": 5.4,
+     "plein": true,
+     "rot": 18
+    },
+    {
+     "f": "triangle",
+     "x": 7.53,
+     "y": 5.37,
+     "l": 3.6,
+     "h": 5.4,
+     "plein": true,
+     "rot": 56
+    },
+    {
+     "f": "triangle",
+     "x": 16.24,
+     "y": 18.78,
+     "l": 3.6,
+     "h": 5.4,
+     "plein": true,
+     "rot": 58
+    },
+    {
+     "f": "triangle",
+     "x": 19.52,
+     "y": 14.74,
+     "l": 3.6,
+     "h": 5.4,
+     "plein": true,
+     "rot": 20
+    },
+    {
+     "f": "triangle",
+     "x": 19.61,
+     "y": 9.53,
+     "l": 3.6,
+     "h": 5.4,
+     "plein": true,
+     "rot": 342
+    },
+    {
+     "f": "triangle",
+     "x": 16.47,
+     "y": 5.37,
+     "l": 3.6,
+     "h": 5.4,
+     "plein": true,
+     "rot": 304
+    }
+   ]
+  },
+  {
+   "cle": "fleur-lys",
+   "nom": "Fleur de lys",
+   "famille": "grades",
+   "genre": "piece",
+   "dit": "",
+   "formes": [
+    {
+     "f": "triangle",
+     "x": 12,
+     "y": 6.6,
+     "l": 5.4,
+     "h": 9,
+     "plein": true
+    },
+    {
+     "f": "rectangle",
+     "x": 10.9,
+     "y": 9,
+     "l": 2.2,
+     "h": 7,
+     "arr": 0.3,
+     "plein": true
+    },
+    {
+     "f": "triangle",
+     "x": 7,
+     "y": 10.8,
+     "l": 4.4,
+     "h": 7.6,
+     "plein": true,
+     "rot": 315
+    },
+    {
+     "f": "triangle",
+     "x": 17,
+     "y": 10.8,
+     "l": 4.4,
+     "h": 7.6,
+     "plein": true,
+     "rot": 45
+    },
+    {
+     "f": "rectangle",
+     "x": 6.6,
+     "y": 14.6,
+     "l": 10.8,
+     "h": 2.5,
+     "arr": 0.9,
+     "plein": true
+    },
+    {
+     "f": "triangle",
+     "x": 12,
+     "y": 19.6,
+     "l": 7,
+     "h": 4.6,
+     "plein": true,
+     "rot": 180
+    }
+   ]
+  },
+  {
+   "cle": "rose-vents",
+   "nom": "Rose des vents",
+   "famille": "grades",
+   "genre": "piece",
+   "dit": "",
+   "formes": [
+    {
+     "f": "etoile",
+     "x": 12,
+     "y": 12,
+     "r": 9.8,
+     "branches": 4,
+     "creux": 0.28,
+     "plein": true
+    },
+    {
+     "f": "etoile",
+     "x": 12,
+     "y": 12,
+     "r": 6.4,
+     "branches": 4,
+     "creux": 0.28,
+     "plein": true,
+     "rot": 45
+    }
+   ]
+  },
+  {
+   "cle": "epees-croisees",
+   "nom": "Épées croisées",
+   "famille": "grades",
+   "genre": "piece",
+   "dit": "",
+   "formes": [
+    {
+     "f": "trait",
+     "x": 6,
+     "y": 20.5,
+     "x2": 18.5,
+     "y2": 4.5,
+     "ep": 2.1
+    },
+    {
+     "f": "trait",
+     "x": 18,
+     "y": 20.5,
+     "x2": 5.5,
+     "y2": 4.5,
+     "ep": 2.1
+    },
+    {
+     "f": "trait",
+     "x": 6.7,
+     "y": 15.4,
+     "x2": 10.8,
+     "y2": 18.6,
+     "ep": 1.7
+    },
+    {
+     "f": "trait",
+     "x": 17.3,
+     "y": 15.4,
+     "x2": 13.2,
+     "y2": 18.6,
+     "ep": 1.7
+    },
+    {
+     "f": "disque",
+     "x": 6,
+     "y": 21,
+     "r": 1.5,
+     "plein": true
+    },
+    {
+     "f": "disque",
+     "x": 18,
+     "y": 21,
+     "r": 1.5,
+     "plein": true
+    }
+   ]
+  },
+  {
+   "cle": "baton-commandement",
+   "nom": "Bâton de commandement",
+   "famille": "grades",
+   "genre": "piece",
+   "dit": "",
+   "formes": [
+    {
+     "f": "trait",
+     "x": 6.5,
+     "y": 18.5,
+     "x2": 17.5,
+     "y2": 5.5,
+     "ep": 3.2
+    },
+    {
+     "f": "disque",
+     "x": 18,
+     "y": 5,
+     "r": 2.8,
+     "plein": true
+    },
+    {
+     "f": "disque",
+     "x": 6,
+     "y": 19,
+     "r": 2,
+     "plein": true
+    }
+   ]
+  },
+  {
+   "cle": "croix-pattee",
+   "nom": "Croix pattée",
+   "famille": "grades",
+   "genre": "piece",
+   "dit": "",
+   "formes": [
+    {
+     "f": "rectangle",
+     "x": 9.5,
+     "y": 2,
+     "l": 5,
+     "h": 20,
+     "arr": 0.3,
+     "plein": true
+    },
+    {
+     "f": "rectangle",
+     "x": 2,
+     "y": 9.5,
+     "l": 20,
+     "h": 5,
+     "arr": 0.3,
+     "plein": true
+    },
+    {
+     "f": "triangle",
+     "x": 12,
+     "y": 4.2,
+     "l": 11,
+     "h": 5,
+     "plein": true,
+     "rot": 180
+    },
+    {
+     "f": "triangle",
+     "x": 12,
+     "y": 19.8,
+     "l": 11,
+     "h": 5,
+     "plein": true
+    },
+    {
+     "f": "triangle",
+     "x": 4.2,
+     "y": 12,
+     "l": 11,
+     "h": 5,
+     "plein": true,
+     "rot": 90
+    },
+    {
+     "f": "triangle",
+     "x": 19.8,
+     "y": 12,
+     "l": 11,
+     "h": 5,
+     "plein": true,
+     "rot": 270
+    }
+   ]
+  },
+  {
+   "cle": "grade-routier",
+   "nom": "Grade — Routier",
+   "famille": "grades",
+   "genre": "assemblage",
+   "dit": "Le premier barreau. Un cadre, une marque : les deux sont des renvois, changez l'un et toute l'échelle change avec.",
+   "formes": [
+    {
+     "f": "icone",
+     "ref": "ecusson",
+     "x": 12,
+     "y": 12,
+     "t": 1
+    },
+    {
+     "f": "icone",
+     "ref": "barrette",
+     "x": 12,
+     "y": 10.6,
+     "t": 0.62
+    }
+   ]
+  },
+  {
+   "cle": "grade-coutilier",
+   "nom": "Grade — Coutilier",
+   "famille": "grades",
+   "genre": "assemblage",
+   "dit": "",
+   "formes": [
+    {
+     "f": "icone",
+     "ref": "ecusson",
+     "x": 12,
+     "y": 12,
+     "t": 1
+    },
+    {
+     "f": "icone",
+     "ref": "chevron",
+     "x": 12,
+     "y": 10.6,
+     "t": 0.54
+    }
+   ]
+  },
+  {
+   "cle": "grade-lancier",
+   "nom": "Grade — Lancier",
+   "famille": "grades",
+   "genre": "assemblage",
+   "dit": "",
+   "formes": [
+    {
+     "f": "icone",
+     "ref": "ecusson",
+     "x": 12,
+     "y": 12,
+     "t": 1
+    },
+    {
+     "f": "icone",
+     "ref": "chevron-2",
+     "x": 12,
+     "y": 10.4,
+     "t": 0.5
+    }
+   ]
+  },
+  {
+   "cle": "grade-arbaletrier",
+   "nom": "Grade — Arbalétrier",
+   "famille": "grades",
+   "genre": "assemblage",
+   "dit": "",
+   "formes": [
+    {
+     "f": "icone",
+     "ref": "ecusson",
+     "x": 12,
+     "y": 12,
+     "t": 1
+    },
+    {
+     "f": "icone",
+     "ref": "chevron-3",
+     "x": 12,
+     "y": 10.2,
+     "t": 0.46
+    }
+   ]
+  },
+  {
+   "cle": "grade-sergent",
+   "nom": "Grade — Sergent",
+   "famille": "grades",
+   "genre": "assemblage",
+   "dit": "",
+   "formes": [
+    {
+     "f": "icone",
+     "ref": "ecusson",
+     "x": 12,
+     "y": 12,
+     "t": 1
+    },
+    {
+     "f": "icone",
+     "ref": "molette",
+     "x": 12,
+     "y": 10.6,
+     "t": 0.55
+    }
+   ]
+  },
+  {
+   "cle": "grade-veteran",
+   "nom": "Grade — Vétéran",
+   "famille": "grades",
+   "genre": "assemblage",
+   "dit": "",
+   "formes": [
+    {
+     "f": "icone",
+     "ref": "ecusson",
+     "x": 12,
+     "y": 12,
+     "t": 1
+    },
+    {
+     "f": "icone",
+     "ref": "couronne",
+     "x": 12,
+     "y": 10.8,
+     "t": 0.58
+    }
+   ]
+  },
+  {
+   "cle": "grade-cartographe",
+   "nom": "Grade — Cartographe",
+   "famille": "grades",
+   "genre": "assemblage",
+   "dit": "Un civil sous les couleurs, mais la même échelle : même cadre, autre marque.",
+   "formes": [
+    {
+     "f": "icone",
+     "ref": "ecusson",
+     "x": 12,
+     "y": 12,
+     "t": 1
+    },
+    {
+     "f": "icone",
+     "ref": "rose-vents",
+     "x": 12,
+     "y": 10.6,
+     "t": 0.54
+    }
+   ]
+  },
+  {
+   "cle": "grade-comptable",
+   "nom": "Grade — Comptable",
+   "famille": "grades",
+   "genre": "assemblage",
+   "dit": "La marque vient d'une autre famille — la bibliothèque l'emporte quand même quand on verse le grade.",
+   "formes": [
+    {
+     "f": "icone",
+     "ref": "ecusson",
+     "x": 12,
+     "y": 12,
+     "t": 1
+    },
+    {
+     "f": "icone",
+     "ref": "bourse",
+     "x": 12,
+     "y": 10.6,
+     "t": 0.56
+    }
+   ]
+  },
+  {
+   "cle": "chevalier",
+   "nom": "Chevalier",
+   "famille": "grades",
+   "genre": "assemblage",
+   "dit": "L'épée vient de la famille des armes : une marque peut être n'importe quelle pièce de la réserve, pas seulement celles d'ici.",
+   "formes": [
+    {
+     "f": "icone",
+     "ref": "ecusson",
+     "x": 12,
+     "y": 12,
+     "t": 1
+    },
+    {
+     "f": "icone",
+     "ref": "epee",
+     "x": 12,
+     "y": 11.4,
+     "t": 0.58
+    }
+   ]
+  },
+  {
+   "cle": "banneret",
+   "nom": "Banneret",
+   "famille": "grades",
+   "genre": "assemblage",
+   "dit": "",
+   "formes": [
+    {
+     "f": "icone",
+     "ref": "banniere",
+     "x": 12,
+     "y": 12,
+     "t": 1
+    },
+    {
+     "f": "icone",
+     "ref": "molette",
+     "x": 10.5,
+     "y": 10.5,
+     "t": 0.5
+    }
+   ]
+  },
+  {
+   "cle": "capitaine",
+   "nom": "Capitaine",
+   "famille": "grades",
+   "genre": "assemblage",
+   "dit": "",
+   "formes": [
+    {
+     "f": "icone",
+     "ref": "ecusson",
+     "x": 12,
+     "y": 12,
+     "t": 1
+    },
+    {
+     "f": "icone",
+     "ref": "baton-commandement",
+     "x": 12,
+     "y": 10.8,
+     "t": 0.56
+    }
+   ]
+  },
+  {
+   "cle": "maitre-guerre",
+   "nom": "Maître de guerre",
+   "famille": "grades",
+   "genre": "assemblage",
+   "dit": "",
+   "formes": [
+    {
+     "f": "icone",
+     "ref": "losange",
+     "x": 12,
+     "y": 12,
+     "t": 1
+    },
+    {
+     "f": "icone",
+     "ref": "epees-croisees",
+     "x": 12,
+     "y": 12,
+     "t": 0.58
+    }
+   ]
+  },
+  {
+   "cle": "garde-royale",
+   "nom": "Garde royale",
+   "famille": "grades",
+   "genre": "assemblage",
+   "dit": "",
+   "formes": [
+    {
+     "f": "icone",
+     "ref": "ecusson",
+     "x": 12,
+     "y": 12,
+     "t": 1
+    },
+    {
+     "f": "icone",
+     "ref": "fleur-lys",
+     "x": 12,
+     "y": 10.8,
+     "t": 0.52
+    }
+   ]
+  },
+  {
+   "cle": "heraut",
+   "nom": "Héraut",
+   "famille": "grades",
+   "genre": "assemblage",
+   "dit": "",
+   "formes": [
+    {
+     "f": "icone",
+     "ref": "pennon",
+     "x": 12,
+     "y": 12,
+     "t": 1
+    },
+    {
+     "f": "icone",
+     "ref": "molette",
+     "x": 8.8,
+     "y": 10,
+     "t": 0.46
+    }
+   ]
+  },
+  {
+   "cle": "chatelain",
+   "nom": "Châtelain",
+   "famille": "grades",
+   "genre": "assemblage",
+   "dit": "",
+   "formes": [
+    {
+     "f": "icone",
+     "ref": "ecusson",
+     "x": 12,
+     "y": 12,
+     "t": 1
+    },
+    {
+     "f": "icone",
+     "ref": "tour-2",
+     "x": 12,
+     "y": 10.8,
+     "t": 0.54
+    }
+   ]
+  },
+  {
+   "cle": "commandeur",
+   "nom": "Commandeur",
+   "famille": "grades",
+   "genre": "assemblage",
+   "dit": "",
+   "formes": [
+    {
+     "f": "icone",
+     "ref": "rondache",
+     "x": 12,
+     "y": 12,
+     "t": 1
+    },
+    {
+     "f": "icone",
+     "ref": "croix-pattee",
+     "x": 12,
+     "y": 12,
+     "t": 0.56
+    }
+   ]
+  },
+  {
+   "cle": "merite",
+   "nom": "Mérite",
+   "famille": "grades",
+   "genre": "assemblage",
+   "dit": "Sans cadre : une distinction n'est pas un rang.",
+   "formes": [
+    {
+     "f": "icone",
+     "ref": "laurier",
+     "x": 12,
+     "y": 12,
+     "t": 1
+    },
+    {
+     "f": "icone",
+     "ref": "molette",
+     "x": 12,
+     "y": 12,
+     "t": 0.6
     }
    ]
   },
