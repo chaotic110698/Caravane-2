@@ -838,7 +838,7 @@ function rolesTous(){
   ((miens&&miens.roles)||[]).forEach(r=>{
     if(!r||!r.cle)return;
     propres[r.cle]={nom:r.nom||r.cle,feminin:r.feminin||'',explique:r.explique||'',
-                    mien:true};
+                    ico:r.ico||null,mien:true};
   });
   const livres=(typeof REF!=='undefined'&&REF.vocabulairePersonnages
     &&REF.vocabulairePersonnages.roles)||{};
@@ -863,6 +863,11 @@ function rolesEmployes(personnages){
     if(!r)return;
     pris[p.role]={nom:r.nom};
     if(r.feminin)pris[p.role].feminin=r.feminin;
+    /* Le dessin du rôle part avec lui : c'est ce qui permet au jeu de le prêter
+       à un personnage qui n'en a pas. Sans cela, donner une icône à « batelier »
+       n'aurait servi qu'à décorer l'atelier. */
+    if(r.ico&&(r.ico.glyphe||r.ico.nature||r.ico.teinte))
+      pris[p.role].ico=Object.assign({},r.ico);
   });
   return pris;
 }

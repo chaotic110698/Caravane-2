@@ -2563,6 +2563,12 @@ const CALENDRIER_NU={format:'caravane.calendrier.v1',heuresParJour:25,joursParMo
   anneeUn:'an I',
   mois:[{cle:'m1',nom:'Mois I'},{cle:'m2',nom:'Mois II'},
         {cle:'m3',nom:'Mois III'},{cle:'m4',nom:'Mois IV'}],
+  /* La semaine se compte à part des mois : rien n'oblige un mois à en contenir
+     un nombre rond, et la semaine court donc sans se réinitialiser — comme la
+     nôtre, qui ignore le 1er du mois. Une semaine vide, ou d'un seul jour, est
+     une façon licite de dire qu'il n'y en a pas. */
+  jours:[{cle:'j1',nom:'Jour I'},{cle:'j2',nom:'Jour II'},{cle:'j3',nom:'Jour III'},
+         {cle:'j4',nom:'Jour IV'},{cle:'j5',nom:'Jour V'}],
   moments:[{cle:'aube',de:4,a:9},{cle:'midi',de:10,a:15},
            {cle:'couchant',de:16,a:20},{cle:'nuit',de:21,a:3}],
   debut:{annee:1,mois:0,jour:1,heure:8}};
@@ -2574,6 +2580,13 @@ function normaliserCalendrier(c){
   if(!Array.isArray(d.mois)||!d.mois.length)d.mois=CALENDRIER_NU.mois;
   d.mois=d.mois.map((m,i)=>({cle:m.cle||('m'+(i+1)),nom:m.nom||('Mois '+(i+1)),
     saison:m.saison||''}));
+  /* Les jours de la semaine. Leur nombre est leur nombre : on ne le déclare pas
+     deux fois, il n'y aurait qu'à se contredire. Une liste vide veut dire qu'il
+     n'y a pas de semaine, et rien n'ira chercher de nom de jour. */
+  d.jours=Array.isArray(d.jours)
+    ?d.jours.filter(j=>j).map((j,i)=>({cle:j.cle||('j'+(i+1)),nom:j.nom||('Jour '+(i+1))}))
+    :CALENDRIER_NU.jours.slice();
+  d.joursParSemaine=d.jours.length;
   if(!Array.isArray(d.moments)||!d.moments.length)d.moments=CALENDRIER_NU.moments;
   d.debut=Object.assign({},CALENDRIER_NU.debut,d.debut||{});
   d.joursParAn=d.joursParMois*d.mois.length;
@@ -2589,16 +2602,27 @@ function dateDe(jour){
   const annee=Math.floor(abs/c.joursParAn)+1;
   const reste=abs-(annee-1)*c.joursParAn;
   const mois=Math.floor(reste/c.joursParMois);
+  /* La semaine tourne sur l'absolu, sans égard aux mois : le rang du jour se
+     prend sur abs, pas sur le jour du mois. Sans semaine déclarée, semaine et
+     nomJour restent nuls et personne n'en parle. */
+  const n=c.jours.length;
+  const rang=n?((abs%n)+n)%n:-1;
   return {annee:annee,mois:mois,jour:reste-mois*c.joursParMois+1,
-          nomMois:c.mois[mois].nom,saison:c.mois[mois].saison};
+          nomMois:c.mois[mois].nom,saison:c.mois[mois].saison,
+          rangJour:rang,nomJour:n?c.jours[rang].nom:'',
+          semaine:n?Math.floor(abs/n)+1:0};
 }
+/* Le quantième seul. C'est la forme qui s'insère dans une phrase — « reçu le
+   17ᵉ jour du Mois I », « ouverte le… » — et qui doit rester courte. */
 function nomDate(jour){
   const d=dateDe(jour||S.jour);
   return `${d.jour}${d.jour===1?'ᵉʳ':'ᵉ'} jour du ${d.nomMois}`;
 }
+/* La date entière, là où une date est présentée comme telle : c'est là que le nom
+   du jour de la semaine a sa place, et nulle part au milieu d'une phrase. */
 function nomDateLongue(jour){
   const d=dateDe(jour||S.jour);
-  return `${nomDate(jour)}, an ${chiffreRomain(d.annee)}`;
+  return `${d.nomJour?d.nomJour+', ':''}${nomDate(jour)}, an ${chiffreRomain(d.annee)}`;
 }
 function chiffreRomain(n){
   const t=[[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],
@@ -6923,10 +6947,30 @@ function chronique(txt,ton){
   if(S.route)noter(txt,ton);
 }
 const etatGens=cle=>(S.gens[cle]=S.gens[cle]||{r:0,m:0,c:[]});
+/* Qui se tient là. Un personnage peut porter un « si » : tant qu'il n'est pas
+   rempli, il n'est pas là — pas grisé, pas annoncé, simplement absent. C'est le
+   même vocabulaire que les conditions d'un dialogue ou d'une offre de mission,
+   donc rien de neuf à apprendre pour l'écrire.
+
+   Une fois rencontré, il reste à l'index du carnet quoi qu'il arrive : ce qu'on
+   a appris de quelqu'un ne se referme pas parce qu'il a quitté sa place. */
 function personnagesEn(cleLieu){
   if(!PERSONNAGES||!cleLieu)return [];
-  return Object.keys(PERSONNAGES).filter(k=>PERSONNAGES[k].lieu===cleLieu)
+  return Object.keys(PERSONNAGES)
+    .filter(k=>PERSONNAGES[k].lieu===cleLieu&&laDesormais(k))
     .map(k=>PERSONNAGES[k]);
+}
+function laDesormais(cle){
+  const p=PERSONNAGES&&PERSONNAGES[cle];
+  if(!p)return false;
+  if(!p.si||!p.si.length)return true;
+  /* QUI_PARLE sert aux interrogations qui portent sur la relation — « combien de
+     fois l'a-t-on vu ». On le pose le temps du jugement, comme pour un dialogue. */
+  const avant=QUI_PARLE;
+  QUI_PARLE=cle;
+  const ouvert=conditionsEv(p.si);
+  QUI_PARLE=avant;
+  return ouvert;
 }
 const personnagesIci=()=>personnagesEn(S.ville&&S.ville.cleLieu);
 function appellationDe(p){
@@ -7354,13 +7398,25 @@ function finirDialogue(){
 }
 
 /* ── l'onglet des gens ── */
+/* Le pictogramme d'un personnage, avec le recours du rôle. Un rôle porte son
+   propre dessin : dessiner « batelier » une fois pourvoit tous les bateliers, et
+   celui qui a un dessin à lui garde le sien. Champ par champ, pour qu'un
+   personnage puisse prendre la teinte de son rôle et son propre glyphe. */
+function icoDe(p){
+  const s=(p&&p.ico)||{};
+  const r=((ROLES&&ROLES[p&&p.role])||{}).ico||{};
+  return {glyphe:s.glyphe||r.glyphe||'',
+          nature:s.nature||r.nature||'',
+          teinte:s.teinte||r.teinte||''};
+}
 function glypheDe(p){
-  const g=(p.ico&&p.ico.glyphe)||'ermite';
+  const g=icoDe(p).glyphe||'ermite';
   return GLYPHES_EV[g]||GLYPHES_EV.ermite;
 }
 function teinteDeGens(p){
-  if(p.ico&&p.ico.teinte)return p.ico.teinte;
-  return TEINTES_EV[(p.ico&&p.ico.nature)||'rencontre']||'#6E9B6A';
+  const i=icoDe(p);
+  if(i.teinte)return i.teinte;
+  return TEINTES_EV[i.nature||'rencontre']||'#6E9B6A';
 }
 function rendreGens(){
   const pan=$('#panneau-gens');
@@ -7873,6 +7929,10 @@ function missionsProposeesIci(){
     const q=m.commanditaire&&PERSONNAGES?PERSONNAGES[m.commanditaire]:null;
     const ou=m.lieu||(q&&q.lieu);
     if(!ou||ou!==ici)return false;
+    /* Personne ne demande un service en son absence : si le commanditaire porte
+       des conditions de présence et qu'elles ne sont pas remplies, il n'est pas
+       là, et sa mission ne s'offre pas. */
+    if(m.commanditaire&&!laDesormais(m.commanditaire))return false;
     return conditionsEv((m.offre||{}).si);
   });
 }

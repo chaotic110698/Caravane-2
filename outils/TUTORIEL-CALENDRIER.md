@@ -29,6 +29,7 @@ qu'une condition de plus.
 | Heures dans une journée | **25** |
 | Jours dans un mois | **50** |
 | Mois dans une année | **4** |
+| Jours dans une semaine | **5** |
 | Jours dans une année | **200** — donc 200 étapes de voyage |
 
 Les trois premiers se règlent dans l'atelier ; le quatrième s'en déduit. Changer la
@@ -49,6 +50,27 @@ les cols qui s'ouvrent et se ferment ; posez-la quand même, elle sera lue le jo
 
 Chaque mois garde une **clé** invisible et stable : renommer un mois ne casse rien de
 ce qui s'y accroche. Les flèches le déplacent, la croix l'ôte — il en faut au moins un.
+
+## La semaine
+
+| Rang | Nom |
+|---|---|
+| 1 | **Jour I** |
+| 2 | **Jour II** |
+| 3 | **Jour III** |
+| 4 | **Jour IV** |
+| 5 | **Jour V** |
+
+Sa longueur **est la longueur de cette liste** : elle n'est pas déclarée à côté,
+pour qu'aucun des deux nombres ne puisse démentir l'autre. Le champ *Jours dans une
+semaine* allonge ou raccourcit la liste, et garde les noms déjà écrits.
+
+Elle **court sans s'interrompre** : elle ne repart pas au premier de chaque mois, pas
+plus que notre lundi ne le fait. Le jour tombe donc toujours au même rang d'un mois à l'autre, puisque 5 divise 200.
+
+Le nom du jour paraît dans la **date entière** — celle de l'écran de fin et de
+l'aperçu de l'atelier. Les mentions au fil d'une phrase — « reçu le 17ᵉ jour du
+Mois I » — gardent le quantième seul, pour rester courtes.
 
 ## Les moments du jour
 

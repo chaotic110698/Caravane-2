@@ -157,10 +157,19 @@ ecrit('# Écrire un personnage — mode d\'emploi', '',
   'dessous, sans jamais rien recouvrir.', '');
 
 ecrit('## Les rôles', '',
-  `${Object.keys(VP.roles).length} rôles arrivent avec le jeu, et **la liste est ouverte** :`,
-  'le bouton **+ Nouveau rôle**, sous la liste déroulante, en ajoute autant que vous',
-  'voulez, sans quitter la fiche. Le rôle est attribué au personnage en cours dès',
-  'qu\'il est créé — c\'est pour lui qu\'on l\'a fait.', '',
+  `${Object.keys(VP.roles).length} rôles arrivent avec le jeu, et **la liste est ouverte**.`,
+  'Deux façons d\'en ajouter, selon le moment.', '',
+  'La **pile des rôles** — la bascule *Personnages / Rôles*, en haut de la liste de',
+  'gauche — les tient à part. On y écrit un rôle **d\'avance**, avant qu\'aucun',
+  'personnage ne le porte, et on lui donne un **dessin**.', '',
+  'Le bouton **+ Nouveau rôle**, sous la liste déroulante d\'une fiche, en ajoute un',
+  'sans quitter le personnage qu\'on est en train d\'écrire. Le rôle lui est attribué',
+  'aussitôt — c\'est pour lui qu\'on l\'a fait.', '',
+  '### Le dessin d\'un rôle sert de recours', '',
+  'Un personnage qui n\'a pas de pictogramme à lui prend **celui de son rôle**, champ',
+  'par champ : son glyphe et la teinte du rôle, ou l\'inverse. Dessiner *batelier*',
+  'une fois pourvoit donc tous les bateliers d\'un coup, et celui qui a son propre',
+  'dessin le garde.', '',
   '| rôle | ce que ça vous donne | au féminin |', '|---|---|---|');
 Object.entries(VP.roles).forEach(([k, d]) =>
   ecrit(`| **${d.nom}** | ${d.explique} | ${d.feminin || '*le même*'} |`));
@@ -211,6 +220,24 @@ ecrit('### Où ils vivent', '',
   'clé `roles`, et l\'atelier n\'y met que ceux dont vos personnages se servent. C\'est ce',
   'qui permet au jeu d\'écrire `{role}` sans qu\'on lui porte un second fichier — et une',
   'occasion de moins de l\'oublier.', '');
+
+ecrit('## À quelles conditions il se tient là', '',
+  'Un personnage peut porter un **si**. Tant qu\'il n\'est pas rempli, il **n\'est pas',
+  'là** : ni grisé, ni annoncé, absent — et la mission dont il est le commanditaire',
+  'ne s\'offre pas non plus. C\'est ainsi qu\'on fait paraître quelqu\'un au milieu',
+  'd\'une partie, après une mission, un objet trouvé, une réputation gagnée.', '',
+  'Le champ est sous *Où on le trouve*. Il parle le même vocabulaire que les',
+  'conditions d\'un dialogue ou d\'une offre de mission : il n\'y a rien de neuf à',
+  'apprendre pour l\'écrire.', '',
+  '| ce qu\'on regarde | à quoi ça sert |', '|---|---|',
+  '| **Une mission en est là** | il paraît quand une mission est *accomplie*, et pas avant |',
+  '| **On porte cet objet** | il ne se montre qu\'à qui tient tel objet |',
+  '| **On a déjà vu quelqu\'un** | lui-même, à la troisième visite — ou quelqu\'un d\'autre |',
+  '| **On a retenu quelque chose** | un souvenir laissé par un dialogue |',
+  '| **L\'état du convoi** | l\'or, la réputation, le karma, les étapes… |', '',
+  'Une fois **rencontré**, il reste à l\'index du carnet quoi qu\'il arrive : ce qu\'on a',
+  'appris de quelqu\'un ne se referme pas parce qu\'il a quitté sa place. Laissez le',
+  'champ vide et il se tient là dès le premier jour.', '');
 
 ecrit('## Ce qui fait mériter une couche', '',
   'Une couche s\'ouvre quand **toutes** ses conditions sont vraies. Trois d\'entre elles',
@@ -557,10 +584,12 @@ horloge('## Ce que le temps fait dans le jeu', '',
   'créature qui ne sort que certains mois — viendra s\'accrocher là, et ne coûtera alors',
   'qu\'une condition de plus.', '');
 
+const jps = Array.isArray(CAL.jours) ? CAL.jours.length : 0;
 horloge('## La forme du temps', '', '| | |', '|---|---|',
   `| Heures dans une journée | **${CAL.heuresParJour}** |`,
   `| Jours dans un mois | **${CAL.joursParMois}** |`,
   `| Mois dans une année | **${CAL.mois.length}** |`,
+  `| Jours dans une semaine | **${jps || 'aucune semaine'}** |`,
   `| Jours dans une année | **${jpa}** — donc ${jpa} étapes de voyage |`, '');
 
 horloge('Les trois premiers se règlent dans l\'atelier ; le quatrième s\'en déduit. Changer la',
@@ -579,6 +608,26 @@ horloge('', 'Le **nom** paraît partout dans le jeu. La **saison** ne sert encor
   'les cols qui s\'ouvrent et se ferment ; posez-la quand même, elle sera lue le jour venu.', '',
   'Chaque mois garde une **clé** invisible et stable : renommer un mois ne casse rien de',
   'ce qui s\'y accroche. Les flèches le déplacent, la croix l\'ôte — il en faut au moins un.', '');
+
+horloge('## La semaine', '');
+if (jps) {
+  horloge('| Rang | Nom |', '|---|---|');
+  CAL.jours.forEach((j, i) => horloge(`| ${i + 1} | **${j.nom}** |`));
+  horloge('', 'Sa longueur **est la longueur de cette liste** : elle n\'est pas déclarée à côté,',
+    'pour qu\'aucun des deux nombres ne puisse démentir l\'autre. Le champ *Jours dans une',
+    'semaine* allonge ou raccourcit la liste, et garde les noms déjà écrits.', '',
+    'Elle **court sans s\'interrompre** : elle ne repart pas au premier de chaque mois, pas',
+    'plus que notre lundi ne le fait. Le jour ' + (jpa % jps === 0
+      ? `tombe donc toujours au même rang d'un mois à l'autre, puisque ${jps} divise ${jpa}.`
+      : `ne tombe donc pas au même rang d'un mois à l'autre, puisque ${jps} ne divise pas ${jpa}.`),
+    '', 'Le nom du jour paraît dans la **date entière** — celle de l\'écran de fin et de',
+    'l\'aperçu de l\'atelier. Les mentions au fil d\'une phrase — « reçu le 17ᵉ jour du',
+    `${CAL.mois[0].nom} » — gardent le quantième seul, pour rester courtes.`, '');
+} else {
+  horloge('Aucune semaine dans ce calendrier : la liste `jours` est vide. Les jours ne portent',
+    'que leur quantième, et rien n\'ira chercher de nom de jour. Mettez un nombre dans',
+    '*Jours dans une semaine* pour en avoir une.', '');
+}
 
 horloge('## Les moments du jour', '');
 horloge('| Moment | De | À |', '|---|---|---|');
@@ -790,10 +839,21 @@ const ATELIERS = ['atelier-carte.html',
                   'atelier-icones.html', 'atelier-dialogues.html',
                   'atelier-calendrier.html'];
 
+/* Le contenu injecté est recopié depuis sa source à chaque construction : une
+   correction faite ici, dans la page, est perdue au prochain `node
+   outils/construire.mjs`. Le bandeau le dit aux deux bouts, parce qu'on arrive
+   rarement dans un fichier par sa première ligne — on y tombe par une recherche,
+   au milieu, là où le commentaire d'en-tête ne se voit plus. */
+const bandeau = (id) =>
+  `/* ══ RECOPIÉ — NE PAS CORRIGER ICI ══ Ce bloc « ${id} » est réécrit par\n`+
+  `   outils/construire.mjs. Corrigez la source, puis reconstruisez. ══ */`;
 const injecte = (html, id, contenu, quoi) => {
   const balise = new RegExp(`(<script id="${id}"[^>]*>)[\\s\\S]*?(</script>)`);
   if (!balise.test(html)) throw new Error(`Balise <script id="${id}"> introuvable dans ${quoi}`);
-  return html.replace(balise, (_, a, b) => a + '\n' + contenu + '\n' + b);
+  const bande = /json/.test(id) || id === 'reference' || id === 'tutoriels'
+    ? '' : bandeau(id) + '\n';
+  return html.replace(balise, (_, a, b) =>
+    a + '\n' + bande + contenu + '\n' + (bande ? bandeau(id) + '\n' : '') + b);
 };
 
 const poses = [];

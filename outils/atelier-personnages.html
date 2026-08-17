@@ -69,6 +69,12 @@ input[type=checkbox]{width:auto;accent-color:var(--or)}
 #onglets button{flex:1;padding:8px 4px;font-size:12px;border-bottom:2px solid transparent;
   color:var(--encre-pale)}
 #onglets button.actif{color:var(--or);border-bottom-color:var(--or)}
+/* Les rôles ont leur propre pile, à côté des personnages : on les écrit
+   d'avance, sans passer par quelqu'un qui les porte. */
+#modes{flex:none;display:flex;border-bottom:1px solid var(--bord)}
+#modes button{flex:1;padding:8px 4px;font-size:12px;border-bottom:2px solid transparent;
+  color:var(--encre-pale)}
+#modes button.actif{color:var(--or);border-bottom-color:var(--or)}
 #volet{flex:1;overflow-y:auto;padding:12px}
 
 .bloc{border:1px solid var(--bord);border-radius:var(--r);background:var(--fond-clair)}
@@ -217,6 +223,10 @@ h4.section:first-child{margin-top:0}
 
 <div id="scene">
   <aside id="repertoire">
+    <div id="modes">
+      <button data-mode="gens" class="actif">Personnages</button>
+      <button data-mode="roles">Rôles</button>
+    </div>
     <input id="filtre" placeholder="Filtrer…" autocomplete="off" spellcheck="false">
     <div id="liste"></div>
   </aside>
@@ -240,6 +250,8 @@ h4.section:first-child{margin-top:0}
 </script>
 
 <script id="commun">
+/* ══ RECOPIÉ — NE PAS CORRIGER ICI ══ Ce bloc « commun » est réécrit par
+   outils/construire.mjs. Corrigez la source, puis reconstruisez. ══ */
 /* La machinerie partagée des ateliers de Caravane.
 
    Ce fichier n'est jamais chargé par une page : outils/construire.mjs le recopie
@@ -1080,7 +1092,7 @@ function rolesTous(){
   ((miens&&miens.roles)||[]).forEach(r=>{
     if(!r||!r.cle)return;
     propres[r.cle]={nom:r.nom||r.cle,feminin:r.feminin||'',explique:r.explique||'',
-                    mien:true};
+                    ico:r.ico||null,mien:true};
   });
   const livres=(typeof REF!=='undefined'&&REF.vocabulairePersonnages
     &&REF.vocabulairePersonnages.roles)||{};
@@ -1105,6 +1117,11 @@ function rolesEmployes(personnages){
     if(!r)return;
     pris[p.role]={nom:r.nom};
     if(r.feminin)pris[p.role].feminin=r.feminin;
+    /* Le dessin du rôle part avec lui : c'est ce qui permet au jeu de le prêter
+       à un personnage qui n'en a pas. Sans cela, donner une icône à « batelier »
+       n'aurait servi qu'à décorer l'atelier. */
+    if(r.ico&&(r.ico.glyphe||r.ico.nature||r.ico.teinte))
+      pris[p.role].ico=Object.assign({},r.ico);
   });
   return pris;
 }
@@ -1940,6 +1957,8 @@ if(typeof document!=='undefined'){
   else installerBandeau();
 }
 
+/* ══ RECOPIÉ — NE PAS CORRIGER ICI ══ Ce bloc « commun » est réécrit par
+   outils/construire.mjs. Corrigez la source, puis reconstruisez. ══ */
 </script>
 
 <script>
@@ -1965,11 +1984,18 @@ let R={format:'caravane.personnages.v1',personnages:[]};
 let RO={format:'caravane.roles.v1',roles:[]};
 let roleEnCours=null;             /* le rôle qu'on est en train d'écrire */
 let sel=0, onglet='fiche', filtre='';
+/* Deux piles dans le même atelier : les gens, et les rôles qu'ils portent. Le
+   mode dit laquelle la liste montre et laquelle la feuille édite. */
+let mode='gens', selRole=0;
 /* Où en est le joueur avec ce personnage — sert à voir ce qui est mérité. */
 let OU={rencontres:2,missionsPour:0,or:900,reputation:52,karma:50,etapes:6,lieues:120};
 
 const PE=()=>R.personnages[sel]||null;
-racineEst(PE);
+const RE=()=>RO.roles[selRole]||null;
+/* Les champs, les teintes et la grille de dessins lisent tous par un chemin
+   depuis RACINE : il suffit d'en changer la racine pour que le même formulaire
+   serve à un rôle. */
+racineEst(()=>mode==='roles'?RE():PE());
 /* Le contenu va au dépôt partagé, l'état de travail reste privé ici. */
 sectionEst('personnages',()=>R);
 sauvegardeEst('caravane.atelier-personnages.v1',
@@ -2149,7 +2175,68 @@ function ditCondition(c){
 }
 
 /* ═══════════════ la feuille ═══════════════ */
+/* La feuille d'un rôle. Les mêmes champs que partout — ils lisent par un chemin
+   depuis RACINE, qui pointe ici sur le rôle choisi. */
+function rendreFeuilleRole(){
+  const f=$('#feuille'), garde=f.scrollTop, r=RE();
+  if(!r){
+    f.innerHTML=`<p class="vide" style="padding:30px;text-align:center">`+
+      `Aucun rôle à vous. <b>+ Rôle</b> pour en écrire un — un rôle se tient tout `+
+      `seul, avant qu'aucun personnage ne le porte.</p>`;
+    f.scrollTop=garde;return;
+  }
+  const clef=r.cle||'', tous=rolesTous();
+  const doubles=Object.keys(tous).filter(k=>k===clef).length>1||
+    RO.roles.filter(x=>x.cle===clef).length>1;
+  const portent=R.personnages.filter(p=>p.role===clef);
+  let h='';
+  h+=`<div class="bloc"><h2>Le rôle</h2><div class="corps">`+
+    champ('Nom',texte('nom','Maître de poste'),
+      'Tel qu\'on le lira. Les accents sont bienvenus.')+
+    champ('Au féminin',texte('feminin','Maîtresse de poste'),
+      'À laisser vide si le mot ne change pas — <i>guide</i>, <i>ermite</i>, '+
+      '<i>aubergiste</i> sont les mêmes des deux côtés. C\'est ce qui permet d\'écrire '+
+      '<b>{role}</b> une seule fois et de le voir s\'accorder tout seul.')+
+    champ('Clé',`<div class="rangee">${texte('cle','maitre-de-poste')}`+
+      `<button class="outil fixe" data-act="rcle-auto">Depuis le nom</button></div>`,
+      doubles?'<b class="mal">Deux rôles portent cette clé.</b> Changez-en une.'
+        :'L\'identifiant. Minuscules et tirets. La changer suit les personnages '+
+         'qui portent le rôle.')+
+    champ('Ce qu\'il fait',texte('explique','Il tient le relais, les chevaux et le courrier.',2),
+      'Une phrase, pour vous y retrouver dans six mois. Ne s\'affiche pas au joueur.')+
+    `</div></div>`;
+
+  const gl=lire('ico.glyphe'), teinte=teinteDe(lire('ico')||{});
+  h+=`<div class="bloc"><h2>Le pictogramme</h2><div class="corps">`+
+    champ('Teinte',champTeinte('ico.nature','ico.teinte'),
+      'Le dessin d\'un rôle sert de <b>recours</b> : un personnage qui n\'a pas de '+
+      'pictogramme à lui prend celui de son rôle. Donner un dessin à « batelier » '+
+      'suffit donc à en pourvoir tous les bateliers d\'un coup.',true)+
+    champ('Dessin',`<div class="glyphes">`+
+      `<button data-act="rglyphe" data-g="" class="${gl?'':'actif'}" title="aucun">`+
+      `<span style="font-size:11px;color:var(--encre-pale)">—</span></button>`+
+      Object.keys(glyphesTous()).map(k=>
+      `<button data-act="rglyphe" data-g="${ech(k)}" class="${k===gl?'actif':''}" `+
+      `title="${ech(k)}">${svgGlyphe(k,teinte)}</button>`).join('')+
+      `</div>`,'',true)+
+    `</div></div>`;
+
+  h+=`<div class="bloc"><h2>Qui le porte</h2><div class="corps">`+
+    (portent.length
+      ?`<div class="rangee" style="flex-wrap:wrap;gap:6px">`+portent.map(p=>{
+          const i=R.personnages.indexOf(p);
+          return `<button class="outil petit" data-versgens="${i}">`+
+            `${ech(appellation(p)||'sans nom')}</button>`;}).join('')+`</div>`+
+       `<p class="aide" style="margin-top:7px">Cliquez pour ouvrir la fiche.</p>`
+      :`<p class="vide">Personne, pour l'instant. Un rôle peut attendre : `+
+       `c'est même à ça que sert de l'écrire d'avance.</p>`)+
+    `</div></div>`;
+  f.innerHTML=h;
+  f.scrollTop=garde;
+}
+
 function rendreFeuille(){
+  if(mode==='roles')return rendreFeuilleRole();
   const f=$('#feuille'), garde=f.scrollTop, p=PE();
   if(!p){
     f.innerHTML=`<p class="vide" style="padding:30px;text-align:center">`+
@@ -2173,11 +2260,20 @@ function rendreFeuille(){
     champRole(p)+
     `</div></div>`;
 
+  const si=p.si||[];
   h+=`<div class="bloc"><h2>Où on le trouve</h2><div class="corps">`+
     champ('Le lieu',listeOu('lieux').length
       ?choixListe('lieu',listeOu('lieux'),'— nulle part de précis —')
       :`<p class="vide">Chargez un <b>monde.json</b> pour choisir un lieu.</p>`,
       'C\'est là qu\'on peut lui parler, et c\'est ce lieu qui héritera de son lore.',true)+
+    champ('À quelles conditions il s\'y tient',blocPresence('si'),
+      si.length
+      ?'Tant que ce n\'est pas rempli, <b>il n\'est pas là</b> : pas grisé, pas '+
+       'annoncé, absent — et sa mission ne s\'offre pas non plus. Une fois '+
+       'rencontré, il reste au carnet quoi qu\'il arrive.'
+      :'Laissez vide et il se tient là dès le premier jour. Une condition le fait '+
+       '<b>paraître plus tard</b> — après une mission, un objet trouvé, une '+
+       'réputation gagnée.',true)+
     `</div></div>`;
 
   const gl=lire('ico.glyphe'), teinte=teinteDe(lire('ico')||{});
@@ -2253,10 +2349,129 @@ function blocConditions(ch){
     `<button class="ajout" data-act="cond-ajout" data-ch="${ech(ch)}">`+
     `+ Ajouter une condition</button></div>`;
 }
+/* ═══════════════ les conditions de présence ═══════════════
+   Le « si » d'un personnage. Tant qu'il n'est pas rempli, il n'est pas là : ni
+   grisé, ni annoncé, simplement absent — et sa mission ne s'offre pas non plus.
+   Une fois rencontré, il reste à l'index du carnet quoi qu'il arrive.
+
+   C'est le vocabulaire des événements, celui que le jeu sait déjà juger avec
+   conditionsEv(). On n'en propose donc que ce que interrogerEv() sait lire, sans
+   quoi l'atelier écrirait des conditions toujours fausses. */
+const ETATS_MISSION=[['aucune','pas encore proposée'],['offerte','proposée'],
+  ['cours','en cours'],['faite','accomplie'],['ratee','ratée']];
+const PRESENCE_RECIT=['missionEtat','objetPorte','rencontres','souvenir'];
+function nomsPresence(k){
+  return ({missionEtat:'Une mission en est là',objetPorte:'On porte cet objet',
+    rencontres:'On a déjà vu quelqu\'un',souvenir:'On a retenu quelque chose'})[k]||k;
+}
+function listeDepot(section,champ){
+  const d=depotLire(section);
+  return ((d&&d[champ])||[]).filter(x=>x&&x.cle)
+    .map(x=>[x.cle,x.nom||x.titre||x.cle]);
+}
+function blocPresence(ch){
+  const l=lire(ch)||[];
+  const conv=Object.keys(V.interrogations||{});
+  const groupes=`<optgroup label="Ce qui s'est passé">`+
+      PRESENCE_RECIT.map(k=>`<option value="${ech(k)}">${ech(nomsPresence(k))}</option>`).join('')+
+    `</optgroup><optgroup label="L'état du convoi">`+
+      conv.map(k=>`<option value="${ech(k)}">${ech(V.interrogations[k].nom)}</option>`).join('')+
+    `</optgroup>`;
+  return `<div class="pile">`+
+    (l.length?'':`<p class="vide">Aucune : il se tient là dès le premier jour.</p>`)+
+    l.map((c,i)=>{
+      const d=V.interrogations[c.quoi]||{};
+      const oui=(d.unite||'')==='oui ou non';
+      let corps;
+      if(c.quoi==='missionEtat'){
+        const m=listeDepot('missions','missions');
+        corps=(m.length?champ('La mission',choixListe(ch+'.'+i+'.mission',m,'— laquelle ? —'))
+          :`<p class="vide">Aucune mission au dépôt : ouvrez l'atelier de missions.</p>`)+
+          champ('Elle doit être',choixListe(ch+'.'+i+'.vaut',ETATS_MISSION,'— quel état ? —'),
+            'C\'est ainsi qu\'on fait paraître quelqu\'un <b>après</b> qu\'une mission '+
+            'est accomplie, et pas avant.');
+      }else if(c.quoi==='objetPorte'){
+        const o=listeDepot('objets','objets');
+        corps=(o.length?champ('L\'objet',choixListe(ch+'.'+i+'.objet',o,'— lequel ? —'))
+          :`<p class="vide">Aucun objet au dépôt : ouvrez l'atelier d'objets.</p>`)+
+          champ('Doit valoir',choixOuiNon(ch+'.'+i+'.vaut'));
+      }else if(c.quoi==='rencontres'){
+        const g=R.personnages.filter(p=>p.cle).map(p=>[p.cle,appellation(p)||p.cle]);
+        corps=champ('Qui',choixListe(ch+'.'+i+'.personnage',g,'— lui-même —'),
+            'Laissez vide pour parler de <b>lui</b> : « il ne se montre qu\'à la '+
+            'troisième visite ». Nommez quelqu\'un d\'autre pour « il n\'apparaît '+
+            'qu\'après qu\'on a vu la batelière ».')+
+          `<div class="rangee"><span class="mot fixe">au moins</span>`+
+          nombre(ch+'.'+i+'.min')+`<span class="mot fixe">au plus</span>`+
+          nombre(ch+'.'+i+'.max')+`</div>`;
+      }else if(c.quoi==='souvenir'){
+        corps=champ('Le souvenir',texte(ch+'.'+i+'.nom','le-bac-de-nuit'),
+            'Le nom qu\'un dialogue a fait retenir. Il s\'écrit à l\'identique des '+
+            'deux côtés.')+
+          champ('Doit valoir',choixOuiNon(ch+'.'+i+'.vaut'));
+      }else{
+        corps=(d.demande==='bien'
+            ?champ('La marchandise',choixListe(ch+'.'+i+'.bien',
+              Object.entries(REF.biens||{}),'— laquelle ? —'))
+            :d.demande==='famille'
+            ?champ('La famille d\'arme',texte(ch+'.'+i+'.famille','hache'))
+            :'')+
+          (oui?champ('Doit valoir',choixOuiNon(ch+'.'+i+'.vaut'))
+             :`<div class="rangee"><span class="mot fixe">au moins</span>`+
+              nombre(ch+'.'+i+'.min')+`<span class="mot fixe">au plus</span>`+
+              nombre(ch+'.'+i+'.max')+`</div>`);
+      }
+      const nom=V.interrogations[c.quoi]?V.interrogations[c.quoi].nom:nomsPresence(c.quoi);
+      return `<div class="cond">`+
+        `<div class="rangee"><select data-ch="${ech(ch+'.'+i+'.quoi')}" data-t="txt">`+
+        groupes.replace(`value="${ech(c.quoi)}"`,`value="${ech(c.quoi)}" selected`)+
+        `</select><button class="fixe outil" data-act="pres-oter" data-ch="${ech(ch)}" `+
+        `data-i="${i}">✕</button></div>`+corps+
+        (d.explique?`<div class="aide">${ech(d.explique)}</div>`:'')+
+        `</div>`;}).join('')+
+    `<button class="ajout" data-act="pres-ajout" data-ch="${ech(ch)}">`+
+    `+ Ajouter une condition</button></div>`;
+}
 function svgGlyphe(k,teinte){return svgGlypheDe(k,teinte);}
 
 /* ═══════════════ le répertoire ═══════════════ */
+/* La liste des rôles : les vôtres d'abord, puisque ce sont les seuls qu'on peut
+   ouvrir, puis ceux que le jeu apporte, en simple rappel de ce qui existe déjà. */
+function rendreListeRoles(){
+  const q=filtre.trim().toLowerCase();
+  const tous=rolesTous();
+  const livres=Object.keys(tous).filter(k=>!tous[k].mien)
+    .filter(k=>!q||(k+' '+tous[k].nom).toLowerCase().indexOf(q)>=0);
+  const miens=RO.roles.map((r,i)=>({r:r,i:i}))
+    .filter(o=>!q||((o.r.nom||'')+' '+(o.r.cle||'')).toLowerCase().indexOf(q)>=0);
+  const porte=c=>R.personnages.filter(p=>p.role===c).length;
+  let h='';
+  h+=`<div class="groupe">Les vôtres</div>`;
+  h+=miens.length?miens.map(o=>{
+    const t=teinteDe(o.r.ico||{});
+    const n=porte(o.r.cle);
+    return `<button class="entree${o.i===selRole?' actif':''}" data-selrole="${o.i}">`+
+      `<span class="jeton">${svgGlyphe((o.r.ico||{}).glyphe,t)}</span>`+
+      `<span class="txt"><b>${ech(o.r.nom||'sans nom')}</b>`+
+      `<span>${o.r.feminin?ech(o.r.feminin.toLowerCase())+' · ':''}`+
+      `${n?n+' le porte'+(n>1?'nt':''):'personne ne le porte'}</span></span></button>`;
+  }).join('')
+   :`<p class="vide" style="padding:8px">Aucun rôle à vous. <b>+ Rôle</b> pour en écrire un.</p>`;
+  if(livres.length){
+    h+=`<div class="groupe">Ceux du jeu — ${livres.length}</div>`;
+    h+=livres.map(k=>{
+      const n=porte(k);
+      return `<button class="entree" disabled style="opacity:.62;cursor:default">`+
+        `<span class="jeton">${svgGlyphe('',teinteDe({}))}</span>`+
+        `<span class="txt"><b>${ech(tous[k].nom)}</b>`+
+        `<span>livré avec le jeu${n?' · '+n+' le porte'+(n>1?'nt':''):''}</span>`+
+        `</span></button>`;}).join('');
+  }
+  $('#liste').innerHTML=h;
+}
+
 function rendreListe(){
+  if(mode==='roles')return rendreListeRoles();
   const q=filtre.trim().toLowerCase();
   const vus=R.personnages.map((p,i)=>({p:p,i:i}))
     .filter(o=>!q||((o.p.nom||'')+' '+(o.p.cle||'')+' '+(o.p.role||''))
@@ -2453,8 +2668,17 @@ function rendreEtat(){
     `<span style="margin-left:auto">Sauvegardé dans le navigateur — <b>exportez</b> `+
       `régulièrement</span>`;
 }
-function tout(){rendreListe();rendreFeuille();rendreVolet();rendreEtat();sauver();}
-function maj(){rendreListe();rendreVolet();rendreEtat();sauver();}
+/* Les rôles ne vont pas dans la même section du dépôt que les personnages : on
+   les y pose à chaque tour, sans quoi ce qu'on tape dans leur feuille resterait
+   dans la page et mourrait au rechargement. */
+function tout(){
+  if(mode==='roles')ecrireRoles();
+  rendreListe();rendreFeuille();rendreVolet();rendreEtat();sauver();
+}
+function maj(){
+  if(mode==='roles')ecrireRoles();
+  rendreListe();rendreVolet();rendreEtat();sauver();
+}
 
 /* ═══════════════ actions ═══════════════ */
 function neuf(){
@@ -2527,15 +2751,37 @@ ecouterSaisie((t,ch)=>{
   }
   maj();
 });
+/* Changer ce qu'une condition regarde change les réglages qui ont un sens. Un
+   « au moins 40 » resté sur une condition d'état de mission ne se voit pas dans
+   l'atelier et ne s'attrape pas à la lecture : le jeu comparerait « accomplie »
+   à quarante, et la condition ne serait jamais vraie. On repart donc propre, avec
+   le réglage par défaut du nouveau genre. */
+const DEFAUT_PRESENCE={missionEtat:{vaut:''},objetPorte:{vaut:'oui'},
+  rencontres:{min:1},souvenir:{vaut:'oui'}};
+function reglerCondition(ch){
+  const c=lire(ch);
+  if(!c)return;
+  const q=c.quoi;
+  Object.keys(c).forEach(k=>{if(k!=='quoi')delete c[k];});
+  const d=V.interrogations[q];
+  const neuf=DEFAUT_PRESENCE[q]||
+    (d&&(d.unite||'')==='oui ou non'?{vaut:'oui'}:{min:0});
+  Object.assign(c,neuf);
+}
 document.addEventListener('change',ev=>{
   const c=ev.target.dataset.ch;
   /* changer le rôle, l'accord ou le lieu change ce que la feuille explique */
+  if(/^si\.\d+\.quoi$/.test(c||''))reglerCondition(c.replace(/\.quoi$/,''));
   if(c==='role'||c==='accord'||c==='lieu'||c==='ico.nature'||/\.quoi$/.test(c||''))tout();
 });
 document.addEventListener('click',ev=>{
   const b=ev.target.closest('[data-act],[data-sel]');
   if(!b)return;
   if(b.dataset.sel!==undefined){ev.preventDefault();sel=Number(b.dataset.sel);tout();return;}
+  if(b.dataset.selrole!==undefined){ev.preventDefault();
+    selRole=Number(b.dataset.selrole);tout();return;}
+  if(b.dataset.versgens!==undefined){ev.preventDefault();
+    sel=Number(b.dataset.versgens);allerAuMode('gens');return;}
   const a=b.dataset.act, p=PE();
   if(a==='role-neuf'){roleEnCours={nom:'',feminin:'',explique:'',avant:''};tout();}
   else if(a==='role-editer'){
@@ -2548,6 +2794,21 @@ document.addEventListener('click',ev=>{
   else if(a==='role-oter'){oterRole();}
   else if(a==='cle-auto'){ecrire('cle',slug(lire('nom')));tout();}
   else if(a==='glyphe'){ecrire('ico.glyphe',b.dataset.g);tout();}
+  /* Un rôle : sa clé se refait depuis son nom, et les porteurs suivent. Le
+     dessin accepte le vide, pour reprendre le recours du personnage. */
+  else if(a==='rcle-auto'){
+    const r=RE();if(!r)return;
+    const avant=r.cle, apres=slug(r.nom||'');
+    if(!apres)return;
+    r.cle=apres;
+    if(avant&&avant!==apres)
+      R.personnages.forEach(x=>{if(x.role===avant)x.role=apres;});
+    ecrireRoles();tout();
+  }
+  else if(a==='rglyphe'){
+    ecrire('ico.glyphe',b.dataset.g||'');
+    ecrireRoles();tout();
+  }
   else if(a==='couche-ajout'){p.couches=p.couches||[];
     p.couches.push({titre:'',gagne:[{quoi:'rencontres',min:3}],texte:''});tout();}
   else if(a==='couche-oter'){p.couches.splice(Number(b.dataset.i),1);tout();}
@@ -2556,6 +2817,11 @@ document.addEventListener('click',ev=>{
   else if(a==='cond-ajout'){const l=lire(b.dataset.ch)||[];
     l.push({quoi:'rencontres',min:1});ecrire(b.dataset.ch,l);tout();}
   else if(a==='cond-oter'){const l=lire(b.dataset.ch);l.splice(Number(b.dataset.i),1);tout();}
+  /* Les conditions de présence : « la réputation » est le premier réglage qu'on
+     comprend sans rien lire, et c'est le plus souvent celui qu'on veut. */
+  else if(a==='pres-ajout'){const l=lire(b.dataset.ch)||[];
+    l.push({quoi:'reputation',min:40});ecrire(b.dataset.ch,l);tout();}
+  else if(a==='pres-oter'){const l=lire(b.dataset.ch);l.splice(Number(b.dataset.i),1);tout();}
   else if(a==='ou-defaut'){OU={rencontres:1,missionsPour:0,or:900,reputation:52,karma:50,
     etapes:6,lieues:120};tout();}
 });
@@ -2565,8 +2831,33 @@ $$('#onglets button').forEach(b=>b.addEventListener('click',()=>{
   rendreVolet();
 }));
 
+/* Changer de pile change ce que la barre du haut propose : « + Personnage »
+   devient « + Rôle », et les gestes qui n'ont pas de sens s'effacent. */
+function allerAuMode(m){
+  mode=m;
+  roleEnCours=null;
+  $$('#modes button').forEach(x=>x.classList.toggle('actif',x.dataset.mode===m));
+  const roles=(m==='roles');
+  $('#b-nouveau').textContent=roles?'+ Rôle':'+ Personnage';
+  $('#b-dupliquer').hidden=roles;
+  $('#b-exemple').hidden=roles;
+  $('#b-monde').hidden=roles;
+  $('#filtre').placeholder=roles?'Filtrer les rôles…':'Filtrer…';
+  $$('#onglets button').forEach(x=>{x.disabled=roles;x.style.opacity=roles?'.45':'';});
+  tout();
+}
+$$('#modes button').forEach(b=>b.addEventListener('click',()=>allerAuMode(b.dataset.mode)));
+
 /* ── la barre ── */
-$('#b-nouveau').onclick=()=>ajouter();
+function ajouterRole(){
+  const tous=rolesTous();
+  let n=1,cle='role';
+  while(tous[cle]||RO.roles.some(r=>r.cle===cle))cle='role-'+(++n);
+  RO.roles.push({cle:cle,nom:''});
+  selRole=RO.roles.length-1;
+  ecrireRoles();tout();
+}
+$('#b-nouveau').onclick=()=>mode==='roles'?ajouterRole():ajouter();
 $('#b-dupliquer').onclick=()=>{
   if(!PE())return;
   const c=JSON.parse(JSON.stringify(PE()));
@@ -2574,6 +2865,18 @@ $('#b-dupliquer').onclick=()=>{
   ajouter(c);
 };
 $('#b-supprimer').onclick=()=>{
+  if(mode==='roles'){
+    const r=RE();if(!r)return;
+    const portent=R.personnages.filter(p=>p.role===r.cle).length;
+    if(!confirm(`Supprimer « ${r.nom||'sans nom'} » ?`+
+      (portent?` ${portent} personnage${portent>1?'s le portent':' le porte'} et `+
+        `restera${portent>1?'ont':''} sans rôle.`:'')))return;
+    const cle=r.cle;
+    RO.roles.splice(selRole,1);
+    R.personnages.forEach(p=>{if(p.role===cle)p.role='';});
+    selRole=Math.max(0,selRole-1);
+    ecrireRoles();tout();return;
+  }
   if(!PE())return;
   if(!confirm('Supprimer « '+(PE().nom||'sans nom')+' » ?'))return;
   R.personnages.splice(sel,1);sel=Math.max(0,sel-1);tout();

@@ -1,20 +1,79 @@
 {
   "format": "caravane.calendrier.v1",
-  "apropos": "CALENDRIER D'ESSAI — noms plats et volontairement sans saveur. Il n'y a pas une ligne de récit là-dedans : c'est une horloge nue, faite pour être remplacée. Posez le vôtre dans data/<votre dossier>/calendrier.json et celui-ci disparaît.",
+  "apropos": "CALENDRIER D'ESSAI — noms plats et volontairement sans saveur. Il n'y a pas une ligne de récit là-dedans : c'est une horloge nue, faite pour être remplacée. La longueur de la semaine est la longueur de la liste « jours » : elle n'est pas déclarée ailleurs, pour qu'aucun des deux ne puisse démentir l'autre. Une liste vide veut dire qu'il n'y a pas de semaine.",
   "heuresParJour": 25,
   "joursParMois": 50,
   "anneeUn": "an I",
   "mois": [
-    { "cle": "m1", "nom": "Mois I", "saison": "saison A" },
-    { "cle": "m2", "nom": "Mois II", "saison": "saison B" },
-    { "cle": "m3", "nom": "Mois III", "saison": "saison C" },
-    { "cle": "m4", "nom": "Mois IV", "saison": "saison D" }
+    {
+      "cle": "m1",
+      "nom": "Mois I",
+      "saison": "saison A"
+    },
+    {
+      "cle": "m2",
+      "nom": "Mois II",
+      "saison": "saison B"
+    },
+    {
+      "cle": "m3",
+      "nom": "Mois III",
+      "saison": "saison C"
+    },
+    {
+      "cle": "m4",
+      "nom": "Mois IV",
+      "saison": "saison D"
+    }
+  ],
+  "jours": [
+    {
+      "cle": "j1",
+      "nom": "Jour I"
+    },
+    {
+      "cle": "j2",
+      "nom": "Jour II"
+    },
+    {
+      "cle": "j3",
+      "nom": "Jour III"
+    },
+    {
+      "cle": "j4",
+      "nom": "Jour IV"
+    },
+    {
+      "cle": "j5",
+      "nom": "Jour V"
+    }
   ],
   "moments": [
-    { "cle": "aube", "de": 4, "a": 9 },
-    { "cle": "midi", "de": 10, "a": 15 },
-    { "cle": "couchant", "de": 16, "a": 20 },
-    { "cle": "nuit", "de": 21, "a": 3 }
+    {
+      "cle": "aube",
+      "de": 4,
+      "a": 9
+    },
+    {
+      "cle": "midi",
+      "de": 10,
+      "a": 15
+    },
+    {
+      "cle": "couchant",
+      "de": 16,
+      "a": 20
+    },
+    {
+      "cle": "nuit",
+      "de": 21,
+      "a": 3
+    }
   ],
-  "debut": { "annee": 1, "mois": 0, "jour": 1, "heure": 8 }
+  "debut": {
+    "annee": 1,
+    "mois": 0,
+    "jour": 1,
+    "heure": 8
+  }
 }

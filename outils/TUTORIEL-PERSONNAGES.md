@@ -17,10 +17,23 @@ dessous, sans jamais rien recouvrir.
 
 ## Les rôles
 
-15 rôles arrivent avec le jeu, et **la liste est ouverte** :
-le bouton **+ Nouveau rôle**, sous la liste déroulante, en ajoute autant que vous
-voulez, sans quitter la fiche. Le rôle est attribué au personnage en cours dès
-qu'il est créé — c'est pour lui qu'on l'a fait.
+15 rôles arrivent avec le jeu, et **la liste est ouverte**.
+Deux façons d'en ajouter, selon le moment.
+
+La **pile des rôles** — la bascule *Personnages / Rôles*, en haut de la liste de
+gauche — les tient à part. On y écrit un rôle **d'avance**, avant qu'aucun
+personnage ne le porte, et on lui donne un **dessin**.
+
+Le bouton **+ Nouveau rôle**, sous la liste déroulante d'une fiche, en ajoute un
+sans quitter le personnage qu'on est en train d'écrire. Le rôle lui est attribué
+aussitôt — c'est pour lui qu'on l'a fait.
+
+### Le dessin d'un rôle sert de recours
+
+Un personnage qui n'a pas de pictogramme à lui prend **celui de son rôle**, champ
+par champ : son glyphe et la teinte du rôle, ou l'inverse. Dessiner *batelier*
+une fois pourvoit donc tous les bateliers d'un coup, et celui qui a son propre
+dessin le garde.
 
 | rôle | ce que ça vous donne | au féminin |
 |---|---|---|
@@ -90,6 +103,29 @@ Ils n'ont **pas de fichier à eux** : ils voyagent dans `personnages.json`, sous
 clé `roles`, et l'atelier n'y met que ceux dont vos personnages se servent. C'est ce
 qui permet au jeu d'écrire `{role}` sans qu'on lui porte un second fichier — et une
 occasion de moins de l'oublier.
+
+## À quelles conditions il se tient là
+
+Un personnage peut porter un **si**. Tant qu'il n'est pas rempli, il **n'est pas
+là** : ni grisé, ni annoncé, absent — et la mission dont il est le commanditaire
+ne s'offre pas non plus. C'est ainsi qu'on fait paraître quelqu'un au milieu
+d'une partie, après une mission, un objet trouvé, une réputation gagnée.
+
+Le champ est sous *Où on le trouve*. Il parle le même vocabulaire que les
+conditions d'un dialogue ou d'une offre de mission : il n'y a rien de neuf à
+apprendre pour l'écrire.
+
+| ce qu'on regarde | à quoi ça sert |
+|---|---|
+| **Une mission en est là** | il paraît quand une mission est *accomplie*, et pas avant |
+| **On porte cet objet** | il ne se montre qu'à qui tient tel objet |
+| **On a déjà vu quelqu'un** | lui-même, à la troisième visite — ou quelqu'un d'autre |
+| **On a retenu quelque chose** | un souvenir laissé par un dialogue |
+| **L'état du convoi** | l'or, la réputation, le karma, les étapes… |
+
+Une fois **rencontré**, il reste à l'index du carnet quoi qu'il arrive : ce qu'on a
+appris de quelqu'un ne se referme pas parce qu'il a quitté sa place. Laissez le
+champ vide et il se tient là dès le premier jour.
 
 ## Ce qui fait mériter une couche
 

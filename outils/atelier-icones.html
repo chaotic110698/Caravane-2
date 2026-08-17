@@ -89,12 +89,16 @@ input[type=range]{padding:0;accent-color:var(--or)}
 .mot{font-size:12px;color:var(--encre-pale);flex:none}
 .vide{font-size:12.5px;color:var(--encre-pale);font-style:italic}
 
-/* ── la planche à dessin ── */
+/* ── la planche à dessin ──
+   Sa largeur est réglable : --planche porte la taille choisie, et le panneau de
+   droite s'élargit avec elle. Sur un écran étroit, 84vw reprend la main pour que
+   la planche ne sorte jamais de la page. */
 #planche{display:flex;justify-content:center;padding:8px}
-#toile{width:min(340px,72vw);aspect-ratio:1;background:
+#toile{width:min(var(--planche,340px),84vw);aspect-ratio:1;background:
   repeating-conic-gradient(#211E1A 0% 25%,#1A1815 0% 50%) 50%/16px 16px;
   border:1px solid var(--bord);border-radius:var(--r);touch-action:none;
   position:relative}
+#toile:focus-visible{outline:2px solid var(--or);outline-offset:2px}
 #toile svg{width:100%;height:100%;display:block}
 .grille-fond line{stroke:#ffffff12;stroke-width:.06}
 .grille-fond line.fort{stroke:#ffffff20;stroke-width:.1}
@@ -184,6 +188,8 @@ h4.section:first-child{margin-top:0}
 </script>
 
 <script id="commun">
+/* ══ RECOPIÉ — NE PAS CORRIGER ICI ══ Ce bloc « commun » est réécrit par
+   outils/construire.mjs. Corrigez la source, puis reconstruisez. ══ */
 /* La machinerie partagée des ateliers de Caravane.
 
    Ce fichier n'est jamais chargé par une page : outils/construire.mjs le recopie
@@ -1024,7 +1030,7 @@ function rolesTous(){
   ((miens&&miens.roles)||[]).forEach(r=>{
     if(!r||!r.cle)return;
     propres[r.cle]={nom:r.nom||r.cle,feminin:r.feminin||'',explique:r.explique||'',
-                    mien:true};
+                    ico:r.ico||null,mien:true};
   });
   const livres=(typeof REF!=='undefined'&&REF.vocabulairePersonnages
     &&REF.vocabulairePersonnages.roles)||{};
@@ -1049,6 +1055,11 @@ function rolesEmployes(personnages){
     if(!r)return;
     pris[p.role]={nom:r.nom};
     if(r.feminin)pris[p.role].feminin=r.feminin;
+    /* Le dessin du rôle part avec lui : c'est ce qui permet au jeu de le prêter
+       à un personnage qui n'en a pas. Sans cela, donner une icône à « batelier »
+       n'aurait servi qu'à décorer l'atelier. */
+    if(r.ico&&(r.ico.glyphe||r.ico.nature||r.ico.teinte))
+      pris[p.role].ico=Object.assign({},r.ico);
   });
   return pris;
 }
@@ -1884,6 +1895,8 @@ if(typeof document!=='undefined'){
   else installerBandeau();
 }
 
+/* ══ RECOPIÉ — NE PAS CORRIGER ICI ══ Ce bloc « commun » est réécrit par
+   outils/construire.mjs. Corrigez la source, puis reconstruisez. ══ */
 </script>
 
 <script>
@@ -1964,6 +1977,11 @@ const REGLAGES={
 /* ═══════════════ le modèle ═══════════════ */
 let R={format:'caravane.icones.v1',icones:[]};
 let sel=0, selForme=-1, onglet='planche', filtre='';
+/* La taille de la planche. Quatre crans plutôt qu'un glissement libre : on veut
+   la même largeur d'une séance à l'autre, pour juger un dessin sans que l'échelle
+   ait bougé sous les yeux. */
+const TAILLES_PLANCHE=[[280,'Petite'],[340,'Normale'],[460,'Grande'],[620,'Immense']];
+let taillePlanche=1;
 const IC=()=>R.icones[sel]||null;
 racineEst(IC);
 /* Ce que les autres reçoivent : le dessin déjà tracé. Ni les autres ateliers ni
@@ -1973,7 +1991,8 @@ function publier(){
     icones:R.icones.map(ic=>Object.assign({},ic,{svg:corpsSvg(ic)}))};
 }
 sectionEst('icones',publier);
-sauvegardeEst('caravane.atelier-icones.v1',()=>({sel:sel}));
+sauvegardeEst('caravane.atelier-icones.v1',
+  ()=>({sel:sel,forme:selForme,planche:taillePlanche}));
 function relire(){
   const c=depotLire('icones');
   /* on reprend les formes, pas le SVG : il se retrace à chaque publication */
@@ -1982,8 +2001,29 @@ function relire(){
     R.icones.forEach(ic=>{delete ic.svg;});
   }
   const d=relireSauve();
-  if(d)sel=Math.max(0,Math.min(R.icones.length-1,d.sel|0));
+  if(d){
+    sel=Math.max(0,Math.min(R.icones.length-1,d.sel|0));
+    if(d.planche!==undefined)
+      taillePlanche=Math.max(0,Math.min(TAILLES_PLANCHE.length-1,d.planche|0));
+  }
+  /* La forme choisie se retrouve aussi : sans cela, rouvrir l'atelier rendait la
+     planche muette — ni cadre, ni poignée, ni réglages — jusqu'à ce qu'on
+     reclique dans la pile. */
+  const formes=(IC()&&IC().formes)||[];
+  selForme=formes.length
+    ?Math.max(0,Math.min(formes.length-1,d&&d.forme!==undefined?d.forme|0:0))
+    :-1;
+  appliquerTaillePlanche();
   return !!c;
+}
+/* La planche vit dans le panneau de droite, large de 320 px : l'agrandir, c'est
+   élargir le panneau avec elle, sinon elle bute. Le panneau du milieu cède la
+   place — c'est lui qui a du jeu. */
+function appliquerTaillePlanche(){
+  const px=TAILLES_PLANCHE[taillePlanche][0];
+  document.documentElement.style.setProperty('--planche',px+'px');
+  const cote=$('#cote');
+  if(cote)cote.style.width=Math.max(320,px+40)+'px';
 }
 
 /* ═══════════════ le dessin ═══════════════ */
@@ -2073,8 +2113,10 @@ function rendreFeuille(){
       if(o.f==='trait')h+=champ('Second point',`<div class="rangee">`+
         `<span class="mot fixe">x</span>${nombre('formes.'+selForme+'.x2','20','0.5')}`+
         `<span class="mot fixe">y</span>${nombre('formes.'+selForme+'.y2','12','0.5')}</div>`);
-      h+=`<div class="rangee"><button class="outil" data-act="centrer">Centrer</button>`+
-        `<button class="outil" data-act="miroir">Miroir horizontal</button></div>`;
+      h+=`<div class="rangee" style="flex-wrap:wrap;gap:5px">`+
+        `<button class="outil" data-act="centrer">Centrer</button>`+
+        `<button class="outil" data-act="miroir">⇋ Miroir</button>`+
+        `<button class="outil" data-act="miroir-v">⇅ Miroir</button></div>`;
       h+=`</div></div>`;
     }
   }
@@ -2173,15 +2215,27 @@ function voletPlanche(){
       `width="${n(b.x1-b.x0)}" height="${n(b.y1-b.y0)}"/>`+
       `<circle class="poignee" data-poignee="1" cx="${n(b.x1)}" cy="${n(b.y1)}" r=".8"/>`;
   }
-  return `<div id="planche"><div id="toile">
+  const jouable=o&&!ic.source;
+  return `<div id="planche"><div id="toile" tabindex="0"
+      aria-label="Planche à dessin, ${TAILLES_PLANCHE[taillePlanche][1].toLowerCase()}">
     <svg viewBox="0 0 24 24" style="color:${t};--velin:#E3D6B2">
       <g class="grille-fond">${g}</g>
       ${corpsSvg(ic)}
       ${cadre}
     </svg></div></div>
+    <div class="rangee" style="padding:0 4px 6px;gap:5px;flex-wrap:wrap">
+      <span class="mot fixe">Planche</span>`+
+      TAILLES_PLANCHE.map(([px,nom],i)=>
+        `<button class="outil petit${i===taillePlanche?' fort':''}" data-act="planche-taille"
+          data-i="${i}" title="${px} px">${ech(nom)}</button>`).join('')+
+    `</div>
     <p class="aide" style="padding:0 4px">Faites glisser la forme choisie sur la planche,
       et tirez la <b>poignée dorée</b> pour la redimensionner. La grille marque les
-      unités ; les traits plus clairs, les quarts.</p>`;
+      unités ; les traits plus clairs, les quarts.</p>
+    ${jouable?`<p class="aide" style="padding:0 4px">Cliquez la planche puis les
+      <b>flèches</b> pour déplacer d'un quart d'unité — <b>Maj</b> pour une unité
+      entière. Pour un dessin symétrique : n'en faites qu'une moitié, <b>dupliquez</b>-la
+      dans la pile, et retournez la copie au <b>miroir</b>.</p>`:''}`;
 }
 function voletTailles(){
   const ic=IC();
@@ -2241,13 +2295,16 @@ function brancherPlanche(){
     toile.setPointerCapture(ev.pointerId);
     const p=point(ev);
     const surPoignee=!!ev.target.closest('[data-poignee]');
-    glisse={quoi:surPoignee?'taille':'place',p:p,depart:Object.assign({},o)};
+    glisse={quoi:surPoignee?'taille':'place',p:p,depart:Object.assign({},o),bouge:false};
+    /* on prend le clavier : les flèches déplaceront la forme sans re-cliquer */
+    toile.focus({preventScroll:true});
   });
   toile.addEventListener('pointermove',ev=>{
     if(!glisse)return;
     const ic=IC(),o=ic.formes[selForme];
     const p=point(ev), dx=p.x-glisse.p.x, dy=p.y-glisse.p.y;
     const d=glisse.depart;
+    if(Math.abs(dx)+Math.abs(dy)>.05)glisse.bouge=true;
     /* un quart d'unité : assez fin pour placer, assez gros pour rester net */
     const q=v=>Math.round(v*4)/4;
     if(glisse.quoi==='place'){
@@ -2261,9 +2318,48 @@ function brancherPlanche(){
     }
     rendrePlancheSeule();
   });
-  const fin=()=>{if(glisse){glisse=null;tout();}};
+  /* Un simple clic ne redessine rien : refaire la feuille remplacerait la planche
+     et le clavier lui échapperait aussitôt — les flèches ne serviraient qu'une
+     fois sur deux, sans qu'on comprenne pourquoi. Seul un glissé qui a bougé
+     quelque chose vaut un tour complet, et la planche y reprend le focus. */
+  const fin=()=>{
+    if(!glisse)return;
+    const bouge=glisse.bouge;
+    glisse=null;
+    if(bouge)majApresGeste();
+  };
   toile.addEventListener('pointerup',fin);
   toile.addEventListener('pointercancel',fin);
+  /* Les flèches, pour poser une forme au quart d'unité près sans viser à la
+     souris. Maj passe à l'unité entière. On ne bouge que ce qui est choisi, et
+     l'on rend la main au navigateur pour tout autre touche. */
+  toile.addEventListener('keydown',ev=>{
+    const ic=IC(),o=(ic&&ic.formes||[])[selForme];
+    if(!o||ic.source)return;
+    const pas=ev.shiftKey?1:.25;
+    const d=({ArrowLeft:[-pas,0],ArrowRight:[pas,0],
+              ArrowUp:[0,-pas],ArrowDown:[0,pas]})[ev.key];
+    if(!d)return;
+    ev.preventDefault();
+    o.x=Math.round((o.x+d[0])*4)/4;
+    o.y=Math.round((o.y+d[1])*4)/4;
+    if(o.f==='trait'){
+      o.x2=Math.round((o.x2+d[0])*4)/4;
+      o.y2=Math.round((o.y2+d[1])*4)/4;
+    }
+    /* on garde le focus : on enchaîne les flèches sans re-cliquer */
+    rendrePlancheSeule();
+    majApresGeste();
+  });
+}
+/* Un geste au clavier doit finir comme un glissé : la feuille remise à jour et
+   le dessin rangé — sauver() pose la section du dépôt au passage. Mais pas la
+   planche, qui a le focus : la refaire le perdrait, et l'on ne pourrait pas
+   enchaîner deux flèches. */
+let tGeste=null;
+function majApresGeste(){
+  clearTimeout(tGeste);
+  tGeste=setTimeout(()=>{rendreFeuille();rendreListe();sauver();},180);
 }
 /* Pendant un glissé on ne redessine que la planche : refaire toute la feuille
    à chaque mouvement du doigt la rendrait poisseuse. */
@@ -2346,6 +2442,15 @@ document.addEventListener('click',ev=>{
     if(o){o.x=24-o.x;if(o.f==='trait')o.x2=24-o.x2;
       if(o.f==='rectangle')o.x-=o.l;}
     tout();}
+  /* Le miroir de haut en bas manquait, et c'est celui qui sert aux dessins
+     symétriques par le travers — une voile, un pont, un toit. */
+  else if(a==='miroir-v'){const o=ic.formes[selForme];
+    if(o){o.y=24-o.y;if(o.f==='trait')o.y2=24-o.y2;
+      if(o.f==='rectangle')o.y-=o.h;}
+    tout();}
+  else if(a==='planche-taille'){
+    taillePlanche=Math.max(0,Math.min(TAILLES_PLANCHE.length-1,i));
+    appliquerTaillePlanche();tout();}
   else if(a==='coller'){ecrire('source',corpsSvg(ic));tout();}
   else if(a==='source-oter'){ecrire('source',undefined);tout();}
 });
