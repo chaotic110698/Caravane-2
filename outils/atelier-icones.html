@@ -1949,6 +1949,23 @@ const FORMES={
       }
       return `<polygon points="${pts.join(' ')}" ${o.plein?'fill="currentColor"'
         :`fill="none" stroke="currentColor" stroke-width="${n(o.ep)}" stroke-linejoin="round"`}/>`}},
+  /* ── une icône entière, reprise comme forme ──
+     La roue dessinée une fois sert quatre fois à la carriole. On ne recopie pas
+     ses formes : on garde un renvoi vers sa clé, si bien que corriger la roue
+     corrige les quatre. Le renvoi ne vit que dans l'atelier — corpsSvg() le
+     résout au moment de publier, et le jeu reçoit un dessin entier, sans rien
+     savoir de la composition. */
+  icone:{nom:'Icône',neuf:()=>({f:'icone',ref:'',x:12,y:12,t:1,rot:0}),
+    svg:(o,vus)=>{
+      const d=corpsDeRenvoi(o.ref,vus);
+      if(!d)return '';
+      const t=o.t===undefined?1:Math.max(.05,o.t);
+      const r=Math.round(Number(o.rot)||0);
+      /* de droite à gauche : on ramène son centre à l'origine, on la met à
+         l'échelle, on la tourne, puis on la pose où on veut */
+      return `<g transform="translate(${n(o.x)} ${n(o.y)})`+
+        (r?` rotate(${r})`:'')+
+        ` scale(${n(t)}) translate(-12 -12)">${d}</g>`;}},
   arc:{nom:'Arc',neuf:()=>({f:'arc',x:12,y:14,r:7,ouvert:180,ep:2}),
     svg:o=>{
       const a=Math.max(10,Math.min(350,o.ouvert||180))*Math.PI/180;
@@ -1971,7 +1988,8 @@ const REGLAGES={
   etoile:[['r','Rayon',1,12,.5],['branches','Branches',3,12,1],
           ['creux','Creux',.15,.9,.05],['ep','Épaisseur du trait',.4,4,.2]],
   arc:[['r','Rayon',1,12,.5],['ouvert','Ouverture (degrés)',20,340,10],
-       ['ep','Épaisseur',.4,4,.2]]
+       ['ep','Épaisseur',.4,4,.2]],
+  icone:[['t','Échelle',.1,2,.05],['rot','Rotation (degrés)',0,355,5]]
 };
 
 /* ═══════════════ le modèle ═══════════════ */
@@ -2026,14 +2044,54 @@ function appliquerTaillePlanche(){
   if(cote)cote.style.width=Math.max(320,px+40)+'px';
 }
 
-/* ═══════════════ le dessin ═══════════════ */
-function corpsSvg(ic){
+/* ═══════════════ le dessin ═══════════════
+   « vus » porte les clés déjà traversées en descendant dans les renvois. Sans
+   elle, une roue qui se reprendrait elle-même — ou deux icônes qui se
+   citeraient l'une l'autre — ferait tourner le dessin jusqu'à la pile pleine.
+   On coupe au premier retour, et l'atelier le signale par ailleurs. */
+function corpsSvg(ic,vus){
   if(!ic)return '';
   if(ic.source)return ic.source;          /* du SVG collé l'emporte */
+  const dedans=vus||[];
   return (ic.formes||[]).map(o=>{
     const d=FORMES[o.f];
-    return d?d.svg(o):'';
+    return d?d.svg(o,ic.cle?dedans.concat([ic.cle]):dedans):'';
   }).join('\n  ');
+}
+/* Ce que désigne un renvoi : une de vos icônes, ou un dessin livré avec le jeu.
+   Les vôtres d'abord — c'est ce qu'on est en train d'écrire qui compte. */
+function iconeDe(cle){
+  if(!cle)return null;
+  const mienne=R.icones.find(x=>x.cle===cle);
+  if(mienne)return {mienne:mienne};
+  const g=(typeof REF!=='undefined'&&REF.glyphes)||{};
+  return g[cle]?{source:g[cle]}:null;
+}
+function corpsDeRenvoi(cle,vus){
+  if(!cle)return '';
+  const dedans=vus||[];
+  if(dedans.indexOf(cle)>=0)return '';          /* on tourne en rond : on coupe */
+  if(dedans.length>8)return '';                 /* garde-fou de profondeur */
+  const t=iconeDe(cle);
+  if(!t)return '';
+  return t.source||corpsSvg(t.mienne,dedans);
+}
+/* Le renvoi de o mènerait-il à un cycle si on le posait dans l'icône « depuis » ?
+   On refuse de proposer un choix qui se mordrait la queue, plutôt que de le
+   laisser faire et de s'en plaindre après. */
+function meneAuCycle(cleVisee,depuis){
+  if(!cleVisee||!depuis)return false;
+  if(cleVisee===depuis)return true;
+  const vus=[];
+  const descend=cle=>{
+    if(cle===depuis)return true;
+    if(vus.indexOf(cle)>=0)return false;
+    vus.push(cle);
+    const t=iconeDe(cle);
+    if(!t||!t.mienne)return false;
+    return (t.mienne.formes||[]).some(o=>o.f==='icone'&&o.ref&&descend(o.ref));
+  };
+  return descend(cleVisee);
 }
 function svgDe(ic,teinte,taille){
   return `<svg viewBox="0 0 24 24" ${taille?`width="${taille}" height="${taille}"`:''} `+
@@ -2078,9 +2136,18 @@ function rendreFeuille(){
       `</div>`+
       (formes.length?`<div class="pile">`+formes.map((o,i)=>{
         const d=FORMES[o.f]||{nom:o.f};
+        /* une icône reprise se nomme par ce qu'elle reprend : « Trait, Trait,
+           Icône, Icône » ne dirait rien de la carriole qu'on assemble */
+        const dit=o.f==='icone'
+          ?(o.ref
+            ?(iconeDe(o.ref)
+              ?'⧉ '+((R.icones.find(x=>x.cle===o.ref)||{}).nom||o.ref)
+              :'⧉ '+o.ref+' — introuvable')
+            :'⧉ aucune icône choisie')
+          :ech(d.nom)+(o.plein===false?' (au trait)':'');
         return `<div class="couche${i===selForme?' choisi':''}">`+
           `<span class="nom" data-act="choisir" data-i="${i}">`+
-          `${ech(d.nom)}${o.plein===false?' (au trait)':''}</span>`+
+          `${o.f==='icone'?ech(dit):dit}</span>`+
           (i>0?`<button data-act="monter" data-i="${i}" title="Passer devant">↑</button>`:'')+
           (i<formes.length-1?`<button data-act="descendre" data-i="${i}" title="Passer derrière">↓</button>`:'')+
           `<button data-act="copier-forme" data-i="${i}" title="Dupliquer">⧉</button>`+
@@ -2094,7 +2161,38 @@ function rendreFeuille(){
     if(o){
       const d=FORMES[o.f];
       h+=`<div class="bloc"><h2>${ech(d.nom)} — ses réglages</h2><div class="corps">`;
-      if(o.f!=='trait'){
+      /* Une icône reprise : on choisit laquelle. Celles qui feraient un cycle ne
+         sont pas dans la liste — mieux vaut ne pas les proposer que s'en plaindre
+         après. Elle n'a ni remplissage ni épaisseur : elle porte les siens. */
+      if(o.f==='icone'){
+        const moi=ic.cle||'';
+        const miennes=R.icones.filter(x=>x.cle&&x.cle!==moi&&!meneAuCycle(x.cle,moi))
+          .map(x=>[x.cle,(x.nom||x.cle)]);
+        const livrees=Object.keys((typeof REF!=='undefined'&&REF.glyphes)||{})
+          .filter(k=>!R.icones.some(x=>x.cle===k)).map(k=>[k,k]);
+        const perdu=o.ref&&!iconeDe(o.ref);
+        h+=champ('Quelle icône',
+          `<select data-ch="formes.${selForme}.ref" data-t="txt">`+
+          `<option value=""${o.ref?'':' selected'}>— à choisir —</option>`+
+          (perdu?`<option value="${ech(o.ref)}" selected>${ech(o.ref)} — introuvable</option>`:'')+
+          (miennes.length?`<optgroup label="Les vôtres">`+miennes.map(([k,nm])=>
+            `<option value="${ech(k)}"${k===o.ref?' selected':''}>${ech(nm)}</option>`).join('')+
+            `</optgroup>`:'')+
+          (livrees.length?`<optgroup label="Les dessins du jeu">`+livrees.map(([k,nm])=>
+            `<option value="${ech(k)}"${k===o.ref?' selected':''}>${ech(nm)}</option>`).join('')+
+            `</optgroup>`:'')+
+          `</select>`,
+          perdu
+          ?`<b class="mal">Aucune icône ne porte la clé <code>${ech(o.ref)}</code>.</b> `+
+           `Elle a été renommée ou supprimée : rien ne se dessine ici.`
+          :`On garde un <b>renvoi</b>, pas une copie : corriger la roue corrige `+
+           `toutes les carrioles qui s'en servent. Les icônes qui se reprendraient `+
+           `elles-mêmes ne sont pas dans la liste.`);
+        if(!miennes.length&&!o.ref)
+          h+=`<p class="vide">Vous n'avez pas encore d'autre icône à reprendre. `+
+             `Les dessins du jeu, eux, sont toujours là.</p>`;
+      }
+      if(o.f!=='trait'&&o.f!=='icone'){
         h+=champ('Rempli',`<div class="chips">${coche('formes.'+selForme+'.plein',
           'plein, sinon au trait')}</div>`);
       }
@@ -2155,6 +2253,20 @@ function controler(ic,idx){
     dur(`La clé <b>${ech(ic.cle)}</b> est déjà celle d'un dessin du jeu : la vôtre `+
       `le remplacerait partout.`);
   if(!ic.nom)doux('Pas de <b>nom</b> : elle sera dure à retrouver dans les listes.');
+  /* Les renvois : sans icône choisie on ne dessine rien, et une clé qui ne mène
+     nulle part est le genre de panne qu'on ne voit pas — le dessin manque
+     simplement, sans rien dire. */
+  (ic.formes||[]).forEach((o,i)=>{
+    if(o.f!=='icone')return;
+    if(!o.ref)dur(`La forme ${i+1} reprend une icône mais <b>aucune n'est choisie</b> : `+
+      `elle ne dessine rien.`);
+    else if(!iconeDe(o.ref))
+      dur(`La forme ${i+1} renvoie à <b>${ech(o.ref)}</b>, qui n'existe pas — `+
+        `renommée ou supprimée. Rien ne se dessine à sa place.`);
+    else if(meneAuCycle(o.ref,ic.cle))
+      dur(`La forme ${i+1} renvoie à <b>${ech(o.ref)}</b>, qui revient à celle-ci : `+
+        `le dessin tournerait en rond. Il est coupé là.`);
+  });
   const corps=corpsSvg(ic);
   if(!corps.trim())dur('Elle est <b>vide</b> : rien ne s\'affichera.');
   if(ic.source){
@@ -2185,6 +2297,9 @@ function boite(o){
     x1:Math.max(o.x,o.x2)+o.ep/2,y1:Math.max(o.y,o.y2)+o.ep/2};
   if(o.f==='rectangle')return {x0:o.x,y0:o.y,x1:o.x+o.l,y1:o.y+o.h};
   if(o.f==='triangle')return {x0:o.x-o.l/2,y0:o.y-o.h/2,x1:o.x+o.l/2,y1:o.y+o.h/2};
+  /* une icône reprise occupe sa boîte de 24, mise à l'échelle et centrée sur x,y */
+  if(o.f==='icone'){const d=12*(o.t===undefined?1:Math.max(.05,o.t));
+    return {x0:o.x-d,y0:o.y-d,x1:o.x+d,y1:o.y+d};}
   const r=o.r||6;
   return {x0:o.x-r,y0:o.y-r,x1:o.x+r,y1:o.y+r};
 }
@@ -2314,6 +2429,10 @@ function brancherPlanche(){
       if(o.f==='rectangle'){o.l=Math.max(.5,q(d.l+dx));o.h=Math.max(.5,q(d.h+dy));}
       else if(o.f==='triangle'){o.l=Math.max(.5,q(d.l+dx*2));o.h=Math.max(.5,q(d.h+dy*2));}
       else if(o.f==='trait'){o.x2=q(d.x2+dx);o.y2=q(d.y2+dy);}
+      /* une icône reprise se tire par son échelle : douze unités de côté valent
+         l'échelle 1, donc un vingtième d'échelle par unité tirée */
+      else if(o.f==='icone')
+        o.t=Math.max(.1,Math.round(((d.t===undefined?1:d.t)+Math.max(dx,dy)/12)*20)/20);
       else o.r=Math.max(.5,q(d.r+Math.max(dx,dy)));
     }
     rendrePlancheSeule();
@@ -2412,7 +2531,31 @@ document.addEventListener('input',ev=>{
     rendrePlancheSeule();sauver();rendreListe();
   }
 });
-ecouterSaisie(()=>{tout();});
+/* Renommer une icône dont d'autres se servent. Sans cela, rebaptiser « roue »
+   laissait quatre renvois pointant vers un nom qui n'existe plus, et la carriole
+   se vidait sans un mot. On note la clé en entrant dans le champ, et chaque
+   frappe fait suivre les renvois. */
+let cleAvant=null;
+document.addEventListener('focusin',ev=>{
+  const d=ev.target&&ev.target.dataset;
+  if(d&&d.ch==='cle')cleAvant=(IC()||{}).cle||'';
+});
+function suivreRenommage(avant,apres){
+  if(!avant||avant===apres)return 0;
+  let n=0;
+  R.icones.forEach(x=>(x.formes||[]).forEach(o=>{
+    if(o.f==='icone'&&o.ref===avant){o.ref=apres||'';n++;}
+  }));
+  return n;
+}
+ecouterSaisie((t,ch)=>{
+  if(ch==='cle'){
+    const apres=(IC()||{}).cle||'';
+    suivreRenommage(cleAvant,apres);
+    cleAvant=apres;
+  }
+  tout();
+});
 ecouterTeintes(()=>tout());
 document.addEventListener('click',ev=>{
   const b=ev.target.closest('[data-act],[data-sel]');
@@ -2420,7 +2563,12 @@ document.addEventListener('click',ev=>{
   if(b.dataset.sel!==undefined){sel=Number(b.dataset.sel);selForme=0;tout();return;}
   const a=b.dataset.act, ic=IC();
   const i=b.dataset.i!==undefined?Number(b.dataset.i):-1;
-  if(a==='cle-auto'){ecrire('cle',slug(lire('nom')));tout();}
+  if(a==='cle-auto'){
+    const avant=(IC()||{}).cle||'';
+    ecrire('cle',slug(lire('nom')));
+    suivreRenommage(avant,(IC()||{}).cle||'');
+    cleAvant=(IC()||{}).cle||'';
+    tout();}
   else if(a==='ajouter'){
     ic.formes=ic.formes||[];
     ic.formes.push(FORMES[b.dataset.f].neuf());
@@ -2470,7 +2618,16 @@ $('#b-dupliquer').onclick=()=>{
 };
 $('#b-supprimer').onclick=()=>{
   if(!IC())return;
-  if(!confirm('Supprimer « '+(IC().nom||'sans nom')+' » ?'))return;
+  const cle=IC().cle;
+  /* Qui s'en sert ailleurs : supprimer une roue viderait les carrioles sans
+     rien dire, et l'on chercherait longtemps pourquoi. */
+  const dependent=cle?R.icones.filter((x,i)=>i!==sel&&
+    (x.formes||[]).some(o=>o.f==='icone'&&o.ref===cle)):[];
+  const noms=dependent.map(x=>x.nom||x.cle).join(', ');
+  if(!confirm('Supprimer « '+(IC().nom||'sans nom')+' » ?'+
+    (dependent.length?`\n\n${dependent.length} icône`+
+      `${dependent.length>1?'s s\'en servent':' s\'en sert'} : ${noms}. `+
+      `Le dessin y disparaîtra.`:'')))return;
   R.icones.splice(sel,1);sel=Math.max(0,sel-1);selForme=0;tout();
 };
 /* Reprendre un dessin du jeu : c'est la façon la plus rapide d'en faire un

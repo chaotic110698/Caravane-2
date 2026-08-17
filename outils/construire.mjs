@@ -496,6 +496,26 @@ trace('', 'Chaque forme se dit **pleine** ou **creuse**, sauf le trait et l\'arc
   'que leur épaisseur. Une forme creuse ne montre que son contour : c\'est ce qui donne',
   'aux dessins du jeu leur air gravé.', '');
 
+trace('## Une icône dans une autre', '',
+  'La forme **Icône** ne dessine pas : elle **reprend une autre icône**, entière. Dessinez',
+  'une roue une fois, et la carriole s\'en sert deux fois, la charrette quatre. On choisit',
+  'la vôtre ou l\'un des dessins livrés avec le jeu, puis on règle son **échelle** et sa',
+  '**rotation** comme pour n\'importe quelle forme.', '',
+  'Ce n\'est **pas une copie, c\'est un renvoi** : corriger la roue corrige du même coup',
+  'toutes les carrioles qui s\'en servent. C\'est le seul moyen de ne pas refaire quatre',
+  'fois la même correction — et la seule façon d\'assembler un dessin quand on ne sait',
+  'pas dessiner : on empile des morceaux qui existent déjà.', '',
+  '**Ce que l\'atelier ne vous laissera pas faire :** une icône qui se reprend',
+  'elle-même, ou deux qui se citent l\'une l\'autre. Le dessin tournerait sans fin ; les',
+  'choix qui bouclent ne sont donc pas dans la liste.', '',
+  '**Renommer** l\'icône reprise fait suivre les renvois tout seuls. La **supprimer**',
+  'demande confirmation en nommant ce qui s\'en servait — sans quoi les carrioles se',
+  'videraient sans un mot. Et un renvoi qui ne mène plus nulle part est signalé dans les',
+  'contrôles, en dur.', '',
+  '> Le renvoi ne vit que dans l\'atelier. Ce qui part vers le jeu est un **dessin',
+  '> entier** : la roue y est recopiée à chaque place qu\'elle occupe, et le jeu n\'a',
+  '> rien à savoir de la composition.', '');
+
 trace('## La teinte', '',
   `Les ${Object.keys(ICO.teintesEvenement).length} teintes du jeu portent un nom, parce qu'elles`,
   'veulent dire quelque chose — un événement de danger est rouge partout, sans qu\'on ait à',
