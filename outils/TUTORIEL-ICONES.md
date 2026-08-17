@@ -36,16 +36,40 @@ la dernière de la liste est celle qui se dessine par-dessus.
 | forme | ce qu'elle règle |
 |---|---|
 | Disque | **Rayon** (1 à 12), **Épaisseur du trait** (0,4 à 4) |
-| Rectangle | **Largeur** (1 à 24), **Hauteur** (1 à 24), **Arrondi** (0 à 6), **Épaisseur du trait** (0,4 à 4) |
-| Triangle | **Base** (1 à 24), **Hauteur** (1 à 24), **Épaisseur du trait** (0,4 à 4) |
+| Rectangle | **Largeur** (1 à 24), **Hauteur** (1 à 24), **Arrondi** (0 à 6), **Rotation (degrés)** (0 à 355), **Épaisseur du trait** (0,4 à 4) |
+| Triangle | **Base** (1 à 24), **Hauteur** (1 à 24), **Rotation (degrés)** (0 à 355), **Épaisseur du trait** (0,4 à 4) |
 | Trait | **Épaisseur** (0,4 à 6) |
-| Étoile | **Rayon** (1 à 12), **Branches** (3 à 12), **Creux** (0,15 à 0,9), **Épaisseur du trait** (0,4 à 4) |
+| Étoile | **Rayon** (1 à 12), **Branches** (3 à 12), **Creux** (0,15 à 0,9), **Rotation (degrés)** (0 à 355), **Épaisseur du trait** (0,4 à 4) |
 | Icône | **Échelle** (0,1 à 2), **Rotation (degrés)** (0 à 355) |
-| Arc | **Rayon** (1 à 12), **Ouverture (degrés)** (20 à 340), **Épaisseur** (0,4 à 4) |
+| Arc | **Rayon** (1 à 12), **Ouverture (degrés)** (20 à 340), **Rotation (degrés)** (0 à 355), **Épaisseur** (0,4 à 4) |
 
 Chaque forme se dit **pleine** ou **creuse**, sauf le trait et l'arc, qui n'ont
 que leur épaisseur. Une forme creuse ne montre que son contour : c'est ce qui donne
 aux dessins du jeu leur air gravé.
+
+## La réserve de pièces
+
+Le bouton **Bibliothèque…** ouvre une réserve de 74 dessins déjà faits,
+rangés en 11 familles. Ce ne sont pas des images :
+ce sont des **listes de formes**, comme les vôtres, donc réglables au curseur une fois
+versées. Trois genres :
+
+| genre | ce que c'est |
+|---|---|
+| **pièce** | un morceau fait pour être repris plusieurs fois — une roue, une aile |
+| **dessin fini** | un pictogramme à prendre tel quel, ou à retoucher |
+| **assemblage** | un dessin qui **renvoie** à des pièces au lieu de les recopier |
+
+**Verser** une pièce la recopie chez vous. Un assemblage emporte avec lui les pièces
+dont il dépend — verser la charrette amène la roue, sinon on obtiendrait une charrette
+sans roues. Si vous avez **déjà** une icône sous cette clé, c'est la vôtre qui sert :
+la réserve ne l'écrase pas et ne la double pas. Dessinez votre propre roue, versez la
+charrette, elle roulera sur la vôtre.
+
+> C'est la réponse à « je ne sais pas dessiner » : à vingt-quatre pixels, un
+> pictogramme est un assemblage de quatre ou cinq formes. On empile des morceaux qui
+> existent déjà, on les tourne, on les met à l'échelle — et l'on obtient un dessin
+> sans avoir tracé une courbe.
 
 ## Une icône dans une autre
 

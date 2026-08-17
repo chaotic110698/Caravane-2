@@ -434,6 +434,15 @@ writeFileSync(join(ICI, 'TUTORIEL-MISSIONS.md'), TUTOS['missions'], 'utf8');
    ajoutée à l'outil apparaisse ici sans qu'on y pense. */
 
 const ICO = litJson('data', 'icones.json');
+/* La réserve de pièces : des dessins déjà faits, en listes de formes, que
+   l'atelier d'icônes verse dans le jeu de l'auteur. Elle vit dans outils/ et non
+   dans data/ : le jeu n'en a que faire, c'est un outil de dessin. Absente, la
+   bibliothèque se tait au lieu de casser la construction. Elle est lue ici parce
+   que le tutoriel la compte, et le tutoriel s'écrit avant l'injection. */
+let pieces = { format: 'caravane.pieces.v1', familles: {}, pieces: [] };
+try { pieces = litJson('outils', 'pieces.json'); }
+catch (e) { console.warn('outils/pieces.json absent : la bibliothèque sera vide.'); }
+
 const pageIcones = (() => { try { return lit('outils', 'atelier-icones.html'); }
                             catch (e) { return ''; } })();
 
@@ -495,6 +504,25 @@ formesDeclarees.forEach(({ cle, nom }) => {
 trace('', 'Chaque forme se dit **pleine** ou **creuse**, sauf le trait et l\'arc, qui n\'ont',
   'que leur épaisseur. Une forme creuse ne montre que son contour : c\'est ce qui donne',
   'aux dessins du jeu leur air gravé.', '');
+
+trace('## La réserve de pièces', '',
+  `Le bouton **Bibliothèque…** ouvre une réserve de ${pieces.pieces.length} dessins déjà faits,`,
+  `rangés en ${Object.keys(pieces.familles || {}).length} familles. Ce ne sont pas des images :`,
+  'ce sont des **listes de formes**, comme les vôtres, donc réglables au curseur une fois',
+  'versées. Trois genres :', '',
+  '| genre | ce que c\'est |', '|---|---|',
+  '| **pièce** | un morceau fait pour être repris plusieurs fois — une roue, une aile |',
+  '| **dessin fini** | un pictogramme à prendre tel quel, ou à retoucher |',
+  '| **assemblage** | un dessin qui **renvoie** à des pièces au lieu de les recopier |', '',
+  '**Verser** une pièce la recopie chez vous. Un assemblage emporte avec lui les pièces',
+  'dont il dépend — verser la charrette amène la roue, sinon on obtiendrait une charrette',
+  'sans roues. Si vous avez **déjà** une icône sous cette clé, c\'est la vôtre qui sert :',
+  'la réserve ne l\'écrase pas et ne la double pas. Dessinez votre propre roue, versez la',
+  'charrette, elle roulera sur la vôtre.', '',
+  '> C\'est la réponse à « je ne sais pas dessiner » : à vingt-quatre pixels, un',
+  '> pictogramme est un assemblage de quatre ou cinq formes. On empile des morceaux qui',
+  '> existent déjà, on les tourne, on les met à l\'échelle — et l\'on obtient un dessin',
+  '> sans avoir tracé une courbe.', '');
 
 trace('## Une icône dans une autre', '',
   'La forme **Icône** ne dessine pas : elle **reprend une autre icône**, entière. Dessinez',
@@ -870,10 +898,14 @@ const bandeau = (id) =>
 const injecte = (html, id, contenu, quoi) => {
   const balise = new RegExp(`(<script id="${id}"[^>]*>)[\\s\\S]*?(</script>)`);
   if (!balise.test(html)) throw new Error(`Balise <script id="${id}"> introuvable dans ${quoi}`);
-  const bande = /json/.test(id) || id === 'reference' || id === 'tutoriels'
-    ? '' : bandeau(id) + '\n';
-  return html.replace(balise, (_, a, b) =>
-    a + '\n' + bande + contenu + '\n' + (bande ? bandeau(id) + '\n' : '') + b);
+  return html.replace(balise, (ouvrant, a, b) => {
+    /* Le bandeau est du commentaire JavaScript : il n'a rien à faire dans un bloc
+       de données, où il rendrait le JSON illisible. On le décide sur la balise
+       elle-même — type="application/json" — et non sur une liste de noms qu'on
+       oublierait d'allonger au bloc suivant. C'est arrivé. */
+    const bande = /type\s*=\s*"application\/json"/.test(a) ? '' : bandeau(id) + '\n';
+    return a + '\n' + bande + contenu + '\n' + (bande ? bandeau(id) + '\n' : '') + b;
+  });
 };
 
 const poses = [];
@@ -884,6 +916,10 @@ for (const nom of ATELIERS) {
   catch (e) { continue; }                       /* atelier pas encore écrit */
   html = injecte(html, 'commun', commun, nom);
   html = injecte(html, 'reference', JSON.stringify(reference), nom);
+  /* La réserve de pièces ne va que dans l'atelier d'icônes : c'est là qu'on
+     assemble, et elle pèse trop pour la porter aux sept autres. */
+  if (/<script id="pieces"/.test(html))
+    html = injecte(html, 'pieces', JSON.stringify(pieces), nom);
   writeFileSync(page, html, 'utf8');
   poses.push(nom);
 }
@@ -919,6 +955,7 @@ console.log(
   'TUTORIEL-MISSIONS.md     %d jalons · %d récompenses · %d trous\n' +
   'TUTORIEL-ICONES.md       %d formes · %d teintes nommées\n' +
   'TUTORIEL-DIALOGUES.md    %d interrogations · %d effets propres · %d trous\n' +
+  'réserve de pièces        %d pièces · %d familles\n' +
   'référence                %d biens · %d armes · %d métiers · %d dessins · %d teintes\n' +
   'injecté dans             %s\n' +
   'poids embarqué           %s de catalogue, %s de machinerie',
@@ -929,6 +966,7 @@ console.log(
   compte(VM.jalons), compte(VM.recompenses), compte(VM.trous),
   formesDeclarees.length, compte(ICO.teintesEvenement),
   compte(VD.interrogations), compte(VD.effets), compte(VD.trous),
+  pieces.pieces.length, compte(pieces.familles),
   compte(reference.biens), compte(reference.armes), compte(reference.metiers),
   compte(reference.glyphes), compte(reference.natures),
   poses.join(', ') || '(aucun atelier trouvé)',
