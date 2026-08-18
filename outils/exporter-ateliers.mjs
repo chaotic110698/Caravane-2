@@ -13,7 +13,8 @@
 
    Le chemin de destination peut aussi venir de la variable ATELIERS_DEST.      */
 
-import { copyFileSync, existsSync, statSync, readFileSync } from 'node:fs';
+import { copyFileSync, existsSync, statSync, readFileSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 
@@ -66,6 +67,38 @@ if (manquent.length) {
   process.exit(1);
 }
 
+/* Estampiller le service worker avant de copier quoi que ce soit.
+
+   Publier ne suffit pas à faire voir : le navigateur garde sa copie, et le
+   service worker garde la sienne sous une clé de version. Cette clé était
+   écrite à la main, donc jamais changée — un atelier republié pouvait rester
+   invisible chez l'auteur pendant que le dépôt d'en face était à jour. On la
+   calcule maintenant sur le contenu même de ce qui part : deux exports
+   identiques gardent la même clé, un octet changé en donne une neuve, et
+   l'ancien cache est purgé à l'activation. */
+const empreinte = (() => {
+  const h = createHash('sha256');
+  A_COPIER.filter(nom => nom !== 'sw.js').forEach(nom => {
+    const src = join(ICI, nom);
+    if (!existsSync(src)) return;
+    h.update(nom);
+    h.update(readFileSync(src));
+  });
+  return h.digest('hex').slice(0, 12);
+})();
+{
+  const chemin = join(ICI, 'sw.js');
+  const avant = readFileSync(chemin, 'utf8');
+  const apres = avant.replace(/^const VERSION='[^']*';/m,
+    `const VERSION='caravane-ateliers-${empreinte}';`);
+  if (!/^const VERSION='caravane-ateliers-/m.test(apres)) {
+    console.error('sw.js n\'a plus de ligne « const VERSION=\'caravane-ateliers-…\'; » :\n' +
+      'sans elle le cache des navigateurs ne se purgera pas. Export interrompu.');
+    process.exit(1);
+  }
+  if (apres !== avant) writeFileSync(chemin, apres, 'utf8');
+}
+
 let n = 0, poids = 0;
 A_COPIER.forEach(nom => {
   const src = join(ICI, nom);
@@ -75,6 +108,22 @@ A_COPIER.forEach(nom => {
   n++;
 });
 
+/* Ce que le service worker précharge doit exister : un fichier publié mais
+   absent de sa liste ne sera pas là hors connexion, et un fichier listé mais
+   jamais publié fait échouer sa mise en cache en silence. */
+{
+  const sw = readFileSync(join(ICI, 'sw.js'), 'utf8');
+  const listes = (sw.match(/const PAGES=\[([\s\S]*?)\]/) || [, ''])[1];
+  const caches = [...listes.matchAll(/'\.\/([^']*)'/g)].map(m => m[1]).filter(Boolean);
+  const pas_caches = A_COPIER.filter(x => x !== 'sw.js' && !caches.includes(x));
+  const pas_publies = caches.filter(x => x !== 'README.md' && !A_COPIER.includes(x));
+  if (pas_caches.length)
+    console.warn('publiés mais absents du cache hors connexion : ' + pas_caches.join(', '));
+  if (pas_publies.length)
+    console.warn('listés dans sw.js mais jamais publiés : ' + pas_publies.join(', '));
+}
+
 console.log('%d fichiers copiés vers %s (%s ko)\n' +
+  'service worker estampillé %s — le cache des navigateurs se purgera tout seul.\n' +
   'Seul le README du dépôt d\'en face lui appartient : il n\'est pas touché.',
-  n, dest, (poids / 1024).toFixed(0));
+  n, dest, (poids / 1024).toFixed(0), empreinte);
