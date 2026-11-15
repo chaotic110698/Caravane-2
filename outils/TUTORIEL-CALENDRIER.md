@@ -26,11 +26,11 @@ qu'une condition de plus.
 
 | | |
 |---|---|
-| Heures dans une journée | **25** |
-| Jours dans un mois | **50** |
-| Mois dans une année | **4** |
-| Jours dans une semaine | **5** |
-| Jours dans une année | **200** — donc 200 étapes de voyage |
+| Heures dans une journée | **24** |
+| Jours dans un mois | **60** |
+| Mois dans une année | **6** |
+| Jours dans une semaine | **6** |
+| Jours dans une année | **360** — donc 360 étapes de voyage |
 
 Les trois premiers se règlent dans l'atelier ; le quatrième s'en déduit. Changer la
 longueur d'un jour ramène les moments dans la nouvelle journée : rien ne peut sortir
@@ -40,10 +40,12 @@ des bornes.
 
 | Rang | Nom | Saison |
 |---|---|---|
-| 1 | **Mois I** | saison A |
-| 2 | **Mois II** | saison B |
-| 3 | **Mois III** | saison C |
-| 4 | **Mois IV** | saison D |
+| 1 | **Pluvieux** | les eaux hautes |
+| 2 | **Semailles** | le printemps |
+| 3 | **Fenaison** | l'été court |
+| 4 | **Moissons** | l'été haut |
+| 5 | **Vendanges** | l'arrière-saison |
+| 6 | **Gelées** | l'hiver |
 
 Le **nom** paraît partout dans le jeu. La **saison** ne sert encore à rien et attend
 les cols qui s'ouvrent et se ferment ; posez-la quand même, elle sera lue le jour venu.
@@ -55,22 +57,23 @@ ce qui s'y accroche. Les flèches le déplacent, la croix l'ôte — il en faut 
 
 | Rang | Nom |
 |---|---|
-| 1 | **Jour I** |
-| 2 | **Jour II** |
-| 3 | **Jour III** |
-| 4 | **Jour IV** |
-| 5 | **Jour V** |
+| 1 | **jour du Sel** |
+| 2 | **jour du Fer** |
+| 3 | **jour de l'Ambre** |
+| 4 | **jour du Pain** |
+| 5 | **jour de la Route** |
+| 6 | **jour de Repos** |
 
 Sa longueur **est la longueur de cette liste** : elle n'est pas déclarée à côté,
 pour qu'aucun des deux nombres ne puisse démentir l'autre. Le champ *Jours dans une
 semaine* allonge ou raccourcit la liste, et garde les noms déjà écrits.
 
 Elle **court sans s'interrompre** : elle ne repart pas au premier de chaque mois, pas
-plus que notre lundi ne le fait. Le jour tombe donc toujours au même rang d'un mois à l'autre, puisque 5 divise 200.
+plus que notre lundi ne le fait. Le jour tombe donc toujours au même rang d'un mois à l'autre, puisque 6 divise 360.
 
 Le nom du jour paraît dans la **date entière** — celle de l'écran de fin et de
 l'aperçu de l'atelier. Les mentions au fil d'une phrase — « reçu le 17ᵉ jour du
-Mois I » — gardent le quantième seul, pour rester courtes.
+Pluvieux » — gardent le quantième seul, pour rester courtes.
 
 ## Les moments du jour
 
@@ -90,7 +93,7 @@ deux moments revient au premier de la liste ; l'atelier vous le dit aussi.
 
 ## Le premier jour du monde
 
-La première étape d'une partie tombe le **1ᵉʳ jour du Mois I, an I**, à 8 heures.
+La première étape d'une partie tombe le **1ᵉʳ jour du Semailles, an CI**, à 7 heures.
 
 Tout le reste se compte à partir de là. Décaler ce jour décale l'histoire entière —
 utile quand on veut qu'une partie commence juste avant la fermeture d'un col.
