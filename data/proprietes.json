@@ -1,34 +1,150 @@
 {
-  "format": "caravane.proprietes.v1",
-  "apropos": "Deux terrains d'essai. Le premier ne coûte rien, et rien n'y coûte : il sert à éprouver les quatre bâtiments en une minute. Le second est chiffré comme le serait un vrai, et se trouve dans la même contrée — de quoi éprouver la règle d'une propriété par contrée, et l'échange.",
-  "proprietes": [
-    {
-      "cle": "le-clos-des-saules",
-      "nom": "Le Clos des Saules",
-      "lieu": "le-gue",
-      "x": 470, "y": 210,
-      "prix": 0,
-      "description": "Un pré en pente douce au-dessus du bac, ceint de saules têtards. Le précédent propriétaire est parti sans rien dire, et la commune n'en veut pas. Elle vous le laisse pour rien, à condition que quelqu'un l'entretienne.",
-      "batiments": {
-        "maison": { "cout": { "or": 0 }, "armes": 6, "gardes": 2 },
-        "grange": { "cout": { "or": 0 }, "chariots": 2 },
-        "cache":  { "cout": { "or": 0 }, "or": 3000 },
-        "ecurie": { "cout": { "or": 0 }, "chevaux": 3 }
-      }
+ "format": "caravane.proprietes.v1",
+ "apropos": "Quatre terrains à acheter, un par contrée et deux dans le Val. Ce qu'on y bâtit ne rapporte rien tout seul : une grange range des chariots, une cache met l'or à l'abri de ce qui arrive sur la route.",
+ "proprietes": [
+  {
+   "cle": "le-clos-des-saules",
+   "nom": "Le Clos des Saules",
+   "lieu": "le-gue",
+   "x": 470,
+   "y": 210,
+   "prix": 900,
+   "description": "Un pré en pente douce au-dessus du bac, ceint de saules têtards. Le précédent propriétaire est parti sans rien dire et la commune n'en veut pas : elle le cède pour le prix des arriérés, à qui l'entretiendra.",
+   "batiments": {
+    "maison": {
+     "cout": {
+      "or": 650
+     },
+     "armes": 6,
+     "gardes": 2
     },
-    {
-      "cle": "la-tuilerie",
-      "nom": "La Tuilerie",
-      "lieu": "vaulmier",
-      "x": 180, "y": 400,
-      "prix": 1200,
-      "description": "L'ancienne tuilerie de Vaulmier, éteinte depuis deux hivers. Les fours sont morts mais les murs tiennent, et la cour est assez large pour y faire tourner un fardier.",
-      "batiments": {
-        "maison": { "cout": { "or": 420, "materiaux": { "bois": 60, "pierre": 40 } }, "armes": 14, "gardes": 4 },
-        "grange": { "cout": { "or": 300, "materiaux": { "bois": 110 } }, "chariots": 4 },
-        "cache":  { "cout": { "or": 260, "materiaux": { "pierre": 90 } }, "or": 6000 },
-        "ecurie": { "cout": { "or": 340, "materiaux": { "bois": 50, "peaux": 30 } }, "chevaux": 5 }
-      }
+    "grange": {
+     "cout": {
+      "or": 540
+     },
+     "chariots": 2
+    },
+    "cache": {
+     "cout": {
+      "or": 820
+     },
+     "or": 3000
+    },
+    "ecurie": {
+     "cout": {
+      "or": 480
+     },
+     "chevaux": 3
     }
-  ]
+   }
+  },
+  {
+   "cle": "la-tuilerie",
+   "nom": "La Tuilerie",
+   "lieu": "sainte-ambre",
+   "x": 300,
+   "y": 380,
+   "prix": 1600,
+   "description": "Quatre fours froids et un hangar qui tient encore, à dix minutes du port franc. On y cuisait la tuile avant que l'argile ne s'épuise ; il reste le toit, les quais et l'adresse.",
+   "batiments": {
+    "maison": {
+     "cout": {
+      "or": 900
+     },
+     "armes": 10,
+     "gardes": 3
+    },
+    "grange": {
+     "cout": {
+      "or": 760
+     },
+     "chariots": 3
+    },
+    "cache": {
+     "cout": {
+      "or": 1100
+     },
+     "or": 6000
+    },
+    "ecurie": {
+     "cout": {
+      "or": 620
+     },
+     "chevaux": 4
+    }
+   }
+  },
+  {
+   "cle": "le-fond-de-galerie",
+   "nom": "Le Fond de Galerie",
+   "lieu": "tarn-creux",
+   "x": 520,
+   "y": 300,
+   "prix": 2400,
+   "description": "Une galerie épuisée que les Contrefortains ont cessé de creuser il y a quarante ans. Sèche, froide, et fermée par une porte de fer qu'on ne force pas. Ce qu'on y pose ne craint ni l'eau ni la curiosité.",
+   "batiments": {
+    "maison": {
+     "cout": {
+      "or": 1200
+     },
+     "armes": 14,
+     "gardes": 4
+    },
+    "grange": {
+     "cout": {
+      "or": 980
+     },
+     "chariots": 3
+    },
+    "cache": {
+     "cout": {
+      "or": 1400
+     },
+     "or": 12000
+    },
+    "ecurie": {
+     "cout": {
+      "or": 900
+     },
+     "chevaux": 3
+    }
+   }
+  },
+  {
+   "cle": "la-ruche-haute",
+   "nom": "La Ruche Haute",
+   "lieu": "les-ruches",
+   "x": 420,
+   "y": 240,
+   "prix": 1900,
+   "description": "Une clairière concédée pour trois générations — les Sylvains ne vendent pas la terre, ils prêtent le temps. Douze ruches, un séchoir, et le droit de passer la nuit sous les fûts, ce qui ne se refuse à personne d'autre.",
+   "batiments": {
+    "maison": {
+     "cout": {
+      "or": 1000
+     },
+     "armes": 8,
+     "gardes": 2
+    },
+    "grange": {
+     "cout": {
+      "or": 700
+     },
+     "chariots": 2
+    },
+    "cache": {
+     "cout": {
+      "or": 1250
+     },
+     "or": 7000
+    },
+    "ecurie": {
+     "cout": {
+      "or": 560
+     },
+     "chevaux": 3
+    }
+   }
+  }
+ ]
 }

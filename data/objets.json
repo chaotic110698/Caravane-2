@@ -1,102 +1,290 @@
 {
-  "format": "caravane.objets.v1",
-  "apropos": "Un objet unique, donné à la fin de la mission d'Orlanne. Le porter délie la langue de Harn : c'est le pouvoir qui lie les objets aux gens.",
-  "objets": [
+ "format": "caravane.objets.v1",
+ "apropos": "Les objets uniques des Marches d'Ambre. Quatre documents portent la trame de la Charte — ils ne valent rien et ils ouvrent des bouches. Deux autres se trouvent en chemin, pour que la curiosité paie aussi.",
+ "objets": [
+  {
+   "cle": "registre-des-peages",
+   "nom": "Le registre des péages",
+   "accord": "m",
+   "genre": "document",
+   "poids": 2,
+   "valeur": 0,
+   "vendable": false,
+   "perdable": true,
+   "ico": {
+    "glyphe": "sceau",
+    "nature": "ruines"
+   },
+   "provenance": {
+    "genre": "mission",
+    "mission": "le-registre-rature",
+    "quand": "à la fin"
+   },
+   "pouvoirs": [
     {
-      "cle": "registre-des-peages",
-      "nom": "Le registre des péages",
-      "accord": "m",
-      "genre": "document",
-      "poids": 2,
-      "valeur": 0,
-      "vendable": false,
-      "perdable": true,
-      "ico": {
-        "glyphe": "sceau",
-        "nature": "ruines"
-      },
-      "provenance": {
-        "genre": "mission",
-        "mission": "le-registre-rature",
-        "quand": "à la fin"
-      },
-      "pouvoirs": [
-        {
-          "faire": "ouvreCouche",
-          "personnage": "harn",
-          "couche": "le-peage"
-        },
-        {
-          "faire": "prix",
-          "sens": "achat",
-          "part": 0.04
-        }
-      ],
-      "premiere": "Un in-folio relié de peau, gonflé d'humidité. Onze années de convois y sont écrites d'une main appliquée, et onze lignes en ont été grattées si soigneusement qu'on voit encore le creux du couteau.",
-      "couches": [
-        {
-          "cle": "la-main",
-          "titre": "La main qui a gratté",
-          "gagne": [
-            {
-              "quoi": "etapesPorte",
-              "min": 8
-            }
-          ],
-          "texte": "À force de le porter on finit par voir : les onze lignes ont été grattées par deux mains différentes. Neuf d'un coup, à la hâte. Deux longtemps après, avec soin."
-        }
-      ]
+     "faire": "ouvreCouche",
+     "personnage": "harn",
+     "couche": "le-peage"
     },
     {
-      "cle": "morceau-d-essai-1",
-      "nom": "Morceau d'Essai I",
-      "genre": "document",
-      "recit": "Un exemple jetable : le Iᵉ tiers d'une carte déchirée. Les trois réunis ouvrent une piste.",
-      "perdable": false,
-      "pouvoirs": [
-        {
-          "faire": "reveler",
-          "lieu": "lieu-cache-essai",
-          "fragments": 3
-        }
-      ],
-      "provenance": {
-        "genre": "depart"
-      }
+     "faire": "prix",
+     "sens": "achat",
+     "part": 0.04
     },
     {
-      "cle": "morceau-d-essai-2",
-      "nom": "Morceau d'Essai II",
-      "genre": "document",
-      "recit": "Un exemple jetable : le IIᵉ tiers d'une carte déchirée. Les trois réunis ouvrent une piste.",
-      "perdable": false,
-      "pouvoirs": [
-        {
-          "faire": "reveler",
-          "lieu": "lieu-cache-essai",
-          "fragments": 3
-        }
-      ],
-      "provenance": {
-        "genre": "monde"
-      }
-    },
-    {
-      "cle": "morceau-d-essai-3",
-      "nom": "Morceau d'Essai III",
-      "genre": "document",
-      "recit": "Un exemple jetable : le IIIᵉ tiers d'une carte déchirée. Les trois réunis ouvrent une piste.",
-      "perdable": false,
-      "pouvoirs": [
-        {
-          "faire": "reveler",
-          "lieu": "lieu-cache-essai",
-          "fragments": 3
-        }
-      ],
-      "provenance": {
-        "genre": "monde"
-      }
+     "faire": "reveler",
+     "lieu": "ruine-du-peage",
+     "fragments": 1
     }
-  ]
+   ],
+   "premiere": "Un in-folio relié de peau, gonflé d'humidité. Onze années de convois y sont écrites d'une main appliquée, et onze lignes en ont été grattées si soigneusement qu'on voit encore le creux du couteau.",
+   "couches": [
+    {
+     "cle": "la-main",
+     "titre": "La main qui a gratté",
+     "gagne": [
+      {
+       "quoi": "etapesPorte",
+       "min": 8
+      }
+     ],
+     "texte": "À force de le porter on finit par voir : les onze lignes ont été grattées par deux mains différentes. Neuf d'un coup, à la hâte. Deux longtemps après, avec soin."
+    },
+    {
+     "cle": "l-ancien-bureau",
+     "titre": "Où l'on tenait le péage avant",
+     "gagne": [
+      {
+       "quoi": "etapesPorte",
+       "min": 3
+      }
+     ],
+     "texte": "Les premières pages renvoient à un bureau qui n'existe plus : « reçu à la maison du péage, au gué bas ». Il y a donc eu une maison du péage, et elle n'était pas à Vaulmier."
+    }
+   ]
+  },
+  {
+   "cle": "le-feuillet-arrache",
+   "nom": "Le feuillet arraché",
+   "accord": "m",
+   "genre": "document",
+   "poids": 1,
+   "valeur": 0,
+   "vendable": false,
+   "perdable": true,
+   "ico": {
+    "glyphe": "sceau",
+    "nature": "trouvaille"
+   },
+   "provenance": {
+    "genre": "mission",
+    "mission": "le-feuillet-arrache",
+    "quand": "à la fin"
+   },
+   "pouvoirs": [
+    {
+     "faire": "ouvreCouche",
+     "personnage": "isaure",
+     "couche": "le-taux"
+    },
+    {
+     "faire": "aptitude",
+     "quoi": "negoce",
+     "de": 4
+    }
+   ],
+   "premiere": "Une seule page, arrachée net au ras de la couture. L'article du droit de passage y est écrit deux fois : une fois sous le grattage, une fois par-dessus, de la même main appliquée.",
+   "couches": [
+    {
+     "cle": "de-biais",
+     "titre": "Ce qu'on voit de biais",
+     "gagne": [
+      {
+       "quoi": "etapesPorte",
+       "min": 4
+      }
+     ],
+     "texte": "Tenu de biais devant le jour, le creux du couteau redevient lisible. Dessous, le chiffre d'origine : au quarantième. Dessus : au vingtième."
+    },
+    {
+     "cle": "la-couture",
+     "titre": "Ce que la couture raconte",
+     "gagne": [
+      {
+       "quoi": "etapesPorte",
+       "min": 10
+      }
+     ],
+     "texte": "L'arrachage est propre et ancien d'un côté, frais de l'autre. La page avait déjà été ôtée une première fois, puis recousue — puis reprise."
+    }
+   ]
+  },
+  {
+   "cle": "la-copie-de-fondgris",
+   "nom": "La copie de Fondgris",
+   "accord": "f",
+   "genre": "document",
+   "poids": 2,
+   "valeur": 0,
+   "vendable": false,
+   "perdable": true,
+   "ico": {
+    "glyphe": "enclume",
+    "nature": "trouvaille"
+   },
+   "provenance": {
+    "genre": "mission",
+    "mission": "la-copie-de-fondgris",
+    "quand": "à la fin"
+   },
+   "pouvoirs": [
+    {
+     "faire": "ouvreCouche",
+     "personnage": "ancelle",
+     "couche": "le-demi"
+    },
+    {
+     "faire": "prix",
+     "sens": "les deux",
+     "part": 0.05
+    }
+   ],
+   "premiere": "Une copie de la main de Borin, lourde, large, scellée à la cire de forge. Les Contrefortains n'écrivent pas joli : ils écrivent pour que ça dure.",
+   "couches": [
+    {
+     "cle": "le-quarantieme",
+     "titre": "Le chiffre des Contrefortains",
+     "gagne": [
+      {
+       "quoi": "etapesPorte",
+       "min": 4
+      }
+     ],
+     "texte": "Article neuf, droit de passage : au quarantième. Pas de grattage, pas de reprise, et une marge annotée d'une écriture plus ancienne : « vérifié l'an sept »."
+    }
+   ]
+  },
+  {
+   "cle": "le-temoignage-d-aubepine",
+   "nom": "Le témoignage d'Aubépine",
+   "accord": "m",
+   "genre": "document",
+   "poids": 1,
+   "valeur": 0,
+   "vendable": false,
+   "perdable": true,
+   "ico": {
+    "glyphe": "feuille",
+    "nature": "halte"
+   },
+   "provenance": {
+    "genre": "mission",
+    "mission": "le-temoignage-d-aubepine",
+    "quand": "à la fin"
+   },
+   "pouvoirs": [
+    {
+     "faire": "ouvreCouche",
+     "personnage": "vaudry",
+     "couche": "le-coffre"
+    },
+    {
+     "faire": "chance",
+     "de": 8
+    }
+   ],
+   "premiere": "Une bande d'écorce fine, pliée en accordéon, scellée d'une goutte de cire verte. On n'y lit pas un texte : on y lit une suite de fautes, recopiées exactement depuis quatre cents ans.",
+   "couches": [
+    {
+     "cle": "les-fautes",
+     "titre": "Pourquoi ils copient les fautes",
+     "gagne": [
+      {
+       "quoi": "etapesPorte",
+       "min": 5
+      }
+     ],
+     "texte": "Une copie fidèle jusqu'aux fautes ne peut pas être corrigée en secret : toute correction se voit, parce qu'elle améliore. C'est une serrure faite d'erreurs."
+    }
+   ]
+  },
+  {
+   "cle": "le-cachet-du-clerc",
+   "nom": "Le cachet du clerc",
+   "accord": "m",
+   "genre": "insigne",
+   "poids": 1,
+   "valeur": 90,
+   "vendable": true,
+   "perdable": true,
+   "ico": {
+    "glyphe": "sceau",
+    "nature": "ruines"
+   },
+   "provenance": {
+    "genre": "lieu",
+    "lieu": "ruine-du-peage"
+   },
+   "pouvoirs": [
+    {
+     "faire": "laissezPasser",
+     "lieu": "vaulmier-porte"
+    }
+   ],
+   "premiere": "Un cachet de laiton au manche usé, gravé d'une halle et de trois vagues. C'est le sceau du péage — celui d'avant Vaulmier, que plus personne ne connaît et que tout garde reconnaît.",
+   "couches": [
+    {
+     "cle": "l-habitude",
+     "titre": "Pourquoi ça marche encore",
+     "gagne": [
+      {
+       "quoi": "etapesPorte",
+       "min": 6
+      }
+     ],
+     "texte": "Aucun garde de la Porte de l'Aube n'a jamais vu ce sceau. Tous le laissent passer. On ne vérifie pas ce qui a l'air plus ancien que soi."
+    }
+   ]
+  },
+  {
+   "cle": "la-lunette-du-port",
+   "nom": "La lunette du port",
+   "accord": "f",
+   "genre": "outil",
+   "poids": 2,
+   "valeur": 420,
+   "vendable": true,
+   "perdable": true,
+   "ico": {
+    "glyphe": "plume",
+    "nature": "trouvaille"
+   },
+   "provenance": {
+    "genre": "lieu",
+    "lieu": "sainte-ambre",
+    "prix": 420
+   },
+   "pouvoirs": [
+    {
+     "faire": "aptitude",
+     "quoi": "vigilance",
+     "de": 9
+    }
+   ],
+   "premiere": "Un tube de cuivre à trois éléments, piqué de vert-de-gris, qui vient d'un navire dont on ne dit pas le nom. On voit avec une demi-heure d'avance ce qu'on verrait de toute façon — et une demi-heure, sur la route, c'est tout.",
+   "couches": [
+    {
+     "cle": "le-navire",
+     "titre": "Le navire dont on ne dit pas le nom",
+     "gagne": [
+      {
+       "quoi": "etapesPorte",
+       "min": 8
+      }
+     ],
+     "texte": "Gravé sous l'oculaire, à l'envers, un nom et une date. Le nom est contrefortain ; la date est antérieure de douze ans au premier bateau nain jamais signalé à Sainte-Ambre."
+    }
+   ]
+  }
+ ]
 }

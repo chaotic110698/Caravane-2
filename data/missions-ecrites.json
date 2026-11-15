@@ -1,59 +1,496 @@
 {
-  "format": "caravane.missions.v1",
-  "apropos": "Deux missions d'essai. La première se confie en conversation, pas depuis l'onglet des contrats : c'est ce qu'un dialogue sait faire de plus utile.",
-  "missions": [
+ "format": "caravane.missions.v1",
+ "apropos": "Les missions écrites des Marches d'Ambre : six qui forment la trame de la Charte du Sel, trois qui sont des services qu'on rend en chemin. Le lien vers le commanditaire est stocké ici, jamais chez le personnage.",
+ "missions": [
+  {
+   "cle": "le-registre-rature",
+   "titre": "Le registre raturé",
+   "oeil": "Un service",
+   "commanditaire": "orlanne",
+   "ico": {
+    "glyphe": "sceau",
+    "nature": "tracas"
+   },
+   "offre": {
+    "recit": "Onze lignes du registre des péages ont été grattées. {Commanditaire} veut savoir par qui, et le clerc qui les tenait a passé le bac du Gué un soir de novembre.",
+    "delai": 22
+   },
+   "jalons": [
     {
-      "cle": "le-registre-rature",
-      "titre": "Le registre raturé",
-      "oeil": "Un service",
-      "commanditaire": "orlanne",
-      "ico": { "glyphe": "sceau", "nature": "tracas" },
-      "offre": {
-        "recit": "Onze lignes du registre des péages ont été grattées. {commanditaire} veut savoir par qui, et le clerc qui les tenait a passé le bac du Gué un soir de novembre.",
-        "delai": 22
-      },
-      "jalons": [
-        { "faire": "rencontrer", "personnage": "sylve" },
-        { "faire": "atteindre", "lieu": "vaulmier" }
-      ],
-      "reussite": {
-        "texte": "« Novembre. » {commanditaire} referme le registre sans le rouvrir. « Je vous remercie, marchand. Ce que vous m'apprenez là, je crois que je le savais. »",
-        "recompenses": [
-          { "donne": "or", "de": 340 },
-          { "donne": "reputation", "de": 6 },
-          { "donne": "objet", "objet": "registre-des-peages" }
-        ]
-      },
-      "echec": {
-        "texte": "Vous revenez trop tard. Le registre a été remplacé par un neuf, et personne à la halle ne se souvient de l'ancien.",
-        "recompenses": [{ "donne": "reputation", "de": -3 }]
-      }
+     "faire": "rencontrer",
+     "personnage": "sylve"
     },
     {
-      "cle": "le-vin-de-gaubert",
-      "titre": "Le vin de Gaubert",
-      "oeil": "Une course",
-      "commanditaire": "gaubert",
-      "ico": { "glyphe": "outre", "nature": "halte" },
-      "offre": {
-        "recit": "Gaubert a besoin de trente kilos de vin avant que le bac ne reprenne. Il ne demande pas d'où il vient — c'est même tout l'intérêt.",
-        "delai": 14,
-        "si": [{ "quoi": "reputation", "min": 20 }]
-      },
-      "jalons": [
-        { "faire": "livrer", "lieu": "le-gue", "bien": "vin", "kg": 30 }
-      ],
-      "reussite": {
-        "texte": "Gaubert compte les outres deux fois, paie sans discuter, et vous verse un verre de l'ancien — le vrai, celui qu'il ne vend pas.",
-        "recompenses": [
-          { "donne": "or", "de": 260 },
-          { "donne": "karma", "de": 4 }
-        ]
-      },
-      "echec": {
-        "texte": "Le bac a repris sans le vin. Gaubert ne dit rien, ce qui est pire.",
-        "recompenses": [{ "donne": "reputation", "de": -2 }]
-      }
+     "faire": "atteindre",
+     "lieu": "vaulmier"
     }
-  ]
+   ],
+   "reussite": {
+    "texte": "« Novembre. » {Commanditaire} referme le registre sans le rouvrir. « Je vous remercie, marchand. Ce que vous m'apprenez là, je crois que je le savais. »",
+    "recompenses": [
+     {
+      "donne": "or",
+      "de": 340
+     },
+     {
+      "donne": "reputation",
+      "de": 6
+     },
+     {
+      "donne": "objet",
+      "objet": "registre-des-peages"
+     }
+    ]
+   },
+   "echec": {
+    "texte": "Vous revenez trop tard. Le registre a été remplacé par un neuf, et personne à la halle ne se souvient de l'ancien.",
+    "recompenses": [
+     {
+      "donne": "reputation",
+      "de": -3
+     }
+    ]
+   }
+  },
+  {
+   "cle": "l-homme-de-novembre",
+   "titre": "L'homme de novembre",
+   "oeil": "Une recherche",
+   "commanditaire": "orlanne",
+   "ico": {
+    "glyphe": "sceau",
+    "nature": "ruines"
+   },
+   "offre": {
+    "recit": "Le clerc s'appelle Perrin. Il est parti vers le sud, du côté des salines, et il fait depuis onze mois un métier pour lequel il n'est pas né. {commanditaire} veut qu'on le trouve — pas qu'on le ramène.",
+    "delai": 26,
+    "si": [
+     {
+      "quoi": "missionEtat",
+      "mission": "le-registre-rature",
+      "vaut": "faite"
+     }
+    ]
+   },
+   "jalons": [
+    {
+     "faire": "rencontrer",
+     "personnage": "perrin"
+    },
+    {
+     "faire": "atteindre",
+     "lieu": "vaulmier"
+    }
+   ],
+   "reussite": {
+    "texte": "« Il est vivant. » {Commanditaire} pose les deux mains à plat sur la table et ferme les yeux une seconde. « Alors il reste quelqu'un pour dire qui tenait le couteau. »",
+    "recompenses": [
+     {
+      "donne": "or",
+      "de": 420
+     },
+     {
+      "donne": "reputation",
+      "de": 8
+     },
+     {
+      "donne": "ouvreCouche",
+      "personnage": "orlanne",
+      "couche": "sa-part"
+     }
+    ]
+   },
+   "echec": {
+    "texte": "Les Salines ont changé de saunier pendant que vous tardiez. Celui qui reste ne sait rien, et il le dit trop vite.",
+    "recompenses": [
+     {
+      "donne": "reputation",
+      "de": -4
+     }
+    ]
+   }
+  },
+  {
+   "cle": "le-feuillet-arrache",
+   "titre": "Ce que Perrin a emporté",
+   "oeil": "Un marché",
+   "commanditaire": "perrin",
+   "ico": {
+    "glyphe": "sceau",
+    "nature": "trouvaille"
+   },
+   "offre": {
+    "recit": "Perrin échange le feuillet qu'il a arraché à la Charte contre de quoi partir : quarante kilos de sel, livrés aux Salines-Basses. Pas d'or — un homme qui part avec de l'or se fait fouiller.",
+    "delai": 18,
+    "si": [
+     {
+      "quoi": "rencontres",
+      "personnage": "perrin",
+      "min": 1
+     }
+    ]
+   },
+   "jalons": [
+    {
+     "faire": "livrer",
+     "lieu": "salines-basses",
+     "bien": "sel",
+     "kg": 40
+    }
+   ],
+   "reussite": {
+    "texte": "Il compte les sacs, pas deux fois, une seule. Puis il sort le feuillet d'une doublure de tablier et vous le tend à plat. « Ne le pliez pas. Le pli ressemble à un grattage et vous perdriez la preuve. »",
+    "recompenses": [
+     {
+      "donne": "objet",
+      "objet": "le-feuillet-arrache"
+     },
+     {
+      "donne": "karma",
+      "de": 5
+     },
+     {
+      "donne": "reputation",
+      "de": 3
+     }
+    ]
+   },
+   "echec": {
+    "texte": "Le bassin est à sec et le muret rangé. Un voisin hausse les épaules : « Parti. Il n'a rien laissé, même pas son nom. »",
+    "recompenses": [
+     {
+      "donne": "reputation",
+      "de": -2
+     }
+    ]
+   }
+  },
+  {
+   "cle": "la-copie-de-fondgris",
+   "titre": "La copie de Fondgris",
+   "oeil": "Un échange",
+   "commanditaire": "borin",
+   "ico": {
+    "glyphe": "enclume",
+    "nature": "trouvaille"
+   },
+   "offre": {
+    "recit": "Les archives des Contrefortains gardent le deuxième exemplaire de la Charte. {commanditaire} descendra le chercher avec vous, mais sa forge est à court : soixante kilos de bois, et la porte s'ouvre.",
+    "delai": 24,
+    "si": [
+     {
+      "quoi": "objetPorte",
+      "objet": "le-feuillet-arrache",
+      "vaut": true
+     }
+    ]
+   },
+   "jalons": [
+    {
+     "faire": "livrer",
+     "lieu": "fondgris",
+     "bien": "bois",
+     "kg": 60
+    }
+   ],
+   "reussite": {
+    "texte": "Il descend devant, une lampe à la main, et vous laisse lire aussi longtemps que vous voulez. Au quarantième. La copie qu'il vous fait prendre est de sa main, et il la scelle à la cire de la forge.",
+    "recompenses": [
+     {
+      "donne": "objet",
+      "objet": "la-copie-de-fondgris"
+     },
+     {
+      "donne": "reputation",
+      "de": 6
+     },
+     {
+      "donne": "or",
+      "de": 120
+     }
+    ]
+   },
+   "echec": {
+    "texte": "« J'ai brûlé autre chose. » {Commanditaire} ne se retourne pas. « Les archives restent fermées : je n'ouvre pas deux fois la même porte pour la même raison. »",
+    "recompenses": [
+     {
+      "donne": "reputation",
+      "de": -3
+     }
+    ]
+   }
+  },
+  {
+   "cle": "le-temoignage-d-aubepine",
+   "titre": "Le seuil d'Aubépine",
+   "oeil": "Une parole",
+   "commanditaire": "ilwen",
+   "ico": {
+    "glyphe": "feuille",
+    "nature": "halte"
+   },
+   "offre": {
+    "recit": "Le troisième exemplaire n'est pas dans un coffre : il se recopie à Fontcendre, génération après génération, fautes comprises. {Commanditaire} ne scellera son témoignage que pour quelqu'un qui saura le lire.",
+    "delai": 22,
+    "si": [
+     {
+      "quoi": "objetPorte",
+      "objet": "la-copie-de-fondgris",
+      "vaut": true
+     }
+    ]
+   },
+   "jalons": [
+    {
+     "faire": "rencontrer",
+     "personnage": "nesir"
+    },
+    {
+     "faire": "atteindre",
+     "lieu": "aubepine"
+    }
+   ],
+   "reussite": {
+    "texte": "{commanditaire} écoute jusqu'au bout sans interrompre. Puis {il} scelle le témoignage d'une goutte de cire verte et le pose dans vos mains à deux mains. « Maintenant, descendez. Nous ne descendons pas. »",
+    "recompenses": [
+     {
+      "donne": "objet",
+      "objet": "le-temoignage-d-aubepine"
+     },
+     {
+      "donne": "karma",
+      "de": 6
+     },
+     {
+      "donne": "reputation",
+      "de": 5
+     }
+    ]
+   },
+   "echec": {
+    "texte": "La sente de gauche s'est refermée. Celle de droite mène où elle a toujours mené : nulle part.",
+    "recompenses": [
+     {
+      "donne": "reputation",
+      "de": -3
+     },
+     {
+      "donne": "karma",
+      "de": -3
+     }
+    ]
+   }
+  },
+  {
+   "cle": "la-charte-du-sel",
+   "titre": "La Charte du Sel",
+   "oeil": "La fin de la route",
+   "commanditaire": "orlanne",
+   "ico": {
+    "glyphe": "couronne",
+    "nature": "tracas"
+   },
+   "offre": {
+    "recit": "Trois pièces, trois peuples, un chiffre. {Commanditaire} vous envoie au Quartier Haut avec les trois, et vous prévient qu'elle ne saura pas ce que vous y aurez décidé.",
+    "delai": 30,
+    "si": [
+     {
+      "quoi": "objetPorte",
+      "objet": "le-temoignage-d-aubepine",
+      "vaut": true
+     }
+    ]
+   },
+   "jalons": [
+    {
+     "faire": "rencontrer",
+     "personnage": "vaudry"
+    },
+    {
+     "faire": "atteindre",
+     "lieu": "vaulmier"
+    }
+   ],
+   "reussite": {
+    "texte": "Vous redescendez par la Porte de l'Aube. Quoi qu'il se soit dit là-haut, le Val est exactement le même en bas, et c'est peut-être cela le plus difficile à regarder.",
+    "recompenses": [
+     {
+      "donne": "or",
+      "de": 600
+     },
+     {
+      "donne": "reputation",
+      "de": 10
+     }
+    ]
+   },
+   "echec": {
+    "texte": "La chancellerie ne reçoit plus. On vous rend les trois pièces à la porte, dans un linge, avec une politesse qui n'a pas besoin d'être menaçante.",
+    "recompenses": [
+     {
+      "donne": "reputation",
+      "de": -6
+     },
+     {
+      "donne": "karma",
+      "de": -5
+     }
+    ]
+   }
+  },
+  {
+   "cle": "le-vin-de-gaubert",
+   "titre": "Le vin de Gaubert",
+   "oeil": "Une course",
+   "commanditaire": "gaubert",
+   "ico": {
+    "glyphe": "outre",
+    "nature": "halte"
+   },
+   "offre": {
+    "recit": "Gaubert a besoin de trente kilos de vin avant que le bac ne reprenne. Il ne demande pas d'où il vient — c'est même tout l'intérêt.",
+    "delai": 14,
+    "si": [
+     {
+      "quoi": "reputation",
+      "min": 20
+     }
+    ]
+   },
+   "jalons": [
+    {
+     "faire": "livrer",
+     "lieu": "le-gue",
+     "bien": "vin",
+     "kg": 30
+    }
+   ],
+   "reussite": {
+    "texte": "Gaubert compte les outres deux fois, paie sans discuter, et vous verse un verre de l'ancien — le vrai, celui qu'il ne vend pas.",
+    "recompenses": [
+     {
+      "donne": "or",
+      "de": 260
+     },
+     {
+      "donne": "karma",
+      "de": 4
+     }
+    ]
+   },
+   "echec": {
+    "texte": "Le bac a repris sans le vin. Gaubert ne dit rien, ce qui est pire.",
+    "recompenses": [
+     {
+      "donne": "reputation",
+      "de": -2
+     }
+    ]
+   }
+  },
+  {
+   "cle": "le-ble-de-tarn-creux",
+   "titre": "Le blé de Tarn-Creux",
+   "oeil": "Une course",
+   "commanditaire": "vigdis",
+   "ico": {
+    "glyphe": "pioche",
+    "nature": "halte"
+   },
+   "offre": {
+    "recit": "Trois cents mineurs mangent mal et frappent moins fort. {Commanditaire} demande cinquante kilos de blé montés jusqu'à la galerie.",
+    "delai": 20
+   },
+   "jalons": [
+    {
+     "faire": "livrer",
+     "lieu": "tarn-creux",
+     "bien": "ble",
+     "kg": 50
+    }
+   ],
+   "reussite": {
+    "texte": "{commanditaire} fait porter les sacs sans un mot, puis lève la main : trois cents marteaux s'arrêtent, et reprennent une seconde plus tard, plus fort. « Voilà. C'est tout ce que je sais dire merci. »",
+    "recompenses": [
+     {
+      "donne": "or",
+      "de": 330
+     },
+     {
+      "donne": "reputation",
+      "de": 5
+     },
+     {
+      "donne": "karma",
+      "de": 3
+     }
+    ]
+   },
+   "echec": {
+    "texte": "Le blé arrive après la relève. On le prend quand même, et l'on ne vous regarde pas en le prenant.",
+    "recompenses": [
+     {
+      "donne": "reputation",
+      "de": -2
+     }
+    ]
+   }
+  },
+  {
+   "cle": "la-cire-de-fontcendre",
+   "titre": "La cire de Fontcendre",
+   "oeil": "Une commande",
+   "commanditaire": "nesir",
+   "ico": {
+    "glyphe": "plume",
+    "nature": "trouvaille"
+   },
+   "offre": {
+    "recit": "Le scriptorium manque de cire et le miel des Ruches en donne la meilleure. {commanditaire} en veut trente-cinq kilos, et il paiera en pages.",
+    "delai": 20,
+    "si": [
+     {
+      "quoi": "rencontres",
+      "personnage": "nesir",
+      "min": 1
+     }
+    ]
+   },
+   "jalons": [
+    {
+     "faire": "livrer",
+     "lieu": "fontcendre",
+     "bien": "miel",
+     "kg": 35
+    }
+   ],
+   "reussite": {
+    "texte": "Il pèse le miel au trébuchet, ce qui est ridicule et ce qu'il fait quand même. En échange il vous tend une carte des sentes de la Sylve, enluminée comme un évangile.",
+    "recompenses": [
+     {
+      "donne": "or",
+      "de": 290
+     },
+     {
+      "donne": "karma",
+      "de": 4
+     },
+     {
+      "donne": "ouvreCouche",
+      "personnage": "nesir",
+      "couche": "la-main"
+     }
+    ]
+   },
+   "echec": {
+    "texte": "« Nous ferons sans. » Il ne lève pas la plume. « Nous avons fait sans pendant quatre cents ans. »",
+    "recompenses": [
+     {
+      "donne": "reputation",
+      "de": -2
+     }
+    ]
+   }
+  }
+ ]
 }

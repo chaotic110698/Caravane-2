@@ -1540,9 +1540,20 @@ function nouvellePartie(cle){
   S.marchand.armure={bottes:'cuir-bottes'};
   S.villes=creerMonde();
   ouvrirLesDeparts();
-  /* on commence dans une cité connue de la première contrée, jamais à un poste
-     ni dans un lieu qu'on est censé découvrir */
-  const departs=lieuxDe(0).filter(i=>!estFrontiere(i)&&!estCache(i));
+  /* Où l'on commence. D'abord les villes que l'auteur a marquées « ville de
+     départ » dans l'atelier de carte : c'est à cela que sert la case, et elle
+     ne servait qu'à dévoiler des lieux cachés — on partait en réalité de
+     n'importe quel lieu de la première contrée. Dans le petit monde livré, cela
+     posait parfois le convoi sur une rive isolée, d'où aucune route ne part :
+     la partie était finie avant d'avoir commencé.
+     Jamais un poste de frontière ni un lieu qu'on est censé découvrir ; et
+     jamais, si l'on peut l'éviter, un lieu sans la moindre voie — mieux vaut
+     commencer ailleurs que nulle part. */
+  const ouvert=i=>!estFrontiere(i)&&!estCache(i);
+  const relie=i=>!VOISINS||!VOISINS[i]||VOISINS[i].length>0;
+  const marquees=villesDuDepart().filter(ouvert);
+  let departs=(marquees.length?marquees:lieuxDe(0).filter(ouvert));
+  if(departs.some(relie))departs=departs.filter(relie);
   S.ville=S.villes[departs.length?pick(departs):0];
   /* les objets qui sont dans les bagages depuis toujours */
   if(OBJETS)Object.keys(OBJETS).forEach(k=>{
@@ -6552,6 +6563,12 @@ function conditionsEv(l){
       return typeof c.vaut==='boolean'?(!!v===c.vaut):(v===c.vaut);
     if(c.min!==undefined&&v<valeurEv(c.min))return false;
     if(c.max!==undefined&&v>valeurEv(c.max))return false;
+    /* Une interrogation en oui-ou-non — porte-t-on cet objet, a-t-on ce
+       souvenir, a-t-on un chien — n'a ni minimum ni maximum à comparer. Écrite
+       sans « vaut », elle ne disait donc rien du tout et la condition passait
+       toujours : la mission finale s'offrait au premier jour. Écrire la
+       question, c'est demander que la réponse soit oui. */
+    if(typeof v==='boolean')return v;
     return true;
   });
 }
@@ -6617,10 +6634,22 @@ function contexteEv(){
   });
   return s;
 }
+/* Les trous. Un trou écrit avec une majuscule — {Il}, {Le}, {Nom} — rend sa
+   valeur avec une majuscule : « {il} attend » donnait « elle attend » en tête
+   de phrase, ce qui est une faute de français qu'aucun auteur ne peut corriger
+   depuis l'atelier, puisque le mot n'est pas encore écrit quand il l'écrit.
+   Le trou en minuscules se comporte exactement comme avant. */
 function texteEv(txt,sac){
   const t=Array.isArray(txt)?pick(txt):txt;
-  return String(t==null?'':t).replace(/\{([a-zA-Z0-9_.]+)\}/g,
-    (m,k)=>sac[k]!==undefined?sac[k]:m);
+  return String(t==null?'':t).replace(/\{([a-zA-Z0-9_.]+)\}/g,(m,k)=>{
+    if(sac[k]!==undefined)return sac[k];
+    const bas=k.charAt(0).toLowerCase()+k.slice(1);
+    if(bas!==k&&sac[bas]!==undefined){
+      const v=String(sac[bas]);
+      return v.charAt(0).toUpperCase()+v.slice(1);
+    }
+    return m;
+  });
 }
 
 /* ── les dix-huit effets ──

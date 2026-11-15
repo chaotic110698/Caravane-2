@@ -1,79 +1,93 @@
 {
-  "format": "caravane.calendrier.v1",
-  "apropos": "CALENDRIER D'ESSAI — noms plats et volontairement sans saveur. Il n'y a pas une ligne de récit là-dedans : c'est une horloge nue, faite pour être remplacée. La longueur de la semaine est la longueur de la liste « jours » : elle n'est pas déclarée ailleurs, pour qu'aucun des deux ne puisse démentir l'autre. Une liste vide veut dire qu'il n'y a pas de semaine.",
-  "heuresParJour": 25,
-  "joursParMois": 50,
-  "anneeUn": "an I",
-  "mois": [
-    {
-      "cle": "m1",
-      "nom": "Mois I",
-      "saison": "saison A"
-    },
-    {
-      "cle": "m2",
-      "nom": "Mois II",
-      "saison": "saison B"
-    },
-    {
-      "cle": "m3",
-      "nom": "Mois III",
-      "saison": "saison C"
-    },
-    {
-      "cle": "m4",
-      "nom": "Mois IV",
-      "saison": "saison D"
-    }
-  ],
-  "jours": [
-    {
-      "cle": "j1",
-      "nom": "Jour I"
-    },
-    {
-      "cle": "j2",
-      "nom": "Jour II"
-    },
-    {
-      "cle": "j3",
-      "nom": "Jour III"
-    },
-    {
-      "cle": "j4",
-      "nom": "Jour IV"
-    },
-    {
-      "cle": "j5",
-      "nom": "Jour V"
-    }
-  ],
-  "moments": [
-    {
-      "cle": "aube",
-      "de": 4,
-      "a": 9
-    },
-    {
-      "cle": "midi",
-      "de": 10,
-      "a": 15
-    },
-    {
-      "cle": "couchant",
-      "de": 16,
-      "a": 20
-    },
-    {
-      "cle": "nuit",
-      "de": 21,
-      "a": 3
-    }
-  ],
-  "debut": {
-    "annee": 1,
-    "mois": 0,
-    "jour": 1,
-    "heure": 8
+ "format": "caravane.calendrier.v1",
+ "apropos": "L'année des Marches d'Ambre : six mois de soixante jours, une semaine de six jours. Les jours portent le nom de ce qu'on fait ce jour-là sur la route — le jour du Sel, le jour du Fer — et le dernier est de repos, ce qui ne veut pas dire que les chariots s'arrêtent. L'an CI est celui du centenaire de la Charte du Sel : c'est l'année où l'on se remet à lire ce que personne ne lisait plus.",
+ "heuresParJour": 24,
+ "joursParMois": 60,
+ "anneeUn": "an I de la Charte",
+ "mois": [
+  {
+   "cle": "pluvieux",
+   "nom": "Pluvieux",
+   "saison": "les eaux hautes"
+  },
+  {
+   "cle": "semailles",
+   "nom": "Semailles",
+   "saison": "le printemps"
+  },
+  {
+   "cle": "fenaison",
+   "nom": "Fenaison",
+   "saison": "l'été court"
+  },
+  {
+   "cle": "moissons",
+   "nom": "Moissons",
+   "saison": "l'été haut"
+  },
+  {
+   "cle": "vendanges",
+   "nom": "Vendanges",
+   "saison": "l'arrière-saison"
+  },
+  {
+   "cle": "gelees",
+   "nom": "Gelées",
+   "saison": "l'hiver"
   }
+ ],
+ "jours": [
+  {
+   "cle": "sel",
+   "nom": "jour du Sel"
+  },
+  {
+   "cle": "fer",
+   "nom": "jour du Fer"
+  },
+  {
+   "cle": "ambre",
+   "nom": "jour de l'Ambre"
+  },
+  {
+   "cle": "pain",
+   "nom": "jour du Pain"
+  },
+  {
+   "cle": "route",
+   "nom": "jour de la Route"
+  },
+  {
+   "cle": "repos",
+   "nom": "jour de Repos"
+  }
+ ],
+ "moments": [
+  {
+   "cle": "aube",
+   "de": 4,
+   "a": 9
+  },
+  {
+   "cle": "midi",
+   "de": 10,
+   "a": 15
+  },
+  {
+   "cle": "couchant",
+   "de": 16,
+   "a": 20
+  },
+  {
+   "cle": "nuit",
+   "de": 21,
+   "a": 3
+  }
+ ],
+ "debut": {
+  "annee": 101,
+  "mois": 1,
+  "jour": 1,
+  "heure": 7
+ }
 }

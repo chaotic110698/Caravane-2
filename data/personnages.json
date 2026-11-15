@@ -1,143 +1,501 @@
 {
-  "format": "caravane.personnages.v1",
-  "apropos": "Quatre personnages d'essai, un par usage : une donneuse de mission, un marchand chez qui l'on repasse, un taiseux dont la langue se délie, et une garde qui ouvre un passage.",
-  "roles": {
-    "echevin": {
-      "nom": "Échevin",
-      "feminin": "Échevine"
-    },
-    "aubergiste": {
-      "nom": "Aubergiste"
-    },
-    "batelier": {
-      "nom": "Batelier",
-      "feminin": "Batelière"
-    },
-    "capitaine": {
-      "nom": "Capitaine de garde"
-    }
+ "format": "caravane.personnages.v1",
+ "apropos": "Les gens des Marches d'Ambre. Chacun porte une première description qu'on peut toujours relire, et des couches qui s'ouvrent à force de le fréquenter — ou parce qu'un objet, un dialogue ou une mission les a déliées. Rien ici ne dit qui donne quelle mission : c'est la mission qui nomme son commanditaire, pour qu'on puisse écrire les deux séparément.",
+ "roles": {
+  "echevin": {
+   "nom": "Échevin",
+   "feminin": "Échevine"
   },
-  "personnages": [
+  "aubergiste": {
+   "nom": "Aubergiste"
+  },
+  "batelier": {
+   "nom": "Batelier",
+   "feminin": "Batelière"
+  },
+  "capitaine": {
+   "nom": "Capitaine de garde"
+  },
+  "prieur": {
+   "nom": "Prieur",
+   "feminin": "Prieure"
+  },
+  "clerc": {
+   "nom": "Clerc"
+  },
+  "marchand": {
+   "nom": "Marchand",
+   "feminin": "Marchande"
+  },
+  "forgeron": {
+   "nom": "Maître de forge",
+   "feminin": "Maîtresse de forge"
+  },
+  "mineur": {
+   "nom": "Contremaître",
+   "feminin": "Contremaîtresse"
+  },
+  "guide": {
+   "nom": "Gardien du seuil",
+   "feminin": "Gardienne du seuil"
+  },
+  "artisan": {
+   "nom": "Enlumineur",
+   "feminin": "Enlumineuse"
+  },
+  "noble": {
+   "nom": "Chambellan"
+  }
+ },
+ "personnages": [
+  {
+   "cle": "orlanne",
+   "nom": "Orlanne",
+   "titre": "Dame",
+   "accord": "f",
+   "role": "echevin",
+   "lieu": "vaulmier",
+   "ico": {
+    "glyphe": "sceau",
+    "nature": "tracas"
+   },
+   "premiere": "Elle tient la halle de {lieu} depuis onze ans, et le registre des péages avec. On la dit juste, ce qui dans sa charge revient à dire qu'elle n'est aimée de personne.",
+   "couches": [
     {
-      "cle": "orlanne",
-      "nom": "Orlanne",
-      "titre": "Dame",
-      "accord": "f",
-      "role": "echevin",
-      "lieu": "vaulmier",
-      "ico": {
-        "glyphe": "sceau",
-        "nature": "tracas"
-      },
-      "premiere": "Elle tient la halle de {lieu} depuis onze ans, et le registre des péages avec. On la dit juste, ce qui dans sa charge revient à dire qu'elle n'est aimée de personne.",
-      "couches": [
-        {
-          "cle": "le-clerc",
-          "titre": "Le clerc qui a fui",
-          "gagne": [
-            {
-              "quoi": "rencontres",
-              "min": 2
-            }
-          ],
-          "texte": "Le clerc qui tenait le registre avant elle est parti un matin sans rien dire. {il} n'a jamais porté plainte. « On ne poursuit pas un homme qui a eu peur », dit-{il}."
-        },
-        {
-          "cle": "sa-part",
-          "titre": "Ce qu'elle y a laissé",
-          "gagne": [
-            {
-              "quoi": "rencontres",
-              "min": 4
-            }
-          ],
-          "texte": "Deux des onze lignes grattées étaient les siennes. {il} le sait depuis le premier jour, et c'est pour ça qu'{il} veut qu'on trouve — pour savoir si l'on trouvera."
-        }
-      ]
+     "cle": "le-clerc",
+     "titre": "Le clerc qui a fui",
+     "gagne": [
+      {
+       "quoi": "rencontres",
+       "min": 2
+      }
+     ],
+     "texte": "Le clerc qui tenait le registre avant elle est parti un matin sans rien dire. {Il} n'a jamais porté plainte. « On ne poursuit pas un homme qui a eu peur », dit-{il}."
     },
     {
-      "cle": "gaubert",
-      "nom": "Gaubert",
-      "accord": "m",
-      "role": "aubergiste",
-      "lieu": "le-gue",
-      "ico": {
-        "glyphe": "outre",
-        "nature": "halte"
-      },
-      "premiere": "Le {role} du Gué, gros comme deux, qui sert un vin qu'il jure du Val et qui vient de bien plus bas. Tout ce qui passe le bac s'arrête chez lui.",
-      "couches": [
-        {
-          "cle": "le-bac",
-          "titre": "Ce que le bac transporte la nuit",
-          "gagne": [
-            {
-              "quoi": "rencontres",
-              "min": 3
-            }
-          ],
-          "texte": "« Le bac ne dort pas, marchand. Il passe des sacs quand la lune est basse, et personne au Gué n'a jamais eu la curiosité de demander de quoi. Moi le premier. »"
-        }
-      ]
+     "cle": "sa-part",
+     "titre": "Ce qu'elle y a laissé",
+     "gagne": [
+      {
+       "quoi": "rencontres",
+       "min": 4
+      }
+     ],
+     "texte": "Deux des onze lignes grattées étaient les siennes. {Il} le sait depuis le premier jour, et c'est pour ça qu'{il} veut qu'on trouve — pour savoir si l'on trouvera."
     },
     {
-      "cle": "sylve",
-      "nom": "Sylve",
-      "accord": "f",
-      "role": "batelier",
-      "lieu": "le-gue",
-      "ico": {
-        "glyphe": "goutte",
-        "nature": "flanerie"
-      },
-      "premiere": "Elle tient le bac. Elle parle peu, et jamais la première. Ses mains disent son âge, son regard dit qu'elle a vu passer autre chose que des chariots.",
-      "couches": [
-        {
-          "cle": "le-nom",
-          "titre": "Un nom qu'elle a reconnu",
-          "gagne": [
-            {
-              "quoi": "rencontres",
-              "min": 12
-            }
-          ],
-          "texte": "« Ce clerc. Je l'ai passé un soir de novembre, sans chariot, sans rien. Il regardait derrière lui tout le long. Je n'ai pas demandé, il n'a pas payé, on était quittes. »"
-        }
-      ]
-    },
-    {
-      "cle": "harn",
-      "nom": "Harn",
-      "titre": "Capitaine",
-      "accord": "m",
-      "role": "capitaine",
-      "lieu": "porte-haute",
-      "ico": {
-        "glyphe": "heaume",
-        "nature": "danger"
-      },
-      "premiere": "Il tient la Porte Haute et les douze hommes qui vont avec. Sous la barbe, on devine qu'il a compté chaque chariot monté vers les Contreforts depuis quinze ans.",
-      "couches": [
-        {
-          "cle": "le-peage",
-          "titre": "Pourquoi le péage a doublé",
-          "gagne": [
-            {
-              "quoi": "reputation",
-              "min": 55
-            }
-          ],
-          "texte": "« Le péage a doublé le mois où le registre de Vaulmier a été gratté. Vous ferez le lien vous-même, marchand. Moi j'ai des ordres, pas des idées. »"
-        }
-      ]
-    },
-    {
-      "cle": "bavard-d-essai",
-      "nom": "Bavard d'Essai",
-      "lieu": "sainte-ambre",
-      "role": "echevin",
-      "premiere": "Un homme d'essai, posé là pour montrer les morceaux de cap. Il n'appartient à aucune histoire.",
-      "couches": []
+     "cle": "la-charte",
+     "titre": "Ce qu'elle n'a jamais lu",
+     "gagne": [
+      {
+       "quoi": "rencontres",
+       "min": 7
+      }
+     ],
+     "texte": "« La Charte du Sel, je l'ai vue deux fois. Scellée, dans son coffre, au Quartier Haut. On ne l'ouvre qu'en présence des trois peuples, et les trois peuples ne se sont pas réunis depuis vingt ans. » {Il} laisse un temps. « Alors on applique un texte que personne ne relit. »"
     }
-  ]
+   ]
+  },
+  {
+   "cle": "gaubert",
+   "nom": "Gaubert",
+   "accord": "m",
+   "role": "aubergiste",
+   "lieu": "le-gue",
+   "ico": {
+    "glyphe": "outre",
+    "nature": "halte"
+   },
+   "premiere": "Le {role} du Gué, gros comme deux, qui sert un vin qu'il jure du Val et qui vient de bien plus bas. Tout ce qui passe le bac s'arrête chez lui.",
+   "couches": [
+    {
+     "cle": "le-bac",
+     "titre": "Ce que le bac transporte la nuit",
+     "gagne": [
+      {
+       "quoi": "rencontres",
+       "min": 3
+      }
+     ],
+     "texte": "« Le bac ne dort pas, marchand. Il passe des sacs quand la lune est basse, et personne au Gué n'a jamais eu la curiosité de demander de quoi. Moi le premier. »"
+    },
+    {
+     "cle": "le-saunier",
+     "titre": "L'homme des Salines",
+     "gagne": [
+      {
+       "quoi": "rencontres",
+       "min": 6
+      }
+     ],
+     "texte": "« Il y a un saunier aux Salines-Basses qui a des mains de clerc. Je ne dis pas ça méchamment : je sers à boire à des mains depuis trente ans, je sais les lire. Celles-là n'ont jamais tiré le sel. »"
+    }
+   ]
+  },
+  {
+   "cle": "sylve",
+   "nom": "Sylve",
+   "accord": "f",
+   "role": "batelier",
+   "lieu": "le-gue",
+   "ico": {
+    "glyphe": "goutte",
+    "nature": "flanerie"
+   },
+   "premiere": "Elle tient le bac. Elle parle peu, et jamais la première. Ses mains disent son âge, son regard dit qu'elle a vu passer autre chose que des chariots.",
+   "couches": [
+    {
+     "cle": "le-nom",
+     "titre": "Un nom qu'elle a reconnu",
+     "gagne": [
+      {
+       "quoi": "rencontres",
+       "min": 3
+      }
+     ],
+     "texte": "« Ce clerc. Je l'ai passé un soir de novembre, sans chariot, sans rien. Il regardait derrière lui tout le long. Je n'ai pas demandé, il n'a pas payé, on était quittes. »"
+    },
+    {
+     "cle": "la-rive",
+     "titre": "Ce qu'elle a vu sur l'autre rive",
+     "gagne": [
+      {
+       "quoi": "rencontres",
+       "min": 6
+      }
+     ],
+     "texte": "« Il n'a pas pris la route de l'est. Il a longé la rive vers le sud, du côté des salines, là où il n'y a rien à faire pour un homme qui sait écrire. » {Il} hausse une épaule. « C'est tout ce que j'ai vu. »"
+    }
+   ]
+  },
+  {
+   "cle": "harn",
+   "nom": "Harn",
+   "titre": "Capitaine",
+   "accord": "m",
+   "role": "capitaine",
+   "lieu": "porte-haute",
+   "ico": {
+    "glyphe": "heaume",
+    "nature": "danger"
+   },
+   "premiere": "Il tient la Porte Haute et les douze hommes qui vont avec. Sous la barbe, on devine qu'il a compté chaque chariot monté vers les Contreforts depuis quinze ans.",
+   "couches": [
+    {
+     "cle": "le-peage",
+     "titre": "Pourquoi le péage a doublé",
+     "gagne": [
+      {
+       "quoi": "reputation",
+       "min": 55
+      }
+     ],
+     "texte": "« Le péage a doublé le mois où le registre de Vaulmier a été gratté. Vous ferez le lien vous-même, marchand. Moi j'ai des ordres, pas des idées. »"
+    },
+    {
+     "cle": "les-ordres",
+     "titre": "De qui viennent les ordres",
+     "gagne": [
+      {
+       "quoi": "rencontres",
+       "min": 5
+      }
+     ],
+     "texte": "« Mes tarifs, je les reçois par coursier, scellés au Quartier Haut. Je ne les discute pas et je ne les garde pas. » Un temps. « Enfin. Je ne les gardais pas. Depuis trois ans, j'en ai une copie dans ma malle. »"
+    }
+   ]
+  },
+  {
+   "cle": "isaure",
+   "nom": "Isaure",
+   "titre": "Mère",
+   "accord": "f",
+   "role": "prieur",
+   "lieu": "bois-l-abbe",
+   "ico": {
+    "glyphe": "sceau",
+    "nature": "halte"
+   },
+   "premiere": "La {role} de Bois-l'Abbé, qui tient douze arpents de vignes et la plus vieille bibliothèque du Val. Elle reçoit les marchands avec une politesse qui ne promet rien.",
+   "couches": [
+    {
+     "cle": "la-copie",
+     "titre": "Ce que l'abbaye a recopié",
+     "gagne": [
+      {
+       "quoi": "rencontres",
+       "min": 3
+      }
+     ],
+     "texte": "« Nous recopions tout ce qui passe sous notre toit, marchand. C'est notre manière de payer l'hospitalité. » {Il} sourit à peine. « La Charte du Sel a dormi ici trois nuits, en l'an quatre-vingt-onze. »"
+    },
+    {
+     "cle": "le-taux",
+     "titre": "Le chiffre qui a changé",
+     "gagne": [
+      {
+       "quoi": "rencontres",
+       "min": 6
+      }
+     ],
+     "texte": "« Dans notre copie, le droit de passage est au quarantième. Dans celle qu'on applique aujourd'hui, au vingtième. Un chiffre, marchand. Un seul trait de plume au bon endroit. »"
+    }
+   ]
+  },
+  {
+   "cle": "perrin",
+   "nom": "Perrin",
+   "accord": "m",
+   "role": "clerc",
+   "lieu": "salines-basses",
+   "ico": {
+    "glyphe": "sceau",
+    "nature": "ruines"
+   },
+   "premiere": "Un saunier maigre qui tire le sel avec des mains qui n'ont jamais tiré le sel. Il donne un autre nom que le sien et ne le donne qu'une fois.",
+   "couches": [
+    {
+     "cle": "pourquoi",
+     "titre": "Pourquoi il est parti",
+     "gagne": [
+      {
+       "quoi": "rencontres",
+       "min": 2
+      }
+     ],
+     "texte": "« On m'a demandé de gratter onze lignes. J'en ai gratté neuf, et la nuit même j'ai compris que la dixième serait la mienne. » {Il} regarde le bassin. « Les deux dernières, ce n'est pas moi. »"
+    },
+    {
+     "cle": "le-feuillet",
+     "titre": "Ce qu'il a emporté",
+     "gagne": [
+      {
+       "quoi": "rencontres",
+       "min": 4
+      }
+     ],
+     "texte": "« Je n'ai pas pris d'argent. J'ai pris un feuillet. Celui où le chiffre a été changé, avec le grattage encore frais dessous. » Un temps. « Tant que je l'ai, je suis vivant. C'est un drôle de salaire. »"
+    }
+   ]
+  },
+  {
+   "cle": "ancelle",
+   "nom": "Ancelle",
+   "titre": "Dame",
+   "accord": "f",
+   "role": "marchand",
+   "lieu": "sainte-ambre",
+   "ico": {
+    "glyphe": "bourse",
+    "nature": "flanerie"
+   },
+   "premiere": "Elle arme quatre convois et n'en conduit aucun. À Sainte-Ambre on dit qu'elle connaît le prix de l'ambre à Fondgris avant les Contrefortains eux-mêmes.",
+   "couches": [
+    {
+     "cle": "le-franc",
+     "titre": "Pourquoi le port est franc",
+     "gagne": [
+      {
+       "quoi": "rencontres",
+       "min": 3
+      }
+     ],
+     "texte": "« Sainte-Ambre ne paie pas le péage, marchand. Pas par faveur : par oubli. La Charte nous a omis{e}s, et depuis cent ans personne à Vaulmier n'a eu intérêt à le rappeler. » {Il} sourit. « Moi non plus. »"
+    },
+    {
+     "cle": "le-demi",
+     "titre": "Le demi pour cent",
+     "gagne": [
+      {
+       "quoi": "rencontres",
+       "min": 6
+      }
+     ],
+     "texte": "« J'ai les livres de mon père et ceux de son père. Le droit monte d'un demi pour cent par an, chaque année, depuis onze ans. En une année cela ne se voit pas. En onze, cela fait un chariot sur sept. »"
+    }
+   ]
+  },
+  {
+   "cle": "borin",
+   "nom": "Borin",
+   "titre": "Maître",
+   "accord": "m",
+   "role": "forgeron",
+   "lieu": "fondgris",
+   "ico": {
+    "glyphe": "enclume",
+    "nature": "trouvaille"
+   },
+   "premiere": "Maître de forge de Fondgris, et gardien des archives par-dessus le marché — chez les Contrefortains, ce qui est écrit se range où l'on range ce qui est trempé.",
+   "couches": [
+    {
+     "cle": "l-exemplaire",
+     "titre": "Le deuxième exemplaire",
+     "gagne": [
+      {
+       "quoi": "rencontres",
+       "min": 3
+      }
+     ],
+     "texte": "« Trois sceaux, trois exemplaires. Le nôtre est en bas, dans le sec, avec les moules et les registres de fonte. Personne ne l'a demandé depuis que je suis né. »"
+    },
+    {
+     "cle": "le-prix",
+     "titre": "Ce que ça leur a coûté",
+     "gagne": [
+      {
+       "quoi": "rencontres",
+       "min": 6
+      }
+     ],
+     "texte": "« Le col nous rapporte moins qu'il y a dix ans et le fer vaut plus. Faites le compte vous-même. Quelqu'un en bas prend une part qui ne figure nulle part, et nous, nous ferrons des chariots pour rien. »"
+    }
+   ]
+  },
+  {
+   "cle": "vigdis",
+   "nom": "Vigdis",
+   "accord": "f",
+   "role": "mineur",
+   "lieu": "tarn-creux",
+   "ico": {
+    "glyphe": "pioche",
+    "nature": "danger"
+   },
+   "premiere": "Elle mène trois cents mineurs et ne lève jamais la voix. Quand elle s'arrête de parler, la galerie entière s'arrête de frapper.",
+   "couches": [
+    {
+     "cle": "le-sel-de-mine",
+     "titre": "Le sel qui vient d'en bas",
+     "gagne": [
+      {
+       "quoi": "rencontres",
+       "min": 3
+      }
+     ],
+     "texte": "« Vous croyez que le sel vient de la mer. Le nôtre vient d'en dessous, et il est meilleur. » {Il} tape la paroi du plat de la main. « Mais il paie le col deux fois : une fois en montant, une fois en descendant. »"
+    },
+    {
+     "cle": "la-greve",
+     "titre": "Ce qu'elle prépare",
+     "gagne": [
+      {
+       "quoi": "reputation",
+       "min": 45
+      }
+     ],
+     "texte": "« Si le droit monte encore, on ferme. Pas une grève : une fermeture. Trois mois sans fer dans le Val, et nous verrons bien qui vient nous expliquer la Charte. »"
+    }
+   ]
+  },
+  {
+   "cle": "ilwen",
+   "nom": "Ilwen",
+   "accord": "f",
+   "role": "guide",
+   "lieu": "aubepine",
+   "ico": {
+    "glyphe": "feuille",
+    "nature": "halte"
+   },
+   "premiere": "Elle se tient au seuil d'Aubépine et décide qui le franchit. Elle ne dit jamais non : elle dit « pas aujourd'hui », et cela revient au même aussi longtemps qu'elle le veut.",
+   "couches": [
+    {
+     "cle": "le-troisieme",
+     "titre": "Le troisième sceau",
+     "gagne": [
+      {
+       "quoi": "rencontres",
+       "min": 3
+      }
+     ],
+     "texte": "« Nous avons signé parce qu'on nous a promis que la route s'arrêterait au Pas d'Ivre. Elle s'y est arrêtée. C'est la seule promesse de cette Charte qui ait été tenue, et nous y tenons. »"
+    },
+    {
+     "cle": "ce-qu-on-lit",
+     "titre": "Ce qu'on lit à Fontcendre",
+     "gagne": [
+      {
+       "quoi": "rencontres",
+       "min": 5
+      }
+     ],
+     "texte": "« Notre exemplaire n'est pas dans un coffre. Il est recopié chaque génération à Fontcendre, mot pour mot, avec les fautes. » {Il} incline la tête. « Une copie fidèle à ses fautes ne peut pas être corrigée en secret. C'est tout l'art. »"
+    }
+   ]
+  },
+  {
+   "cle": "nesir",
+   "nom": "Nésir",
+   "accord": "m",
+   "role": "artisan",
+   "lieu": "fontcendre",
+   "ico": {
+    "glyphe": "plume",
+    "nature": "trouvaille"
+   },
+   "premiere": "{Il} enlumine depuis quarante ans et n'a jamais quitté Fontcendre. On lui apporte des pages ; il rend des pages, plus lentes et plus belles.",
+   "couches": [
+    {
+     "cle": "la-main",
+     "titre": "Reconnaître une main",
+     "gagne": [
+      {
+       "quoi": "rencontres",
+       "min": 3
+      }
+     ],
+     "texte": "« Une main, marchand, c'est comme un pas dans la neige. On ne la contrefait pas, on l'imite — et l'imitation fatigue. Au bout de dix lignes, l'imitateur se repose, et il redevient lui-même. »"
+    },
+    {
+     "cle": "le-grattage",
+     "titre": "Ce que le couteau laisse",
+     "gagne": [
+      {
+       "quoi": "rencontres",
+       "min": 5
+      }
+     ],
+     "texte": "« Gratter ne fait pas disparaître : cela creuse. Mettez la page devant le jour, de biais. Ce qu'on a voulu ôter vous regarde en transparence. »"
+    }
+   ]
+  },
+  {
+   "cle": "vaudry",
+   "nom": "Vaudry",
+   "titre": "Le chambellan",
+   "accord": "m",
+   "role": "noble",
+   "lieu": "vaulmier-haut",
+   "ico": {
+    "glyphe": "couronne",
+    "nature": "tracas"
+   },
+   "premiere": "Il tient la chancellerie du Quartier Haut, et la Charte du Sel dort dans son coffre. Il vous reçoit tout de suite, ce qui n'est jamais bon signe.",
+   "couches": [
+    {
+     "cle": "le-coffre",
+     "titre": "Ce qu'il y a dans le coffre",
+     "gagne": [
+      {
+       "quoi": "rencontres",
+       "min": 2
+      }
+     ],
+     "texte": "« Un parchemin, marchand. Vieux, sec, scellé trois fois. On ne l'ouvre qu'en présence des trois peuples. » {Il} écarte les mains. « Les trois peuples sont des gens très occupés. »"
+    },
+    {
+     "cle": "l-arrangement",
+     "titre": "Ce qu'il appelle un arrangement",
+     "gagne": [
+      {
+       "quoi": "rencontres",
+       "min": 4
+      }
+     ],
+     "texte": "« Le droit monte parce que la route coûte plus cher. Les ponts, les gardes, les relais. Si quelqu'un y trouve son compte au passage, c'est le prix de ce que personne d'autre ne veut faire. » {Il} sourit. « Vous, par exemple, vous y trouvez le vôtre. »"
+    }
+   ]
+  }
+ ]
 }
