@@ -12,7 +12,7 @@
    pouvait rester invisible — le navigateur servait sa copie et personne ne lui
    disait qu'elle avait vieilli. Deux exports identiques gardent la même clé ;
    un seul octet changé en donne une neuve, et l'ancien cache est purgé.      */
-const VERSION='caravane-ateliers-7cce39e61aa6';
+const VERSION='caravane-ateliers-af87b2e821f6';
 const PAGES=[
   './','./index.html','./sauvegarde.html','./tutoriels.html','./manifest.webmanifest',
   './icone.png',
@@ -21,7 +21,7 @@ const PAGES=[
   './atelier-dialogues.html','./atelier-calendrier.html',
   './TUTORIEL-EVENEMENTS.md','./TUTORIEL-PERSONNAGES.md',
   './TUTORIEL-OBJETS.md','./TUTORIEL-MISSIONS.md','./TUTORIEL-ICONES.md',
-  './TUTORIEL-DIALOGUES.md',
+  './TUTORIEL-DIALOGUES.md','./TUTORIEL-CALENDRIER.md',
   './README.md'
 ];
 self.addEventListener('install',e=>{

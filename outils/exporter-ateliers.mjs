@@ -40,7 +40,7 @@ const A_COPIER = [
   'atelier-dialogues.html', 'atelier-calendrier.html',
   'TUTORIEL-EVENEMENTS.md', 'TUTORIEL-PERSONNAGES.md',
   'TUTORIEL-OBJETS.md', 'TUTORIEL-MISSIONS.md', 'TUTORIEL-ICONES.md',
-  'TUTORIEL-DIALOGUES.md'
+  'TUTORIEL-DIALOGUES.md', 'TUTORIEL-CALENDRIER.md'
 ];
 
 /* Un atelier qui n'a pas reçu sa machinerie serait vide sur le dépôt d'en face :
