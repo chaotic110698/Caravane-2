@@ -1,12 +1,30 @@
 # Caravane
 
-Un jeu de navigateur en français. Vous menez une caravane marchande à travers
-trois contrées — les Terres humaines, naines et elfiques —, vous achetez là où
-c'est commun, vous revendez là où c'est rare, et vous essayez d'arriver.
+**→ [Jouer](https://chaotic110698.github.io/Caravane-2/)**
+
+Un jeu de navigateur en français. Vous menez une caravane marchande sur la
+route du sel et de l'ambre : vous achetez là où c'est commun, vous revendez là
+où c'est rare, et vous essayez d'arriver.
 
 Il n'y a rien à installer : une page, du JavaScript, aucune dépendance.
 
-## Jouer
+## Les Marches d'Ambre
+
+Trois contrées le long d'une même route. **Le Val d'Ambre** et ses salines,
+où Vaulmier perçoit le droit sur tout ce qui descend vers la mer. **Les
+Contreforts**, leurs forges et leur col qu'on paie deux fois. **La Sylve
+Close**, qui n'ouvre son seuil qu'à qui a bonne réputation.
+
+Le droit de passage est fixé depuis cent ans par la Charte du Sel : trois
+sceaux, trois exemplaires. Depuis onze ans, quelqu'un ajoute des articles à
+celui de Vaulmier — un demi pour cent par an. Invisible en une année ; un
+chariot sur sept en onze. Onze lignes ont été grattées dans un registre, et
+le clerc qui les tenait s'est fait saunier sous un autre nom.
+
+Douze personnes, neuf missions écrites, six objets uniques, et trois façons
+d'en finir au Quartier Haut.
+
+## Jouer chez soi
 
 Le jeu se sert depuis n'importe quel serveur statique. **Il ne fonctionne pas
 par un double-clic sur `index.html`** : les données se chargent par `fetch()`,
